@@ -8,7 +8,7 @@ To participate:
 * fork this repo
 * make a copy of the TEMPLATE directory
 * rename the copy to your team name (for example, if your team is "foobazers" rename TEMPLATE to foobazers)
-* update the TEAM file in the directory with the name of your team members. The first name on the list of team members is the team captain (see below)
+* update the TEAM file in the directory with the name of your team members. Team members should be listed by their GitHub username. The first username on the list of team members is the team captain (see below)
 * send a PR to add your team to the repo
 
 Team names are "first come, first served" so if someone else takes your team name you'll need to come up with a new one.
