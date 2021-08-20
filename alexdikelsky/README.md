@@ -2,7 +2,8 @@
 The goal is to be like the J programming language,
 but with syntax level support for modular arithmetic,
 and with S-expressions to make parsing easier for now.
-For instance:
+It also requires the rank of the some operators be specified,
+unlike J. For instance:
 
 ```
 > 3_4
@@ -15,9 +16,9 @@ For instance:
 0_4
 
 > (+ 1 '(0 3_4 6_2))
-[1 0_4 1_2]
+(1 0_4 1_2)
 
-> (/ + '(1_2 0_2 1_2))
+> ((" / 1) + '(1_2 0_2 1_2))
 0_2
 
 > (i. 4 4)
@@ -43,8 +44,6 @@ Type error: First argument to i. should be [Number]
 
 > ((" / 2) + y)   NB. Sym across the first column
 (2_4 0_4)
-
-
 ```
 
 
