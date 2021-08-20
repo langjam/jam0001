@@ -32,12 +32,22 @@ executable dyniec
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:    base ^>=4.14.1.0
-                    , lib
+                    , dyniec-lib
     hs-source-dirs:   app
     default-language: Haskell2010
-library lib
+library dyniec-lib
     hs-source-dirs:   lib
     build-depends:    base ^>=4.14.1.0
                     , text
+                    , parsec
     exposed-modules: Syntax
                    , Parser
+Test-Suite dyniec-test
+    main-is:        test.hs
+    hs-source-dirs: test
+    type:           exitcode-stdio-1.0
+    build-depends: dyniec-lib
+                 , base ^>=4.14.1.0
+                 , tasty
+                 , tasty-hunit
+                 , parsec
