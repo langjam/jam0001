@@ -92,7 +92,7 @@ peg::parser!(pub grammar dank() for str {
           lines:(line()*)
           ___?
         {
-            FileAst { header_comments, code: Ast { statements: vec![] } }
+            FileAst { header_comments, code: Ast { statements: lines } }
         }
 });
 
@@ -141,19 +141,37 @@ pub mod tests {
             dank::file(test).unwrap(),
             FileAst {
                 header_comments: vec![],
-                code: Ast { statements: vec![] }
+                code: Ast {
+                    statements: vec![LineComment {
+                        body: CommentBody::Text(" test comment".into()),
+                        stmt: None,
+                    }],
+                }
             }
         )
     }
 
     #[test]
     fn attached_comment() {
-        let test = r#"print variable;"#;
+        let test = r#"
+        
+        // attached comment
+        print variable;
+
+        "#;
         assert_eq!(
             dank::file(test).unwrap(),
             FileAst {
                 header_comments: vec![],
-                code: Ast { statements: vec![] }
+                code: Ast {
+                    statements: vec![LineComment {
+                        body: CommentBody::Text(" attached comment".into()),
+                        stmt: Some(Stmt {
+                            kind: StmtKind::Print(vec![]),
+                            span: 46..60,
+                        }),
+                    }],
+                }
             }
         )
     }
