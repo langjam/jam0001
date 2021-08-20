@@ -162,7 +162,7 @@ int arena_free_index(struct Arena *self, usize index)
         #ifdef NDEBUG
         fprintf(stderr, "Arena container: attempt to free already freed area");
         #endif
-        return -ENODATA;
+        return -EACCES;
     }
 
     // Mark free
