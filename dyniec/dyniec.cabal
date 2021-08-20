@@ -38,5 +38,6 @@ executable dyniec
 library lib
     hs-source-dirs:   lib
     build-depends:    base ^>=4.14.1.0
+                    , text
     exposed-modules: Syntax
                    , Parser
