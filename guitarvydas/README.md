@@ -181,6 +181,8 @@ Let's start by making separate diagrams for each of the view.
 
 ## Sequence Diagram
 
+![2021-08-20-jam0001-sequence.png](https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/2021-08-20-jam0001-sequence.png?raw=true)
+
 
 
 
