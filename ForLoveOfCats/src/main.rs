@@ -1,7 +1,7 @@
 // use std::collections::HashMap;
 use std::iter::Peekable;
 
-const SOURCE: &str = r#"(print "Hello world!" "How are you?" 42)"#;
+const SOURCE: &str = r#"(print "Hello world!" (+ (- (* 10 5) 10) (/ 4 2)))"#;
 
 #[derive(Debug)]
 enum Token<'a> {
@@ -93,9 +93,9 @@ enum TreeNode<'a> {
 type TokenIterator<'a> = Peekable<std::slice::Iter<'a, Token<'a>>>;
 
 fn parse_expression<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
-	let is_lone = matches!(tokens.peek(), Some(Token::OpenParen));
+	let is_lone = !matches!(tokens.peek(), Some(Token::OpenParen));
 
-	if is_lone {
+	if !is_lone {
 		parse_matching_parens(tokens)
 	} else {
 		match tokens.next() {
@@ -121,7 +121,7 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 
 	#[allow(clippy::match_single_binding)]
 	match ident {
-		//TODO: Match builtin ident names
+		//TODO: Match `block`
 		ident => {
 			let args = {
 				let mut args = Vec::new();
@@ -131,6 +131,7 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 						args.push(parse_expression(tokens));
 					} else {
 						tokens.next();
+						break;
 					}
 				}
 
@@ -170,11 +171,87 @@ fn evaluate(node: &TreeNode) -> Value {
 
 		&TreeNode::IntegerLiteral(num) => Value::I64(num),
 
-		TreeNode::Call { name, args } => match *name {
-			"print" => print_values(&args.iter().map(|arg| evaluate(arg)).collect::<Vec<Value>>()),
-			_ => unimplemented!("TODO: Symbol lookup"),
-		},
+		TreeNode::Call { name, args } => {
+			let args = args.iter().map(|arg| evaluate(arg)).collect::<Vec<Value>>();
+
+			match *name {
+				"+" => add_all(&args),
+				"-" => sub_all(&args),
+				"*" => mul_all(&args),
+				"/" => div_all(&args),
+
+				"print" => print_values(&args),
+				_ => unimplemented!("TODO: Symbol lookup"),
+			}
+		}
 	}
+}
+
+fn add_all(values: &[Value]) -> Value {
+	let mut result = 0;
+
+	for value in values {
+		match value {
+			Value::I64(num) => result += num,
+			_ => panic!("Unsupported type of value passed to add"),
+		}
+	}
+
+	Value::I64(result)
+}
+
+fn sub_all(values: &[Value]) -> Value {
+	let mut result = None;
+
+	for value in values {
+		match value {
+			Value::I64(num) => {
+				if let Some(result) = &mut result {
+					*result -= *num
+				} else {
+					result = Some(*num)
+				}
+			}
+
+			_ => panic!("Unsupported type of value passed to sub"),
+		}
+	}
+
+	Value::I64(result.unwrap_or(0))
+}
+
+
+fn mul_all(values: &[Value]) -> Value {
+	let mut result = 1;
+
+	for value in values {
+		match value {
+			Value::I64(num) => result *= num,
+			_ => panic!("Unsupported type of value passed to mul"),
+		}
+	}
+
+	Value::I64(result)
+}
+
+fn div_all(values: &[Value]) -> Value {
+	let mut result = None;
+
+	for value in values {
+		match value {
+			Value::I64(num) => {
+				if let Some(result) = &mut result {
+					*result /= *num
+				} else {
+					result = Some(*num)
+				}
+			}
+
+			_ => panic!("Unsupported type of value passed to div"),
+		}
+	}
+
+	Value::I64(result.unwrap_or(0))
 }
 
 fn print_values(values: &[Value]) -> Value {
