@@ -1,0 +1,6 @@
+[[function]]
+name = "main"
+body = [
+    { put = ["Hello, world"] },
+    { puts = ["Hello, world 2"] },
+]
