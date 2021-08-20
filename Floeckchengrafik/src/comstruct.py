@@ -3,6 +3,8 @@
 from sys import argv, path
 import os
 
+import executor
+
 path.append(os.path.dirname(__file__))
 
 from lexer import ComstructLexer
@@ -33,7 +35,9 @@ if __name__ == '__main__':
     tokens = clexer.tokenize(file)
     tree = cparser.parse(tokens)
 
-    env = dict()
-    ComstructExecutor.env = env
-    _exec = ComstructExecutor(tree)
-    print("Hello World!!1!")
+    print("Begin Execution")
+    print(tree)
+    ComstructExecutor(tree)
+
+    environment = executor.env
+    print("End Executions")

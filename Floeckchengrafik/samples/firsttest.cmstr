@@ -1,8 +1,14 @@
-2?
+2? comment: just is an expression
 3?
 50?
 a = 3?
 
 comment: This is a comment and not ඞ || AMOGUS ||
 
-    comment: b = 3 + a? (assign, b, (simplemath, +, 3, (var, a)))
+b = 3 + a? comment: Should generate a tree like that: (VarAssignNode, b, (MathNode, +, 3, (VarNode, a)))
+
+c = 2?
+
+d = 10?
+
+the_answer_to_everything = d+d+d+d+c? comment: 42

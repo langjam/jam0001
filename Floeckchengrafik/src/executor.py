@@ -7,9 +7,11 @@ env = dict()
 
 class ComstructExecutor:
     def __init__(self, object_tree):
-        self.walkTree(object_tree)
+        for node in object_tree:
+            self.walkTree(node)
 
     def walkTree(self, node):
+        global env
 
         if isinstance(node, StatementNode.MathNode):
             if node.type == "+":
@@ -24,7 +26,7 @@ class ComstructExecutor:
                 return self.walkTree(node.var1) % self.walkTree(node.var2)
         elif isinstance(node, StatementNode.EqualNode):
             return self.walkTree(node.var1) == self.walkTree(node.var2)
-        elif isinstance(node, StatementNode.EqualNode):
+        elif isinstance(node, StatementNode.NotEqualNode):
             return self.walkTree(node.var1) != self.walkTree(node.var2)
         elif isinstance(node, StatementNode.GreaterThanNode):
             return self.walkTree(node.var1) > self.walkTree(node.var2)
@@ -40,5 +42,4 @@ class ComstructExecutor:
         elif isinstance(node, StatementNode.VarNode):
             return env[node.var_name]
         elif isinstance(node, StatementNode.LiterallyNode):
-            if isinstance(node.var, str):
-                return node.var
+            return node.var

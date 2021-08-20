@@ -47,23 +47,13 @@ class ComstructLexer(Lexer):
     ASSIGN = r'='
     NEWSTMT = r'\?'
 
-    def NEWSTMT(self, t):
-        self.lineno += len(t.value)
+    @_(r"\d+")
+    def NUMBER(self, t):
+        t.value = int(t.value)
         return t
 
-    @_(
-        r"\d+",  # Regular Int notation
-        r"0x\d+",  # Hex int notation
-        r"1x\d+",  # Binary int notation
-    )
-    def NUMBER(self, t):
-        t.value = t.value.lower()
-        if t.value.startswith("0x"):
-            t.value = int(t.value.removeprefix("0x"), 16)
-        elif t.value.startswith("1x"):
-            t.value = int(t.value.removeprefix("1x"), 2)
-        else:
-            t.value = int(t.value)
+    def NEWSTMT(self, t):
+        self.lineno += len(t.value)
         return t
 
     def error(self, t):

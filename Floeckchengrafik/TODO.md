@@ -10,17 +10,17 @@
 
 
 ```
-class = c(){ 
-    comment = f(env_for_class, arg1, arg2){
+typeclass = class({
+    NUM=0?
+    STR=1?
+    OBJ=2?
+})?
+TYPE = typeclass()?
+
+
+myclass = class({ 
+    comment = function({
         comment: Kommentar
-    }
-    
-    comment = f(env_for_class, arg1){
-        comment: Kommentar
-    }
-}
+    }, TYPE.NUM, TYPE.OBJ, TYPE.STR)?
+})?
 ```
-
-
-BaseNode#appendStatement(StatementNode(*args -> <type: Str, *runargs | SubtreeNode -extends BaseNode- >))
-BaseNode.appendStatement(PrintNode("Hello World!!1!"))
