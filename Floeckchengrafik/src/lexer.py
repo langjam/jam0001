@@ -22,7 +22,8 @@ class ComstructLexer(Lexer):
         "ST",  # Smaller than <
         "SEQT",  # Smaller or equals than <=
         "ASSIGN",  # Assign a vaiable (=)
-        "NEWSTMT"  # ?
+        "NEWSTMT",  # ?
+        "SEP"  # :
     }
 
     ignore = " \t\n"
@@ -46,6 +47,7 @@ class ComstructLexer(Lexer):
     SEQT = r'<='
     ASSIGN = r'='
     NEWSTMT = r'\?'
+    SEP = r':'
 
     @_(r"\d+")
     def NUMBER(self, t):

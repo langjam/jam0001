@@ -1,5 +1,5 @@
-x = function({
+comment: x = function({
 
-}, ARG_1, ARG_2, ARG_3)?
+comment: } : ARG_1 : ARG_2 : ARG_3)?
 
-x(ARG_1, ARG_2, ARG_3)
+x(1 : 2 : 3)?

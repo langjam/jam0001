@@ -74,3 +74,23 @@ class ComstructParser(Parser):
     @_("NAME ASSIGN expr")
     def expr(self, p):
         return StatementNode.VarAssignNode(p.NAME, p.expr)
+
+    @_("NAME LPAREN RPAREN")
+    def expr(self, p):
+        return StatementNode.FunctionCallNode(p.NAME, [])
+
+    @_('expr')
+    def elem(self, p):
+        return p.expr
+
+    @_('elem')
+    def arglist(self, p):
+        return [p.elem, ]
+
+    @_('arglist SEP elem')
+    def arglist(self, p):
+        return p.arglist + [p.elem, ]
+
+    @_("NAME LPAREN arglist RPAREN")
+    def expr(self, p):
+        return StatementNode.FunctionCallNode(p.NAME, p.arglist)

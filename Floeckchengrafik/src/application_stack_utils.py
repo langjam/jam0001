@@ -1,5 +1,4 @@
 class StatementNode:
-
     class MathNode:
 
         def __init__(self, _type, var1, var2):
@@ -61,12 +60,12 @@ class StatementNode:
 
     class FunctionDefinitionNode:
 
-        def __init__(self, content, *args):
+        def __init__(self, content, args):
             self.content = content
             self.args = args
 
     class FunctionCallNode:
 
-        def __init__(self, func_name, *args):
+        def __init__(self, func_name, args):
             self.func_name = func_name
             self.args = args
