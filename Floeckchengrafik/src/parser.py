@@ -70,3 +70,7 @@ class ComstructParser(Parser):
     @_("expr SEQT expr")
     def expr(self, p):
         return StatementNode.SmallerOrEqualsThanNode(p.expr0, p.expr1)
+
+    @_("NAME ASSIGN expr")
+    def expr(self, p):
+        return StatementNode.VarAssignNode(p.NAME, p.expr)
