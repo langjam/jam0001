@@ -1,2 +1,3 @@
 pub mod operations;
-mod ast;
+pub mod ast;
+pub mod vm;
