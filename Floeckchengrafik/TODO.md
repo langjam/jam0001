@@ -1,5 +1,5 @@
 - [x] Create File Structure
-- [ ] The Theme: [insert your theme here]
+- [ ] The Theme: "first class comments"
 - [ ] Decide for a name `NAME` and theme `THEME`
 - [ ] Decide for Tokens
 - [ ] Decide for a Language tree
