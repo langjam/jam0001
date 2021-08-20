@@ -5,10 +5,20 @@
 CODE: .quad 0       # pointer to source program
 HEAP_A: .quad 0     # pointer to heap A
 HEAP_B: .quad 0     # pointer to heap B
+VARENV: .quad 0     # pointer to env
+VCOUNT: .quad 0     # number of entries in env
 HALTED: .quad 0     # whether or not we've halted
+CALLBACK: .quad 0   # optional function pointer to call
 OPCODE: .space 1024 # pointers for all ascii chars
+IOBUF: .space 256   # buffer for io formatting
 
-PRIMS:
+.data
+
+MSG_OOM: .asciz "Out of memory!\n"
+MSG_USAGE: .asciz "Usage: smal <source file>\n"
+MSG_TOO_BIG: .asciz "File too big! Max source size is 1MB.\n"
+MSG_TYPERR: .asciz "Type error!\n"
+NEWLINE: .asciz "\n"
 
 .text
 
@@ -46,6 +56,100 @@ open:   # rdi = path
     mov rax, 2      # open
     xor rsi, rsi    # O_RDONLY
     syscall
+    ret
+
+panic_strlen:
+    cmp BYTE PTR [rsi + rdx], 0
+    je .panic_strlen_end
+    inc rdx
+    jmp panic_strlen
+.panic_strlen_end:
+    ret
+
+panic:  # rdi = msg
+    mov rax, 1      # write
+    mov rsi, 1      # stdout
+    xchg rdi, rsi   # everything in its rightful place...
+    xor rdx, rdx
+    call panic_strlen   # grab size of rsi
+    syscall
+    mov rdi, 1
+    call exit
+
+newline:
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [NEWLINE]
+    mov rdx, 1
+    syscall
+    ret
+
+putv:
+    mov rax, rdi
+    shr rax, 32
+    cmp rax, 1
+    je .putv_int
+    cmp rax, 2
+    je .putv_str
+    ret
+.putv_int:
+    lea rcx, [IOBUF]
+    cmp rdi, 0
+    mov r8, 1
+    mov r9, 0
+    xor rax, rax
+    mov eax, edi
+    jge .putv_int_nonnegative
+    mov BYTE PTR [rcx], 45   # '-'
+    inc rcx
+.putv_int_nonnegative:
+    cmp rax, r8
+    jl .putv_int_serialize
+    mov rdx, 10
+    imul r8, rdx
+    inc r9
+    jmp .putv_int_nonnegative
+.putv_int_serialize:
+    mov r10, 10
+    push rax
+    mov rax, r8
+    cdq
+    idiv r10
+    mov r8, rax
+    mov rax, [rsp]
+    cdq
+    idiv r8
+    mov r10, rax
+    mov r11, rax
+    imul r11, r8
+    pop rax
+    sub rax, r11
+    add r10, 48 # '0'
+    mov BYTE PTR [rcx], r10b
+    inc rcx 
+    dec r9
+    cmp r9, 0
+    jg .putv_int_serialize
+.putv_int_write:
+    lea rdx, [IOBUF]
+    sub rcx, rdx
+    mov rdx, rcx
+    mov rdi, 1  # stdout
+    lea rsi, [IOBUF]
+    mov rax, 1
+    syscall
+    call newline
+    ret
+.putv_str:
+    xor rax, rax
+    mov eax, edi
+    add rax, r14
+    mov rdx, [rax]
+    lea rsi, [rax + 8]
+    mov rdi, 1
+    mov rax, 1
+    syscall
+    call newline
     ret
 
 reserve_heap:
@@ -92,12 +196,20 @@ reserve_code:
 
     mov rbx, [rip + CODE]     # otherwise, set our instruction pointer to [CODE]
     ret
+
+reserve_env:
+    mov rdi, 1048576
+    call mmap
+    mov [rip + VARENV], rax
+    mov QWORD PTR [rip + VCOUNT], 0
+    ret
+
 .too_big:
-    mov rdi, 2          # source was over 1MB
-    call exit
+    lea rdi, [MSG_TOO_BIG]          # source was over 1MB
+    call panic
 .no_args:
-    mov rdi, 1          # no args provided; do nothing
-    call exit
+    lea rdi, [MSG_USAGE]            # no args were provided
+    call panic
 
 exit:
     mov rax, 60
@@ -154,6 +266,7 @@ setup_opcode:
 #  - char = 0
 #  - int = 1
 #  - string = 2
+#  - func = 3
 
 letter:
     sub r12, 8
@@ -182,8 +295,10 @@ digit:
     ret
 
 halt:
+    call space
     mov QWORD PTR [rip + HALTED], 1
     mov rdi, [r12]
+    call putv
     ret
 
 # like a memcpy, but iterates inversely through the source string
@@ -199,17 +314,184 @@ inv_memcpy:
 .inv_memcpy_end:
     ret  
 
-do_collection:
+is_ref: # eax = type sig
+    cmp eax, 2
+    je .is_ref_yes
+    mov rax, 1    # not a ref
     ret
+.is_ref_yes:
+    xor rax, rax      # is a ref type
+    ret
+
+gc_memcpy:            # we keep rsi, rdi, r14, r15, rdx, rcx alive
+    test r8, r8
+    jz .gc_memcpy_end
+    sub r8, 8
+    mov r9, QWORD PTR [rax + r8]
+    mov QWORD PTR [rdi + r8], r9
+    jmp gc_memcpy
+.gc_memcpy_end:
+    ret
+
+pop_stack:
+    add r12, 8
+    ret
+
+push_stack:
+    sub r12, 8
+    mov [r12], rdi
+    ret 
+
+def_var:    # rdi = name, rsi = value
+    push rsi
+    call lookup
+    test rax, rax
+    jnz .def_var_exists
+
+    mov rax, [rip + VCOUNT]
+    inc QWORD PTR [rip + VCOUNT]
+    mov rcx, 16
+    imul rcx, rax
+    lea rdx, [rip + VARENV]
+    mov rdx, [rdx]  # get the actual varenv ptr
+    add rdx, rcx 
+    pop rsi
+    mov [rdx], rdi
+    mov [rdx + 8], rsi
+.def_var_exists:
+    ret
+
+lookup_cmp:
+    mov rax, rdi
+    shr rax, 32
+    mov r8, rsi
+    shr r8, 32
+    cmp rax, r8 # type mismatch
+    jne .lookup_cmp_fail
+
+    xor r8, r8
+    xor r9, r9
+    mov r8d, edi
+    mov r9d, esi
+    add r8, r14
+    add r9, r14
+    mov rax, QWORD PTR [r8]
+    cmp rax, QWORD PTR [r9]
+    jne .lookup_cmp_fail    # size mismatch
+    sub rax, 9              # sub 8 to account for size prefix, and an extra one to point to a real char
+.lookup_cmp_loop:
+    mov sil, BYTE PTR [r8 + rax + 8]
+    cmp sil, BYTE PTR [r9 + rax + 8]
+    jne .lookup_cmp_fail
+    dec rax
+    cmp rax, 0
+    jge .lookup_cmp_loop
+    xor rax, rax
+    ret
+.lookup_cmp_fail:
+    mov rax, 1
+    ret
+
+lookup:
+    xor rcx, rcx
+.lookup_loop:
+    cmp rcx, [rip + VCOUNT]
+    jge .lookup_fail
+    
+    mov rax, 16
+    imul rax, rcx
+    lea rsi, [rip + VARENV]
+    mov rsi, [rsi]  # get actual env ptr
+    add rsi, rax    # VARENV[rcx * 16]
+    mov rdx, rsi
+    mov rsi, [rdx]  # get key
+    
+    call lookup_cmp
+    test rax, rax
+    jz .lookup_success
+
+    inc rcx 
+    jmp .lookup_loop
+.lookup_success:
+    mov rax, [rdx + 8]
+    ret
+.lookup_fail:
+    xor rax, rax
+    ret 
+
+# perform a pass of the copying collector
+do_collection:
+    push rsi
+    push rdi
+    push rcx
+    push rdx
+    # basic steps of a GC
+    # 1. figure out if we are on heap A or B, and set rdi/rsi to the bounds of the other one
+    # 2. iterate through the stack, word by word, checking is_ref for every word
+    # 3. if is_ref returns true, realloc the object in the other heap and redirect the pointer
+    # 4. change r14 and r15 over to the new heap
+    cmp r14, [HEAP_A]
+    je .do_collection_on_a
+
+    mov rsi, [HEAP_A]   # we are on heap B
+    mov rdi, rsi
+    add rdi, 1048576
+    jmp .do_collection_scan
+
+.do_collection_on_a:
+    mov rsi, [HEAP_A]   # we are on heap A
+    mov rdi, rsi
+    add rdi, 1048576
+
+.do_collection_scan:
+    mov rcx, r13        # bounds of the stack, for traversal
+    mov rdx, r12
+
+.do_collection_scan_loop:
+    cmp rdx, rcx
+    jge .do_collection_end
+
+    mov eax, DWORD PTR [rdx + 4]    # get type tag of next word
+    call is_ref
+    test eax, eax
+    jnz .do_collection_scan_inc
+
+    # we found a ref, so we'll copy it
+    mov eax, DWORD PTR [rdx]        # get heap offset
+    add rax, r14                    # get absolute address from heap ptr
+    mov r8, [rax]                   # store size
+    sub rdi, r8                     # alloc on other heap
+
+    cmp rdi, rsi                    # check if we're out of memory
+    jl .collection_oom_err
+
+    call gc_memcpy
+
+    mov rax, rdi
+    sub rax, rsi
+    mov DWORD PTR [rdx], eax        # fix up reference
+.do_collection_scan_inc:
+    add rdx, 8
+    jmp .do_collection_scan_loop
+
+.do_collection_end:
+    mov r14, rsi
+    mov r15, rdi
+    pop rdx
+    pop rcx
+    pop rdi
+    pop rsi
+    ret
+.collection_oom_err:
+    lea rdi, [MSG_OOM]
+    call panic
 
 space:
     cmp r12, r13
     je .space_end
-
-# tok_to_string
-# this section goes through the preceding stacked chars and forms a string
-# resulting from them
-
+    # tok_to_string
+    # this section goes through the preceding stacked chars and forms a string
+    # resulting from them
     mov rcx, r12
 .space_loop:
     cmp DWORD PTR [rcx + 4], 0    # loop until we hit a non-char or stack base
@@ -242,26 +524,57 @@ space:
     #  - rsi points to the beginning of a string
     #  - rdx points to the end of a string
     #  - rax has the length of the string
-    #  - rdx should be at the end of the stack
+    #  - rcx should be past the end of the stack
     lea rcx, [rax + 15]
-    and cl, 248   # align 8
-    sub r15, rcx    # allocate rax bytes on heap
+    and cl, 248     # align 8
+    sub r15, rcx    # allocate rcx bytes on heap
     cmp r15, r14   
+    mov rdx, rax    # store original size (this is preserved across collections)
     jge .space_alloc_success
     call do_collection
 .space_alloc_success:
     mov QWORD PTR [r15], rcx    # save size before string
     lea rdi, [r15 + 8]          # copy string to allocated region
-    sub rcx, 8
-    mov rdx, rcx
     mov rcx, rsi                # save unmoved rsi
+    sub rsi, 1
     call inv_memcpy
     
-    lea r12, [rcx - 8]
+    mov r12, rcx
     mov rdi, r15
     sub rdi, r14
-    mov DWORD PTR [r12 + 4], 2  # string type
-    mov DWORD PTR [r12], edi    # heap offset
+
+    mov rcx, 2      # string type
+    shl rcx, 32
+    or rcx, rdi    # heap offset
+.space_lookup:
+    mov rdi, rcx
+    push rdi
+    call lookup
+    pop rdi
+    test rax, rax
+    jz .space_push
+
+    mov rdi, rax
+    mov rcx, rdi
+    shr rcx, 32     # get type
+    cmp ecx, 3      # is it a function?
+    jne .space_push
+    
+    xor rcx, rcx
+    mov ecx, edi
+    add rcx, r14
+    mov rcx, [rcx + 8]
+    call rcx        # call function
+    jmp .space_end
+.space_push:
+    call push_stack # push rdi
+
+    cmp QWORD PTR [CALLBACK], 0
+    je .space_end
+
+    xor rax, rax
+    xchg rax, QWORD PTR [CALLBACK]
+    call rax
 .space_end:
     ret
 
@@ -278,13 +591,86 @@ run:
 .halted:
     ret
 
+memcpy: # rdi = dest, rsi = src, rdx = size
+    test rdx, rdx
+    jz .memcpy_end
+    dec rdx
+    mov al, BYTE PTR [rsi]
+    mov BYTE PTR [rdi], al
+    inc rdi
+    inc rsi
+    jmp memcpy
+.memcpy_end:
+    ret
+
+alloc_string:  # rdi = string ptr, rsi = size
+    lea rcx, [rsi + 15]
+    and cl, 248     # align 8
+    sub r15, rcx    # allocate rax bytes on heap
+    cmp r15, r14   
+    jge .alloc_string_success
+    call do_collection
+.alloc_string_success:
+    mov [r15], rcx
+    mov rdx, rsi
+    mov rsi, rdi
+    lea rdi, [r15 + 8]
+    call memcpy
+    mov rax, 2
+    shl rax, 32
+    mov rdx, r15
+    sub rdx, r14
+    or rax, rdx
+    ret    
+
+alloc_fn:   # rdi = fn ptr
+    sub r15, 16
+    cmp r15, r14   
+    jge .alloc_fn_success
+    call do_collection
+.alloc_fn_success:
+    mov QWORD PTR [r15], 16
+    mov QWORD PTR [r15 + 8], rdi
+    mov rdx, r15
+    sub rdx, r14
+    mov rax, 3
+    shl rax, 32
+    or rax, rdx
+    ret
+
 .global _start
 _start: # entry point
     call reserve_code   # load program
     call reserve_heap   # set up heap
     call reserve_stack  # set up stack
+    call reserve_env    # set up env
     call setup_opcode   # populate opcode table
+    call prelude        # primitive defs
 
     mov rbp, rsp        # set up stack
     call run
     call exit
+
+.data
+
+inc_name: .asciz "inc"
+
+.text
+
+inc_native:
+    inc DWORD PTR [r12]
+    ret
+
+prelude:
+    # inc
+    lea rdi, [rip + inc_name]
+    mov rsi, 3
+    call alloc_string
+    mov rcx, rax
+    lea rdi, [rip + inc_native]
+    call alloc_fn
+    mov rsi, rax
+    mov rdi, rcx 
+    call def_var
+
+    ret
