@@ -1,5 +1,8 @@
-a = 3?
+2?
+3?
+50?
+comment: a = 3?
 
-comment: This is a comment and not ඞ
+comment: This is a comment and not ඞ || AMOGUS ||
 
-b = 3 + 1?
+    comment: b = 3 + a? (assign, b, (simplemath, +, 3, (var, a)))

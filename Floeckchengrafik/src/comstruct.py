@@ -6,8 +6,8 @@ import os
 path.append(os.path.dirname(__file__))
 
 from lexer import ComstructLexer
-# from parser import ComstructParser
-# from executor import ComstructExecutor
+from parser import ComstructParser
+from executor import ComstructExecutor
 
 
 if __name__ == '__main__':
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     file = open(argv[1]).read()
 
     clexer = ComstructLexer()
-    # cparser = ComstructParser()
+    cparser = ComstructParser()
 
     print(" |------------|------------|------------|")
     print(" |    Type    |    Value   |    Line    |")
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     print(" |------------|------------|------------|")
     print()
 
-    # tokens = clexer.tokenize(file)
-    # tree = cparser.parse(tokens)
+    tokens = clexer.tokenize(file)
+    tree = cparser.parse(tokens)
 
-    # ComstructExecutor(tree)
+    ComstructExecutor(tree)
