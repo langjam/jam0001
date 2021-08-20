@@ -1,19 +1,19 @@
 from sys import argv
 
 from lexer import ComstructLexer
-from parser import ComstructParser
+# from parser import ComstructParser
 from executor import ComstructExecutor
 
 
 if __name__ == '__main__':
-    if len(argv) != 1:
+    if len(argv) != 2:
         print("You need to specify exactly one file as an argument")
         exit(0)
 
     file = open(argv[1]).read()
 
     clexer = ComstructLexer()
-    cparser = ComstructParser()
+    # cparser = ComstructParser()
 
     print(" |------------|------------|------------|")
     print(" |    Type    |    Value   |    Line    |")
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     print(" |------------|------------|------------|")
     print()
 
-    tokens = clexer.tokenize(file)
-    tree = cparser.parse(tokens)
+    # tokens = clexer.tokenize(file)
+    # tree = cparser.parse(tokens)
 
-    ComstructExecutor(tree)
+    # ComstructExecutor(tree)
