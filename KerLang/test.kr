@@ -10,3 +10,5 @@ function f;
   ...
 */
 type t;
+
+(defun <fname> (<x> ... ) (<body>))
