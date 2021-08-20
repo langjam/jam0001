@@ -6,9 +6,9 @@ use std::fs;
 use std::collections::HashMap;
 
 fn main() {
-    let mut functions: HashMap<&'static str, Box<dyn Fn(&Array)>> = HashMap::new();
+    let mut builtin_functions: HashMap<&'static str, Box<dyn Fn(&Array)>> = HashMap::new();
 
-    functions.insert(
+    builtin_functions.insert(
         "put",
         Box::new(|args| {
             let mut iter = args.iter();
@@ -19,7 +19,7 @@ fn main() {
         }),
     );
 
-    functions.insert(
+    builtin_functions.insert(
         "puts",
         Box::new(|args| {
             let mut iter = args.iter();
@@ -29,6 +29,8 @@ fn main() {
             println!("{}", s);
         }),
     );
+
+    let mut userdefined_functions: HashMap<String, Array> = HashMap::new();
 
     let mut args = env::args();
 
@@ -55,59 +57,73 @@ fn main() {
     };
 
     for table in aot.iter() {
-        /*
-        let table = aot
-            .iter()
-            .next()
-            .expect("array of tables must not be empty");
-            */
+        let item = table.get("name").expect("function must have a name");
 
-        if !table.contains_key("name") {
-            panic!("function must have a name");
-        }
-
-        let item = table.get("name").unwrap();
-
-        match item {
-            Item::Value(value) => {
-                if value.as_str() != Some("main") {
-                    panic!("function must be named main");
-                }
-            }
+        let name = match item {
+            Item::Value(value) => value
+                .as_str()
+                .expect("function name must be a string")
+                .to_string(),
             _ => panic!("name must be a string"),
         };
 
-        // we have now validated that we have a table of functions and our first
-        // one is named 'main'
-
-        let item = table.get("body").expect("must have a body");
+        let item = table.get("body").expect("function must have a body");
 
         match item {
             Item::Value(value) => {
-                let a = value.as_array().expect("body must be an array");
-                for line in a.iter() {
-                    match line {
-                        Value::InlineTable(it) => {
-                            let mut statement = it.iter();
-                            let (name, args) = statement
-                                .next()
-                                .expect("needs to have at least one function call");
+                let body = value.as_array().expect("body must be an array");
 
-                            let f = functions
-                                .get(name)
-                                .expect("could not find a function with that name");
-
-                            let args = args.as_array().expect("arguments must be an array");
-
-                            f(args);
-                        }
-                        _ => panic!("the body of functions must be inline tables"),
-                    }
-                }
+                userdefined_functions.insert(name, body.clone());
             }
             _ => panic!("body must be a value"),
         }
     }
 
-    //dbg!(item);
+    call_function("main", &userdefined_functions, &builtin_functions);
+}
+
+fn call_function(
+    name: &str,
+    userdefined_functions: &HashMap<String, Array>,
+    builtin_functions: &HashMap<&'static str, Box<dyn Fn(&Array)>>,
+) {
+    let body = userdefined_functions
+        .get(name)
+        .expect("Could not find function with that name");
+
+    for line in body.iter() {
+        match line {
+            Value::InlineTable(it) => {
+                let mut statement = it.iter();
+                let (name, args) = statement
+                    .next()
+                    .expect("needs to have at least one function call");
+
+                if let Some(f) = builtin_functions.get(name) {
+                    let args = args.as_array().expect("arguments must be an array");
+
+                    f(args);
+                } else if let Some(body) = userdefined_functions.get(name) {
+                    let _args = args.as_array().expect("arguments must be an array");
+
+                    for line in body.iter() {
+                        match line {
+                            Value::InlineTable(it) => {
+                                let mut statement = it.iter();
+                                let (name, _args) = statement
+                                    .next()
+                                    .expect("needs to have at least one function call");
+
+                                call_function(name, userdefined_functions, builtin_functions);
+                            },
+                            _ => panic!("the body of functions must be inline tables"),
+                        }
+                    }
+                } else {
+                    panic!("Could not find function named {}", name);
+                }
+            }
+            _ => panic!("the body of functions must be inline tables"),
+        }
+    }
 }

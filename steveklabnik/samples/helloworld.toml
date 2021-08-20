@@ -2,5 +2,11 @@
 name = "main"
 body = [
     { put = ["Hello, world"] },
+    { puts2 = [] },
+]
+
+[[function]]
+name = "puts2"
+body = [
     { puts = ["Hello, world 2"] },
 ]
