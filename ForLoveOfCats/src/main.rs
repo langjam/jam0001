@@ -1,13 +1,16 @@
-// use std::collections::HashMap;
+use std::collections::HashMap;
 use std::iter::Peekable;
 
-const SOURCE: &str =
-r#"
-(print
-	(block
-		(print "Something first!")
-		(print "Hello world!" (+ (- (* 10 5) 10) (/ 4 2)))
-		96))
+const SOURCE: &str = r#"
+(block
+	(define x 0)
+	(print "Initial value: " x)
+	(set x 96)
+	(print "Returned from block"
+		(block
+			(print "Something first in block")
+			(print "Hello world from block" (+ (- (* 10 5) 10) (/ 4 2)))
+			x)))
 "#;
 
 #[derive(Debug)]
@@ -93,6 +96,20 @@ enum TreeNode<'a> {
 
 	Block(Vec<TreeNode<'a>>),
 
+	Define {
+		name: &'a str,
+		rhs: Box<TreeNode<'a>>,
+	},
+
+	Set {
+		name: &'a str,
+		rhs: Box<TreeNode<'a>>,
+	},
+
+	Read {
+		name: &'a str,
+	},
+
 	Call {
 		name: &'a str,
 		args: Vec<TreeNode<'a>>,
@@ -112,6 +129,8 @@ fn parse_expression<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 
 			Some(&Token::String(string)) => TreeNode::StringLiteral(string),
 
+			Some(Token::Ident(name)) => TreeNode::Read { name },
+
 			None => panic!("No token for literal"),
 
 			_ => panic!("Lone token not handled"),
@@ -129,6 +148,34 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 	};
 
 	match *ident {
+		"define" => {
+			let name = if let Some(Token::Ident(name)) = tokens.next() {
+				name
+			} else {
+				panic!("Needed name to define");
+			};
+
+			let rhs = Box::new(parse_expression(tokens));
+
+			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+
+			TreeNode::Define { name, rhs }
+		}
+
+		"set" => {
+			let name = if let Some(Token::Ident(name)) = tokens.next() {
+				name
+			} else {
+				panic!("Needed name to set");
+			};
+
+			let rhs = Box::new(parse_expression(tokens));
+
+			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+
+			TreeNode::Set { name, rhs }
+		}
+
 		"block" => {
 			let mut block = Vec::new();
 
@@ -181,29 +228,103 @@ impl std::fmt::Display for Value {
 	}
 }
 
-// struct ScopeState<'a> {
-// 	parent: Option<&'a mut ScopeState<'a>>,
-// 	scope: HashMap<String, Value>,
-// }
+#[derive(Debug)]
+struct ScopeState {
+	scopes: Vec<HashMap<String, Value>>,
+}
 
-fn evaluate(node: &TreeNode) -> Value {
+impl ScopeState {
+	fn new() -> ScopeState {
+		ScopeState {
+			scopes: vec![HashMap::new()],
+		}
+	}
+
+	fn push_scope(&mut self) {
+		self.scopes.push(HashMap::new());
+	}
+
+	fn pop_scope(&mut self) {
+		self.scopes.pop();
+	}
+
+	fn define(&mut self, name: &str, value: Value) -> Value {
+		self.scopes
+			.last_mut()
+			.unwrap()
+			.insert(name.to_string(), value.clone());
+
+		value
+	}
+
+	fn set(&mut self, name: &str, value: Value) -> Value {
+		for scope in self.scopes.iter_mut().rev() {
+			if let Some(ptr) = scope.get_mut(name) {
+				*ptr = value.clone();
+				return value;
+			}
+		}
+
+		panic!("Unknown variable {:?} to set", name);
+	}
+
+	fn read(&self, name: &str) -> Value {
+		for scope in self.scopes.iter().rev() {
+			if let Some(ptr) = scope.get(name) {
+				return ptr.clone();
+			}
+		}
+
+		panic!("Unknown variable {:?} to read", name);
+	}
+}
+
+fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 	match node {
 		&TreeNode::StringLiteral(string) => Value::String(string.to_string()),
 
 		&TreeNode::IntegerLiteral(num) => Value::I64(num),
 
+		TreeNode::Define { name, rhs } => {
+			state.push_scope();
+			let value = evaluate(state, rhs);
+			state.pop_scope();
+
+			state.define(name, value.clone());
+			value
+		}
+
+		TreeNode::Set { name, rhs } => {
+			state.push_scope();
+			let value = evaluate(state, rhs);
+			state.pop_scope();
+
+			state.set(name, value.clone());
+			value
+		}
+
+		TreeNode::Read { name } => state.read(name),
+
 		TreeNode::Block(block) => {
 			let mut result = Value::None;
 
 			for entry in block {
-				result = evaluate(entry);
+				result = evaluate(state, entry);
 			}
 
 			result
 		}
 
 		TreeNode::Call { name, args } => {
-			let args = args.iter().map(|arg| evaluate(arg)).collect::<Vec<Value>>();
+			let args = {
+				let mut evaluated = Vec::new();
+				for arg in args {
+					state.push_scope();
+					evaluated.push(evaluate(state, arg));
+					state.pop_scope();
+				}
+				evaluated
+			};
 
 			match *name {
 				"+" => add_all(&args),
@@ -212,6 +333,7 @@ fn evaluate(node: &TreeNode) -> Value {
 				"/" => div_all(&args),
 
 				"print" => print_values(&args),
+
 				_ => unimplemented!("TODO: Symbol lookup"),
 			}
 		}
@@ -301,5 +423,6 @@ fn main() {
 	println!("Preparing to run source: `{}`", SOURCE);
 	let tokens = tokenize(SOURCE);
 	let tree = parse_matching_parens(&mut tokens.iter().peekable());
-	evaluate(&tree);
+	let mut state = ScopeState::new();
+	evaluate(&mut state, &tree);
 }
