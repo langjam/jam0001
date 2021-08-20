@@ -1,0 +1,5 @@
+
+
+[workspace]
+members=["boole", "boole-cli"]
+default-members=["boole", "boole-cli"]
