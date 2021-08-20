@@ -7,3 +7,16 @@
 { TEST yes } = 1 1
 { TEST yes } <> 2 3
 { TEST no } = () ('foo)
+
+{ TESTWITH x 0 0 }
+{ TESTWITH x 1 0 }
+{ TESTWITH x 2 0 }
+{ TESTWITH x 7 0 }
+{ TESTWITH x 12 0 }
+* x 0
+
+stash-comment make-comment "TEST" 1 1 "TEST 13"
++ 1 * 2 6
+
+testtable 'x 0 4 (yes no yes no yes)
+= mod x 2 0

@@ -309,13 +309,12 @@ const char *format_value(Value val, bool inspect) {
         case Value_List: {
             BucketArray<u8> buf = {};
             buf.arena = &arena;
-            bucket_array_push(&buf, (u8)'(');
+            concat_bytes(&buf, '(');
             for (s32 i = 0; i < val.list.count; i++) {
                 if (i > 0) bucket_array_push(&buf, (u8)' ');
                 concat_write(&buf, str_slice(format_value(val.list[i], true)));
             }
-            bucket_array_push(&buf, (u8)')');
-            bucket_array_push(&buf, (u8)0);
+            concat_bytes(&buf, ')', 0);
             return (char *)bucket_array_linearize(buf, &arena).data;
         } break;
     }
@@ -423,6 +422,18 @@ Value b_div(Slice<Value> args, Env *env, SourceLoc loc) {
     return {.type = Value_Int, .i = args[0].i / args[1].i};
 }
 
+Value b_mod(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("mod", 0, Value_Int);
+    CHECK_ARG("mod", 1, Value_Int);
+
+    if (!args[1].i) {
+        fprintf(stderr, "%s:%d:%d: mod: Encountered zero divisor.\n", LOCFMT(loc));
+        exit(1);
+    }
+    return {.type = Value_Int, .i = args[0].i % args[1].i};
+}
+
 Value b_eq(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env; (void)loc;
 
@@ -476,9 +487,40 @@ Value b_make_comment(Slice<Value> args, Env *env, SourceLoc loc) {
 }
 
 Value b_stash_comment(Slice<Value> args, Env *env, SourceLoc loc) {
-    CHECK_ARG("stash-comment", 1, Value_Comment);
+    CHECK_ARG("stash-comment", 0, Value_Comment);
     stash_comment(env, args[0]);
     return args[0];
+}
+
+Value b_testtable(Slice<Value> args, Env *env, SourceLoc loc) {
+    CHECK_ARG("testtable", 0, Value_Ident);
+    CHECK_ARG("testtable", 1, Value_Int);
+    CHECK_ARG("testtable", 2, Value_Int);
+    CHECK_ARG("testtable", 3, Value_List);
+
+    s32 lower = args[1].i, upper = args[2].i;
+    Slice<Value> vals = args[3].list;
+    if (vals.count != (upper - lower + 1)) {
+        fprintf(stderr, "%s:%d:%d: testtable: Range of integers does not match list size (%d--%d vs %ld).\n", LOCFMT(loc),
+            lower, upper, vals.count);
+        exit(1);
+    }
+
+    for (s32 i = lower; i <= upper; i++) {
+        BucketArray<u8> buf = {};
+        buf.arena = &arena;
+        concat_write(&buf, lit_slice("TESTWITH "));
+        concat_write(&buf, args[0].s);
+        concat_bytes(&buf, ' ');
+        concat_write(&buf, str_slice(tprint("%d", i)));
+        concat_bytes(&buf, ' ');
+        concat_write(&buf, str_slice(format_value(vals[i], true)));
+        concat_bytes(&buf, 0);
+        Value v = {.type = Value_String, .s = bucket_array_linearize(buf, &arena)};
+        ValComment c = {.loc = loc, .value = copy_to_arena(&arena, v)};
+        stash_comment(env, {.type = Value_Comment, .c = c});
+    }
+    return {.type = Value_Bool, .b = true};
 }
 
 Value eval(Slice<Token> *tokens, Env *env) {
@@ -547,25 +589,66 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
         return {};
     } else {
         SourceLoc loc = (*tokens)[0].loc;
-        Value v = eval(tokens, env);
-        if (v.type == Value_Comment) {
-            stash_comment(env, v);
-        } else if (env->stashed_comment.type == Value_Comment &&
+        if (env->stashed_comment.type == Value_Comment &&
             env->stashed_comment.c.value->type == Value_String &&
-            slice_has_prefix(env->stashed_comment.c.value->s, lit_slice("TEST "))
-        ) {
-            Slice<u8> expr = env->stashed_comment.c.value->s;
-            slice_advance(&expr, 5);
-            Slice<Token> toks = tokenize("<TEST>", expr);
-            Value expected = eval(&toks, env);
-            if (v != expected) {
-                fprintf(stderr, "%s:%d:%d: TEST failure: Expression produced %s but %s was required.\n", LOCFMT(loc),
-                    format_value(v, true), format_value(expected, true));
-                exit(1);
+            slice_has_prefix(env->stashed_comment.c.value->s, lit_slice("TESTWITH ")) &&
+            (*tokens)[0].type != Token_Comment)
+        {
+            Slice<Token> tests = tokenize("<TESTWITH>", env->stashed_comment.c.value->s);
+            Slice<Token> stmt;
+            Value have;
+            while (tests.count) {
+                SourceLoc loc = tests[0].loc;
+                if (tests[0].type != Token_Ident || tests[0].s != lit_slice("TESTWITH")) {
+                    fprintf(stderr, "%s:%d:%d: Unexpected token in TESTWITH directive: %s.\n", LOCFMT(tests[0].loc), format_token(tests[0]));
+                    exit(1);
+                }
+                slice_advance(&tests, 1);
+                if (!tests.count || tests[0].type != Token_Ident) {
+                    if (tests.count)
+                        fprintf(stderr, "%s:%d:%d: ", LOCFMT(tests[0].loc));
+                    fprintf(stderr, "Expected identifier in TESTWITH directive, got: %s.\n", tests.count ? format_token(tests[0]) : "EOF");
+                    exit(1);
+                }
+                Slice<u8> var = tests[0].s;
+                slice_advance(&tests, 1);
+                Value input = eval(&tests, env);
+                Value expected = eval(&tests, env);
+                stmt = *tokens;
+                Env newenv = {};
+                newenv.symtab.arena = &arena;
+                newenv.super = env;
+                bind(&newenv, var)->value = input;
+                have = eval(&stmt, &newenv);
+                if (have != expected) {
+                    fprintf(stderr, "%s:%d:%d: TESTWITH failure: With %.*s=%s the statement produced %s but %s was required.\n",
+                        LOCFMT(loc), STRFMT(var), format_value(input, true), format_value(have, true), format_value(expected, true));
+                    exit(1);
+                }
             }
-            env->stashed_comment = {};
+            *tokens = stmt;
+            return have;
+        } else {
+            Value v = eval(tokens, env);
+            if (v.type == Value_Comment) {
+                stash_comment(env, v);
+            } else if (env->stashed_comment.type == Value_Comment &&
+                env->stashed_comment.c.value->type == Value_String &&
+                slice_has_prefix(env->stashed_comment.c.value->s, lit_slice("TEST "))
+            ) {
+                Slice<u8> expr = env->stashed_comment.c.value->s;
+                slice_advance(&expr, 5);
+                Slice<Token> toks = tokenize("<TEST>", expr);
+                Value expected = eval(&toks, env);
+                if (v != expected) {
+                    fprintf(stderr, "%s:%d:%d: TEST failure: Expression produced %s but %s was required.\n", LOCFMT(loc),
+                        format_value(v, true), format_value(expected, true));
+                    exit(1);
+                }
+                env->stashed_comment = {};
+            }
+            return v;
         }
-        return v;
     }
 }
 
@@ -588,6 +671,7 @@ int main(int argc, char **argv) {
     BIND_BUILTIN1("-", b_sub, 2);
     BIND_BUILTIN1("*", b_mul, 2);
     BIND_BUILTIN1("/", b_div, 2);
+    BIND_BUILTIN(mod, 2);
     BIND_BUILTIN1("=", b_eq, 2);
     BIND_BUILTIN1("<>", b_ne, 2);
     BIND_BUILTIN1("->string", b_tostring, 1);
@@ -595,6 +679,7 @@ int main(int argc, char **argv) {
     BIND_BUILTIN(peel, 1);
     BIND_BUILTIN1("make-comment", b_make_comment, 4);
     BIND_BUILTIN1("stash-comment", b_stash_comment, 1);
+    BIND_BUILTIN(testtable, 4);
 #undef BIND_BUILTIN
 #undef BIND_BUILTIN1
     bind(&env, lit_slice("yes"))->value = {.type = Value_Bool, .b = true};

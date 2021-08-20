@@ -111,3 +111,30 @@ If a statement is executed while a string comment is stashed that begins with "T
 ```
 
 The stashed comment is cleared afterwards.
+
+Another comment test directive is `TESTWITH`. It expects an identifier and two values (separated by whitespace). It binds the first value to the given identifier and afterwards compares the second expression with the statement result. What makes `TESTWITH` special is that a comment can contain several `TESTWITH` directives and the statement is executed for every directive. Imagine, for example, you really wanted to make sure that Flamingo doesn’t mess up multiplication with 0. You test it like this:
+
+```
+{ TESTWITH x 0 0 }
+{ TESTWITH x 1 0 }
+{ TESTWITH x 2 0 }
+{ TESTWITH x 7 0 }
+{ TESTWITH x 12 0 }
+* x 0
+```
+
+Now, remember that comments can be dynamically created and stashed. This means you can dynamically create tests.
+
+```
+stash-comment make-comment "TEST" 1 1 "TEST 13"
++ 1 * 2 6
+```
+
+This is equivalent to our literal comment TEST above.
+
+This is even more useful in conjunction with `TESTWITH`. There is a builtin function `testtable` that generates test cases for you. It takes a variable name, two integers representing a lower and upper bound and a list of values. For every integer in the given range it generates and stashes a `TESTWITH` comment for the given variable and the corresponding element of the list.
+
+```
+testtable 'x 0 4 (yes no yes no yes)
+= mod x 2 0
+```
