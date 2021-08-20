@@ -1,7 +1,10 @@
+mod frontend;
+
 use clap::{App, Arg};
 use clap::crate_authors;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let matches = App::new("Train")
         .version("1.0")
         .author(crate_authors!("\n"))
@@ -9,6 +12,7 @@ fn main() {
         .arg(Arg::with_name("program")
             .help("a program of your train network"))
         .get_matches();
+
 
 
 }

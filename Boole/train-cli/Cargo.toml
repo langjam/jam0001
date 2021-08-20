@@ -6,13 +6,13 @@ authors = [
     "Jonathan Dönszelmann <jonabent@gmail.com>",
     "Julius de Jeu <julius@voidcorp.nl>",
     "Jonathan Brouwer <jonathantbrouwer@gmail.com>",
-    "Noah Jadoenathmisier <>"
+    "Noah Jadoenathmisier <n.j.m.jadoenathmisier@student.tudelft.nl>"
 ]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 train = { path = "../train" }
 clap = "2.33"
+tokio = "1.10.0"
+warp = "0.3.1"
 
 
