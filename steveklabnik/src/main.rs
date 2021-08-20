@@ -6,25 +6,48 @@ use std::fs;
 use std::collections::HashMap;
 use std::cell::RefCell;
 
+#[derive(Debug)]
 struct Vm {
-    builtin_functions: HashMap<&'static str, Box<dyn Fn(&Array)>>,
-    userdefined_functions: HashMap<String, Array>,
-    variables: RefCell<HashMap<String, Value>>,
+    values: RefCell<HashMap<String, Value>>,
 }
 
 impl Vm {
-    fn define_builtin_function<F: Fn(&Array) + 'static>(&mut self, name: &'static str, body: F) {
-        self.builtin_functions.insert(name, Box::new(body));
+    fn set_value(&self, name: String, value: Value) {
+        self.values.borrow_mut().insert(name, value);
     }
 
-    fn define_userdefined_function(&mut self, name: String, body: Array) {
-        self.userdefined_functions.insert(name, body);
+    fn eval(&self, name: &str, args: &Value) -> Value {
+        if name == "puts" {
+            match args {
+                Value::String(_) => println!("{}", args.as_str().unwrap()),
+                _ => panic!("not yet supported"),
+            }
+            return Value::Array(Array::default());
+        }
+
+        let value = self.values.borrow();
+        let value = value.get(name).expect("lookup failed");
+
+        match value {
+            Value::Array(array) => {
+                for i in array.iter() {
+                    match i {
+                        Value::InlineTable(it) => {
+                            for (name, args) in it.iter() {
+                                self.eval(name, args);
+                            }
+                        }
+                        _ => panic!("not supported"),
+                    }
+                }
+            }
+            _ => panic!("not supported"),
+        }
+
+        return Value::Array(Array::default());
     }
 
-    fn set_variable(&self, name: String, value: Value) {
-        self.variables.borrow_mut().insert(name, value);
-    }
-
+    /*
     fn call_function(&self, name: &str, args: &Value) {
         if name == "set" {
             self.set_variable(name.to_string(), args.clone());
@@ -52,17 +75,17 @@ impl Vm {
             panic!("Could not find function named {}", name);
         }
     }
+    */
 }
 
 fn main() {
-    let mut vm = Vm {
-        builtin_functions: HashMap::new(),
-        userdefined_functions: HashMap::new(),
-        variables: RefCell::new(HashMap::new()),
+    let vm = Vm {
+        values: RefCell::new(HashMap::new()),
     };
 
-    vm.define_builtin_function("comment", |_| {});
+    //vm.define_builtin_function("comment", |_| {});
 
+    /*
     vm.define_builtin_function("put", |args| {
         let mut iter = args.iter();
         let contents = iter.next().expect("must have at least one argument");
@@ -70,7 +93,9 @@ fn main() {
 
         print!("{}", s);
     });
+    */
 
+    /*
     vm.define_builtin_function("puts", |args| {
         let mut iter = args.iter();
         let contents = iter.next().expect("must have at least one argument");
@@ -78,6 +103,7 @@ fn main() {
 
         println!("{}", s);
     });
+    */
 
     let mut args = env::args();
 
@@ -90,14 +116,24 @@ fn main() {
 
     let toml = fs::read_to_string(path).expect("Could not read the file");
 
-    let doc = toml.parse::<Document>().expect("invalid doc");
+    let doc = toml.parse::<Document>().expect("invalid toml");
 
-    let (name, aot) = doc.iter().next().expect("document was empty");
+    //let (name, item) = doc.iter().next().expect("document was empty");
 
-    if name != "function" {
-        panic!("must have an array of tables named 'function'");
+    for (name, item) in doc.iter() {
+        let value = match item {
+            Item::Value(value) => value,
+            _ => panic!("top level must be a value"),
+        } ;
+
+        vm.set_value(name.to_string(), value.clone());
     }
 
+    let args = Value::Array(Array::default());
+    vm.eval("main", &args);
+}
+
+    /*
     let aot = match aot {
         Item::ArrayOfTables(aot) => aot,
         _ => panic!("Must be an array of tables"),
@@ -130,3 +166,5 @@ fn main() {
 
     vm.call_function("main", &args);
 }
+
+*/

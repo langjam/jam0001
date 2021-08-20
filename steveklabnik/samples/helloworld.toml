@@ -1,15 +1,8 @@
-[[function]]
-name = "main"
-body = [
-    { comment = ["this is my program"] },
-    { set = { x = 5 } },
-    { set = { x = { puts = ["Hello world"]} } },
-    { puts = ["Hello, world 2 {x}"] },
+main = [
+    { puts = "Hello, world" },
     { puts2 = [] },
 ]
 
-[[function]]
-name = "puts2"
-body = [
-    { put = ["Hello, world 2"] },
+puts2 = [
+    { puts = "Hello 2" },
 ]
