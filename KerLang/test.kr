@@ -1,0 +1,12 @@
+/*
+  Takes 2 arguments
+  First argument is an Int
+  Second argument is an Int
+  Returns a sum
+*/
+function f;
+
+/*
+  ...
+*/
+type t;
