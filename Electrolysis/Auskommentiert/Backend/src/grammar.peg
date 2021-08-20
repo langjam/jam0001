@@ -1,4 +1,4 @@
-start := comment=Comment $
+start := comment=Comment _ $
 
 Comment := LoopComment | ManipulationComment | AssignmentComment
 _ := ' '*
@@ -15,4 +15,14 @@ CommentSelector := count='[0-9]+' _ 'comments' _ dir={'above' | 'below'}
 AssignmentComment := varName=VarName _ 'is' _ rhsExpr=Expression
 
 VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
-Expression := varName=VarName | num='[0-9]+'
+Expression := LineExpression
+LineExpression := AddExpression | SubExpression | DotExpression
+AddExpression :=  lhs=LineExpression _ '\+' _ rhs=DotExpression
+SubExpression :=  lhs=LineExpression _ '\-' _ rhs=DotExpression
+
+DotExpression := MulExpression | DivExpression | AtomicExpression
+MulExpression := lhs=DotExpression _ '\*' _ rhs=AtomicExpression
+DivExpression := lhs=DotExpression _ '\/' _ rhs=AtomicExpression
+
+
+AtomicExpression := varName=VarName | num='[0-9]+'
