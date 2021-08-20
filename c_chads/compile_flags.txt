@@ -1,0 +1,7 @@
+-xc
+-Wsign-conversion
+-Wextra
+-Wall
+-Werror
+-Wno-pointer-sign
+-pedantic
