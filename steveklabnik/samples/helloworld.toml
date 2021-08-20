@@ -1,6 +1,7 @@
 [[function]]
 name = "main"
 body = [
+    { comment = ["this is my program"] },
     { put = ["Hello, world"] },
     { puts2 = [] },
 ]

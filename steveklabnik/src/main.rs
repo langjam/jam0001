@@ -52,6 +52,8 @@ fn main() {
         userdefined_functions: HashMap::new(),
     };
 
+    vm.define_builtin_function("comment", |_| {});
+
     vm.define_builtin_function("put", |args| {
         let mut iter = args.iter();
         let contents = iter.next().expect("must have at least one argument");
