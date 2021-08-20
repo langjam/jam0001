@@ -1,3 +1,7 @@
+pub mod ast;
+pub mod data;
+pub mod parser;
+
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 pub mod wasm {
     use wasm_bindgen::prelude::*;
