@@ -1,8 +1,13 @@
-from sys import argv
+#!/bin/env python3
+
+from sys import argv, path
+import os
+
+path.append(os.path.dirname(__file__))
 
 from lexer import ComstructLexer
 # from parser import ComstructParser
-from executor import ComstructExecutor
+# from executor import ComstructExecutor
 
 
 if __name__ == '__main__':

@@ -1,1 +1,4 @@
-[delete this and put your project build and use instructions here]
+# Comstruct » The Constructor is named `comment`
+
+## Executing Steps
+Execute the comstruct.py with the file as an argument. You need python 3.9.
