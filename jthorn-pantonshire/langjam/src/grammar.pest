@@ -1,0 +1,48 @@
+//Ignore whitespace
+WHITESPACE = _{ " " }
+
+//basic stuff
+digit = {'0'..'9'}
+alpha = {('a'..'z'|'A'..'Z')+}
+number = {digit+}
+alphanumeric = {(alpha|number)+}
+literal = {alphanumeric}
+
+//expressions
+expr  = { equality }
+equality    = { comparison ~ ( ( "!=" | "==" ) ~  comparison )*}
+comparison  = { termOr ~ (( ">" | ">=" | "<" | "<=" ) ~ termOr )*}
+termOr      = {factorAnd ~  ( ( "-" | "+" ) ~  factorAnd )*}
+factorAnd   = {unary ~ ( "/" | "*" | "and") ~  unary | unary }
+unary       = {("not" | "-") ~ unary | primary}
+primary     = {number | alphanumeric | "true" | "false" | "(" ~ expr~")"}
+
+
+//Singular deterministic values
+//Store 1 in x
+
+//Non-determinism (possible higher-order functions)
+//Store 5 as in b
+
+// James' grammar ================================
+//require immediate newline for comments
+varStmt = {"stores" ~ " " ~ expr ~ " in " ~ literal}
+loopStmt = {"repeat "~ "(" ~ statement ~ ") " ~ number ~ " times"}
+statement = {varStmt | loopStmt}
+action = {statement}
+fnStmt  = {(action ~ " then " ~ fnStmt)+ | action}
+comments = {"//" ~ fnStmt ~ "\n" ~ (literal ~ (" ")*)}
+program = {(comments ~ "\n")*}
+// ==============================================
+
+
+
+
+
+
+
+
+
+
+
+

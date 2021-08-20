@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+anyhow = "1"
+clap = "3.0.0-beta.4"
+pest = "2"
+pest_derive = "2"
