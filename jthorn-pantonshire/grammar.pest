@@ -1,0 +1,72 @@
+//Ignore whitespace
+//WHITESPACE = _{ " " }
+
+//basic stuff
+digit = {'0'..'9'}
+alpha = {('a'..'z'|'A'..'Z')+}
+number = {digit+}
+alphanumeric = {(alpha|number)+}
+literal = {alpha | alpha ~ alphanumeric}
+string = {"\"" ~ literal ~ "\""}
+
+//expressions
+expr  = { equality }
+equality    = { comparison ~ ( ( "!=" | "==" ) ~  comparison )*}
+comparison  = { termOr ~ (( ">" | ">=" | "<" | "<=" ) ~ termOr )*}
+termOr      = {factorAnd ~  ( ( "-" | "+" ) ~  factorAnd )*}
+factorAnd   = {unary ~ ( "/" | "*" | "and") ~  unary | unary }
+unary       = {("not" | "-") ~ unary | primary}
+primary     = {number | alphanumeric | "true" | "false" | string | "(" ~ expr~")"}
+
+//Singular deterministic values
+//Store 1 in x
+
+//Non-determinism (possible higher-order functions)
+//Store 5 as in b
+
+//require immediate newline for comments
+varStmt = {"stores" ~ " " ~ expr ~ " in " ~ literal}
+loopStmt = {"repeat "~ "(" ~ statement ~ ") " ~ number ~ " times"}
+printStmt = {"prints " ~ string}
+listStmt = {literal | literal ~ "," ~ listStmt}
+argsStmt = {"takes " ~ listStmt}
+statement = {argsStmt | varStmt | loopStmt | printStmt}
+fnStmt  = {statement | (statement ~ " then " ~ fnStmt)+}
+comment = {(fnStmt ~ (" ")*|literal~ (" ")* )+ }
+commentStmt = {"//" ~ comment ~ "\n" ~ literal | "//" ~ comment}
+semanticBody = {commentStmt ~ ("\n" ~ semanticBody)*}
+syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (mainStmt*) ~ "}"}
+mainStmt = {mss | mss ~ mainStmt}
+mss = {("\n" | " ")* ~ literal+ ~ ("\n" | " ")*}
+program = {semanticBody ~ syntaxBody}
+
+
+
+//program = {semanticBody ~ (" "|"\n")* ~ "main {\n"~ (literal ~ "\n")* ~"}"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
