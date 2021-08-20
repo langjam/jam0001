@@ -1,0 +1,60 @@
+c_int main = proc [c_int argc; c_char*{} argv] <
+    print $Hello, World!$
+>
+
+Variables:
+
+i32 a = 10;
+f64 f = 12.3;
+# These two are the same
+i64 x1 = 1, x2 = 2;
+i64 x1, x2 ~= 1, 2;
+
+a = 4;
+# Explicit casting mandatory?
+f = f64(a) + 3.5; 
+
+# Array
+i32{3} arr = [1, 2, 5];
+arr:2 = 3
+
+# Dynamic Array
+u16{} dynarr = [1, 2, 3]
+# Built-in support for operations (append)
+dynarr <- 4
+# Yummy indexing
+i32 a = dynarr[-1]
+# Pop front and back
+i32 first <- dynarr[0]
+i32 last <- dynarr[-1]
+# Discard just like in zig, with any expression 
+_ <- dynarr[0]
+
+Structures:
+
+# Structures are values 
+struct vec = <
+    f64 x, y;
+>
+
+# Using structures anywhere requires $ for a clear distinction
+$vec myvec = !<
+    x = 10;
+    y = 20;
+>
+
+Functions:
+
+# Notice that the function body and struct initialisation is
+# the same, that's because struct initialisation is a special
+# code block that also runs
+f64 square = proc <f64 a, b;> !<
+    # Line starting with ^ returns the subsequent expression
+    # Use ?num to access arguments, num represents the index of the
+    # argument block, as there can be multiple
+    f64 res = ?0.a ?0.b;
+    ^ a * b;
+>
+
+# This is identical
+f64 square = proc $vec !< ^?0.a*?0.b >
