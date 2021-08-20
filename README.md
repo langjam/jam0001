@@ -45,3 +45,11 @@ The langjam begins at 7pm UK time 20th of August and runs for 48 hours. At 7pm U
 Judging will take place after the jam has ended. Once judging has concluded, we'll pick a set of winning projects that will become part of a video on the [Systems with JT](https://www.youtube.com/user/giard321) YouTube channel.
 
 You're welcome to try out other projects. We'll have a way to leave comments so you can share your thoughts and vote on which you liked best, too.
+
+## Other rules
+
+General information about the langjam is available in the main [langjam README](https://github.com/langjam/langjam/blob/main/README.md).
+
+## Social media
+
+If you like, you can tag your social media posts with #langjam2021 to help others find you.
