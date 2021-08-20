@@ -183,7 +183,11 @@ Let's start by making separate diagrams for each of the view.
 
 ![2021-08-20-jam0001-sequence.png](https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/2021-08-20-jam0001-sequence.png?raw=true)
 
+## Details Diagram
 
+![2021-08-20-jam0001-details.png](https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/2021-08-20-jam0001-details.png?raw=true)
+
+"Red" boxes mean _synchronous_ code.  (The default is asynchronous code).
 
 
 
