@@ -1,0 +1,18 @@
+start := comment=Comment $
+
+Comment := LoopComment | ManipulationComment | AssignmentComment
+_ := ' '*
+
+LoopComment := 'while' _ whileExpression=Expression ':'
+
+ManipulationComment := base=ManipulationCommentBase _ self={'including' _ 'self'}?
+ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate
+ManipulationCommentSwap := 'swap' _ target=CommentSelector
+ManipulationCommentMove := 'move' _ target=CommentSelector
+ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'clockwise' | 'counterclockwise'}
+CommentSelector := count='[0-9]+' _ 'comments' _ dir={'above' | 'below'}
+
+AssignmentComment := varName=VarName _ 'is' _ rhsExpr=Expression
+
+VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
+Expression := varName=VarName | num='[0-9]+'
