@@ -1,7 +1,14 @@
 // use std::collections::HashMap;
 use std::iter::Peekable;
 
-const SOURCE: &str = r#"(print "Hello world!" (+ (- (* 10 5) 10) (/ 4 2)))"#;
+const SOURCE: &str =
+r#"
+(print
+	(block
+		(print "Something first!")
+		(print "Hello world!" (+ (- (* 10 5) 10) (/ 4 2)))
+		96))
+"#;
 
 #[derive(Debug)]
 enum Token<'a> {
@@ -84,6 +91,8 @@ enum TreeNode<'a> {
 
 	IntegerLiteral(i64),
 
+	Block(Vec<TreeNode<'a>>),
+
 	Call {
 		name: &'a str,
 		args: Vec<TreeNode<'a>>,
@@ -119,9 +128,21 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 		panic!("First token after open paren must be ident");
 	};
 
-	#[allow(clippy::match_single_binding)]
-	match ident {
-		//TODO: Match `block`
+	match *ident {
+		"block" => {
+			let mut block = Vec::new();
+
+			while let Some(peeked) = tokens.peek() {
+				if !matches!(peeked, Token::CloseParen) {
+					block.push(parse_expression(tokens));
+				} else {
+					break;
+				}
+			}
+
+			TreeNode::Block(block)
+		}
+
 		ident => {
 			let args = {
 				let mut args = Vec::new();
@@ -171,6 +192,16 @@ fn evaluate(node: &TreeNode) -> Value {
 
 		&TreeNode::IntegerLiteral(num) => Value::I64(num),
 
+		TreeNode::Block(block) => {
+			let mut result = Value::None;
+
+			for entry in block {
+				result = evaluate(entry);
+			}
+
+			result
+		}
+
 		TreeNode::Call { name, args } => {
 			let args = args.iter().map(|arg| evaluate(arg)).collect::<Vec<Value>>();
 
@@ -219,7 +250,6 @@ fn sub_all(values: &[Value]) -> Value {
 
 	Value::I64(result.unwrap_or(0))
 }
-
 
 fn mul_all(values: &[Value]) -> Value {
 	let mut result = 1;
