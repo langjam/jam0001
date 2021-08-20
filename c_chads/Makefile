@@ -3,7 +3,7 @@ CSAN := -fsanitize=address -fsanitize=undefined
 CWARN := -Wconversion -Wsign-conversion -Wextra -Wall -Wno-initializer-overrides -pedantic
 CSHD := $(shell find aid -name '*.c') $(shell find lang -name '*.c') 
 CSRC := $(CSHD) $(shell find frontend -name '*.c')
-CTST := $(CSHD) ./test/lib/test.c ./test/runner.c
+CTST := $(CSHD) ./tests/lib/test.c ./tests/runner.c
 # May improve compile times if you have ccache installed
 CPFX := $(shell command -v ccache)
 CLIB := -lc -lm 
