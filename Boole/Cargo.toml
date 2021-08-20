@@ -1,5 +1,5 @@
 
 
 [workspace]
-members=["plane", "plane-cli"]
-default-members=["plane", "plane-cli"]
+members=["train", "train-cli"]
+default-members=["train", "train-cli"]
