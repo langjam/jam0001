@@ -2,7 +2,7 @@
 - [x] The Theme: "first class comments"
 - [x] Decide for a name `comstruct` and theme `the constructor is named comment and a comment is defined using comment: This is an example`
 - [x] Decide for Tokens
-- [ ] Decide for a Language tree
+- [x] Decide for a Language tree
 - [x] Implement the Lexer
 - [ ] Work on the Parser and the Executor
 - [ ] Have FUN!
@@ -23,3 +23,4 @@ class = c(){
 
 
 BaseNode#appendStatement(StatementNode(*args -> <type: Str, *runargs | SubtreeNode -extends BaseNode- >))
+BaseNode.appendStatement(PrintNode("Hello World!!1!"))
