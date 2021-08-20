@@ -1,0 +1,41 @@
+import /[build_a_language.unseemly]/
+extend_syntax
+    Expr ::=also
+        alt[
+            forall T . '{[
+                ,{DefaultSeparator},
+                /(@@)/
+            ]}' test -> .{
+                '[Expr|
+                        (write_file "/dev/stdout" "@@")
+                ]'
+            }.
+            forall T . '{ [
+                ,{DefaultSeparator},
+                /(\/\*)/
+                pre_text := (/([^`*]*)/)
+                /(`)/
+                comment_expr := ( ,{Expr<String>}, )
+                ,{DefaultSeparator},
+                /(`)/
+                post_text := ( /([^`*]*)/ )
+                /(\*\/)/
+                ,{DefaultSeparator},
+                body := ( ,{Expr<T>}, )
+            ] }' comment_annotate -> .{
+                '[Expr|
+                    -{
+                        (write_file "/dev/stdout"
+                            (concat
+                                (concat ,[(prefab (ident_to_string pre_text))], ,[comment_expr],)
+                                    ,[(prefab (ident_to_string post_text))],)) ;
+                        ,[body],
+                    }-
+                ]'
+            }.
+
+        ]alt
+    ;
+in
+    /*asdf ` (concat "<<" ">>") ` fdsa */
+    eight
