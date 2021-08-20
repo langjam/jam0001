@@ -3,10 +3,11 @@ use crate::ast::*;
 
 impl<'a> Parser<'a> {
     pub fn parse_target(&mut self) -> ParseResult<Target> {
+        let start = self.current;
         let station = self.expect_word()?;
         self.expect_exact_text(" track ")?;
         let track = (self.expect_number()? - 1) as usize;
-        Ok(Target{ station, track })
+        Ok(Target{ station, track, span: Span{start, end: self.current } })
     }
 
     pub fn parse_train(&mut self) -> ParseResult<Train> {
@@ -74,7 +75,7 @@ mod tests {
             Ok(train) => {
                 println!("{:?}", train);
                 let expected = Train {
-                    start: Target { station: String::from("Groningen"), track: 0 },
+                    start: Target { station: String::from("Groningen"), track: 0, span: Span{ start: 22, end: 39 } },
                     first_class_passengers: vec![
                         FirstClassPassenger { name: String::from("robert"), data: String::from("this train is nice and red") },
                         FirstClassPassenger { name: String::from("peter"), data: String::from("this train must be at least") }

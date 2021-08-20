@@ -28,12 +28,13 @@ impl<'a> Parser<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parse_and_check;
 
     #[test]
     fn test_full() {
         let test = include_str!("../../../shunting_yard/test_full.train");
-        let mut parser = Parser::new(test);
-        match parser.parse_program() {
+
+        match parse_and_check(test) {
             Ok(program) => {
                 println!("{:?}", program);
             }

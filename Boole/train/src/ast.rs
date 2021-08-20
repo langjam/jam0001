@@ -1,4 +1,5 @@
 use crate::operations::Operation;
+use crate::parse::parser::Span;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Program {
@@ -34,6 +35,7 @@ pub struct Station {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Target {
+    pub span: Span,
     pub station: String,
     pub track: usize,
 }

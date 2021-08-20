@@ -69,8 +69,8 @@ mod tests {
                     name: String::from("Groningen"),
                     operation: Operation::Add,
                     output: vec![
-                        Target { station: String::from("Groningen"), track: 0 },
-                        Target { station: String::from("Utrecht"), track: 0 }
+                        Target { station: String::from("Groningen"), track: 0, span: Span{ start: 42, end: 59 } },
+                        Target { station: String::from("Utrecht"), track: 0, span: Span{ start: 75, end: 90 } }
                     ]
                 };
                 assert_eq!(station, expected)
