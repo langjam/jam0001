@@ -1,4 +1,3 @@
-import application_stack_utils
 from application_stack_utils import StatementNode
 
 
@@ -38,8 +37,16 @@ class ComstructExecutor:
             return self.walkTree(node.var1) <= self.walkTree(node.var2)
         elif isinstance(node, StatementNode.VarAssignNode):
             env[node.var_name] = self.walkTree(node.var_value)
-            return node.var_value
+            return self.walkTree(node.var_value)
         elif isinstance(node, StatementNode.VarNode):
             return env[node.var_name]
         elif isinstance(node, StatementNode.LiterallyNode):
             return node.var
+        elif isinstance(node, StatementNode.FunctionDefinitionNode):
+            return self.walkTree(node.content)
+        elif isinstance(node, StatementNode.FunctionCallNode):
+            env[node.func_name].args = node.args
+            ret: StatementNode.GenericNode
+            for func_node in env[node.func_name].content:
+                ret = self.walkTree(func_node)
+            return ret

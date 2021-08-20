@@ -1,70 +1,74 @@
 class StatementNode:
-    class MathNode:
+
+    class GenericNode:
+        pass
+
+    class MathNode(GenericNode):
 
         def __init__(self, _type, var1, var2):
             self.type = _type
             self.var1 = var1
             self.var2 = var2
 
-    class EqualNode:
+    class EqualNode(GenericNode):
 
         def __init__(self, var1, var2):
             self.var1 = var1
             self.var2 = var2
 
-    class NotEqualNode:
+    class NotEqualNode(GenericNode):
 
         def __init__(self, var1, var2):
             self.var1 = var1
             self.var2 = var2
 
-    class GreaterThanNode:
+    class GreaterThanNode(GenericNode):
 
         def __init__(self, var1, var2):
             self.var1 = var1
             self.var2 = var2
 
-    class GreaterOrEqualsThanNode:
+    class GreaterOrEqualsThanNode(GenericNode):
 
         def __init__(self, var1, var2):
             self.var1 = var1
             self.var2 = var2
 
-    class SmallerThanNode:
+    class SmallerThanNode(GenericNode):
 
         def __init__(self, var1, var2):
             self.var1 = var1
             self.var2 = var2
 
-    class SmallerOrEqualsThanNode:
+    class SmallerOrEqualsThanNode(GenericNode):
 
         def __init__(self, var1, var2):
             self.var1 = var1
             self.var2 = var2
 
-    class VarAssignNode:
+    class VarAssignNode(GenericNode):
 
         def __init__(self, name, value):
             self.var_name = name
             self.var_value = value
 
-    class VarNode:
+    class VarNode(GenericNode):
 
         def __init__(self, name):
             self.var_name = name
 
-    class LiterallyNode:
+    class LiterallyNode(GenericNode):
 
         def __init__(self, var):
             self.var = var
 
-    class FunctionDefinitionNode:
+    class FunctionDefinitionNode(GenericNode):
 
         def __init__(self, content, args):
             self.content = content
             self.args = args
 
-    class FunctionCallNode:
+    class FunctionCallNode(GenericNode):
 
         def __init__(self, func_name, args):
             self.func_name = func_name
