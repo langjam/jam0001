@@ -1,7 +1,7 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Loc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Tm {
     Text(Loc, String),
     // Doc(Loc, Box<Tm>, Doc),
@@ -15,14 +15,14 @@ pub enum Tm {
 // #[derive(Debug)]
 // pub enum Doc {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Ty {
     Var(String),
     Arr(Box<Ty>, Box<Ty>),
     ForAll(String, Box<Ty>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Binding {
     NameBind,
     VarBind(Ty),

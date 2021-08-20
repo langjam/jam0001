@@ -1,4 +1,7 @@
+use eval::Eval;
+
 mod ast;
+mod eval;
 mod parser;
 
 fn main() {
@@ -13,7 +16,9 @@ fn main() {
             std::process::exit(1);
         }
     };
-    dbg!(tm);
+    let mut eval = Eval::new();
+    let val = eval.eval(&tm);
+    println!(">>> {}", val)
 }
 
 #[test]
