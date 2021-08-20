@@ -25,23 +25,23 @@ class ComstructParser(Parser):
 
     @_("expr PLUS expr")
     def expr(self, p):
-        return  # The math Node
+        return StatementNode.MathNode("+", p.expr0, p.expr1)
 
     @_("expr MINUS expr")
     def expr(self, p):
-        return  # The math Node
+        return StatementNode.MathNode("-", p.expr0, p.exp1)
 
     @_("expr MULTIPLY expr")
     def expr(self, p):
-        return  # The math Node
+        return StatementNode.MathNode("*", p.expr0, p.expr1)
 
     @_("expr DIVIDE expr")
     def expr(self, p):
-        return  # The math Node
+        return StatementNode.MathNode("/", p.expr0, p.expr1)
 
     @_("expr MODULO expr")
     def expr(self, p):
-        return  # The math Node
+        return StatementNode.MathNode("%", p.expr0, p.expr1)
 
     @_("LPAREN expr RPAREN")
     def expr(self, p):
@@ -49,24 +49,24 @@ class ComstructParser(Parser):
 
     @_("expr EQ expr")
     def expr(self, p):
-        return  # Equal Node
+        return StatementNode.EqualNode(p.expr0, p.expr1)
 
     @_("expr NOTEQ expr")
     def expr(self, p):
-        return  # Not Equal Node
+        return StatementNode.NotEqualNode(p.expr0, p.expr1)
 
     @_("expr GT expr")
     def expr(self, p):
-        return  # Greater Than Node
+        return StatementNode.GreaterThanNode(p.expr0, p.expr1)
 
     @_("expr GEQT expr")
     def expr(self, p):
-        return  # Greater or equals than Node
+        return StatementNode.GreaterOrEqualsThanNode(p.expr0, p.expr1)
 
     @_("expr ST expr")
     def expr(self, p):
-        return  # Smaller than Node
+        return StatementNode.SmallerThanNode(p.expr0, p.expr1)
 
     @_("expr SEQT expr")
     def expr(self, p):
-        return  # Smaller or equals than Node
+        return StatementNode.SmallerOrEqualsThanNode(p.expr0, p.expr1)

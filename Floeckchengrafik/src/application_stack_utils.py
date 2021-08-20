@@ -3,7 +3,7 @@ env = dict()
 
 class StatementNode:
 
-    class MathNote:
+    class MathNode:
 
         def __init__(self, _type, var1, var2):
             self.type = _type
