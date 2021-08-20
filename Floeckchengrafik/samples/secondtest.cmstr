@@ -1,0 +1,5 @@
+x = function({
+
+}, ARG_1, ARG_2, ARG_3)?
+
+x(ARG_1, ARG_2, ARG_3)

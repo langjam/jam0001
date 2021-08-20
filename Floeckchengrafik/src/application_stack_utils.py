@@ -58,3 +58,15 @@ class StatementNode:
 
         def __init__(self, var):
             self.var = var
+
+    class FunctionDefinitionNode:
+
+        def __init__(self, content, *args):
+            self.content = content
+            self.args = args
+
+    class FunctionCallNode:
+
+        def __init__(self, func_name, *args):
+            self.func_name = func_name
+            self.args = args
