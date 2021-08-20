@@ -1,12 +1,8 @@
 use crate::operations::Operation;
 
 pub struct Program {
-    statements: Vec<Statement>
-}
-
-pub enum Statement {
-    Train(Train),
-    Station(Station),
+    trains: Vec<Train>,
+    stations: Vec<Station>,
 }
 
 pub struct Train {
