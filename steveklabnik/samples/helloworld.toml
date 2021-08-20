@@ -2,7 +2,9 @@
 name = "main"
 body = [
     { comment = ["this is my program"] },
-    { put = ["Hello, world"] },
+    { set = { x = 5 } },
+    { set = { x = { puts = ["Hello world"]} } },
+    { puts = ["Hello, world 2 {x}"] },
     { puts2 = [] },
 ]
 

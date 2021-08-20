@@ -4,10 +4,12 @@ use std::env;
 use std::fs;
 
 use std::collections::HashMap;
+use std::cell::RefCell;
 
 struct Vm {
     builtin_functions: HashMap<&'static str, Box<dyn Fn(&Array)>>,
     userdefined_functions: HashMap<String, Array>,
+    variables: RefCell<HashMap<String, Value>>,
 }
 
 impl Vm {
@@ -19,8 +21,14 @@ impl Vm {
         self.userdefined_functions.insert(name, body);
     }
 
+    fn set_variable(&self, name: String, value: Value) {
+        self.variables.borrow_mut().insert(name, value);
+    }
+
     fn call_function(&self, name: &str, args: &Value) {
-        if let Some(f) = self.builtin_functions.get(name) {
+        if name == "set" {
+            self.set_variable(name.to_string(), args.clone());
+        } else if let Some(f) = self.builtin_functions.get(name) {
             let args = args.as_array().expect("arguments must be an array");
 
             f(args);
@@ -50,6 +58,7 @@ fn main() {
     let mut vm = Vm {
         builtin_functions: HashMap::new(),
         userdefined_functions: HashMap::new(),
+        variables: RefCell::new(HashMap::new()),
     };
 
     vm.define_builtin_function("comment", |_| {});
