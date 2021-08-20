@@ -56,3 +56,8 @@ class StatementNode:
 
         def __init__(self, name):
             self.var_name = name
+
+    class LiterallyNode:
+
+        def __init__(self, var):
+            self.var = var
