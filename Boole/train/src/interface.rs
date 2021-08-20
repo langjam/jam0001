@@ -1,6 +1,6 @@
 use crate::ast::Station;
 
-struct VMInterface {
+pub struct VMInterface {
     // sender: Sender<SimulationUpdate>
 }
 

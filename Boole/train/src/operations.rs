@@ -1,4 +1,5 @@
 
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
 pub enum Operation {
     Nothing,
     Print,
