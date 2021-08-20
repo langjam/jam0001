@@ -33,4 +33,7 @@ if __name__ == '__main__':
     tokens = clexer.tokenize(file)
     tree = cparser.parse(tokens)
 
-    ComstructExecutor(tree)
+    env = dict()
+    ComstructExecutor.env = env
+    _exec = ComstructExecutor(tree)
+    print("Hello World!!1!")

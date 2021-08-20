@@ -1,6 +1,3 @@
-env = dict()
-
-
 class StatementNode:
 
     class MathNode:
