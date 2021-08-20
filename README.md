@@ -19,6 +19,10 @@ Once your team has a directory, you can submit your project.
 
 Please keep your team names "family-friendly". Sole discretion for what counts as "family friendly" is left up to JT, but if the name is safe/kid-friendly you should be fine.
 
+## One-person teams
+
+If you are a single-person team, feel free to make up a team name or use your GitHub username as the team name, if it's available.
+
 ## Submitting your project
 
 When you submit your project, send a PR that updates *only* your team's directory and nothing else. 
