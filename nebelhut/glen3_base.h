@@ -180,7 +180,7 @@ FORCEINLINE void slice_remove(Slice<T> *slice, s64 index) {
 }
 
 template<typename T>
-FORCEINLINE bool slice_has_prefix(Slice<T> data, Slice<T> prefix) {
+FORCEINLINE static inline bool slice_has_prefix(Slice<T> data, Slice<T> prefix) {
     Slice<u8> d = {.data = data.data, .count = prefix.count};
     return d == prefix;
 }

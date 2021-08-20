@@ -1,0 +1,9 @@
+{ TEST 3 } + 1 2
+{ TEST -3 } - 2 5
+{ TEST 27 } * 9 3
+{ TEST 2 } / 8 3
+{ TEST yes } yes
+{ TEST no } no
+{ TEST yes } = 1 1
+{ TEST yes } <> 2 3
+{ TEST no } = () ('foo)
