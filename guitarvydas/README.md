@@ -164,6 +164,27 @@ This script is essentially a _toy example_.  I chose something simple to help il
 
 What I really want is something like...
 
+![2021-08-20-jam0001-top level.png](https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/2021-08-20-jam0001-top%20level.png?raw=true)
+
+## Making It Simpler
+
+I have less than 24 hours to build this.
+
+What can I chop to make this simpler?
+
+The boxes represent at least 2 views of the solution:
+
+1. sequencing of operations
+2. details.
+
+Let's start by making separate diagrams for each of the view.
+
+## Sequence Diagram
+
+
+
+
+
 # Appendix
 
 [Bare Essence](https://guitarvydas.github.io/2021/08/16/Bare-Essence.html).
