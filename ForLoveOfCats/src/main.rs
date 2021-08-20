@@ -1,6 +1,7 @@
+// use std::collections::HashMap;
 use std::iter::Peekable;
 
-const SOURCE: &str = r#"(print "hello world")"#;
+const SOURCE: &str = r#"(print "Hello world!" "How are you?")"#;
 
 #[derive(Debug)]
 enum Token<'a> {
@@ -130,8 +131,53 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 	}
 }
 
+#[derive(Debug, Clone, PartialEq)]
+enum Value {
+	None,
+	String(String),
+}
+
+impl std::fmt::Display for Value {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Value::None => write!(f, "None"),
+			Value::String(string) => write!(f, "{}", string),
+		}
+	}
+}
+
+// struct ScopeState<'a> {
+// 	parent: Option<&'a mut ScopeState<'a>>,
+// 	scope: HashMap<String, Value>,
+// }
+
+fn evaluate(node: &TreeNode) -> Value {
+	match node {
+		&TreeNode::StringLiteral(string) => Value::String(string.to_string()),
+
+		TreeNode::Call { name, args } => match *name {
+			"print" => print_values(&args.iter().map(|arg| evaluate(arg)).collect::<Vec<Value>>()),
+			_ => unimplemented!("TODO: Symbol lookup"),
+		},
+	}
+}
+
+fn print_values(values: &[Value]) -> Value {
+	let count = values.len();
+	for (index, value) in values.iter().enumerate() {
+		if index + 1 >= count {
+			println!("{}", value);
+		} else {
+			print!("{} ", value);
+		}
+	}
+
+	Value::None
+}
+
 fn main() {
+	println!("Preparing to run source: `{}`", SOURCE);
 	let tokens = tokenize(SOURCE);
 	let tree = parse_matching_parens(&mut tokens.iter().peekable());
-	println!("{:#?}", tree);
+	evaluate(&tree);
 }
