@@ -1,0 +1,9 @@
+- [x] Create File Structure
+- [ ] The Theme: [insert your theme here]
+- [ ] Decide for a name `NAME` and theme `THEME`
+- [ ] Decide for Tokens
+- [ ] Decide for a Language tree
+- [ ] Implement the Lexer
+- [ ] Work on the Parser and the Executor
+- [ ] Have FUN!
+- [ ] Submit a PR (before the end of the jam)
