@@ -21,22 +21,22 @@ pub fn parse_from_file(path: impl AsRef<Path>) -> Result<Tm, String> {
 
 pub fn parse(i: &str) -> Result<Tm, String> {
     let res: Result<Tm, nom::error::Error<&str>> =
-        final_parser::final_parser(ws::allowed::before(expr))(i);
+        final_parser::final_parser(ws::allowed::before(tm))(i);
     match res {
         Ok(tm) => Ok(tm),
         Err(e) => Err(format!("{}", e)),
     }
 }
 
-fn expr(i: &str) -> IResult<&str, Tm> {
-    alt((var_expr, text_expr, lam_expr, app_expr))(i)
+fn tm(i: &str) -> IResult<&str, Tm> {
+    alt((var_tm, text_tm, lam_tm, app_tm))(i)
 }
 
-fn var_expr(i: &str) -> IResult<&str, Tm> {
+fn var_tm(i: &str) -> IResult<&str, Tm> {
     identifier.map(|s| Tm::Var(Loc, s.to_string())).parse(i)
 }
 
-fn text_expr(i: &str) -> IResult<&str, Tm> {
+fn text_tm(i: &str) -> IResult<&str, Tm> {
     let (i, text) = parse_string(i)?;
     Ok((i, Tm::Text(Loc, text)))
 }
@@ -45,14 +45,14 @@ fn parse_string(i: &str) -> IResult<&str, String> {
     delimited(tag("\""), take_till(|ch| ch == '"'), tag("\""))(i).map(|(i, s)| (i, s.to_string()))
 }
 
-fn lam_expr(i: &str) -> IResult<&str, Tm> {
+fn lam_tm(i: &str) -> IResult<&str, Tm> {
     bracketed(tuple((
         tag("fn"),
         ws::required::before(identifier),
         ws::allowed::before(tag(":")),
         ws::allowed::before(ty),
         ws::allowed::before(tag("->")),
-        ws::allowed::before(expr),
+        ws::allowed::before(tm),
     )))
     .map(|(_, param, _, ty, _, body)| Tm::Lam(Loc, param.into(), ty, Box::new(body)))
     .parse(i)
@@ -86,8 +86,8 @@ fn var_ty(i: &str) -> IResult<&str, Ty> {
     identifier.map(|s| Ty::Var(s.to_string())).parse(i)
 }
 
-fn app_expr(i: &str) -> IResult<&str, Tm> {
-    bracketed(tuple((expr, ws::allowed::before(expr))))
+fn app_tm(i: &str) -> IResult<&str, Tm> {
+    bracketed(tuple((tm, ws::allowed::before(tm))))
         .map(|(func, arg)| Tm::App(Loc, Box::new(func), Box::new(arg)))
         .parse(i)
 }
