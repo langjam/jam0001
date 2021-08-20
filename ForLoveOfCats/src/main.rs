@@ -1,3 +1,5 @@
+use std::iter::Peekable;
+
 const SOURCE: &str = r#"(print "hello world")"#;
 
 #[derive(Debug)]
@@ -20,8 +22,9 @@ fn tokenize(source: &str) -> Vec<Token> {
 				if !current.is_empty() {
 					output.push(Token::Ident(current));
 					current = &source[0..0];
-					current_start = index + 1;
 				}
+
+				current_start = index + 1;
 
 				let token = match byte {
 					b'(' => Token::OpenParen,
@@ -35,8 +38,9 @@ fn tokenize(source: &str) -> Vec<Token> {
 				if !current.is_empty() {
 					output.push(Token::Ident(current));
 					current = &source[0..0];
-					current_start = index + 1;
 				}
+
+				current_start = index + 1;
 			}
 
 			b'"' => {
@@ -67,6 +71,67 @@ fn tokenize(source: &str) -> Vec<Token> {
 	output
 }
 
+#[derive(Debug)]
+enum TreeNode<'a> {
+	StringLiteral(&'a str),
+	Call {
+		name: &'a str,
+		args: Vec<TreeNode<'a>>,
+	},
+}
+
+type TokenIterator<'a> = Peekable<std::slice::Iter<'a, Token<'a>>>;
+
+fn parse_expression<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
+	let is_lone = matches!(tokens.peek(), Some(Token::OpenParen));
+
+	if is_lone {
+		parse_matching_parens(tokens)
+	} else {
+		match tokens.next() {
+			Some(&Token::String(string)) => TreeNode::StringLiteral(string),
+
+			None => panic!("No token for literal"),
+
+			_ => panic!("Lone token not handled"),
+		}
+	}
+}
+
+fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
+	assert!(matches!(tokens.next(), Some(Token::OpenParen)));
+
+	let ident = if let Some(Token::Ident(literal)) = tokens.next() {
+		literal
+	} else {
+		panic!("First token after open paren must be ident");
+	};
+
+	#[allow(clippy::match_single_binding)]
+	match ident {
+		//TODO: Match builtin ident names
+		ident => {
+			let args = {
+				let mut args = Vec::new();
+
+				while let Some(peeked) = tokens.peek() {
+					if !matches!(peeked, Token::CloseParen) {
+						args.push(parse_expression(tokens));
+					} else {
+						tokens.next();
+					}
+				}
+
+				args
+			};
+
+			TreeNode::Call { name: ident, args }
+		}
+	}
+}
+
 fn main() {
-	println!("{:?}", tokenize(SOURCE));
+	let tokens = tokenize(SOURCE);
+	let tree = parse_matching_parens(&mut tokens.iter().peekable());
+	println!("{:#?}", tree);
 }
