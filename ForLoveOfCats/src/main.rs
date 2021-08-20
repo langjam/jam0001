@@ -1,12 +1,13 @@
 // use std::collections::HashMap;
 use std::iter::Peekable;
 
-const SOURCE: &str = r#"(print "Hello world!" "How are you?")"#;
+const SOURCE: &str = r#"(print "Hello world!" "How are you?" 42)"#;
 
 #[derive(Debug)]
 enum Token<'a> {
 	OpenParen,
 	CloseParen,
+	IntegerLiteral(i64),
 	Ident(&'a str),
 	String(&'a str),
 }
@@ -16,16 +17,30 @@ fn tokenize(source: &str) -> Vec<Token> {
 	let mut current_start = 0;
 	let mut output = Vec::new();
 
+	fn finalize_current<'a>(
+		source: &'a str,
+		current: &mut &'a str,
+		current_start: &mut usize,
+		output: &mut Vec<Token<'a>>,
+		index: usize,
+	) {
+		if !current.is_empty() {
+			if let Ok(num) = current.parse() {
+				output.push(Token::IntegerLiteral(num));
+			} else {
+				output.push(Token::Ident(current));
+			}
+			*current = &source[0..0];
+		}
+
+		*current_start = index + 1;
+	}
+
 	let mut iterator = source.bytes().enumerate();
 	while let Some((index, byte)) = iterator.next() {
 		match byte {
 			b'(' | b')' => {
-				if !current.is_empty() {
-					output.push(Token::Ident(current));
-					current = &source[0..0];
-				}
-
-				current_start = index + 1;
+				finalize_current(source, &mut current, &mut current_start, &mut output, index);
 
 				let token = match byte {
 					b'(' => Token::OpenParen,
@@ -36,20 +51,11 @@ fn tokenize(source: &str) -> Vec<Token> {
 			}
 
 			byte if byte.is_ascii_whitespace() => {
-				if !current.is_empty() {
-					output.push(Token::Ident(current));
-					current = &source[0..0];
-				}
-
-				current_start = index + 1;
+				finalize_current(source, &mut current, &mut current_start, &mut output, index);
 			}
 
 			b'"' => {
-				if !current.is_empty() {
-					output.push(Token::Ident(current));
-					current = &source[0..0];
-					current_start = index + 1;
-				}
+				finalize_current(source, &mut current, &mut current_start, &mut output, index);
 
 				for (index, byte) in &mut iterator {
 					match byte {
@@ -58,7 +64,7 @@ fn tokenize(source: &str) -> Vec<Token> {
 					}
 				}
 
-				output.push(Token::String(&current[1..current.len()]));
+				output.push(Token::String(&current[0..current.len()]));
 				current = &source[0..0];
 				current_start = index + 1;
 			}
@@ -75,6 +81,9 @@ fn tokenize(source: &str) -> Vec<Token> {
 #[derive(Debug)]
 enum TreeNode<'a> {
 	StringLiteral(&'a str),
+
+	IntegerLiteral(i64),
+
 	Call {
 		name: &'a str,
 		args: Vec<TreeNode<'a>>,
@@ -90,6 +99,8 @@ fn parse_expression<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 		parse_matching_parens(tokens)
 	} else {
 		match tokens.next() {
+			Some(&Token::IntegerLiteral(num)) => TreeNode::IntegerLiteral(num),
+
 			Some(&Token::String(string)) => TreeNode::StringLiteral(string),
 
 			None => panic!("No token for literal"),
@@ -134,6 +145,7 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 #[derive(Debug, Clone, PartialEq)]
 enum Value {
 	None,
+	I64(i64),
 	String(String),
 }
 
@@ -141,6 +153,7 @@ impl std::fmt::Display for Value {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Value::None => write!(f, "None"),
+			Value::I64(num) => write!(f, "{}", num),
 			Value::String(string) => write!(f, "{}", string),
 		}
 	}
@@ -154,6 +167,8 @@ impl std::fmt::Display for Value {
 fn evaluate(node: &TreeNode) -> Value {
 	match node {
 		&TreeNode::StringLiteral(string) => Value::String(string.to_string()),
+
+		&TreeNode::IntegerLiteral(num) => Value::I64(num),
 
 		TreeNode::Call { name, args } => match *name {
 			"print" => print_values(&args.iter().map(|arg| evaluate(arg)).collect::<Vec<Value>>()),
