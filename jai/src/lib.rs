@@ -413,7 +413,7 @@ impl Lexer {
 }
 
 #[pymodule]
-fn plrs(_py: Python, m: &PyModule) -> PyResult<()> {
+fn jai(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(is_char_symbol, m)?)?;
     m.add_function(wrap_pyfunction!(is_char_operator, m)?)?;
     m.add_function(wrap_pyfunction!(is_char_whitespace, m)?)?;

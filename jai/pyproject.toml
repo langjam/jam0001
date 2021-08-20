@@ -1,0 +1,30 @@
+[project]
+name = "jai"
+requires-python = ">=3.6"
+
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python",
+    "Programming Language :: Rust",
+    "Typing :: Typed",
+]
+
+[build-system]
+build-backend = "maturin"
+requires = ["maturin>=0.10.6,<0.11"]
+
+[tool.maturin]
+manylinux = "off"
+sdist-include = ["Cargo.lock", "setup.py"]
+strip = "on"
