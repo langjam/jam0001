@@ -79,51 +79,37 @@ fn main() {
         }
     }
 
-    call_function("main", &userdefined_functions, &builtin_functions);
+    let args = Value::Array(Array::default());
+    call_function("main", &args, &userdefined_functions, &builtin_functions);
 }
 
 fn call_function(
     name: &str,
+    args: &Value,
     userdefined_functions: &HashMap<String, Array>,
     builtin_functions: &HashMap<&'static str, Box<dyn Fn(&Array)>>,
 ) {
-    let body = userdefined_functions
-        .get(name)
-        .expect("Could not find function with that name");
+    if let Some(f) = builtin_functions.get(name) {
+        let args = args.as_array().expect("arguments must be an array");
 
-    for line in body.iter() {
-        match line {
-            Value::InlineTable(it) => {
-                let mut statement = it.iter();
-                let (name, args) = statement
-                    .next()
-                    .expect("needs to have at least one function call");
+        f(args);
+    } else if let Some(body) = userdefined_functions.get(name) {
+        let _args = args.as_array().expect("arguments must be an array");
 
-                if let Some(f) = builtin_functions.get(name) {
-                    let args = args.as_array().expect("arguments must be an array");
+        for line in body.iter() {
+            match line {
+                Value::InlineTable(it) => {
+                    let mut statement = it.iter();
+                    let (name, args) = statement
+                        .next()
+                        .expect("needs to have at least one function call");
 
-                    f(args);
-                } else if let Some(body) = userdefined_functions.get(name) {
-                    let _args = args.as_array().expect("arguments must be an array");
-
-                    for line in body.iter() {
-                        match line {
-                            Value::InlineTable(it) => {
-                                let mut statement = it.iter();
-                                let (name, _args) = statement
-                                    .next()
-                                    .expect("needs to have at least one function call");
-
-                                call_function(name, userdefined_functions, builtin_functions);
-                            },
-                            _ => panic!("the body of functions must be inline tables"),
-                        }
-                    }
-                } else {
-                    panic!("Could not find function named {}", name);
+                    call_function(name, args, userdefined_functions, builtin_functions);
                 }
+                _ => panic!("the body of functions must be inline tables"),
             }
-            _ => panic!("the body of functions must be inline tables"),
         }
+    } else {
+        panic!("Could not find function named {}", name);
     }
 }

@@ -8,5 +8,5 @@ body = [
 [[function]]
 name = "puts2"
 body = [
-    { puts = ["Hello, world 2"] },
+    { put = ["Hello, world 2"] },
 ]
