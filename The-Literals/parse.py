@@ -66,9 +66,15 @@ class Parser:
         token, value = self.advance()
         if token != Token.TO:
             raise UnexpectedTokenError(Token.TO, token)
-        token, value = self.advance()
-        if token != Token.NUMBER:
-            raise UnexpectedTokenError(Token.NUMBER, token)
+        token, value = self.peek_lexeme()
+        if token == Token.NUMBER:
+            first_operand_token, first_operand_value = self.expect(Token.NUMBER)
+        elif token == Token.IDENTIFIER_WORD:
+            self.parse_identifier()
+        else:
+            raise UnexpectedTokenError(
+                Token.IDENTIFIER_WORD, token
+            )  # TODO: could be either.
 
     def parse_identifier(self):
         token, value = self.peek_lexeme()
@@ -107,22 +113,28 @@ class Parser:
 
 
 if __name__ == "__main__":
-    # input_file = "samples/fib.comment"
-    # with open(input_file, "r") as f:
-    #     text = f.read()
-
-    # tokeniser = Tokeniser(text)
 
     def empty_program():
         yield (Token.BOF, "")
         yield (Token.EOF, "")
 
-    def set_x():
+    def set_var_to_constant():
         yield (Token.BOF, "")
         yield (Token.SETVAR, "Set")
         yield (Token.IDENTIFIER_WORD, "x")
         yield (Token.TO, "to")
         yield (Token.NUMBER, "-39")
+        yield (Token.DOT, ".")
+        yield (Token.EOF, "")
+
+    def set_var_to_var():
+        yield (Token.BOF, "")
+        yield (Token.SETVAR, "Set")
+        yield (Token.IDENTIFIER_WORD, "retirement")
+        yield (Token.IDENTIFIER_WORD, "age")
+        yield (Token.TO, "to")
+        yield (Token.IDENTIFIER_WORD, "pension")
+        yield (Token.IDENTIFIER_WORD, "age")
         yield (Token.DOT, ".")
         yield (Token.EOF, "")
 
@@ -173,7 +185,10 @@ if __name__ == "__main__":
         yield (Token.DOT, ".")
         yield (Token.EOF, "")
 
-    parser = Parser(set_x().__next__)
+    parser = Parser(set_var_to_constant().__next__)
+    parser.parse()
+
+    parser = Parser(set_var_to_var().__next__)
     parser.parse()
 
     parser = Parser(if_stmt_compare_constants().__next__)
