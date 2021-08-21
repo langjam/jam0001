@@ -1,4 +1,4 @@
-(ocamllex test)
+(ocamllex kl_parser)
 
 (library
  (name kerlang))

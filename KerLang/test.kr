@@ -11,6 +11,16 @@ comment "log the integer";
 /*
   This function takes 2 args
 
+  It is a case analysis on the first arg
+
+  It is a sum
+  It takes 1 arg
+  It contains 3
+
+  It is a case analysis on the first arg
+  It computes ...
+  It performs a recursive call
+
   let A be a recursive application on the first param
   and let B be a recursive application on ...
   
@@ -31,8 +41,3 @@ function eq;
   and then double the result, when the first param (is even) or return 0 otherwise
 */
 function f;
-
-/*
-  ...
-*/
-type t;

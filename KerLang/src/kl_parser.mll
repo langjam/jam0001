@@ -24,11 +24,11 @@ rule token = parse
   | int       { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | "/*"      { comment lexbuf }
   | eof       { EOF }
-  | _         { raise SyntaxError "Invalid character: " ^ Lexing.lexeme lexbuf }
+  | _         { raise (SyntaxError ("Invalid character: " ^ (Lexing.lexeme lexbuf))) }
 
 and comment = parse
   | "*/"      { token lexbuf }
   | id        { ID (Lexing.lexeme lexbuf) }
   | white     { comment lexbuf }
   | newline   { next_line lexbuf; comment lexbuf }
-  | _         { raise SyntaxError "comment is'nt terminated" }
+  | _         { raise (SyntaxError "comment is'nt terminated") }
