@@ -719,9 +719,13 @@ mod tests {
         let (sender, r) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
+        assert_eq!(1, pp.train_count().unwrap());
         pp.do_current_step(&i).unwrap();
-        let station = pp.stations.get("Test").unwrap().lock().unwrap();
-        assert_eq!(station.trains[0].len(), 0)
+        {
+            let station = pp.stations.get("Test").unwrap().lock().unwrap();
+            assert_eq!(station.trains[0].len(), 0);
+        }
+        assert_eq!(0, pp.train_count().unwrap());
     }
 
     #[test]
