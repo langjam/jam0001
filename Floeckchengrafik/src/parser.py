@@ -98,7 +98,13 @@ class ComstructParser(Parser):
 
     @_("LBRACK arglist RBRACK")
     def expr(self, p):
-        return p.arglist
+        def walk(walk_tree_func, node):
+            newargs = []
+            for elem in node.var:
+                newargs.append(walk_tree_func(elem))
+
+            node.var = newargs
+        return StatementNode.LiterallyNode(p.arglist, walk_function=walk)
 
     @_('expr')
     def elem(self, p):

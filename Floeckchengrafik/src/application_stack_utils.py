@@ -1,5 +1,4 @@
 class StatementNode:
-
     class GenericNode:
         pass
 
@@ -59,8 +58,9 @@ class StatementNode:
 
     class LiterallyNode(GenericNode):
 
-        def __init__(self, var):
+        def __init__(self, var, walk_function=None):
             self.var = var
+            self.walk_function = walk_function
 
     class StoredProcedureNode(GenericNode):
 

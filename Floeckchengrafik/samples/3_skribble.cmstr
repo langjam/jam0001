@@ -1,8 +1,13 @@
-out(["Test1" : 2 : "Test3"])?
-out([])?
+out("before if")?
 
-if(1 == 1 : {
+x = 1?
 
+if(1 == x : {
 	out("I am here !!1!")?
-
 })?
+
+if(1 != x : {
+	out("This isnt printed at all")?
+})?
+
+out("after if")?

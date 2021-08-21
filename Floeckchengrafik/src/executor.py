@@ -42,11 +42,12 @@ class ComstructExecutor:
         elif isinstance(node, StatementNode.VarNode):
             return env[node.var_name]
         elif isinstance(node, StatementNode.LiterallyNode):
+            if node.walk_function is not None:
+                node.walk_function(self.walkTree, node)
             return node.var
         elif isinstance(node, StatementNode.StoredProcedureNode):
             return node
         elif isinstance(node, StatementNode.ExecuteStoredProcedureNode):
-            print("execute stored procedure node")
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             for stmt_node in node.exec.content:
                 ret = self.walkTree(stmt_node)
@@ -58,7 +59,7 @@ class ComstructExecutor:
             for arg in node.args:
                 processed_args.append(self.walkTree(arg))
             if env[node.func_name].content == "internal":
-                return internals[node.func_name](processed_args)
+                return self.walkTree(internals[node.func_name](processed_args))
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             for func_node in env[node.func_name].content.content:
                 ret = self.walkTree(func_node)
