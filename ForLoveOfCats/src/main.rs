@@ -3,23 +3,16 @@ use std::iter::Peekable;
 
 const SOURCE: &str = r#"
 (block
-	(define say_hello
-		(lambda (z)
-			(print "Hello!" z)
+	(define sum-even-fib
+		(lambda (f1 f2 total)
+			(if (<= f2 4000000)
+				(sum-even-fib f2 (set f2 (+ f1 f2)) (+ total (* f2 (mod f2 2))))
+				total
+			)
 		)
 	)
 
-	(define x 1)
-	(while (!= x 11)
-		(block
-			(if (<= x 5)
-				(print "Number is less than or equal to five")
-				()
-			)
-			(say_hello x)
-			(set x (+ x 1))
-		)
-	)
+	(print (sum-even-fib 0 1 1))
 )
 "#;
 
@@ -432,10 +425,7 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 
 		&TreeNode::BooleanLiteral(lit) => Value::Bool(lit),
 
-		TreeNode::LambdaLiteral(lambda) => {
-			println!("Hit lambda literal");
-			Value::Lambda(Lambda::clone(lambda))
-		}
+		TreeNode::LambdaLiteral(lambda) => Value::Lambda(Lambda::clone(lambda)),
 
 		TreeNode::Define { name, rhs } => {
 			state.push_scope();
@@ -525,6 +515,8 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 				"<=" => less_equal(&args),
 				">" => greater(&args),
 				">=" => greater_equal(&args),
+
+				"mod" => mod_impl(&args),
 
 				"print" => print_values(&args),
 
@@ -633,8 +625,8 @@ fn invert_bool(values: &[Value]) -> Value {
 	}
 }
 
-macro_rules! two_arg_int_bool_function {
-	( $name:ident, $a:ident, $b:ident, $expr:expr ) => {
+macro_rules! two_arg_int_function {
+	( $name:ident, $a:ident, $b:ident, $expr:expr, $return_type:ident ) => {
 		fn $name(values: &[Value]) -> Value {
 			if values.len() != 2 {
 				panic!(
@@ -653,15 +645,17 @@ macro_rules! two_arg_int_bool_function {
 			let $a = unwrap(&values[0]);
 			let $b = unwrap(&values[1]);
 
-			Value::Bool($expr)
+			Value::$return_type($expr)
 		}
 	};
 }
 
-two_arg_int_bool_function!(less, a, b, a < b);
-two_arg_int_bool_function!(less_equal, a, b, a <= b);
-two_arg_int_bool_function!(greater, a, b, a > b);
-two_arg_int_bool_function!(greater_equal, a, b, a >= b);
+two_arg_int_function!(less, a, b, a < b, Bool);
+two_arg_int_function!(less_equal, a, b, a <= b, Bool);
+two_arg_int_function!(greater, a, b, a > b, Bool);
+two_arg_int_function!(greater_equal, a, b, a >= b, Bool);
+
+two_arg_int_function!(mod_impl, a, b, a % b, I64);
 
 fn print_values(values: &[Value]) -> Value {
 	let count = values.len();
