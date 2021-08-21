@@ -11,9 +11,9 @@ export class Runtime {
     // The current mode of the runtime
     mode: Mode;
     delaySeconds: number = 0.5;
-    interpreter: Interpreter = new Interpreter([]);
+    interpreter: Interpreter = new Interpreter();
     stateListener: (s: StateInfo | null) => void;
-    newCode: string[] | null = null;
+    newCode: string | null = null;
 
     constructor(stateListener: (s: StateInfo) => void) {
         this.stateListener = stateListener;
@@ -23,8 +23,8 @@ export class Runtime {
         this.delaySeconds = delaySeconds;
     }
 
-    setCode(newCode: string[]) {
-        this.newCode = newCode;
+    setCode(code: string) {
+        this.newCode = code;
         this.stop();
     }
 
@@ -34,7 +34,12 @@ export class Runtime {
     }
 
     step(n: number) {
-        this.mode = { type: 'RunForN', n };
+        if (this.mode.type === 'RunForN') {
+            this.mode.n += n;
+        }
+        else {
+            this.mode = { type: 'RunForN', n };
+        }
         this.runLoop();
     }
 
@@ -49,7 +54,8 @@ export class Runtime {
         this.running = true;
 
         if (this.newCode !== null) {
-            this.interpreter = new Interpreter(this.newCode);
+            this.interpreter.setCode(this.newCode);
+            this.newCode = null;
         }
 
         while (this.mode.type !== 'Stopped') {
