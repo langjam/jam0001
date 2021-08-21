@@ -9,10 +9,9 @@ game_instance = TetrisGameInstance.init();
 
 while !game_is_quit() {
     game_fill_screen(40, 40, 40);
-    events = [];
+    events = game_get_events();
     game_instance.updatePhase(events);
     game_instance.renderPhase();
-    
     
     game_end_frame();
 }
@@ -54,6 +53,22 @@ this.fallCounter = 0;
 
 ```
 
+for i = 0 till events.length {
+    event = events[i];
+    if event == 'left:press' {
+        this.tryMoveOverlay(-1, 0);
+    }
+    if event == 'right:press' {
+        this.tryMoveOverlay(1, 0);
+    }
+    if event == 'up:press' {
+        this.overlayRotate(true);
+    }
+    if event == 'space:press' {
+        this.overlayRotate(false);
+    }
+}
+
 fallCounterStart = 30.0;
 
 if this.overlay == null {
@@ -69,6 +84,9 @@ if this.fallCounter <= 0 {
     }
 } else {
     this.fallCounter -= this.getDropRate();
+    if game_is_key_pressed('down') {
+        this.fallCounter -= 10;
+    }
 }
 
 ```
@@ -110,9 +128,10 @@ for y = 0 till 4 {
             gx = x + this.overlayX;
             gy = y + this.overlayY;
             if gx < 0 || gy < 0 || gx >= 10 || gy >= 20 {
-                if this.grid[gx][gy] != 0 {
-                    return false;
-                }
+                return false;
+            }
+            if this.grid[gx][gy] != 0 {
+                return false;
             }
         }
     }
@@ -220,6 +239,66 @@ if id == 6 {
     ];
 }
 return overlay;
+```
+
+### Overlay Rotate
+
+- `isClockwise` - a boolean indicating if the piece should be rotated clockwise
+
+The implementation here is a transpose of the overlay followed by a flip for clockwise, and a flip followed by a transpose for counter-clocwise. This allows easy swap-based shuffling. If the current piece is marked with `overlayUsesTranspose = true`, then only use transpose without the flip (The I-beam and the square).
+
+```
+if this.overlay == null {
+    return;
+}
+
+if this.overlayUsesTranspose {
+    this.overlayTranspose();
+    if !this.isOverlayValid() {
+        this.overlayTranspose();
+    }
+    return;
+}
+
+if isClockwise {
+    this.overlayTranspose();
+    this.overlayFlip();
+} else {
+    this.overlayFlip();
+    this.overlayTranspose();
+}
+
+if !this.isOverlayValid() {
+    if isClockwise {
+        this.overlayFlip();
+        this.overlayTranspose();
+    } else {
+        this.overlayTranspose();
+        this.overlayFlip();
+    }
+}
+```
+
+### Overlay Transpose
+
+```
+for y = 0 till 4 {
+    for x = y + 1 till 4 {
+        t = this.overlay[x][y];
+        this.overlay[x][y] = this.overlay[y][x];
+        this.overlay[y][x] = t;
+    }
+}
+```
+
+### Overlay Flip
+
+```
+for y = 0 till 4 {
+    t = this.overlay[0][y];
+    this.overlay[0][y] = this.overlay[2][y];
+    this.overlay[2][y] = t;
+}
 ```
 
 ### Render Phase
