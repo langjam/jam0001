@@ -6,6 +6,8 @@
 #include <string.h>
 #include <assert.h>
 
+static void print_node(struct Node *node);
+
 static void print_help(void) {
     printf("./ech --file [file]\n");
     printf("./ech --string \"string of code\"\n");
@@ -34,10 +36,26 @@ static void print_value(struct Value *value) {
         printf("(value: (type: void))");
         break;
     case ValueTypeNumber:
-        printf("(value: (type: number, value: %d))", value->value.number);
+        printf("(value: (type: number, value: %d))", value->as.number);
         break;
     case ValueTypeString:
-        printf("(value: (type: string, value: \"%s\"))", value->value.string);
+        printf("(value: (type: string, value: \"%s\"))", value->as.string);
+        break;
+    case ValueTypeRoutine:
+        printf("(value: (type: routine, parameter_names: (");
+        if (value->as.routine.amount_parameters > 0) {
+            printf("%s", value->as.routine.parameters[0]);
+            for (size_t i = 1; i < value->as.routine.amount_parameters; ++i) {
+                printf(", %s", value->as.routine.parameters[i]);
+            }
+        }
+        printf("), nodes: (");
+
+        for (size_t i = 0; value->as.routine.block[i]; ++i) {
+            print_node(value->as.routine.block[i]);
+            printf(", ");
+        }
+        printf(")))");
         break;
     default:
         assert(0);
@@ -81,8 +99,6 @@ static void print_expr(struct Expr *expr) {
         print_value(expr->as.value);
         break;
     default:
-        printf("%d", expr->type);
-        break;
         assert(0);
     }
 }
@@ -100,8 +116,8 @@ static void print_node(struct Node *node) {
         printf("))");
         break;
     default:
+        //FIXME: wtf?
         break;
-        assert(0);
     }
 }
 

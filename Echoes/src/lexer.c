@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 
 static inline bool lexer_error(const struct Lexer* const lexer, const char* const error_message) {
     printf("LexerError: %s. on line: %ld, column: %ld\n", error_message, lexer->line, lexer->column);
@@ -147,6 +148,24 @@ bool lexer_tokenize(struct Lexer* const lexer) {
         lexer->token.string = lexer->stream++;
         return true;
     }
+    if (lexer->stream[0] == ',') {
+        lexer->token.name = TokenNameComma;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
+    if (lexer->stream[0] == '{') {
+        lexer->token.name = TokenNameLeftCur;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
+    if (lexer->stream[0] == '}') {
+        lexer->token.name = TokenNameRightCur;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
     // try to tokenize `log`
     if (lexer_match_keyword(lexer, "log", 3, TokenNameLog))
         return true;
@@ -156,4 +175,13 @@ bool lexer_tokenize(struct Lexer* const lexer) {
 
     lexer_error(lexer, "Unrecognized token");
     return false;
+}
+
+char *token_allocate_key(struct Token* const token) {
+    char *key;
+    assert(token->name == TokenNameKey);
+    key = malloc((token->length + 1) * sizeof(char));
+    strncpy(key, token->string, token->length);
+    key[token->length] = '\0';
+    return key;
 }

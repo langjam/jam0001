@@ -16,7 +16,10 @@ enum TokenName {
     TokenNameDiv,
     TokenNameLeftParen,
     TokenNameRightParen,
-    TokenNameRoutine
+    TokenNameRoutine,
+    TokenNameComma,
+    TokenNameLeftCur,
+    TokenNameRightCur
 };
 
 struct Token {
@@ -33,5 +36,7 @@ struct Lexer {
 };
 
 bool lexer_tokenize(struct Lexer* const lexer);
+
+char *token_allocate_key(struct Token* const token);
 
 #endif // ECHOES_LEXER_H

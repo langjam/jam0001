@@ -8,7 +8,14 @@
 enum ValueType {
     ValueTypeVoid,
     ValueTypeNumber,
-    ValueTypeString
+    ValueTypeString,
+    ValueTypeRoutine
+};
+
+struct RoutineValue {
+    char **parameters;
+    size_t amount_parameters;
+    struct Node **block;
 };
 
 struct Value {
@@ -16,7 +23,8 @@ struct Value {
     union {
         char *string;
         int number;
-    } value;
+        struct RoutineValue routine;
+    } as;
 };
 
 enum ExprType {

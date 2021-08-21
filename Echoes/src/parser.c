@@ -13,6 +13,9 @@ typedef enum Precedence {
     PrecedenceProduct
 } Precedence;
 
+static struct Node *parser_parse_node(struct Parser* const parser);
+static struct Value *parser_parse_node_routine(struct Parser* const parser);
+
 static inline bool parser_error(const struct Parser* const parser, const char* const error_message) {
     printf("ParserError: %s. on line: %ld, column: %ld\n",
             error_message, parser->lexer.line, parser->lexer.column);
@@ -21,7 +24,7 @@ static inline bool parser_error(const struct Parser* const parser, const char* c
 
 static void parser_push(struct Parser* const parser, struct Node* const node) {
     if (parser->allocated == 0) {
-        parser->nodes = malloc((parser->allocated = 32)+1 * sizeof(struct Node*));
+        parser->nodes = malloc(((parser->allocated = 32)+1) * sizeof(struct Node*));
     } else if (parser->idx == 32) {
         parser->nodes = realloc(parser->nodes, (parser->allocated += 32)+1 * sizeof(struct Node*));
     }
@@ -39,6 +42,13 @@ static void parser_expect_newline(struct Parser* const parser) {
 static struct Expr *parser_parse_literal_expr(struct Parser* const parser) {
     struct Expr *expr;
     struct Lexer old_state = parser->lexer;
+    struct Value *routine;
+    if ((routine = parser_parse_node_routine(parser))) {
+        expr = malloc(sizeof(struct Expr));
+        expr->type = ExprTypeValue;
+        expr->as.value = routine; 
+        return expr;
+    }
     if (!lexer_tokenize(&parser->lexer))
         return NULL;
     switch (parser->lexer.token.name) {
@@ -52,7 +62,7 @@ static struct Expr *parser_parse_literal_expr(struct Parser* const parser) {
         expr->type = ExprTypeValue;
         expr->as.value = malloc(sizeof(struct Value));
         expr->as.value->type = ValueTypeNumber;
-        expr->as.value->value.number = number;
+        expr->as.value->as.number = number;
         return expr;
     }
     case TokenNameString: {
@@ -64,15 +74,13 @@ static struct Expr *parser_parse_literal_expr(struct Parser* const parser) {
         expr->type = ExprTypeValue;
         expr->as.value = malloc(sizeof(struct Value));
         expr->as.value->type = ValueTypeString;
-        expr->as.value->value.string = string;
+        expr->as.value->as.string = string;
         return expr;
     }
     case TokenNameKey: {
         char *key;
         expr = malloc(sizeof(struct Expr));
-        key = malloc((parser->lexer.token.length+1) * sizeof(char));
-        strncpy(key, parser->lexer.token.string, parser->lexer.token.length);
-        key[parser->lexer.token.length] = '\0';
+        key = token_allocate_key(&parser->lexer.token);
         expr->as.key = key;
         expr->type = ExprTypeKey;
         return expr;
@@ -113,7 +121,6 @@ static Precedence token_name_to_precedence(const enum TokenName name) {
         assert(0);
     }
 }
-
 
 static struct Expr *parser_parse_expr(struct Parser* const parser) {
     struct Token operator_stack[256];
@@ -215,11 +222,7 @@ static struct Node *parser_parse_node_set(struct Parser* const parser) {
     parser_expect_newline(parser);
     node = malloc(sizeof(struct Node));
     node->type = NodeTypeSet;
-    // allocate the key
-    key = malloc((key_token.length + 1) * sizeof(char));
-    strncpy(key, key_token.string, key_token.length);
-    key[key_token.length] = '\0';
-    node->value.set.key = key;
+    node->value.set.key = token_allocate_key(&key_token);
     node->value.set.expr = expr;
     return node;
 }
@@ -247,6 +250,116 @@ static struct Node *parser_parse_node_log(struct Parser* const parser) {
     return node;
 }
 
+static struct Node **parser_parse_block(struct Parser* const parser) {
+    struct Lexer old_state = parser->lexer;
+    struct Node **nodes;
+    size_t node_amount, node_idx = 0;
+    // is there something?
+    if (!lexer_tokenize(&parser->lexer))
+        return NULL;
+    // verify it starts with '{'
+    if (parser->lexer.token.name != TokenNameLeftCur) {
+        parser->lexer = old_state;
+        return NULL;
+    }
+    parser_expect_newline(parser);
+    nodes = malloc(((node_amount = 32)+1) * sizeof(struct Node *));
+    while (true) {
+        struct Node *node;
+        if (!(node = parser_parse_node(parser))) {
+            if (!lexer_tokenize(&parser->lexer))
+                parser_error(parser, "Expected '}'");
+            if (parser->lexer.token.name == TokenNameRightCur) {
+                break;
+            } else {
+                parser_error(parser, "Unexpected token");
+            }
+        }
+        if (node_idx == node_amount) {
+            nodes = realloc(nodes, ((node_amount += 32)+1) * sizeof(struct Node *));
+        }
+        nodes[node_idx++] = node;
+    }
+    nodes[node_idx] = NULL;
+    return nodes;
+}
+
+static struct Value *parser_parse_node_routine(struct Parser* const parser) {
+    struct Value *value;
+    struct RoutineValue decl;
+    struct Lexer old_state = parser->lexer;
+    // is there something?
+    if (!lexer_tokenize(&parser->lexer))
+        return NULL;
+    // verify it starts with 'routine'
+    if (parser->lexer.token.name != TokenNameRoutine) {
+        parser->lexer = old_state;
+        return NULL;
+    }
+    // verify there is '(' after 'routine'?
+    if (!lexer_tokenize(&parser->lexer) || parser->lexer.token.name != TokenNameLeftParen) {
+        parser->lexer = old_state;
+        parser_error(parser, "Expected '(' after 'routine'");
+    }
+    // verify you can lex and lex
+    if (!lexer_tokenize(&parser->lexer))
+        parser_error(parser, "Unexpected EOF");
+    // if there is a ')', it is the end
+    if (parser->lexer.token.name == TokenNameRightParen) {
+        decl.amount_parameters = 0;
+        decl.parameters = NULL;
+    } else if (parser->lexer.token.name == TokenNameKey) {
+        char *key = token_allocate_key(&parser->lexer.token);
+        size_t allocated;
+        decl.parameters = malloc((allocated = 4) * sizeof(char *));
+        decl.amount_parameters = 0;
+        decl.parameters[decl.amount_parameters++] = key;
+        while (true) {
+            // verify you can tokenize
+            if (!lexer_tokenize(&parser->lexer))
+                parser_error(parser, "Unexpected EOF");
+            // if the token is ')', you can exit the loop
+            if (parser->lexer.token.name == TokenNameRightParen)
+                break;
+            // if there is no comma, error
+            if (parser->lexer.token.name != TokenNameComma)
+                parser_error(parser, "Expected Comma");
+            // verify you can lex
+            if (!lexer_tokenize(&parser->lexer))
+                parser_error(parser, "Unexpected EOF");
+            // verify the token is a key
+            if (parser->lexer.token.name != TokenNameKey)
+                parser_error(parser, "Expected key");
+            // allocate the key
+            key = token_allocate_key(&parser->lexer.token);
+            // reallocate if needed
+            if (decl.amount_parameters == allocated) {
+                decl.parameters = realloc(decl.parameters, (allocated += 3)*sizeof(char *));
+            }
+            // push parameter
+            decl.parameters[decl.amount_parameters++] = key;
+        }
+    } else {
+        parser_error(parser, "Unexpected token");
+    }
+    if (!(decl.block = parser_parse_block(parser))) {
+        parser_error(parser, "Expected block after routine decleration");
+    }
+    value = malloc(sizeof(struct Value));
+    value->type = ValueTypeRoutine;
+    value->as.routine = decl;
+    return value;
+}
+
+static struct Node *parser_parse_node(struct Parser* const parser) {
+    struct Node *node;
+    if ((node = parser_parse_node_set(parser)) ||
+        (node = parser_parse_node_log(parser))) {
+        return node;
+    }
+    return NULL;
+}
+
 struct Node **parse(char* const stream) {
     struct Node *node;
     struct Parser parser = {
@@ -259,15 +372,11 @@ struct Node **parse(char* const stream) {
             .stream = stream
         }
     };
-    while (true) {
-        if (!(node = parser_parse_node_log(&parser)) && !(node = parser_parse_node_set(&parser))) {
-            if (lexer_tokenize(&parser.lexer)) {
-                parser_error(&parser, "Syntax Error");
-            } else {
-                break;
-            }
-        }
+    while ((node = parser_parse_node(&parser))) {
         parser_push(&parser, node);
+    }
+    if (lexer_tokenize(&parser.lexer)) {
+        parser_error(&parser, "Syntax Error");
     }
     return parser.nodes;
 }
