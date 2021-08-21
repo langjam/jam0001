@@ -1,0 +1,25 @@
+/*************************
+ * Example 3: If and For *
+ *************************/
+
+out("This gets printed before any If-Statement is executed")?
+
+if(1 == 1 : {
+	out("We are inside the If-Statement")?
+})?
+
+if(1 != 1 : {
+	out("This isnt printed at all!")?
+})?
+
+out("This gets printed before we run a loop 20 times")?
+
+for ("y" : intrange_inclusive(1:20) : {
+	out("This is just test nr. " : y)?
+})?
+
+\\ Now we exit with code 0. You can write any code there
+
+exit()?
+
+out("This code is unreachable!")?
