@@ -1,6 +1,7 @@
 #include "interpreter.h"
-#ifdef ENABLE_INTERPRETER
+
 static struct Interpreter_State intrp;
+
 static struct Interpreter_Value void_val() {
     return (struct Interpreter_Value){ IT_VOID, {0} };
 }
@@ -16,7 +17,7 @@ static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Val
                 printf("%d", arg->data.intg.val);
             break;
             case IT_STRING:
-                printf("%s", arg->data.string.str);
+                printf("%.*s", (int)arg->data.string.str.size, arg->data.string.str.view);
             break;
             case IT_VOID:
                 printf("(void)");
@@ -37,29 +38,17 @@ static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Val
 }
 
 void intrp_init() {
-    intrp.vars = vec_new(sizeof(struct Interpreter_Variable));
-    vec_push(&intrp.vars, &(struct Interpreter_Variable){ "print", {IT_CFUNC, .data.cfunc.func = cfunc_print} });
+    intrp.global = map_new(sizeof(struct Interpreter_Value));
+    intrp.vars = &intrp.global;
+
+    map_add(intrp.vars, strview_from("print"), &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_print });
 }
 
 void intrp_deinit() {
-    vec_drop(&intrp.vars);
-}
-
-static struct Interpreter_Variable* find_var(char* ident, usize len) {
-
-    for (usize i = 0; i < intrp.vars.size; i += 1) {
-        struct Interpreter_Variable* currv = vec_get(&intrp.vars, i);
-        if (!strncmp(currv->name, ident, len))
-            return currv;
-    }
-
-    return NULL;
-    
+    map_drop(&intrp.global);
 }
 
 static struct Interpreter_Value eval(struct Parser_Node* node) {
-    const string source = parser_get_state()->lexer.src;
-
     struct Interpreter_Value ret = void_val();
 
     switch (node->kind) {
@@ -69,15 +58,17 @@ static struct Interpreter_Value eval(struct Parser_Node* node) {
         break;
         case PN_STRING:
             ret.type = IT_STRING;
-            ret.data.string.str = strndup(source + node->data.string.val.from + 1, node->data.string.val.size - 2);
+            ret.data.string.str = strview_dup(node->data.string.val);
         break;
         case PN_NUMBER:
             ret.type = IT_INT;
-            ret.data.intg.val = atoi(source + node->data.string.val.from);
+            ret.data.intg.val = atoi(node->data.string.val.view);
         break;
         case PN_IDENT: {
-            struct Interpreter_Variable* var = find_var(source + node->data.ident.val.from, node->data.ident.val.size);
-            ret = var->val;
+            struct Interpreter_Value* val = map_get(intrp.vars, node->data.ident.val);
+            if (!val) 
+                val = map_get(&intrp.global, node->data.ident.val);
+            ret = *val;
         } break;
         default:
         break;
@@ -95,9 +86,10 @@ static struct Interpreter_Value execute(struct Vec OF(struct Parser_Node*) *body
 }
 
 static struct Interpreter_Value call(struct Parser_Node* node) {
-    const string source = parser_get_state()->lexer.src;
 
-    struct Interpreter_Variable* func = find_var(source + node->data.call.name.from, node->data.call.name.size);
+    struct Interpreter_Value* func = map_get(intrp.vars, node->data.call.name);
+    if (!func)
+        func = map_get(&intrp.global, node->data.call.name);
 
     struct Vec args = vec_new(sizeof(struct Interpreter_Value));
     for (usize i = 0; i < node->children.size; i += 1) {
@@ -105,39 +97,43 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
         vec_push(&args, &val);
     }
 
+    struct Map* oldframe = intrp.vars;
+    struct Map vars = map_new(sizeof(struct Vec));
+    intrp.vars = &vars;
+
     struct Interpreter_Value ret = void_val(); 
-    switch (func->val.type) {
-        case IT_CFUNC:
-            ret = func->val.data.cfunc.func(&args);
-        break;
+    switch (func->type) {
+        case IT_CFUNC: {
+            ret = func->data.cfunc.func(&args);
+        } break;
         case IT_FUNC:
-            ret = execute(func->val.data.func.body);
+            ret = execute(func->data.func.body);
         break;
         default:
         break;
     }
 
     vec_drop(&args);
+
+    map_drop(intrp.vars);
+    intrp.vars = oldframe;
     return ret;
 }
 
 static void declaration(struct Parser_Node* node) {
-    const string source = parser_get_state()->lexer.src;
-    
     struct Parser_Node* object = vec_get(&node->children, 0);
 
-    struct Interpreter_Variable var = {
-        .name = strndup(source + node->data.decl.name.from, node->data.decl.name.size),
-        .val = eval(object)
-    };
-    vec_push(&intrp.vars, &var);   
+    struct Interpreter_Value var = eval(object);
+    map_add(intrp.vars, node->data.decl.name, &var);   
 }
 
 struct Interpreter_Value intrp_run(struct Parser_Node* node) {
-    //const string source = parser_get_state()->lexer.src;
     
     struct Interpreter_Value ret = void_val(); 
     switch (node->kind) {
+        case PN_TOPLEVEL:
+            ret = execute(&node->children);
+        break;
         case PN_CALL:
             ret = call(node);                        
         break;
@@ -152,6 +148,5 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node) {
 }
 
 struct Interpreter_Value intrp_main() {
-    return execute(find_var("main", 4)->val.data.func.body);
+    return execute(((struct Interpreter_Value*)map_get(&intrp.global, strview_from("main")))->data.func.body);
 }
-#endif

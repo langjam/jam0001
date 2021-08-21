@@ -1,5 +1,5 @@
 .PHONY: clean, test
-CSAN := -fsanitize=address -fsanitize=undefined
+#CSAN := -fsanitize=address -fsanitize=undefined
 CWARN := -Wconversion -Wsign-conversion -Wextra -Wall -Wno-initializer-overrides -pedantic
 CSHD := $(shell find aid -name '*.c') $(shell find lang -name '*.c') 
 CSRC := $(CSHD) $(shell find frontend -name '*.c')
@@ -13,11 +13,6 @@ CFLAGS := $(CSAN) $(CLIB) $(CWARN) -g -Werror
 all:
 	if [ ! -d "./bin" ]; then mkdir bin; fi
 	$(CPFX) $(CC) $(CFLAGS) $(CSRC) -g -o ./bin/COLAN-21
-
-interp:
-	if [ ! -d "./bin" ]; then mkdir bin; fi
-	$(CPFX) $(CC) $(CFLAGS) -DENABLE_INTERPRETER $(CSRC) -g -o ./bin/COLAN-21
-	./bin/COLAN-21 input.cln
 
 test:
 	$(CPFX) $(CC) $(CFLAGS) $(CTST) -Wno-gnu-zero-variadic-macro-arguments -g -o ./bin/test

@@ -1,5 +1,6 @@
 #pragma once
 #include "../parser/parser.h"
+#include "../../aid/map/map.h"
 
 enum Interpreter_Type {
     IT_VOID,
@@ -24,18 +25,14 @@ struct Interpreter_Value {
             int val;
         } intg;
         struct {
-            char* str;
+            strview_t str;
         } string;
     } data;
 };
 
-struct Interpreter_Variable {
-    string name;
-    struct Interpreter_Value val;
-};
-
 struct Interpreter_State {
-    struct Vec OF(struct Interpreter_Variable) vars;
+    struct Map OF(struct Interpreter_Value) global;
+    struct Map OF(struct Interpreter_Value) *vars;
 };
 
 void intrp_init();
