@@ -28,7 +28,8 @@ init ast =
 
 step : Runtime -> Runtime
 step runtime =
-    MaybeX.unwrap (panic runtime) (exec runtime) <| Array.get runtime.ip runtime.ast
+    MaybeX.unwrap (panic runtime) (exec runtime) <|
+        Array.get runtime.ip runtime.ast
 
 
 next : Runtime -> Runtime
