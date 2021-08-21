@@ -31,6 +31,7 @@ peg::parser!(pub grammar dank() for str {
     rule line_comment_group() -> Vec<&'input str>
         = ("//" t:$([ch if ch != '\n']*) "\n" "\r"? {t})+
 
+    // TODO: make this properly attach comments
     /// Parses a single-line comment
     rule line_comment() -> LineComment<'input>
         = g:line_comment_group() s:stmt() {
