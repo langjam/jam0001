@@ -6,6 +6,8 @@
 #include <string.h>
 #include <assert.h>
 
+static size_t indent;
+
 static void print_node(struct Node *node);
 
 static void print_help(void) {
@@ -30,32 +32,64 @@ static char *load_file(const char* const filename) {
     return allocated;
 }
 
+void print_indent(void) {
+    for (size_t i = 0; i < indent; ++i) {
+        printf("  ");
+    }
+}
+
 static void print_value(struct Value *value) {
     switch (value->type) {
     case ValueTypeVoid:
-        printf("(value: (type: void))");
+        print_indent(); printf("value\n");
+        ++indent;
+        print_indent(); printf("type\n");
+        ++indent;
+        print_indent(); printf("void\n");
+        indent -= 2;
         break;
     case ValueTypeNumber:
-        printf("(value: (type: number, value: %d))", value->as.number);
+        print_indent(); printf("value\n");
+        ++indent;
+        print_indent(); printf("type\n");
+        ++indent;
+        print_indent(); printf("number\n");
+        --indent;
+        print_indent(); printf("value\n");
+        ++indent;
+        print_indent(); printf("%d\n", value->as.number);
+        indent -= 2;
         break;
     case ValueTypeString:
-        printf("(value: (type: string, value: \"%s\"))", value->as.string);
+        print_indent(); printf("value\n");
+        ++indent;
+        print_indent(); printf("type\n");
+        ++indent;
+        print_indent(); printf("number\n");
+        --indent;
+        print_indent(); printf("value\n");
+        ++indent;
+        print_indent(); printf("\"%s\"\n", value->as.string);
+        indent -= 2;
         break;
     case ValueTypeRoutine:
-        printf("(value: (type: routine, parameter_names: (");
-        if (value->as.routine.amount_parameters > 0) {
-            printf("%s", value->as.routine.parameters[0]);
-            for (size_t i = 1; i < value->as.routine.amount_parameters; ++i) {
-                printf(", %s", value->as.routine.parameters[i]);
-            }
+        print_indent(); printf("value\n");
+        ++indent;
+        print_indent(); printf("type\n");
+        ++indent;
+        print_indent(); printf("routine\n");
+        --indent;
+        print_indent(); printf("parameter_names\n");
+        ++indent;
+        for (size_t i = 0; i < value->as.routine.amount_parameters; ++i) {
+            print_indent(); printf(":%s\n", value->as.routine.parameters[i]);
         }
-        printf("), nodes: (");
-
+        --indent;
+        print_indent(); printf("node\n");
         for (size_t i = 0; value->as.routine.block[i]; ++i) {
             print_node(value->as.routine.block[i]);
-            printf(", ");
         }
-        printf(")))");
+        --indent;
         break;
     default:
         assert(0);
@@ -65,55 +99,56 @@ static void print_value(struct Value *value) {
 static void print_expr(struct Expr *expr) {
     switch (expr->type) {
     case ExprTypeAdd:
-        printf("(op: '+', lhs: ");
-        print_expr(expr->as.binary.lhs);
-        printf(", rhs: ");
-        print_expr(expr->as.binary.rhs);
-        printf(")");
+        print_indent(); printf("+\n");
         break;
     case ExprTypeSub:
-        printf("(op: '-', lhs: ");
-        print_expr(expr->as.binary.lhs);
-        printf(", rhs: ");
-        print_expr(expr->as.binary.rhs);
-        printf(")");
+        print_indent(); printf("-\n");
         break;
     case ExprTypeMul:
-        printf("(op: '*', lhs: ");
-        print_expr(expr->as.binary.lhs);
-        printf(", rhs: ");
-        print_expr(expr->as.binary.rhs);
-        printf(")");
+        print_indent(); printf("*\n");
         break;
     case ExprTypeDiv:
-        printf("(op: '/', lhs: ");
-        print_expr(expr->as.binary.lhs);
-        printf(", rhs: ");
-        print_expr(expr->as.binary.rhs);
-        printf(")");
+        print_indent(); printf("/\n");
         break;
     case ExprTypeKey:
-        printf("(key: %s)", expr->as.key);
-        break;
+        print_indent(); printf("key\n");
+        ++indent;
+        print_indent(); printf(":%s\n", expr->as.key);
+        --indent;
+        return;
     case ExprTypeValue:
         print_value(expr->as.value);
-        break;
+        return;
     default:
         assert(0);
     }
+    ++indent;
+    print_indent(); printf("lhs\n");
+    ++indent;
+    print_expr(expr->as.binary.lhs);
+    --indent;
+    print_indent(); printf("rhs\n");
+    ++indent;
+    print_expr(expr->as.binary.rhs);
+    indent -= 2;
 }
 
 static void print_node(struct Node *node) {
     switch (node->type) {
     case NodeTypeLog:
-        printf("(log: ");
+        print_indent(); printf("log\n");
+        ++indent;
         print_expr(node->value.log_value);
-        printf(")");
+        --indent;
         break;
     case NodeTypeSet:
-        printf("(set: (key: %s, value: ", node->value.set.key);
+        print_indent(); printf("set\n");
+        ++indent;
+        print_indent(); printf("key\n");
+        ++indent;
+        print_indent(); printf(":%s\n", node->value.set.key);
+        --indent;
         print_expr(node->value.set.expr);
-        printf("))");
         break;
     default:
         //FIXME: wtf?
