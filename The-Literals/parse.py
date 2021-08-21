@@ -1,4 +1,4 @@
-from abstract_syntax_trees import Binop, Comparison, IfStmt, Number, SetStmt, Variable
+from abstract_syntax_trees import Binop, Comparison, IfStmt, Number, Program, SetStmt, Variable
 from run_code import apply_binop, apply_comparison
 from tokenise import Token, Tokeniser
 
@@ -41,19 +41,23 @@ class Parser:
         functions = self.parse_functions()
         stmts = self.parse_stmts()
         self.expect(Token.EOF)
-        return stmts
+        return Program(functions, stmts)
 
     def parse_functions(self):
         token, value = self.peek_lexeme()
+        functions = []
         while token == Token.FUNCTION:
-            self.parse_function()
+            functions.append(self.parse_function())
             token, value = self.peek_lexeme()
+        return functions
 
     def parse_function(self):
+        params = []
+
         token, value = self.advance()
         self.expect(Token.EOL)
         self.expect(Token.HFILL)
-        token, value = self.expect(token.FUNCTION_NAME)
+        token, func_name = self.expect(token.FUNCTION_NAME)
         self.expect(Token.DOT)
         self.expect(Token.EOL)
 
@@ -62,7 +66,7 @@ class Parser:
             self.advance()
             token, value = self.peek_lexeme()
             if token == Token.PARAM:
-                self.parse_param()
+                params.append(self.parse_param())
             elif token == Token.EOL:
                 self.advance()
             token, value = self.peek_lexeme()
