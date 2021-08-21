@@ -62,13 +62,15 @@ class Parser:
             self.parse_if_stmt()
 
     def parse_set_stmt(self):
-        identifier = self.parse_identifier()
+        target = self.parse_identifier()
         token, value = self.advance()
         if token != Token.TO:
             raise UnexpectedTokenError(Token.TO, token)
         token, value = self.advance()
         if token != Token.NUMBER:
             raise UnexpectedTokenError(Token.NUMBER, token)
+        
+        return 
 
     def parse_identifier(self):
         identifier_words = []
@@ -80,10 +82,11 @@ class Parser:
         return ' '.join(identifier_words)
 
     def parse_if_stmt(self):
-        self.parse_expr()
+        condition = self.parse_expr()
         self.expect(Token.THEN)
-        self.parse_stmt()
-        pass
+        stmt = self.parse_stmt()
+        if condition:
+            stmt.run()
 
     def parse_expr(self):
         first_operand_token, first_operand_value = self.expect(Token.NUMBER)
@@ -104,7 +107,7 @@ class Parser:
         if second_operand_token != Token.NUMBER:
             raise UnexpectedTokenError(Token.NUMBER, second_operand_token)
         if operator_token == Token.BINOP:
-            result = apply_binop(
+            result = Binop(
                 operator_value, first_operand_value, second_operand_value
             )
         if operator_token == Token.COMPARISON:
