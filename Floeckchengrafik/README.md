@@ -32,7 +32,7 @@ run `pyinstaller comstruct.py application_stack_utils.py cli.py executor.py inte
 |---|---|
 |`<name>?`|`foo?`|
 <br>
-Note: variables can also be used in arithmetic operations, e.g. `1 + x - y?`
+Note: variables can also be used in arithmetic operations, e.g. 1 + x - y?
 
 
 ### Arithmetic Operations: <br>
@@ -40,7 +40,7 @@ Note: variables can also be used in arithmetic operations, e.g. `1 + x - y?`
 |---|---|
 |`<var1> <operation> <var2>?`|`1 + 1?`|
 <br>
-Note: operation can be one of the following characters: `+` ,`-`,`*`,`/`,`%`
+Note: operation can be one of the following characters: +, -, *, /, %
 
 ### Function Definition: <br>
 |Format|Example|
