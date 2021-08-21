@@ -383,16 +383,17 @@ class OpChain(Expression):
     left = expression
     for i in range(1, len(self.expressions)):
       op = self.ops[i - 1]
-      if _SHORT_CIRCUIT_OPS.get(op, False):
-        if op == '&&' and left.type == 'BOOL' and not left.value:
+      op_value = op.value
+      if _SHORT_CIRCUIT_OPS.get(op_value, False):
+        if op_value == '&&' and left.type == 'BOOL' and not left.value:
           return FALSE_VALUE
-        if op == '||' and left.type == 'BOOL' and left.value:
+        if op_value == '||' and left.type == 'BOOL' and left.value:
           return TRUE_VALUE
-        if op == '??' and left.type != 'NULL':
+        if op_value == '??' and left.type != 'NULL':
           return left
       right = self.expressions[i].run(scope)
       if right.is_error: return right
-      combined = perform_op(op, left, op.value, right)
+      combined = perform_op(op, left, op_value, right)
       if combined.is_error: return combined
       left = combined
     return left
