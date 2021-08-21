@@ -19,7 +19,6 @@ print-hello # does nothing
 # read in file as string
 # place "instruction pointer" at the start of the string
 # decide on how functions are declared
-# declare some variables
 # create some kind of test
 
 # expresions
@@ -66,17 +65,20 @@ class UnFunc
 	end
 
 	def call(uncom)
-		uncom.data.push(@func.call(*uncom.data.pop(@func.arity)))
+		#uncom.data.push(@func.call(*uncom.data.pop(@func.arity)))
+		val = (@func.call(*uncom.data.pop(@func.arity)))
+		uncom.data.push val if val != nil
 	end
 
 	def inspect
-		name
+		@name
 	end
 end
 
 $uncom_words = {}
 [
 ["uncom-v", [], lambda { "uncom ver 2108.2021" }],
+["shrek!", [], lambda { puts "shrek!" ; nil }],
 
 ["false", [], lambda { false }],
 ["true", [], lambda { true }],
@@ -115,6 +117,8 @@ class Uncom
 		@data_stacks = [[]]
 		# first one is global, rest are used for func locals, where last is for current func
 		@dict = [$uncom_words.merge({}), {}]
+		# storage for locals, mirrors dict, should get pushed / popped when dict does
+		@vars = [{}, {}]
 		# TODO:
 		# source code string
 		# instruction pointer
@@ -141,6 +145,8 @@ class Uncom
 	end
 
 	def do_word(word)
+		# special words #
+
 		# ( -> push data + func stacks
 		if word == "(" then
 			@data_stacks.push([])
@@ -153,9 +159,14 @@ class Uncom
 				return false # no funcs called
 			end
 			s = @data_stacks.pop()
-			data.push(s.last)
+			data.push(s.last) if s.length > 0
 			@func_stacks.pop()
 			return try_apply_stacks()
+		# . -> clear func and data stacks
+		elsif word == "." then
+			data.pop(data.length)
+			func.pop(func.length)
+			return false # no funcs called
 		end
 
 		# number -> push
@@ -172,7 +183,7 @@ class Uncom
 		# found local -> do word
 		if @dict.last.member? word then
 			# TODO
-		elsif word[0] != "=" and word[-1] == "=" then
+		elsif word.length > 1 and word[-1] == "=" then
 		# matches local= -> make local
 			# TODO
 		end
@@ -183,11 +194,17 @@ class Uncom
 			return try_apply_stacks()
 		# matches $global= -> make global
 		elsif word[0] == "$" and word[-1] == "=" then
-			# TODO create setter / getter pairs
-			puts "That'd have made a global"
+			@dict.first.merge! gen_variable_funcs(word[0..-2], @vars.first)
+			return do_word(word) # that word we just made has to get called now
 		end
 
-		puts "did nothing"
+		raise "word #{word} not found"
+	end
+
+	def gen_variable_funcs(name, vars)
+		vars[name] = 0 # TODO: change default value ?
+		{name + "=" => UnFunc.new(name + "=", [:any], lambda {|x| vars[name] = x ; nil }),
+		name => UnFunc.new(name, [], lambda { vars[name] })}
 	end
 end
 
