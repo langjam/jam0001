@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use quickscope::ScopeMap;
 
-use self::value::{Class, Object, Value};
+use self::value::{Class, Function, Object, Value};
 
 mod ast;
 mod value;
@@ -12,7 +12,7 @@ pub type EvalResult = Result<Value, String>;
 pub struct Evaluator {
     classes: HashMap<String, Class>,
     vars: ScopeMap<String, Value>,
-    pub(crate) target: Option<Object>,
+    fns: ScopeMap<String, Function>,
 }
 
 impl Evaluator {
@@ -20,16 +20,25 @@ impl Evaluator {
         let mut this = Self {
             classes: HashMap::default(),
             vars: ScopeMap::new(),
-            target: None,
+            fns: ScopeMap::new(),
         };
         this.register_ast_classes();
         this
     }
 
-    pub fn get_class(&self, name: &str) -> EvalResult {
+    pub(crate) fn enter_scope(&mut self) {
+        self.vars.push_layer();
+        self.fns.push_layer();
+    }
+
+    pub(crate) fn exit_scope(&mut self) {
+        self.vars.pop_layer();
+        self.fns.pop_layer();
+    }
+
+    pub fn get_class(&self, name: &str) -> Result<&Class, String> {
         self.classes
             .get(name)
-            .map(|class| Value::Class(class.clone()))
             .ok_or(format!("Unknown class: {}", name))
     }
 
@@ -46,5 +55,16 @@ impl Evaluator {
 
     pub(crate) fn create_var(&mut self, name: impl Into<String>, value: Value) {
         self.vars.define(name.into(), value);
+    }
+
+    pub fn get_fn(&self, name: &str) -> Result<Function, String> {
+        self.fns
+            .get(name)
+            .cloned()
+            .ok_or(format!("Unknown function: {}", name))
+    }
+
+    pub(crate) fn create_fn(&mut self, name: impl Into<String>, function: Function) {
+        self.fns.define(name.into(), function);
     }
 }

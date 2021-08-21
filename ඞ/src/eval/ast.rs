@@ -1,4 +1,4 @@
-use super::*;
+use super::{value::Function, *};
 
 #[allow(unused)]
 macro_rules! default {
@@ -32,7 +32,7 @@ impl Evaluator {
             declare_builtin!("ASTComment"; "text"),
             declare_builtin!("ASTIdent"; "name"),
             declare_builtin!("ASTBinaryExpr"; "op", "lhs", "rhs"),
-            declare_builtin!("ASTList"; "op", "lhs", "rhs"),
+            declare_builtin!("ASTList"; "elements"),
             declare_builtin!("ASTObjectLiteral"; "class", "fields"),
             declare_builtin!("ASTFieldLiteral"; "name", "value"),
             declare_builtin!("ASTForLoop"; "op", "lhs", "rhs"),
@@ -113,12 +113,84 @@ impl Evaluator {
                     fields: obj_fields,
                 })
             }
+            "ASTFnDef" => {
+                let function = self.eval_fn_def(obj)?;
+                self.create_fn(function.name.clone(), function);
+                Value::Unit
+            }
+            "ASTRetStmt" => self.eval_ast(&obj.get_field("value")?)?,
+            "ASTFnCall" => {
+                let name = match obj.get_field("name")? {
+                    Value::String(s) => s,
+                    _ => unreachable!(),
+                };
+                let args = match obj.get_field("args")? {
+                    Value::List { elems } => elems,
+                    _ => unreachable!(),
+                };
+                match self.get_fn(&name) {
+                    Ok(f) => {
+                        // user-defined
+                        if args.len() != f.params.len() {
+                            return Err(format!(
+                                "Expected {} arguments for function {}, but got {}",
+                                f.params.len(),
+                                name,
+                                args.len()
+                            ));
+                        }
+                        let mut eval_args = Vec::with_capacity(args.len());
+                        for arg in args {
+                            let val = self.eval_ast(&arg)?;
+                            let val = self.deref_val(val)?;
+                            eval_args.push(val);
+                        }
+                        self.enter_scope();
+                        for (name, val) in f.params.iter().zip(eval_args.into_iter()) {
+                            self.create_var(name, val);
+                        }
+                        let mut result = Value::Unit;
+                        for stmt in &f.body {
+                            let val = self.eval_ast(stmt)?;
+                            let val = self.deref_val(val)?;
+                            if let Value::Object(o) = stmt {
+                                if o.class == "ASTRetStmt" {
+                                    result = val;
+                                    break;
+                                }
+                            }
+                        }
+                        self.exit_scope();
+                        result
+                    }
+                    Err(s) => {
+                        // maybe built-in
+                        match name.as_str() {
+                            "print" => {
+                                for arg in args {
+                                    let val = self.eval_ast(&arg)?;
+                                    print!("{}", self.deref_val(val)?);
+                                }
+                                println!();
+                                Value::Unit
+                            }
+                            _ => return Err(s),
+                        }
+                    }
+                }
+            }
             "ASTFile" => {
                 let elems = match obj.get_field("elements")? {
                     Value::List { elems } => elems,
                     _ => unreachable!(),
                 };
                 for elem in &elems {
+                    if let Value::Object(o) = elem {
+                        if o.class == "ASTClassDef" {
+                            self.eval_class_def(&o)?;
+                            continue;
+                        }
+                    }
                     self.eval_ast(elem)?;
                 }
                 Value::Unit
@@ -127,6 +199,78 @@ impl Evaluator {
         };
 
         Ok(result)
+    }
+
+    fn eval_class_def(&mut self, obj: &Object) -> EvalResult {
+        assert_eq!(obj.class, "ASTClassDef");
+        let name = match obj.get_field("name")? {
+            Value::String(s) => s,
+            _ => unreachable!(),
+        };
+        let fields = match obj.get_field("fields")? {
+            Value::List { elems } => elems,
+            _ => unreachable!(),
+        };
+        let methods = match obj.get_field("methods")? {
+            Value::List { elems } => elems,
+            _ => unreachable!(),
+        };
+        let mut class_fields = HashMap::with_capacity(fields.len());
+        let mut class_methods = HashMap::with_capacity(methods.len());
+        for field in fields {
+            let field_name = match field {
+                Value::String(s) => s,
+                _ => unreachable!(),
+            };
+            class_fields.insert(field_name, Value::None);
+        }
+        for method in methods {
+            let method = match method {
+                Value::Object(o) => o,
+                _ => unreachable!(),
+            };
+            assert_eq!(method.class, "ASTFnDef");
+            let method_name = match method.get_field("name")? {
+                Value::String(s) => s,
+                _ => unreachable!(),
+            };
+            class_methods.insert(method_name, self.eval_fn_def(&method)?);
+        }
+        self.add_class(
+            name.clone(),
+            Class {
+                name,
+                fields: class_fields,
+                methods: class_methods,
+            },
+        );
+        Ok(Value::Unit)
+    }
+
+    fn eval_fn_def(&mut self, obj: &Object) -> Result<Function, String> {
+        assert_eq!(obj.class, "ASTFnDef");
+        let name = match obj.get_field("name")? {
+            Value::String(s) => s,
+            _ => unreachable!(),
+        };
+        let params = match obj.get_field("params")? {
+            Value::List { elems } => elems
+                .into_iter()
+                .map(|v| match v {
+                    Value::String(s) => s,
+                    _ => unreachable!(),
+                })
+                .collect(),
+            _ => unreachable!(),
+        };
+        let body = match obj.get_field("body")? {
+            Value::List { elems } => elems,
+            _ => unreachable!(),
+        };
+        for stmt in &body {
+            assert!(matches!(stmt, Value::Object(_)));
+        }
+        Ok(Function { name, params, body })
     }
 
     fn eval_bin_op(&mut self, obj: &Object) -> EvalResult {
@@ -356,6 +500,94 @@ fn field_access() -> Result<(), String> {
 
     assert_eq!(unsafe { &*eval.get_var("result_x")? }, &Value::Int(3));
     assert_eq!(unsafe { &*eval.get_var("result_neg")? }, &Value::Int(-2));
+
+    Ok(())
+}
+
+#[test]
+fn print_in_fn() -> Result<(), String> {
+    let three = ast_obj! { "ASTIntLiteral";
+        "value" => Value::Int(3)
+    };
+    let neg_two = ast_obj! { "ASTIntLiteral";
+        "value" => Value::Int(-2)
+    };
+    let x = ast_obj! { "ASTLetStmt";
+        "var_name" => Value::String("x".into()),
+        "value" => three.clone()
+    };
+    let x_ident = ast_obj! { "ASTIdent";
+        "name" => Value::String("x".into())
+    };
+    let y = ast_obj! { "ASTLetStmt";
+        "var_name" => Value::String("y".into()),
+        "value" => neg_two.clone()
+    };
+    let y_ident = ast_obj! { "ASTIdent";
+        "name" => Value::String("y".into())
+    };
+    let x_str = ast_obj! { "ASTStringLiteral";
+        "text" => Value::String("x = ".into())
+    };
+    let print_x = ast_obj! { "ASTFnCall";
+        "name" => Value::String("print".into()),
+        "args" => Value::List {
+            elems: vec![
+                x_str,
+                x_ident.clone()
+            ]
+        }
+    };
+    let y_str = ast_obj! { "ASTStringLiteral";
+        "text" => Value::String("y = ".into())
+    };
+    let print_y = ast_obj! { "ASTFnCall";
+        "name" => Value::String("print".into()),
+        "args" => Value::List {
+            elems: vec![
+                y_str,
+                y_ident.clone()
+            ]
+        }
+    };
+    let ret = ast_obj! { "ASTRetStmt";
+        "value" => x_ident.clone()
+    };
+    let def = ast_obj! { "ASTFnDef";
+        "name" => Value::String("do".into()),
+        "params" => Value::List { elems: vec![
+            Value::String("x".into()),
+            Value::String("y".into()),
+        ]},
+        "body" => Value::List {
+            elems: vec![
+                print_x,
+                print_y,
+                ret
+            ]
+        }
+    };
+    let call = ast_obj! { "ASTFnCall";
+        "name" => Value::String("do".into()),
+        "args" => Value::List {
+            elems: vec![
+                y_ident,
+                x_ident
+            ]
+        }
+    };
+    let result = ast_obj! { "ASTLetStmt";
+        "var_name" => Value::String("result".into()),
+        "value" => call
+    };
+    let ast = ast_obj! { "ASTFile";
+        "elements" => Value::List { elems: vec![x, y, def, result] }
+    };
+
+    let mut eval = Evaluator::new();
+    eval.eval_ast(&ast)?;
+
+    assert_eq!(unsafe { &*eval.get_var("result")? }, &Value::Int(-2));
 
     Ok(())
 }

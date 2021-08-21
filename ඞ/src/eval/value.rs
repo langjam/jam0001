@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
 use super::EvalResult;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Value {
     None,
     Unit,
@@ -14,14 +14,13 @@ pub enum Value {
     Comment { content: String },
     List { elems: Vec<Value> },
     Object(Object),
-    Class(Class),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Class {
     pub(crate) name: String,
     pub(crate) fields: HashMap<String, Value>,
-    pub(crate) methods: HashMap<String, Object>,
+    pub(crate) methods: HashMap<String, Function>,
 }
 
 impl Class {
@@ -30,6 +29,23 @@ impl Class {
             name,
             fields: HashMap::default(),
             methods: HashMap::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Function {
+    pub(crate) name: String,
+    pub(crate) params: Vec<String>,
+    pub(crate) body: Vec<Value>,
+}
+
+impl Function {
+    pub fn new(name: String) -> Self {
+        Self {
+            name,
+            params: Vec::new(),
+            body: Vec::new(),
         }
     }
 }
@@ -52,5 +68,51 @@ impl Object {
         self.fields
             .get_mut(name)
             .ok_or(format!("Unknown field: {}", name))
+    }
+}
+
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::None => write!(f, "None"),
+            Value::Unit => write!(f, "()"),
+            Value::Int(i) => write!(f, "{}", i),
+            Value::Float(ff) => write!(f, "{}", ff),
+            Value::String(s) => write!(f, r#""{}""#, s),
+            Value::VarRef { name } => write!(f, "{}", name),
+            Value::Ptr(ptr) => write!(f, "*{}", unsafe { &**ptr }),
+            Value::Comment { content } => write!(f, "/* {} */", content),
+            Value::List { elems } => f.debug_list().entries(elems).finish(),
+            Value::Object(o) => {
+                writeln!(f, "{} {{", &o.class)?;
+                for (name, value) in &o.fields {
+                    writeln!(f, "{}: {},", name, value)?;
+                }
+                write!(f, "}}")
+            }
+        }
+    }
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::None => write!(f, "None"),
+            Value::Unit => write!(f, "()"),
+            Value::Int(i) => write!(f, "{}", i),
+            Value::Float(ff) => write!(f, "{}", ff),
+            Value::String(s) => write!(f, "{}", s),
+            Value::VarRef { name } => write!(f, "{}", name),
+            Value::Ptr(ptr) => write!(f, "*{}", unsafe { &**ptr }),
+            Value::Comment { content } => write!(f, "/* {} */", content),
+            Value::List { elems } => f.debug_list().entries(elems).finish(),
+            Value::Object(o) => {
+                writeln!(f, "{} {{", &o.class)?;
+                for (name, value) in &o.fields {
+                    writeln!(f, "{}: {},", name, value)?;
+                }
+                write!(f, "}}")
+            }
+        }
     }
 }
