@@ -12,6 +12,12 @@ void print_ast(struct Parser_Node *node, usize depth) {
         case PN_PROC:
             printf("Proc\n");
             break;
+        case PN_CALL:
+            printf("Call(name = %.*s)\n", (int)node->data.call.name.size, source+node->data.call.name.from);
+            break;
+        case PN_STRING:
+            printf("String(%.*s)\n", (int)node->data.string.val.size, source+node->data.string.val.from);
+            break;
     }
     for (usize i = 0; i < node->children.size; i += 1) {
         print_ast(vec_get(&node->children, i), depth + 1);
@@ -22,10 +28,14 @@ void print_ast(struct Parser_Node *node, usize depth) {
 
 int main() {
     parser_init(
-        "main = proc {}"
+        "main = proc {\n"
+        "   print(\"Hello world\"; \"!!\");\n"
+        "}"
     );
+    printf("------\n%s\n------\n", parser_get_state()->lexer.src);
     struct Parser_Node result = parser_parse_toplevel();
     print_ast(&result, 0);
+    printf("------\n");
     parser_deinit();
     return 0;
 }

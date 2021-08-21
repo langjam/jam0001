@@ -26,10 +26,12 @@ enum Token_Type {
     TT_RBRACE,
     TT_LBRACKET,
     TT_RBRACKET,
+    TT_COMMA,
     TT_LT,
     TT_GT,
     TT_SEMI,
-    TT_RETURN
+    TT_RETURN,
+    TT_PROC
 };
 
 extern const string TT_NAMES[];

@@ -42,6 +42,7 @@ static void skip_tt(enum Token_Type tt) {
     }
 }
 
+__attribute__((unused))
 static void skip_v(const string v) {
     tok_t tok = pull();
     if (!spanstreqstr(tok.span, parser.lexer.src, v)) {
@@ -61,14 +62,44 @@ static void pnode_attach(pnode_t *left, pnode_t right) {
     vec_push(&left->children, &right);
 }
 
-
+static pnode_t value();
+static pnode_t call() {
+    tok_t name = pull();
+    assert_tt(&name, TT_IDENT);
+    skip_tt(TT_LPAREN);
+    pnode_t call_node = pnode_new(PN_CALL);
+    call_node.data.call.name = name.span;
+    while (peek().tt != TT_RPAREN) {
+        pnode_attach(&call_node, value());  
+        if (peek().tt != TT_RPAREN)
+            skip_tt(TT_SEMI);
+    }
+    skip_tt(TT_RPAREN);
+    return call_node;
+}
 
 static pnode_t value() {
-    // We only parse procedures for now
-    skip_v("proc");
-    skip_tt(TT_LBRACE);
-    skip_tt(TT_RBRACE);
-    return pnode_new(PN_PROC);
+    tok_t token = pull();
+    pnode_t value_node;
+    switch (token.tt) {
+        case TT_STRING:
+        value_node = pnode_new(PN_STRING);
+        value_node.data.string.val = token.span;
+        return value_node;
+        case TT_PROC:
+        value_node = pnode_new(PN_PROC);
+        skip_tt(TT_LBRACE);
+        while (peek().tt != TT_RBRACE) {
+            // For now we are just gonna parse some calls
+            pnode_attach(&value_node, call());
+            skip_tt(TT_SEMI);
+        }
+        skip_tt(TT_RBRACE);
+        return value_node;
+        default:
+        fprintf(stderr, "This is a sign that we should improve error handling, please\n");
+        exit(1);
+    }
 }
 
 static pnode_t declaration() {

@@ -8,7 +8,9 @@ struct Parser_State {
 
 enum Parser_Node_Kind {
     PN_DECL,
-    PN_PROC
+    PN_STRING,
+    PN_PROC,
+    PN_CALL
 };
 
 struct Parser_Node {
@@ -18,6 +20,12 @@ struct Parser_Node {
         struct {
             struct Span name; 
         } decl;
+        struct {
+            struct Span name; 
+        } call;
+        struct {
+            struct Span val; 
+        } string;
     } data;
 };
 

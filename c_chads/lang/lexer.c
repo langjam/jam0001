@@ -19,10 +19,12 @@ const string TT_NAMES[256] = {
     [TT_RPAREN] = "RightParen",
     [TT_LBRACKET] = "LeftBracket",
     [TT_RBRACKET] = "RightBracket",
+    [TT_COMMA] = ",",
     [TT_LT] = "LessThan",
     [TT_GT] = "GreaterThan",
     [TT_SEMI] = "Semi",
-    [TT_RETURN] = "Return"
+    [TT_RETURN] = "Return",
+    [TT_PROC] = "Proc"
 };
  
 struct Lexer_State lex_new(const string input) {
@@ -129,6 +131,8 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
     switch (lex_skip(self)) {
         case ':':
             return TT_DEF;
+        case ',':
+            return TT_COMMA;
         case '=':
             return TT_ASSIGN;
         case '{':
@@ -156,6 +160,9 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
 static enum Token_Type check_for_keyword(struct Lexer_State *self, struct Token *tok) {
     if (spanstreqstr(tok->span, self->src, "return")) {
         return TT_RETURN;
+    }
+    if (spanstreqstr(tok->span, self->src, "proc")) {
+        return TT_PROC;
     }
     return TT_INVALID;
 }
