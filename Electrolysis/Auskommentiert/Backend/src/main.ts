@@ -14,15 +14,16 @@ model.addPost({
     upvotes: 4,
     topLevelComments: [
         {
-            "id": "1",
-            "content": "while true:",
-            "upvotes": 1,
-            "children": [
+            id: "1",
+            content: "while true:",
+            upvotes: 1,
+            children: [
 
             ]
         }
     ]
 });
 if(res.ast !== null) {
-    let vm = new VM(model);
+    let vm = new VM(model.makeCommentProvider("22"));
+    vm.run();
 }
