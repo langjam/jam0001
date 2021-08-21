@@ -2,10 +2,9 @@
   "name": "pancake",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "npx parcel index.html -d build",
+    "dev": "npx parcel serve index.html",
     "build": "npm run prettier && parcel build index.html -d public",
     "prettier": "prettier --write 'src/*'"
   },
@@ -20,12 +19,15 @@
   },
   "homepage": "https://github.com/pancake-lang/jam0001#readme",
   "devDependencies": {
-    "parcel-bundler": "^1.12.5",
+    "parcel": "^2.0.0-rc.0",
     "prettier": "^2.3.2",
     "typescript": "^4.3.5"
   },
   "dependencies": {
+    "@parcel/transformer-react-refresh-wrap": "^2.0.0-alpha.3",
+    "@parcel/transformer-sass": "^2.0.0-rc.0",
     "@types/react": "^17.0.2",
+    "postcss": "^8.2.15",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   }
