@@ -52,7 +52,7 @@ export class Interpreter {
             this.nextResultCallback = resolve
         });
 
-        this.ports.compile(code);
+        this.ports.compile.send(code);
 
         return promise;
     }
@@ -68,7 +68,7 @@ export class Interpreter {
             this.nextStateCallback = resolve
         });
 
-        this.ports.step();
+        this.ports.step.send();
 
         return promise;
     }
