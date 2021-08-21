@@ -157,7 +157,7 @@ public:
     }
 
 private:
-    Value execute(Context&) override { return { Empty {} }; }
+    Value execute(Context&) override;
     virtual void dump(int indent) override;
 
     Vector<NonnullRefPtr<Variable>> m_decls;

@@ -43,3 +43,13 @@ let some_string = add("print " "native");
 print(<string>.length);
 
 print(<number>.negated);
+
+let Vec3 = { |T|: res
+    let res = record {
+        x: T y: T z: T
+    };
+};
+
+let any = record { x };
+
+print(Vec3(any));

@@ -24,7 +24,7 @@ Value lang$print(Context&, void* ptr, size_t count)
         value.value.visit(
             [](Empty) { out("<empty>"); },
             [](FunctionValue const&) { out("<fn ref>"); }, // FIXME
-            [](Type*) { out("<type ref>"); },                            // FIXME
+            [](NonnullRefPtr<Type> const&) { out("<type ref>"); },                            // FIXME
             [&print_value](NonnullRefPtr<CommentResolutionSet> const& rs) {
                 out("<Comment resolution set: {{");
                 auto first = true;
@@ -74,7 +74,7 @@ Value lang$sub(Context&, void* ptr, size_t count)
         arg.value.visit(
             [&](Empty) { append(Empty {}); },
             [&](FunctionValue const&) { append(String("<function>"sv)); },
-            [&](Type*) { append(String("<type>"sv)); },
+            [&](NonnullRefPtr<Type> const&) { append(String("<type>"sv)); },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) {
                 for (auto& entry : crs->values)
                     append(entry.value);
@@ -82,7 +82,7 @@ Value lang$sub(Context&, void* ptr, size_t count)
             [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
             [&](auto const& value) { append(value); });
     }
-    return { move(accumulator).downcast<Empty, int, String, Type*, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
+    return { move(accumulator).downcast<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
 }
 
 Value lang$add(Context&, void* ptr, size_t count)
@@ -122,7 +122,7 @@ Value lang$add(Context&, void* ptr, size_t count)
         arg.value.visit(
             [&](Empty) { append(String("<empty>"sv)); },
             [&](FunctionValue const&) { append(String("<function>"sv)); },
-            [&](Type*) { append(String("<type>"sv)); },
+            [&](NonnullRefPtr<Type> const&) { append(String("<type>"sv)); },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) {
                 for (auto& entry : crs->values)
                     append(entry.value);
@@ -130,7 +130,7 @@ Value lang$add(Context&, void* ptr, size_t count)
             [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
             [&](auto const& value) { append(value); });
     }
-    return { move(accumulator).downcast<Empty, int, String, Type*, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
+    return { move(accumulator).downcast<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
 }
 
 Value lang$cond(Context&, void* ptr, size_t count)
@@ -143,7 +143,7 @@ Value lang$cond(Context&, void* ptr, size_t count)
         if (condition.value.visit(
                 [&](Empty) -> bool { return false; },
                 [&](FunctionValue const&) -> bool { return true; },
-                [&](Type*) -> bool { return true; },
+                [&](NonnullRefPtr<Type> const&) -> bool { return true; },
                 [&](NonnullRefPtr<CommentResolutionSet> const& crs) -> bool {
                     // TODO.
                     return true;

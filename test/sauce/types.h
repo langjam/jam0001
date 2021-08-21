@@ -7,8 +7,25 @@
 #include <AK/Vector.h>
 #include <typeinfo>
 
-struct Type {
-    // ...
+enum class NativeType {
+    Int,
+    String,
+    Any,
+};
+
+struct Type;
+struct TypeName {
+    String name;
+    NonnullRefPtr<Type> type;
+};
+
+struct Type : public RefCounted<Type> {
+    Type(Variant<Vector<TypeName>, NativeType> decl)
+        : decl(move(decl))
+    {
+    }
+    
+    Variant<Vector<TypeName>, NativeType> decl;
 };
 
 struct CommentResolutionSet;
@@ -30,7 +47,7 @@ struct FunctionValue {
 };
 
 struct Value {
-    Variant<Empty, int, String, Type*, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType> value;
+    Variant<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType> value;
 };
 
 struct CommentResolutionSet : public AK::RefCounted<CommentResolutionSet> {

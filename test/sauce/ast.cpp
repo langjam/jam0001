@@ -223,6 +223,24 @@ void RecordDecl::dump(int indent)
     // FIXME
 }
 
+Value RecordDecl::execute(Context& context)
+{
+    Vector<TypeName> members;
+    for (auto& entry : m_decls) {
+        TypeName member {
+            .name = entry->name(),
+            .type = create<Type>(NativeType::Any),
+        };
+        if (entry->type()) {
+            auto type = const_cast<RefPtr<ASTNode>&>(entry->type())->run(context);
+            if (type.value.has<NonnullRefPtr<Type>>())
+                member.type = type.value.get<NonnullRefPtr<Type>>();
+        }
+        members.append(move(member));
+    }
+    return { create<Type>(move(members)) };
+}
+
 void Comment::dump(int indent)
 {
     ASTNode::dump(indent);
@@ -260,7 +278,7 @@ Value MemberAccess::execute(Context& context)
             },
             [](FunctionValue const&) -> Value { return { Empty {} }; },
             [](NativeFunctionType const&) -> Value { return { Empty {} }; },
-            [](Type const*) -> Value { return { Empty {} }; },
+            [](NonnullRefPtr<Type> const&) -> Value { return { Empty {} }; },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) -> Value {
                 auto res_crs = create<CommentResolutionSet>();
                 for (auto& entry : crs->values)

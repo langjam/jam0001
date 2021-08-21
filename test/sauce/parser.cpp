@@ -99,6 +99,8 @@ Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_expression()
         case Token::Type::Eof:
             return make_error_here("Unexpected eof");
         }
+
+        VERIFY_NOT_REACHED();
     };
     Optional<Result<NonnullRefPtr<ASTNode>, ParseError>> primary = parse_primary();
     if (primary->is_error())
@@ -279,7 +281,22 @@ Result<NonnullRefPtr<Variable>, ParseError> Parser::parse_variable()
 
 Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_record_decl()
 {
-    return make_error_here("Unimplemented: record");
+    (void)consume();
+    if (peek().type != Token::Type::OpenBrace)
+        return make_error_here("Expected an open brace");
+    (void)consume();
+    Vector<NonnullRefPtr<Variable>> contents;
+    while (peek().type != Token::Type::CloseBrace) {
+        if (peek().type == Token::Type::Eof)
+            return make_error_here("Expected a close brace, but got eof");
+        
+        auto var = parse_variable();
+        if (var.is_error())
+            return var.release_error();
+        contents.append(var.release_value());
+    }
+    (void)consume();
+    return static_ptr_cast<ASTNode>(create<RecordDecl>(move(contents)));
 }
 
 Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_member_access(NonnullRefPtr<ASTNode> base)
