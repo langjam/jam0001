@@ -32,6 +32,7 @@ type function_result =
   | YOLO of expr list
 
 type comment_function = {
+  name : string;
   n_args : int;
   declarations : (string * expr) list;
   result : function_result;
@@ -46,7 +47,7 @@ in split [] [] comment
 
 let string_of_tok = function
   | Int(_, n) -> string_of_int n
-  | Word(_, w) -> w
+  | Word(_, w) -> String.lowercase_ascii w
   | Sep -> ""
 
 let rec string_of_comment = function
@@ -119,7 +120,7 @@ let rec parse_statement (comment : tok list) : expr statement =
     | _ -> parse_statement q
   )
 
-let parse_function (comment : tok list) =
+let parse_function (Spec(_, name, comment)) =
   let comments = split_lines comment in
   let rec build_function (f : comment_function) = function
     | [] -> f
@@ -133,7 +134,22 @@ let parse_function (comment : tok list) =
         | YOLO l' -> YOLO (l @ l')
 in build_function {f with result = r} q
 in build_function {
+    name = name;
     n_args = 0;
     declarations = [];
     result = YOLO []
   } comments
+
+let parse_file f =
+  let lexbuf = Lexing.from_channel (open_in f) in
+  let blocks = ref [] in
+  Lexing.set_filename lexbuf f;
+  try while true do
+    blocks := Kl_parser.block lexbuf::!blocks
+  done;
+  failwith "osef"
+  with
+  | Kl_parser.Eof ->
+    List.map (parse_function) (List.rev !blocks)
+  | Kl_parser.SyntaxError msg ->
+    failwith msg
