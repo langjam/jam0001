@@ -1,4 +1,15 @@
-from abstract_syntax_trees import Binop, Comparison, FuncHeader, IfStmt, Number, Parameter, Program, SetStmt, Stmts, Variable
+from abstract_syntax_trees import (
+    Binop,
+    Comparison,
+    FuncHeader,
+    IfStmt,
+    Number,
+    Parameter,
+    Program,
+    SetStmt,
+    Stmts,
+    Variable,
+)
 from run_code import apply_binop, apply_comparison
 from tokenise import Token, Tokeniser
 
@@ -138,7 +149,7 @@ class Parser:
             identifier_words.append(value)
             self.advance()
             token, value = self.peek_lexeme()
-        return ' '.join(identifier_words)
+        return " ".join(identifier_words)
 
     def parse_if_stmt(self):
         condition = self.parse_expr()
@@ -153,13 +164,9 @@ class Parser:
             self.advance()  # we already have these values!
             second_operand = self.parse_operand()
             if operator_token == Token.BINOP:
-                return Binop(
-                    operator_value, first_operand, second_operand
-                )
+                return Binop(operator_value, first_operand, second_operand)
             if operator_token == Token.COMPARISON:
-                return Comparison(
-                    operator_value, first_operand, second_operand
-                )
+                return Comparison(operator_value, first_operand, second_operand)
         else:
             return first_operand
 

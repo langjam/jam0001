@@ -3,6 +3,7 @@ vowel_o_endings = ("ao", "eo", "io", "oo", "uo")
 vowel_z_endings = ("az", "ez", "iz", "oz", "uz")
 vowel_y_endings = ("ay", "ey", "iy", "oy", "uy")
 
+
 def conjugate_third_person(verb: str):
     if verb == "be":
         return "is"
