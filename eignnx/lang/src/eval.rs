@@ -7,6 +7,7 @@ pub type Env = Vec<ValBinding>;
 
 #[derive(Debug, Clone)]
 pub enum Val {
+    Void,
     Text(String),
     Closure(Env, String, Tm),
 }
@@ -14,6 +15,7 @@ pub enum Val {
 impl Display for Val {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Val::Void => write!(f, "void"),
             Val::Text(txt) => write!(f, "{:?}", txt),
             Val::Closure(_env, param, body) => write!(f, "[fn {} -> {}]", param, body),
         }
@@ -76,6 +78,17 @@ impl Eval {
                     result
                 } else {
                     panic!("Expected a closure, got {:?}", func);
+                }
+            }
+
+            Tm::Block(_loc, tms) => {
+                if let Some((last, init)) = tms.split_last() {
+                    for tm in init {
+                        self.eval(tm);
+                    }
+                    self.eval(last)
+                } else {
+                    Val::Void
                 }
             }
         }

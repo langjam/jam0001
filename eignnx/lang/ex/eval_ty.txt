@@ -1,5 +1,9 @@
-[[{
-    tyfn T -> fn f: [T -> T] -> fn x: T -> [f [f x]]
-    Text}
-    fn x: Text -> "qwer"]
-    "asdf"]
+"ertywety";;
+
+{
+    [[fn f: [Text -> Text] -> fn x: Text -> [f [f x]]
+        fn x: Text -> "qwer"]
+        "asdf"];
+
+    "poiu"
+};;

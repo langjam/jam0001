@@ -6,32 +6,38 @@ use nom::{
     character::complete::{alpha1, alphanumeric1, multispace0},
     combinator::{recognize, verify},
     error::ParseError,
-    multi::many0,
+    multi::{many0, many1, separated_list0},
     sequence::{delimited, pair, tuple},
     IResult, Parser,
 };
-use nom_supreme::final_parser;
+use nom_supreme::{final_parser::final_parser, ParserExt};
 
 use crate::ast::{Loc, Tm, Ty};
 
 const KEYWORDS: &'static [&'static str] = &["fn", "any", "tyfn"];
 
 pub fn parse_from_file(path: impl AsRef<Path>) -> Result<Tm, String> {
-    let src = std::fs::read_to_string(path).map_err(|e| format!("{}", e))?;
+    let src = std::fs::read_to_string(&path).map_err(|e| format!("{}", e))?;
     parse(&src.trim_end())
 }
 
 pub fn parse(i: &str) -> Result<Tm, String> {
-    let res: Result<Tm, nom::error::Error<&str>> =
-        final_parser::final_parser(ws::allowed::before(tm))(i);
+    let res: Result<_, nom::error::Error<&str>> =
+        final_parser(ws::allowed::before(top_lvl_block_tm))(i);
     match res {
         Ok(tm) => Ok(tm),
         Err(e) => Err(format!("{}", e)),
     }
 }
 
+fn top_lvl_block_tm<'i>(i: &'i str) -> IResult<&'i str, Tm> {
+    many1(ws::allowed::before(tm).terminated(ws::allowed::before(tag(";;"))))
+        .map(|tms| Tm::Block(Loc, tms))
+        .parse(i)
+}
+
 fn tm(i: &str) -> IResult<&str, Tm> {
-    alt((var_tm, text_tm, lam_tm, app_tm))(i)
+    alt((var_tm, text_tm, lam_tm, app_tm, block_tm))(i)
 }
 
 #[test]
@@ -73,6 +79,15 @@ fn app_tm(i: &str) -> IResult<&str, Tm> {
         .parse(i)
 }
 
+fn block_tm(i: &str) -> IResult<&str, Tm> {
+    braced(separated_list0(
+        ws::allowed::before(tag(";")),
+        ws::allowed::before(tm),
+    ))
+    .map(|tms| Tm::Block(Loc, tms))
+    .parse(i)
+}
+
 fn ty(i: &str) -> IResult<&str, Ty> {
     alt((arr_ty, forall_ty, var_ty))(i)
 }
@@ -103,7 +118,7 @@ fn var_ty(i: &str) -> IResult<&str, Ty> {
 }
 
 fn bracketed<'i, O, E>(
-    mut p: impl FnMut(&'i str) -> IResult<&'i str, O, E>,
+    mut p: impl Parser<&'i str, O, E>,
 ) -> impl FnMut(&'i str) -> IResult<&'i str, O, E>
 where
     E: ParseError<&'i str>,
@@ -111,9 +126,25 @@ where
     move |i: &str| {
         let (i, _) = tag("[")(i)?;
         let (i, _) = multispace0(i)?;
-        let (i, o) = p(i)?;
+        let (i, o) = p.parse(i)?;
         let (i, _) = multispace0(i)?;
         let (i, _) = tag("]")(i)?;
+        Ok((i, o))
+    }
+}
+
+fn braced<'i, O, E>(
+    mut p: impl Parser<&'i str, O, E>,
+) -> impl FnMut(&'i str) -> IResult<&'i str, O, E>
+where
+    E: ParseError<&'i str>,
+{
+    move |i: &str| {
+        let (i, _) = tag("{")(i)?;
+        let (i, _) = multispace0(i)?;
+        let (i, o) = p.parse(i)?;
+        let (i, _) = multispace0(i)?;
+        let (i, _) = tag("}")(i)?;
         Ok((i, o))
     }
 }

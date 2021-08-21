@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{write, Display};
 
 use crate::tcx::Tcx;
 
@@ -18,6 +18,7 @@ pub enum Tm {
     Var(Loc, String),
     Lam(Loc, String, Ty, Box<Tm>),
     App(Loc, Box<Tm>, Box<Tm>),
+    Block(Loc, Vec<Tm>),
 }
 
 impl Display for Tm {
@@ -27,6 +28,14 @@ impl Display for Tm {
             Tm::Var(_, name) => write!(f, "{}", name),
             Tm::Lam(_, param, ty, body) => write!(f, "[fn {}: {} -> {}]", param, ty, body),
             Tm::App(_, func, arg) => write!(f, "[{} {}]", func, arg),
+            Tm::Block(_, tms) => {
+                writeln!(f, "{}", "{")?;
+                for tm in tms {
+                    writeln!(f, "    {}\n", tm)?;
+                }
+                writeln!(f, "{}", "}")?;
+                Ok(())
+            }
         }
     }
 }
@@ -38,6 +47,7 @@ impl Tm {
             Tm::Var(loc, _) => loc,
             Tm::Lam(loc, _, _, _) => loc,
             Tm::App(loc, _, _) => loc,
+            Tm::Block(loc, _) => loc,
         }
     }
 }
@@ -93,13 +103,15 @@ impl Display for Ty {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum BuiltinTy {
+    Void,
     Text,
 }
 
 impl Display for BuiltinTy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BuiltinTy::Text => write!(f, "{}", "builtin::Text"),
+            BuiltinTy::Void => write!(f, "Void"),
+            BuiltinTy::Text => write!(f, "builtin::Text"),
         }
     }
 }

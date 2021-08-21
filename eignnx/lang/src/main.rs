@@ -40,12 +40,6 @@ fn main() {
 }
 
 #[test]
-fn test_parse() {
-    let ast = parser::parse(r#"  [fn asdf:Int->"balkjasdf"]"#).unwrap();
-    dbg!(ast);
-}
-
-#[test]
 fn test_parse_from_file() {
     let ast = parser::parse_from_file(r#"ex\ex1.txt"#).unwrap();
     dbg!(ast);

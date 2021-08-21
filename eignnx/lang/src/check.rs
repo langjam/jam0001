@@ -93,6 +93,18 @@ impl Check {
                     ))
                 }
             }
+
+            Tm::Block(_loc, tms) => {
+                if let Some((last, init)) = tms.split_last() {
+                    let tm_tys = init
+                        .iter()
+                        .map(|tm| self.infer(tm))
+                        .collect::<Result<Vec<_>, TyCheckErr>>()?;
+                    self.infer(last)
+                } else {
+                    Ok(Ty::Builtin(BuiltinTy::Void))
+                }
+            }
         }
     }
 
@@ -137,6 +149,11 @@ impl Check {
                         func.as_ref().clone(),
                     ))
                 }
+            }
+
+            tm => {
+                let actual = self.infer(tm)?;
+                self.subtype(tm.loc(), &actual, ty)
             }
         }
     }
