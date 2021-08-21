@@ -1,3 +1,7 @@
+/**********************************
+ * Example 5: Function Signatures *
+ **********************************/
+
 x = function({
 	/*
 	 * This function is used to print a tree out of a list and a level:
@@ -10,5 +14,5 @@ x = function({
 	out("Yeet")?
 })?
 
-/* Print out yeet */
+/* Print out "yeet" */
 x()?
