@@ -14,6 +14,73 @@ Four transpilers (languages) are created:
 3. sequence.json -> BASH
 4. details.json -> BASH
 
+# Key Takeaways
+- multiple views on one problem
+- one mini-language (SCN) for each problem
+- separation of concerns
+- isolation
+- concurrency.
+
+# Key Technologies
+- drawings (.drawio, .svg in the future)
+- exhaustive search
+- PEG.
+
+# Drawings
+
+I grok and transpile .drawio files for this project.
+
+.SVG should be another easy-to-grok drawing format (rectangles, ellipses, text, lines).
+
+## Exhaustive Search
+
+I used PROLOG (SWIPL) for this project, but, there are other choices, e.g.
+- miniKanren
+- datalog
+- core.logic
+- nested loops.
+
+# PEG
+PEG means Parsing Expression Grammars.
+
+Many PEG libraries exist for many languages.
+
+I currently think the Ohm-JS, and especially the Ohm Editor, are the best-of-breed in PEG technologies.
+
+# Separation of Concerns
+
+## Multiple Views
+
+I use multiple paradigms for this problem. 
+
+Each paradigm is a view.
+
+Each paradigm (view) gets its own syntax (I call it an SCN - like a mini-DSL).
+
+## Ohm-JS
+
+Ohm-JS separates concerns into
+- grammar
+- semantics (understanding and emitting).
+
+Most PEG libraries conflate grammar+semantics (e.g. by annotating the grammar with variable names).
+
+# Isolation
+
+Build and forget.
+
+Regression testing is a _tell_ that isolation is not present.  
+
+[_If new code impacts existing code, the problem is lack-of-isolation._]
+
+# Concurrency
+
+It is not possible to build isolated components unless they are concurrent-by-default.
+
+Synchrony is a hidden from of dependency.
+
+Dependency is anti-isolation.
+
 # Introduction
 
 The following is a discussion about the [language jam](https://github.com/langjam/langjam).
