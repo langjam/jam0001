@@ -136,4 +136,8 @@ function namify (s) {
 	.replace (/ /g,'__');
 }
 
+function stripQuotes (s) {
+    return s
+	.replace (/"/g,'');
+}
 

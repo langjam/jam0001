@@ -115,7 +115,7 @@ Components {
   Component [lb children connections diagram id inputs name outputs synccode rb] =
   [[
 ${namify (name)} {
-  ${synccode}
+  ${stripQuotes (synccode)}
 }
 ]]
       Pair [q1 name q2 colon str] = [[${str}]]
