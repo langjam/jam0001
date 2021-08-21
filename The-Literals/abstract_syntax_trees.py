@@ -17,6 +17,12 @@ class Variable(Expr):
     def __repr__(self):
         return f"VAR {self.varname}"
 
+class Parameter(Expr):
+    def __init__(self, varname):
+        self.varname = varname
+
+    def __repr__(self):
+        return f"PARAM {self.varname}"
 
 class Binop(Expr):
     def __init__(self, operator, left_operand, right_operand):
@@ -68,3 +74,13 @@ class Program:
     def __repr__(self):
         return (
             f"\nPROGRAM \n{self.funcs}\n{self.stmts}")
+
+class FuncHeader:
+    def __init__(self, func_name, params, return_var):
+        self.func_name = func_name
+        self.params = params
+        self.return_var = return_var
+
+    def __repr__(self):
+        return (
+            f"FUNC (NAME:{self.func_name}, PARAMS:{self.params}, RETURNS:{self.return_var}")

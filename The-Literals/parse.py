@@ -1,4 +1,4 @@
-from abstract_syntax_trees import Binop, Comparison, IfStmt, Number, Program, SetStmt, Variable
+from abstract_syntax_trees import Binop, Comparison, FuncHeader, IfStmt, Number, Parameter, Program, SetStmt, Variable
 from run_code import apply_binop, apply_comparison
 from tokenise import Token, Tokeniser
 
@@ -53,6 +53,7 @@ class Parser:
 
     def parse_function(self):
         params = []
+        return_var = Variable("it")
 
         token, value = self.advance()
         self.expect(Token.EOL)
@@ -70,7 +71,7 @@ class Parser:
             elif token == Token.EOL:
                 self.advance()
             elif token == Token.RETURNVAR:
-                self.parse_returnvar()
+                return_var = self.parse_returnvar()
                 token, value = self.peek_lexeme()
                 while token == Token.HFILL:
                     self.advance()
@@ -84,15 +85,19 @@ class Parser:
             self.expect(Token.EOL)
             self.advance()
 
+        return FuncHeader(func_name, params, return_var)
+
     def parse_param(self):
         self.advance()
-        self.parse_identifier()
+        param_name = self.parse_identifier()
         self.expect(Token.EOL)
+        return Parameter(param_name)
 
     def parse_returnvar(self):
         self.advance()
-        self.parse_identifier()
+        varname = self.parse_identifier()
         self.expect(Token.EOL)
+        return Variable(varname)
 
     def parse_stmts(self):
         stmts_end_tokens = [Token.LEAVE_FUNC, Token.EOF]
