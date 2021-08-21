@@ -5,6 +5,16 @@
 #include "../aid/sfio/sfio.h"
 
 void print_ast(struct Parser_Node *node, usize depth) {
+
+    if (node->kind == PN_DECL) {
+        struct Vec *annots = &node->data.decl.annotations;
+        for (usize i = 0; i < node->data.decl.annotations.size; i += 1) {
+            for (usize i = 0; i < depth; i += 1) 
+                printf("    ");
+            strview_t *view = vec_get(annots, i);
+            printf("#%.*s\n", (int)view->size, view->view);
+        }
+    }
     for (usize i = 0; i < depth; i += 1) 
         printf("    ");
 
@@ -74,7 +84,6 @@ void print_ast(struct Parser_Node *node, usize depth) {
             printf("Ident(%.*s)\n", (int)node->data.ident.val.size, node->data.ident.val.view);
             break;
     }
-
     if (node->kind != PN_INVAL)
         for (usize i = 0; i < node->children.size; i += 1) {
             print_ast(vec_get(&node->children, i), depth + 1);
