@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	toks := lexer.RunLexer("while 1")
+	toks := lexer.RunLexer("set($1 $2) set($1 $2) // thing")
 	shared.Node{IsExpression: true, Children: parser.GenerateAst(&toks)}.Print("")
 }

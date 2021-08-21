@@ -22,17 +22,10 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 			continue
 
 		case shared.TTrparen, shared.TTcloseBlock:
-			*toks = (*toks)[1:]
 			return out
 
 		case shared.TTinstruction: // (instruction (arguments))
 			*toks = (*toks)[1:]
-
-			if len(*toks) > 0 &&
-				(*toks)[0].Type == shared.TTlparen {
-				
-				*toks = (*toks)[1:]
-			}
 
 			out = append(out,
 				shared.Node{
@@ -44,7 +37,7 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 			continue
 
 		case shared.TTstring, shared.TTref:
-			if len(*toks) > 1 &&
+			if len(*toks) > 0 &&
 				(*toks)[1].Type == shared.TTlparen {
 
 				*toks = (*toks)[1:]
@@ -62,6 +55,7 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 			}
 
 		case shared.TTwcomment:
+			print("here\n")
 			if len(out) == 0 {
 				continue
 			}
