@@ -10,6 +10,7 @@ pub enum Value {
     Function(Function),
     Bool(bool),
     Const(Box<Value>),
+    List(Vec<Value>),
     Null,
 }
 
@@ -21,6 +22,7 @@ impl Value {
             ("string", Self::String(_)) => true,
             ("number", Self::Number(_)) => true,
             ("bool", Self::Bool(_)) => true,
+            ("list", Self::List(_)) => true,
             (_, Self::Const(constant)) => constant.is_type(t),
             _ => false,
         }
@@ -32,6 +34,7 @@ impl Value {
             Self::Number(_) => "number".to_owned(),
             Self::Bool(_) => "bool".to_owned(),
             Self::Null => "null".to_owned(),
+            Self::List(_) => "list".to_owned(),
             Self::Const(constant) => constant.type_string(),
             _ => todo!()
         }
@@ -44,6 +47,7 @@ impl Value {
             Self::Bool(b) => *b,
             Self::Null => false,
             Self::Function(_) => true,
+            Self::List(items) => ! items.is_empty(),
             Self::Const(constant) => constant.to_bool(),
         }
     }
@@ -58,6 +62,21 @@ impl Display for Value {
             Self::Null => "null".to_owned(),
             Self::Bool(true) => "true".to_owned(),
             Self::Bool(false) => "false".to_owned(),
+            Self::List(items) => {
+                let mut buffer = String::from("[");
+
+                for (i, item) in items.iter().enumerate() {
+                    buffer.push_str(&format!("{}", item));
+
+                    if i != items.len() - 1 {
+                        buffer.push_str(", ");
+                    }
+                }
+
+                buffer.push_str("]");
+
+                buffer
+            },
             Self::Const(constant) => format!("{}", constant),
         })
     }

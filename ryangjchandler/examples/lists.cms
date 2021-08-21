@@ -1,0 +1,11 @@
+/*
+ * @name "Lists"
+ */
+
+/*
+ * @identifier names
+ * @type list
+ */
+var ["Ryan", "John", "Jane"]
+
+println(names)

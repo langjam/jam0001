@@ -68,6 +68,8 @@ pub enum TokenKind {
     Var,
     Const,
     Assign,
+    LeftBracket,
+    RightBracket,
 }
 
 pub type TokenList = Vec<Token>;

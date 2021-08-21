@@ -309,6 +309,23 @@ impl<'i> Interpreter<'i> {
 
                 value
             },
+            Expression::List(items) => {
+                let items: Vec<Value> = items.iter()
+                    .map(|a| {
+                        let value = self.execute_expression(a.clone());
+
+                        if value.is_err() {
+                            crate::error(&format!("{}", value.err().unwrap()));
+                            std::process::exit(1);
+                        } else {
+                            value.unwrap()
+                        }
+                    })
+                    .map(|a| a.unwrap())
+                    .collect();
+
+                Value::List(items)
+            },
             _ => todo!()
         }))
     }

@@ -324,6 +324,29 @@ impl<'p> Parser<'p> {
 
                 Some(Expression::Null)
             },
+            TokenKind::LeftBracket => {
+                self.expect_token_and_read(TokenKind::LeftBracket)?;
+
+                let mut items = Vec::new();
+
+                while ! self.current_is(TokenKind::RightBracket) {
+                    if self.current_is(TokenKind::Comma) {
+                        self.expect_token_and_read(TokenKind::Comma)?;
+                        continue;
+                    }
+
+                    let item = match self.parse_expression(Priority::Lowest)? {
+                        Some(e) => e,
+                        None => return Err(ParserError::ExpectedExpression(self.current.position.line)),
+                    };
+
+                    items.push(item);
+                }
+
+                self.expect_token_and_read(TokenKind::RightBracket)?;
+
+                Some(Expression::List(items))
+            },
             TokenKind::Identifier(i) => {
                 self.expect_token_and_read(TokenKind::Identifier("".to_owned()))?;
 

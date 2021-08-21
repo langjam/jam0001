@@ -241,7 +241,9 @@ fn get_symbol(symbol: &str) -> Option<TokenKind> {
         "," => TokenKind::Comma,
         "+" => TokenKind::Plus,
         "-" => TokenKind::Minus,
-        "=" => TokenKind::Assign
+        "=" => TokenKind::Assign,
+        "[" => TokenKind::LeftBracket,
+        "]" => TokenKind::RightBracket
     }
 }
 

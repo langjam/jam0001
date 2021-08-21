@@ -26,6 +26,7 @@ pub enum Expression {
     String(String),
     Number(f64),
     Bool(bool),
+    List(Vec<Expression>),
     Null,
     GetIdentifier(String),
     Call(Call),
