@@ -2,7 +2,7 @@ import os
 import sys
 from marksideways.runner import Runner
 
-def main(args):
+def main(ms_dir, args):
   if len(args) == 0:
     print("Usage: python ms.py codefile.md [args...]")
     return
@@ -16,7 +16,12 @@ def main(args):
   text = c.read()
   c.close()
 
-  Runner(args[0], text).run(args[1:])
+  Runner(ms_dir, args[0], text).run(args[1:])
 
 if __name__ == "__main__":
-  main(sys.argv[1:])
+  args = sys.argv
+  dir = args[0].replace('\\', '/').split('/')
+  dir.pop()
+  if len(dir) == 0: dir = ['.']
+
+  main(os.sep.join(dir), args[1:])

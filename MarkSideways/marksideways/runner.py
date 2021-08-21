@@ -7,9 +7,11 @@ from .values import *
 from .builtinlib import generate_builtins
 
 class Runner:
-  def __init__(self, filename, text):
+  def __init__(self, marksideways_dir, filename, text):
     self.filename = filename
     self.text = text
+
+    set_marksideways_dir(marksideways_dir)
 
   def run(self, args):
     documentItems = markdown_tokenize(self.filename, self.text)

@@ -3,6 +3,7 @@ import sys
 import time
 
 from .values import *
+from .util import *
 
 # Suppress the welcome message STDOUT spam when importing pygame.
 # This is the official method which sometimes does not work:
@@ -75,6 +76,8 @@ def get_game_lib():
     vars['frame_begin'] = time.time()
     vars['fps'] = args[3]
     pygame.display.set_caption(args[0])
+    icon = pygame.image.load(os.path.join(get_marksideways_dir(), 'marksideways', 'icon.png')).convert_alpha()
+    pygame.display.set_icon(icon)
 
   def _end_frame(throw_token, args):
     pygame.display.flip()

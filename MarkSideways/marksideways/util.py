@@ -52,3 +52,11 @@ def merge_dictionaries(a, b):
     for k in d.keys():
       output[k] = d[k]
   return output
+
+_ms_dir = None
+def set_marksideways_dir(dir):
+  global _ms_dir
+  _ms_dir = dir
+
+def get_marksideways_dir():
+  return _ms_dir
