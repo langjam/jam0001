@@ -24,12 +24,11 @@ class ComstructLexer(Lexer):
         "ASSIGN",  # Assign a vaiable (=)
         "NEWSTMT",  # ?
         "SEP",  # :
-        "MLCOMMENT"  # \\ Text \\
     }
 
     ignore = " \t\n"
+    ignore_mlcomment = r"//[\s\S]*\\\\"
 
-    MLCOMMENT = r"\\\\[\s\S]*\\\\"
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
     PLUS = r'\+'
     MINUS = r'-'
@@ -57,10 +56,6 @@ class ComstructLexer(Lexer):
 
     def NEWSTMT(self, t):
         self.lineno += len(t.value)
-        return t
-
-    def MLCOMMENT(self, t):
-        t.value = t.value.replace("\\", "")
         return t
 
     def error(self, t):

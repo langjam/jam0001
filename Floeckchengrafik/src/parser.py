@@ -32,10 +32,6 @@ class ComstructParser(Parser):
     def expr(self, p):
         return StatementNode.VarNode(p.NAME)
 
-    @_("MLCOMMENT")
-    def expr(self, p):
-        return StatementNode.LiterallyNode(p.MLCOMMENT)
-
     @_("expr PLUS expr")
     def expr(self, p):
         return StatementNode.MathNode("+", p.expr0, p.expr1)
