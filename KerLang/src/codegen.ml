@@ -1,5 +1,7 @@
 
-(** Code generator - To transpile to OCaml. *)
+(** Code generator - To transpile to OCaml.
+    Call function_as_ast_generate to print the generated code of a function,
+    given its name and its AST. *)
 
 open Kl_IR;;
 
@@ -65,9 +67,9 @@ let rec ast_generate ?(self_name: string option = None) ?(indent_lvl: int = 0) (
   | If(cond, ifcase, elsecase) -> begin
       print_string "\n";
       print_indent indent_lvl;
-      print_string "if";
+      print_string "if 0 <> (";
       ast_generate ~self_name:(self_name) ~indent_lvl:(indent_lvl+1) cond;
-      print_string "\n";
+      print_string ")\n";
       print_indent indent_lvl;
       print_string "then";
       ast_generate ~self_name:(self_name) ~indent_lvl:(indent_lvl+1) ifcase;
