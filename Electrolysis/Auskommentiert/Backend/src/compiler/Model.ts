@@ -3,22 +3,35 @@ import { Comment } from "./grammar";
 import { WrappedComment, WrappedCommentSorter } from "./WrappedComment";
 import { inspect } from "util";
 import {parse} from "./grammar";
+import { urlToHttpOptions } from "url";
 
 class ModelComment extends WrappedComment {
-    private children : WrappedComment[];
+    private children : ModelComment[];
     private astString : string;
-    constructor(ast : Comment, astString : string, upvotes : number, id : string, date: Date, children : WrappedComment[]) {
+    constructor(ast : Comment, astString : string, upvotes : number, id : string, date: Date, children : ModelComment[]) {
         super(ast, upvotes, id, date);
         this.children = children;
         this.astString = astString;
+    }
+
+    toObject() : any {
+        return {
+            id: this.id,
+            content: this.astString,
+            children: this.children.map(v => v.toObject()),
+            upvotes: this.upvotes,
+            date: this.date
+        };
     }
 }
 
 class ModelPost {
     private mTitle : string;
     private mId : string;
+    private mContent : string;
     private mUpvotes : number;
     private mTopLevelComments : ModelComment[];
+    private mDate : number;
     get title() {
         return this.mTitle;
     }
@@ -34,11 +47,23 @@ class ModelPost {
     get upvotes() {
         return this.mUpvotes;
     }
-    constructor(title : string, id : string, upvotes : number, topLevelComments : ModelComment[]) {
+    constructor(title : string, content : string, id : string, upvotes : number, topLevelComments : ModelComment[], date : number) {
         this.mTitle = title;
         this.mId = id;
+        this.mContent = content;
         this.mUpvotes = upvotes;
         this.mTopLevelComments = topLevelComments;
+        this.mDate = date;
+    }
+    toObject() : any {
+        return {
+            id: this.mId,
+            title: this.mTitle,
+            content: this.mContent,
+            comments: this.topLevelCommentsSorted.map(v => v.toObject()),
+            upvotes: this.mUpvotes,
+            date: this.mDate
+        };
     }
 }
 
@@ -71,7 +96,7 @@ export class Model {
         for(let topLevelComment of post.comments) {
             comments.push(this.parseComment(topLevelComment));
         }
-        this.mPosts.set(post.id, new ModelPost(post.title, post.id, post.upvotes, comments));
+        this.mPosts.set(post.id, new ModelPost(post.title, post.content, post.id, post.upvotes, comments, post.date));
         console.log(inspect(this.mPosts, false, null, true));
     }
     addComment(postId : string, comment : ModelComment) {

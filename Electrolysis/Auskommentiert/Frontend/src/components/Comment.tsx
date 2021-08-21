@@ -14,8 +14,8 @@ class Comment extends Component<CommentType, CommentType> {
 
     UNSAFE_componentWillMount() {
         this.setState(this.props)
-        for (let entry of this.props.answers) {
-            let component = <Comment id={entry.id} body={entry.body} answers={entry.answers} upvotes={entry.upvotes} creation={entry.creation}></Comment>
+        for (let entry of this.props.children) {
+            let component = <Comment id={entry.id} content={entry.content} children={entry.children} upvotes={entry.upvotes} date={entry.date}></Comment>
             this.answers.push(component)
         }
     }
@@ -24,7 +24,7 @@ class Comment extends Component<CommentType, CommentType> {
         return (
             <div className="">
                 <div className="body comment">
-                    <p className="content">{this.state.body}</p>
+                    <p className="content">{this.state.content}</p>
                     <button onClick={() => this.upvote()}>{this.state.upvotes} &#8593;</button>
                     <button onClick={() => this.downvote()}>&#8595;</button>
                     <Link to="/create_answer_comment">

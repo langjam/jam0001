@@ -15,7 +15,7 @@ class Topic extends Component<TopicType, TopicType> {
     UNSAFE_componentWillMount() {
         this.setState(this.props)
         for (let entry of this.props.comments) {
-            let component = <Comment id={entry.id} body={entry.body} answers={entry.answers} upvotes={entry.upvotes} creation={entry.creation}></Comment>
+            let component = <Comment id={entry.id} content={entry.content} children={entry.children} upvotes={entry.upvotes} date={entry.date}></Comment>
             this.comments.push(component)
         }
     }
@@ -24,11 +24,11 @@ class Topic extends Component<TopicType, TopicType> {
         return (
             <div className="middle">
                 <div className="">
-                    <h2 className="heading_element">{this.state.heading}</h2>
-                    <h4 className="heading_element">{new Date(this.state.creation).toLocaleString()}</h4>
+                    <h2 className="heading_element">{this.state.title}</h2>
+                    <h4 className="heading_element">{new Date(this.state.date).toLocaleString()}</h4>
                 </div>
                 <div className="body">
-                    <p className="content">{this.state.body}</p>
+                    <p className="content">{this.state.content}</p>
                 </div>
                 <div>
                     <button onClick={() => this.upvote()}>{this.state.upvotes} &#8593;</button>

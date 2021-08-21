@@ -6,19 +6,19 @@ type AppType = {
 
 type TopicType = {
     id: string
-    heading: string,
-    body: string,
+    title: string,
+    content: string,
     comments: CommentType[],
     upvotes: number,
-    creation: number
+    date: number
 }
 
 type CommentType = {
     id: string,
-    body: string,
-    answers: CommentType[],
+    content: string,
+    children: CommentType[],
     upvotes: number,
-    creation: number
+    date: number
 }
 
 export type { AppType, TopicType, CommentType }

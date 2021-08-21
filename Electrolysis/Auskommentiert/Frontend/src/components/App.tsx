@@ -12,66 +12,66 @@ let data: AppType = {
     topics: [
         {
             id: "1",
-            heading: "Hi",
-            body: "Test Body",
+            title: "Hi",
+            content: "Test Body",
             upvotes: 0,
             comments: [
                 {
                     id: "1",
-                    body: "Ich bin ein Kommentar",
-                    answers: [
+                    content: "Ich bin ein Kommentar",
+                    children: [
                         {
                             id: "2",
-                            body: "Unterkommentar",
-                            answers: [],
+                            content: "Unterkommentar",
+                            children: [],
                             upvotes: 0,
-                            creation: Date.now()
+                            date: Date.now()
                         },
                         {
                             id: "3",
-                            body: "Zweiter Unterkommentar",
-                            answers: [
+                            content: "Zweiter Unterkommentar",
+                            children: [
                                 {
                                     id: "4",
-                                    body: "Antwort",
-                                    answers: [],
+                                    content: "Antwort",
+                                    children: [],
                                     upvotes: 0,
-                                    creation: Date.now()
+                                    date: Date.now()
                                 }
                             ],
                             upvotes: 0,
-                            creation: Date.now()
+                            date: Date.now()
                         }
                     ],
                     upvotes: 0,
-                    creation: Date.now()
+                    date: Date.now()
                 }
             ],
-            creation: Date.now()
+            date: Date.now()
         },
         {
             id: "2",
-            heading: "Programming",
-            body: "Body",
+            title: "Programming",
+            content: "Body",
             upvotes: 0,
             comments: [
                 {
                     id: "1",
-                    body: "Ich bin ein Kommentar",
-                    answers: [
+                    content: "Ich bin ein Kommentar",
+                    children: [
                         {
                             id: "2",
-                            body: "Unterkommentar",
-                            answers: [],
+                            content: "Unterkommentar",
+                            children: [],
                             upvotes: 0,
-                            creation: Date.now()
+                            date: Date.now()
                         }
                     ],
                     upvotes: 0,
-                    creation: Date.now()
+                    date: Date.now()
                 }
             ],
-            creation: Date.now()
+            date: Date.now()
         }
     ]
 }
@@ -99,7 +99,7 @@ class App extends Component<{}, AppType> {
                     {
                         this.state.topics.map(topic =>
                             <Route key={topic.id} exact path={"/topic/" + topic.id}>
-                                <Topic id={topic.id} heading={topic.heading} body={topic.body} comments={topic.comments} upvotes={topic.upvotes} creation={topic.creation} />
+                                <Topic id={topic.id} title={topic.title} content={topic.content} comments={topic.comments} upvotes={topic.upvotes} date={topic.date} />
                             </Route>
                         )
                     }
