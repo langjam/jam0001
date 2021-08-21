@@ -29,3 +29,25 @@ class Comparison(Expr):
         self.operator = operator    
         self.left_operand = left_operand
         self.right_operand = right_operand
+
+    def __repr__(self):
+        return f'({self.left_operand}) {self.operator} ({self.right_operand})'
+
+class Stmt:
+    pass
+
+class IfStmt(Stmt):
+    def __init__(self, condition, thenpt):
+        self.condition = condition
+        self.thenpt = thenpt
+
+    def __repr__(self):
+        return f"IF {self.condition} THEN {self.thenpt}"
+
+class SetStmt(Stmt):
+    def __init__(self, target, value):
+        self.target = target
+        self.value = value
+
+    def __repr__(self):
+        return f"SET {self.target} TO {self.value}"

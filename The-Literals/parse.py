@@ -1,4 +1,4 @@
-from abstract_syntax_trees import Binop, Comparison, Number, Variable
+from abstract_syntax_trees import Binop, Comparison, IfStmt, Number, SetStmt, Variable
 from run_code import apply_binop, apply_comparison
 from tokenise import Token, Tokeniser
 
@@ -38,36 +38,41 @@ class Parser:
 
     def parse_program(self):
         self.expect(Token.BOF)
-        self.parse_stmt()
+        stmts = self.parse_stmts()
         self.expect(Token.EOF)
+        return stmts
 
     def parse_stmts(self):
         stmts_end_tokens = [Token.LEAVE_FUNC, Token.EOF]
+        stmts = []
         done = False
         while not done:
             token, value = self.peek_lexeme()
             if token in stmts_end_tokens:
                 done = True
             else:
-                self.parse_stmt()
+                stmts.append(self.parse_stmt())
+        return stmts
 
     def parse_stmt(self):
-        self.parse_stmt_contents()
+        contents = self.parse_stmt_contents()
         self.expect(Token.DOT)
+        return contents
 
     def parse_stmt_contents(self):
         token, value = self.advance()
         if token == Token.SETVAR:
-            self.parse_set_stmt()
+            return self.parse_set_stmt()
         elif token == Token.IF_KEYWORD:
-            self.parse_if_stmt()
+            return self.parse_if_stmt()
 
     def parse_set_stmt(self):
         target = self.parse_identifier()
         token, value = self.advance()
         if token != Token.TO:
             raise UnexpectedTokenError(Token.TO, token)
-        self.parse_operand()
+        operand = self.parse_operand()
+        return SetStmt(target, operand)
 
     def parse_identifier(self):
         identifier_words = []
@@ -82,9 +87,9 @@ class Parser:
         condition = self.parse_expr()
         self.expect(Token.THEN)
         stmt = self.parse_stmt_contents()
+        return IfStmt(condition, stmt)
 
     def parse_expr(self):
-        print("Is this getting called?")
         first_operand = self.parse_operand()
         operator_token, operator_value = self.peek_lexeme()
         if operator_token == Token.BINOP or operator_token == Token.COMPARISON:
@@ -193,20 +198,20 @@ if __name__ == "__main__":
         yield (Token.DOT, ".")
         yield (Token.EOF, "")
 
-    # parser = Parser(set_var_to_constant().__next__)
-    # parser.parse()
+    parser = Parser(set_var_to_constant().__next__)
+    parser.parse()
 
-    # parser = Parser(set_var_to_var().__next__)
-    # parser.parse()
+    parser = Parser(set_var_to_var().__next__)
+    parser.parse()
 
-    # parser = Parser(if_stmt_compare_constants().__next__)
-    # parser.parse()
+    parser = Parser(if_stmt_compare_constants().__next__)
+    parser.parse()
 
-    # parser = Parser(if_stmt_compare_variable_and_constant().__next__)
-    # parser.parse()
+    parser = Parser(if_stmt_compare_variable_and_constant().__next__)
+    parser.parse()
 
-    # parser = Parser(if_stmt_compare_variable_and_variable().__next__)
-    # parser.parse()
+    parser = Parser(if_stmt_compare_variable_and_variable().__next__)
+    parser.parse()
 
     parser = Parser(expr().__next__)
     print(parser.parse_expr())
