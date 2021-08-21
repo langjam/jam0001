@@ -1,1 +1,1 @@
-./bin/COLAN-21 tests/scripts/$1.colan
+./bin/COLAN-21 tests/scripts/$1
