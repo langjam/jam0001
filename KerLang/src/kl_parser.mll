@@ -4,8 +4,6 @@ open Kl_parsing
 
 exception SyntaxError of string
 exception Eof
-
-
 }
 
 let int = '-'? ['0'-'9'] ['0'-'9']*
@@ -47,6 +45,6 @@ and defun l = parse
   | "yolo " (word as fname) ";" { Spec (false, fname, l) }
   | _         {
     let c = Lexing.lexeme lexbuf in
-    raise (SyntaxError ("invalid token '" ^ c ^ "' found while parsing a comment"))
+    raise (SyntaxError ("invalid token '" ^ c ^ "' found while parsing a function definition"))
   }
   | eof       { raise (SyntaxError "unexcpected enf of file while parsing a function declaration") }
