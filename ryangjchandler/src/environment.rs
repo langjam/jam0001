@@ -18,6 +18,13 @@ impl Environment {
         }
     }
 
+    pub fn new_with_parent(parent: Rc<RefCell<Self>>) -> Self {
+        Self {
+            store: HashMap::new(),
+            parent: Some(parent),
+        }
+    }
+
     pub fn set(&mut self, name: impl Into<String>, value: &Value) {
         self.store.insert(name.into(), value.clone());
     }

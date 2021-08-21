@@ -4,9 +4,9 @@ use std::rc::Rc;
 use thiserror::Error;
 
 use crate::ast::{Program, Statement, FileHeader, DefinitionHeader, FunctionDefinition};
-use crate::expression::{Expression};
+use crate::expression::{Expression, Call};
 use crate::environment::Environment;
-use crate::value::{Value, Function};
+use crate::value::{Value, Function, NativeFunction};
 use crate::document::Document;
 
 #[derive(Debug)]
@@ -61,7 +61,10 @@ impl<'i> Interpreter<'i> {
                     _ => unreachable!(),
                 };
 
-                self.environment.borrow_mut().set(name.to_string(), &Value::Function(Function { body }))
+                self.environment.borrow_mut().set(name, &Value::Function(Function::User {
+                    name: name.into(),
+                    body
+                }))
             },
             Statement::Expression(expression) => {
                 self.execute_expression(expression)?;
@@ -75,7 +78,58 @@ impl<'i> Interpreter<'i> {
     // TODO: Actually do something here. It's useless at the moment.
     // TODO: Also implemented native functions so that we can test println, etc.
     pub fn execute_expression(&mut self, expression: Expression) -> Result<Option<Value>, InterpreterError> {
-        
+        Ok(Some(match expression {
+            Expression::Call(Call { function, args }) => {
+                let args: Vec<Value> = args.iter().map(|a| self.execute_expression(a.clone()).unwrap().unwrap()).collect();
+                let function = self.execute_expression(*function)?;
+
+                match function {
+                    Some(Value::Function(Function::User { body, .. })) => {
+                        let new_environment = Environment::new_with_parent(self.environment.clone());
+                        let old_environment = Rc::clone(&self.environment);
+
+                        self.environment = Rc::new(RefCell::new(new_environment));
+
+                        for statement in body {
+                            self.execute_statement(statement)?;
+                        }
+
+                        self.environment = old_environment;
+                        
+                        Value::Null
+                    },
+                    Some(Value::Function(Function::Native { callback, .. })) => {
+                        callback(self, args);
+
+                        Value::Null
+                    },
+                    None => unreachable!(),
+                    _ => {
+                        return Err(InterpreterError::ValueIsNotCallable(function.unwrap()));
+                    }
+                }
+            },
+            Expression::GetIdentifier(identifier) => {
+                let value = self.environment.borrow().get(identifier.clone());
+
+                if value.is_none() {
+                    return Err(InterpreterError::UndefinedIdentifier(identifier));
+                } else {
+                    value.unwrap()
+                }
+            },
+            Expression::String(string) => Value::String(string),
+            _ => todo!()
+        }))
+    }
+
+    pub fn register_stdlib_function(&mut self, name: impl Into<String>, callback: NativeFunction) {
+        let name = name.into();
+
+        self.environment.borrow_mut().set(name.clone(), &Value::Function(Function::Native {
+            name: name.into(),
+            callback: callback,
+        }))
     }
 
     pub fn execute(&mut self) -> Result<(), InterpreterError> {
@@ -103,10 +157,18 @@ pub enum InterpreterError {
 
     #[error("All definitions must be preceded with a valid definition header.")]
     MissingDefinitionHeader,
+
+    #[error("Trying to access undefined identifier {0}.")]
+    UndefinedIdentifier(String),
+
+    #[error("Value of type {0:?} is not callable.")]
+    ValueIsNotCallable(Value),
 }
 
 pub fn interpret<'i>(program: Program) -> Result<(), InterpreterError> {
     let mut interpreter = Interpreter::new(program.iter());
+
+    crate::stdlib::register(&mut interpreter);
 
     interpreter.execute()?;
 

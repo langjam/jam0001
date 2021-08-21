@@ -11,6 +11,7 @@ mod interpreter;
 mod environment;
 mod value;
 mod document;
+mod stdlib;
 
 pub fn has_flag(flag: &str) -> bool {
     args().find(|i| i == flag).is_some()
