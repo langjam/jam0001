@@ -7,7 +7,7 @@ import executor
 
 path.append(os.path.dirname(__file__))
 
-from lexer import ComstructLexer
+from lexer import ComstructLexer, FuncDescProcessor
 from parser import ComstructParser
 from executor import ComstructExecutor
 
@@ -32,15 +32,15 @@ if __name__ == '__main__':
 
     file = open(argv[1]).read()
 
-    # print(" |------------|------------|------------|")
-    # print(" |    Type    |    Value   |    Line    |")
-    #
-    # for token in clexer.tokenize(file):
-    #     print(" |------------|------------|------------|")
-    #     print(" | {:10} | {:10} | {:10} |".format(token.type, str(token.value), token.lineno))
-    #
-    # print(" |------------|------------|------------|")
-    # print()
+    print(" |------------|------------|------------|")
+    print(" |    Type    |    Value   |    Line    |")
+
+    for token in clexer.tokenize(file):
+        print(" |------------|------------|------------|")
+        print(" | {:10} | {:10} | {:10} |".format(token.type, str(token.value), token.lineno))
+
+    print(" |------------|------------|------------|")
+    print()
 
     tokens = clexer.tokenize(file)
     tree = cparser.parse(tokens)

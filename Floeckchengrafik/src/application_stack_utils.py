@@ -93,3 +93,8 @@ class StatementNode:
 
             print(varname, tgetfrm, execute)
 
+    class FunctionDescriptionNode(GenericNode):
+
+        def __init__(self, attrs):
+            self.attributes = attrs
+

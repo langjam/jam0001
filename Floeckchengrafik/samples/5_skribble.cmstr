@@ -1,0 +1,8 @@
+x = function({
+	/*
+    * @param Busch wegen Busch
+    * @param Baeume weil Baum
+    */
+	out("Yeet")?
+})?
+x()?

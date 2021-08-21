@@ -122,3 +122,7 @@ class ComstructParser(Parser):
     @_("NAME LPAREN arglist RPAREN")
     def expr(self, p):
         return StatementNode.FunctionCallNode(p.NAME, p.arglist)
+
+    @_("FUNCDESC")
+    def exprs(self, t):
+        return [StatementNode.FunctionDescriptionNode(t.FUNCDESC), ]
