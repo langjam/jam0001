@@ -1,13 +1,11 @@
 import { ReactElement } from 'react';
 import { Component } from 'react';
 import '../css/App.css';
+import { CommentType } from './types'
+import '../css/Comment.css';
+import '../css/all.css';
 
 
-type CommentType = {
-    body: string,
-    answers: CommentType[],
-    creation: number
-}
 
 class Comment extends Component<CommentType, CommentType> {
     answers: Array<ReactElement<any, any>> = [];
@@ -15,25 +13,35 @@ class Comment extends Component<CommentType, CommentType> {
     componentWillMount() {
         this.setState(this.props)
         for (let entry of this.props.answers) {
-            let component = <Comment body={entry.body} answers={entry.answers} creation={entry.creation}></Comment>
+            let component = <Comment topic={entry.topic} id={entry.id} parent={entry.parent} position={entry.position} body={entry.body} answers={entry.answers} upvotes={entry.upvotes} creation={entry.creation}></Comment>
             this.answers.push(component)
         }
     }
 
     render() {
         return (
-            <div className="App">
-                <div className="App">
+            <div className="">
+                <div className="body comment">
                     <p>{this.state.body}</p>
+                    <button onClick={() => this.upvote()}>{this.state.upvotes} &#8593;</button>
+                    <button onClick={() => this.downvote()}>&#8595;</button>
+                    <button>Answer</button>
                 </div>
 
-                <div className="App">
+                <div className="indent">
                     <>
                         {this.answers}
                     </>
                 </div>
             </div>
         );
+    }
+
+    upvote() {
+        this.setState({ upvotes: this.state.upvotes + 1 })
+    }
+    downvote() {
+        this.setState({ upvotes: this.state.upvotes - 1 })
     }
 }
 
