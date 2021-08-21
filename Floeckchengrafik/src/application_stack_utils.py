@@ -83,3 +83,9 @@ class StatementNode:
         def __init__(self, func_name, args):
             self.func_name = func_name
             self.args = args
+
+    class ForLoopExecutorNode(GenericNode):
+
+        def __init__(self, proc_node, limit):
+            self.proc_node = proc_node
+            self.loop_limit = limit

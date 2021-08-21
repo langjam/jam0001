@@ -13,6 +13,10 @@ if(1 != x : {
 
 out("after if")?
 
+for (i = 100 : {
+	out("This is just a test")?
+})?
+
 exit()?
 
 out("no")?

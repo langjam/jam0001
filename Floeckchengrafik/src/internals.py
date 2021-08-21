@@ -8,10 +8,16 @@ def out(args):
     print()
 
 
+# This method is called "when" because it can´t be called if
 def when(args):
     condition = args[0]
     if condition:
         return StatementNode.ExecuteStoredProcedureNode(args[1])
+
+
+def _for(args):
+    loop_limit = args[0]
+    return StatementNode.ForLoopExecutorNode(args[1], loop_limit)
 
 
 internals = {
@@ -21,6 +27,7 @@ internals = {
     "length": lambda args: len(args[0]),
     "if": when,
     "exit": lambda args: exit(args[0] if len(args) == 1 else 0),
+    "for": _for
 }
 
 env = {
@@ -30,4 +37,5 @@ env = {
     "length": StatementNode.FunctionDefinitionNode("internal", []),
     "if": StatementNode.FunctionDefinitionNode("internal", []),
     "exit": StatementNode.FunctionDefinitionNode("internal", []),
+    "for": StatementNode.FunctionDefinitionNode("internal", []),
 }

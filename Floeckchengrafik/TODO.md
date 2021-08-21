@@ -13,12 +13,12 @@
 - [ ] Implement Lists
 - [ ] Implement Classes
 - [x] Implement If
-- [ ] Implement while
+- [x] Implement for
 - [ ] Submit a PR (before the end of the jam)
 
 while(expr=true, { code gets executed })
 
-for ( num : intrange(0, 100), {
+for ( num = intrange(0, 100), {
 
 })
 

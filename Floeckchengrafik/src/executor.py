@@ -63,3 +63,8 @@ class ComstructExecutor:
             for func_node in env[node.func_name].content.content:
                 ret = self.walkTree(func_node)
             return ret
+        elif isinstance(node, StatementNode.ForLoopExecutorNode):
+            ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
+            for i in range(0, node.loop_limit):
+                ret = self.walkTree(StatementNode.ExecuteStoredProcedureNode(node.proc_node))
+            return ret
