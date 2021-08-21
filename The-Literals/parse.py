@@ -62,15 +62,27 @@ class Parser:
                 self.parse_param()
             elif token == Token.EOL:
                 self.advance()
+            elif token == Token.RETURNVAR:
+                self.parse_returnvar()
+                token, value = self.peek_lexeme()
+                while token == Token.HFILL:
+                    self.advance()
+                    self.expect(Token.EOL)
+                    token, value = self.peek_lexeme()
+                break
             token, value = self.peek_lexeme()
 
-        if token == Token.END_DEF:
+        if token == Token.HEADER_END:
             self.advance()
             self.expect(Token.EOL)
             self.advance()
-            return
 
     def parse_param(self):
+        self.advance()
+        self.parse_identifier()
+        self.expect(Token.EOL)
+
+    def parse_returnvar(self):
         self.advance()
         self.parse_identifier()
         self.expect(Token.EOL)
@@ -194,17 +206,17 @@ if __name__ == "__main__":
         yield (Token.NUMBER, "6502")
         yield (Token.DOT, ".")
 
-    def function_definition_no_params_no_return():
+    def function_header_no_params_no_return():
         yield (Token.FUNCTION, "/**")
         yield (Token.EOL, "\n")
         yield (Token.HFILL, " *")
         yield (Token.FUNCTION_NAME, "Opens the pod bay doors")
         yield (Token.DOT, ".")
         yield (Token.EOL, "\n")
-        yield (Token.END_DEF, "*/")
+        yield (Token.HEADER_END, "*/")
         yield (Token.EOL, "\n")
 
-    def function_definition_params_no_return():
+    def function_header_params_no_return():
         yield (Token.FUNCTION, "/**")
         yield (Token.EOL, "\n")
         yield (Token.HFILL, " *")
@@ -218,10 +230,10 @@ if __name__ == "__main__":
         yield (Token.IDENTIFIER_WORD, "the")
         yield (Token.IDENTIFIER_WORD, "number")
         yield (Token.EOL, "\n")
-        yield (Token.END_DEF, "*/")
+        yield (Token.HEADER_END, "*/")
         yield (Token.EOL, "\n")
 
-    def function_definition_params_and_return():
+    def function_header_params_and_return():
         yield (Token.FUNCTION, "/**")
         yield (Token.EOL, "\n")
         yield (Token.HFILL, " *")
@@ -242,7 +254,11 @@ if __name__ == "__main__":
         yield (Token.IDENTIFIER_WORD, "the")
         yield (Token.IDENTIFIER_WORD, "result")
         yield (Token.EOL, "\n")
-        yield (Token.END_DEF, "*/")
+        yield (Token.HFILL, " *")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.EOL, "\n")
+        yield (Token.HEADER_END, "*/")
         yield (Token.EOL, "\n")
 
     def program(*fragments):
@@ -277,11 +293,11 @@ if __name__ == "__main__":
     )
     parser.parse()
 
-    parser = Parser(program(function_definition_no_params_no_return))
+    parser = Parser(program(function_header_no_params_no_return))
     parser.parse()
 
-    parser = Parser(program(function_definition_params_no_return))
+    parser = Parser(program(function_header_params_no_return))
     parser.parse()
 
-    # parser = Parser(program(function_definition_params_and_return))
-    # parser.parse()
+    parser = Parser(program(function_header_params_and_return))
+    parser.parse()
