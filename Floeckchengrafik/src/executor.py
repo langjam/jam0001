@@ -45,6 +45,12 @@ class ComstructExecutor:
             return node.var
         elif isinstance(node, StatementNode.StoredProcedureNode):
             return node
+        elif isinstance(node, StatementNode.ExecuteStoredProcedureNode):
+            print("execute stored procedure node")
+            ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
+            for stmt_node in node.exec.content:
+                ret = self.walkTree(stmt_node)
+            return ret
         elif isinstance(node, StatementNode.FunctionDefinitionNode):
             return node
         elif isinstance(node, StatementNode.FunctionCallNode):

@@ -20,11 +20,18 @@ def length(args):
     return len(args[0])
 
 
+def when(args):
+    condition = args[0]
+    if condition:
+        return StatementNode.ExecuteStoredProcedureNode(args[1])
+
+
 internals = {
     "function": function,
     "out": out,
     "readline": readline,
     "length": length,
+    "if": when,
 }
 
 env = {
@@ -32,4 +39,5 @@ env = {
     "out": StatementNode.FunctionDefinitionNode("internal", []),
     "readline": StatementNode.FunctionDefinitionNode("internal", []),
     "length": StatementNode.FunctionDefinitionNode("internal", []),
+    "if": StatementNode.FunctionDefinitionNode("internal", []),
 }

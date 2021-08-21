@@ -35,3 +35,7 @@ while (i < length(x){
     code goes here
     i++
 })
+
+if (condition : {
+stmt
+})
