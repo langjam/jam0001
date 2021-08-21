@@ -27,7 +27,7 @@ enum Interpreter_Function_Kind {
 };
 
 struct Interpreter_Function {
-    char* name;
+    string name;
     enum Interpreter_Function_Kind kind; 
     union {
         struct {
@@ -39,8 +39,14 @@ struct Interpreter_Function {
     } data;
 };
 
+struct Interpreter_Variable {
+    string name;
+    struct Interpreter_Value val;
+};
+
 struct Interpreter_State {
     struct Vec OF(struct Interpreter_Function) funcs;
+    struct Vec OF(struct Interpreter_Variable) vars;
 };
 
 void intrp_init();

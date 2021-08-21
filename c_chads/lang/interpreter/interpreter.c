@@ -34,13 +34,40 @@ static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Val
 void intrp_init() {
     intrp.funcs = vec_new(sizeof(struct Interpreter_Function));
     vec_push(&intrp.funcs, &(struct Interpreter_Function){ "print", ITF_CFUNC, .data.cfunc.func = cfunc_print });
+
+    intrp.vars = vec_new(sizeof(struct Interpreter_Variable));
 }
 
 void intrp_deinit() {
     vec_drop(&intrp.funcs);
+    vec_drop(&intrp.vars);
 }
 
-static struct Interpreter_Value eval(const string source, struct Parser_Node* node) {
+static struct Interpreter_Function* find_func(char* ident, usize len) {
+
+    for (usize i = 0; i < intrp.funcs.size; i += 1) {
+        struct Interpreter_Function* currf = vec_get(&intrp.funcs, i);
+        if (!strncmp(currf->name, ident, len))
+            return currf;
+    }
+
+    return NULL;
+}
+
+static struct Interpreter_Variable* find_var(char* ident, usize len) {
+
+    for (usize i = 0; i < intrp.vars.size; i += 1) {
+        struct Interpreter_Variable* currv = vec_get(&intrp.vars, i);
+        if (!strncmp(currv->name, ident, len))
+            return currv;
+    }
+
+    return NULL;
+    
+}
+
+static struct Interpreter_Value eval(struct Parser_Node* node) {
+    const string source = parser_get_state()->lexer.src;
 
     struct Interpreter_Value ret = void_val();
 
@@ -53,6 +80,10 @@ static struct Interpreter_Value eval(const string source, struct Parser_Node* no
             ret.type = IT_INT;
             ret.data.intg.val = atoi(source + node->data.string.val.from);
         break;
+        case PN_IDENT: {
+            struct Interpreter_Variable* var = find_var(source + node->data.ident.val.from, node->data.ident.val.size);
+            ret = var->val;
+        } break;
         default:
         break;
     }
@@ -71,22 +102,11 @@ static struct Interpreter_Value execute(struct Vec OF(struct Parser_Node*) *body
 static struct Interpreter_Value call(struct Parser_Node* node) {
     const string source = parser_get_state()->lexer.src;
 
-    struct Interpreter_Function* func = NULL;
-    for (usize i = 0; i < intrp.funcs.size; i += 1) {
-        struct Interpreter_Function* currf = vec_get(&intrp.funcs, i);
-        if (!strncmp(
-            currf->name, 
-            source + node->data.call.name.from,
-            node->data.call.name.size)) {
-
-            func = currf;
-            break;        
-        }
-    }
+    struct Interpreter_Function* func = find_func(source + node->data.call.name.from, node->data.call.name.size);
 
     struct Vec args = vec_new(sizeof(struct Interpreter_Value));
     for (usize i = 0; i < node->children.size; i += 1) {
-        struct Interpreter_Value val = eval(source, vec_get(&node->children, i));
+        struct Interpreter_Value val = eval(vec_get(&node->children, i));
         vec_push(&args, &val);
     }
 
@@ -116,8 +136,14 @@ static void declaration(struct Parser_Node* node) {
                 .data.normal.body = &object->children
             };
             vec_push(&intrp.funcs, &func);
-        }
-        break;
+        } break;
+        case PN_NUMBER: case PN_STRING: {
+            struct Interpreter_Variable var = {
+                .name = strndup(source + node->data.decl.name.from, node->data.decl.name.size),
+                .val = eval(object)
+            };
+            vec_push(&intrp.vars, &var);   
+        } break;
         default:
         break;
     }
@@ -142,12 +168,5 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node) {
 }
 
 struct Interpreter_Value intrp_main() {
-
-    for (usize i = 0; i < intrp.funcs.size; i += 1) {
-        struct Interpreter_Function* currf = vec_get(&intrp.funcs, i);
-        if (!strcmp(currf->name, "main"))
-            return execute(currf->data.normal.body);
-    }
-    
-    return void_val();
+    return execute(find_func("main", 4)->data.normal.body);
 }
