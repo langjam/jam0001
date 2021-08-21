@@ -45,6 +45,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Can't access file %s\n", argv[1]);
         return EXIT_FAILURE;
     } 
+    eh_set_file(argv[1]);
+    eh_init();
     parser_init(src);
     printf("------\n%s\n------\n", parser_get_state()->lexer.src);
     struct Parser_Node result = parser_parse_toplevel();
@@ -62,5 +64,6 @@ int main(int argc, char *argv[]) {
 
     parser_deinit();
     free(src);
+    eh_deinit();
     return 0;
 }

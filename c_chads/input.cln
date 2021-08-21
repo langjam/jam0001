@@ -1,11 +1,11 @@
 main = proc {
     x = 32;
-    y = "Hello world";
-    # this creates a goddamn procedure
-    test = proc {
-        print("Hello"; 2; proc {});
+    y =   "Hello world";
+    # this creattes a goddamn procedure
+    test = pro {
+        print(2; proc {});
     };
     print(x; y);
-    test();
+    test;
 }
 # test
