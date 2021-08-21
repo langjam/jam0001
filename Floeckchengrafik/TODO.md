@@ -15,4 +15,3 @@
 - [x] Implement If
 - [x] Implement for
 - [ ] Submit a PR (before the end of the jam)
-- 
