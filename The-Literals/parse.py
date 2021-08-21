@@ -33,7 +33,7 @@ class Parser:
         return (token, value)
 
     def parse(self):
-        print(self.parse_expr())
+        print(self.parse_program())
 
     def parse_program(self):
         self.expect(Token.BOF)
@@ -62,8 +62,7 @@ class Parser:
             self.parse_if_stmt()
 
     def parse_set_stmt(self):
-        token, value = self.advance()
-        self.parse_identifier()
+        identifier = self.parse_identifier()
         token, value = self.advance()
         if token != Token.TO:
             raise UnexpectedTokenError(Token.TO, token)
@@ -72,10 +71,13 @@ class Parser:
             raise UnexpectedTokenError(Token.NUMBER, token)
 
     def parse_identifier(self):
+        identifier_words = []
         token, value = self.peek_lexeme()
         while token == Token.IDENTIFIER_WORD:
+            identifier_words.append(value)
             self.advance()
             token, value = self.peek_lexeme()
+        return ' '.join(identifier_words)
 
     def parse_if_stmt(self):
         self.parse_expr()
@@ -142,5 +144,5 @@ if __name__ == "__main__":
         # TODO: put an if statement here to parse.
         pass
 
-    parser = Parser(expr().__next__)
+    parser = Parser(set_x().__next__)
     parser.parse()
