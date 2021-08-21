@@ -176,6 +176,22 @@ impl Data {
                         }
                     }
                 }
+                Operation::SwitchEmpty => {
+                    if let Some(x) = station.trains[0].pop_front() {
+                        let xcln = x.clone();
+                        let st = x.lock()?;
+                        let val = st
+                            .train
+                            .second_class_passengers.len();
+                        if val == 0 {
+                            let target = station.output.clone()[0].clone();
+                            targets.push((xcln, target, station.station.clone(), 0));
+                        } else {
+                            let target = station.output.clone()[1].clone();
+                            targets.push((xcln, target, station.station.clone(), 0));
+                        }
+                    }
+                }
                 Operation::Duplicate => {
                     if let Some(x) = station.trains[0].front().cloned() {
                         station.trains[1].push_back(x);
