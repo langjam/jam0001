@@ -14,32 +14,22 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 		case shared.TTlparen, shared.TTopenBlock:
 			*toks = (*toks)[1:]
 
-			out = append(out,
+			out[len(out)-1].Children = append(
+				out[len(out)-1].Children,
 				shared.Node{
 					IsExpression: true,
 					Children:     GenerateAst(toks)})
 
-			continue
-
 		case shared.TTrparen, shared.TTcloseBlock:
-			*toks = (*toks)[1:]
 			return out
 
 		case shared.TTinstruction: // (instruction (arguments))
 			*toks = (*toks)[1:]
 
-			if len(*toks) > 0 &&
-				(*toks)[0].Type == shared.TTlparen {
-				
-				*toks = (*toks)[1:]
-			}
-
 			out = append(out,
 				shared.Node{
 					IsExpression: true,
-					Children: append(
-						[]shared.Node{{Val: tok}},
-						GenerateAst(toks)...)})
+					Children: []shared.Node{{Val: tok}}})
 
 			continue
 
@@ -52,9 +42,7 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 				out = append(out,
 					shared.Node{
 						IsExpression: true,
-						Children: append(
-							[]shared.Node{{Val: tok}},
-							GenerateAst(toks)...)})
+						Children: []shared.Node{{Val: tok}}})
 
 				continue
 			} else {
@@ -79,15 +67,10 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 				break
 			}
 
-			*toks = (*toks)[1:]
 			out = append(out,
 				shared.Node{
 					IsExpression: true,
-					Children: append(
-						append(
-							[]shared.Node{{Val: tok}},
-							GenerateAst(toks)...),
-						GenerateAst(toks)...)})
+					Children: []shared.Node{{Val: tok}}})
 
 		default:
 			out = append(out, shared.Node{Val: tok})
