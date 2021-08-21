@@ -33,7 +33,7 @@ track 1: go to sum1 track 2
 track 2: go to dupe1 track 1
 
 {print}
-operation: print
+operation: print number
 track 1: go to yeet track 1
 
 {yeet}

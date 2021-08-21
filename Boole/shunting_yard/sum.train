@@ -18,5 +18,5 @@ track 1: go to printmachine track 1
 track 2: go to printmachine track 1
 
 {printmachine}
-operation: print
+operation: print number
 track 1: go to summachine track 1

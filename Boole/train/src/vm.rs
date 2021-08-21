@@ -116,7 +116,7 @@ impl Data {
                 Operation::Nothing => {
                     did_work = true;
                 }
-                Operation::Print => {
+                Operation::PrintString => {
                     if let Some(x) = station.trains[0].front() {
                         let zz = x.lock()?;
                         if let Ok(_) = interface.print(
@@ -602,7 +602,7 @@ mod tests {
 
     #[test]
     fn print_prints() {
-        let program = create_program!(Operation::Print);
+        let program = create_program!(Operation::PrintString);
         let i = VMInterface::new();
         let mut pp = Data::new(program, &i);
         pp.do_current_step(&i).unwrap();
