@@ -56,7 +56,7 @@ OP_MATRIX = {
   'FUNCTION==FUNCTION': lambda t, a, b: get_bool_value(a.method_def == b.method_def),
   'METHOD==METHOD': lambda t, a, b: get_bool_value(a.method_def == b.method_def and a.instance == b.instance),
   'INSTANCE==INSTANCE': lambda t, a, b: get_bool_value(a.instance == b.instance),
-  'NULL==NULL': lambda t, a, b: True,
+  'NULL==NULL': lambda t, a, b: TRUE_VALUE,
   'BUILTIN_FUNCTION==BUILTIN_FUNCTION': lambda t, a, b: get_bool_value(a.handler == b.handler),
 }
 
