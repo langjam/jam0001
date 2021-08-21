@@ -6,6 +6,10 @@ title:  "Jam0001"
 
 Transpile drawings to code using drawio, PROLOG, Ohm-JS.
 
+Use 2 drawings to describe 1 (very, very simple) problem.
+
+Use 4 languages to transpile the 2 drawings.
+
 Components on the drawings are concurrent by default.
 
 Four transpilers (languages) are created:
@@ -14,17 +18,26 @@ Four transpilers (languages) are created:
 3. sequence.json -> BASH
 4. details.json -> BASH
 
+[_Status: Done: 1, 2. Working on 4._]
+
+Jump to _Build_ section to skip the essay about motivation.
+
 # Key Takeaways
 - multiple views on one problem
 - one mini-language (SCN) for each problem
 - separation of concerns
 - isolation
-- concurrency.
+- concurrency
+- simplicity
+- the New Assembler.
 
 # Key Technologies
 - drawings (.drawio, .svg in the future)
 - exhaustive search
-- PEG.
+- PEG
+- JSON
+- Ohm-JS (PEG parser)
+- Glue tool (code emitter/formatter for Ohm-JS)
 
 # Drawings
 
@@ -80,6 +93,28 @@ It is not possible to build isolated components unless they are concurrent-by-de
 Synchrony is a hidden from of dependency.
 
 Dependency is anti-isolation.
+
+# JSON
+
+I use JSON as an intermediate file format.
+
+JSON has problems, but, JSON is ubiquitous.
+
+# Simplicity
+
+The goal is to make this project _so simple_ that it evokes _this is not hard enough_ and _this is not powerful enough_ gag reflexes.
+
+We should not be wasting brain power on the fine details required by most GPLs. 
+
+We should devote that brain power to more interesting concepts.
+
+# The New Assembler
+
+I use GPLs (general purpose languages), in this case JavaScript and JSON and PROLOG, as _assembly_ languages.
+
+The less syntax and the less type checking (!) the better.
+
+Lisp (Common Lisp, Racket) would be my choice, but Ohm-JS has not yet been ported to lisp.
 
 # Introduction
 
@@ -269,7 +304,18 @@ Let's start by making separate diagrams for each of the view.
 
 "Red" boxes mean _synchronous_ code.  (The default is asynchronous code).
 
-
+# Emitters 3 & 4
+## Create Basic Grammar
+- basic.ohm
+- use ohm editor to test/develop against sequence.json and details.json
+[_Status: done_]
+## Create Identity Emitter
+- identity.glue
+- basic.html
+## Emitter 4 - Details
+- plan: (1) collect up all components (2) emit BASH functions for all components that have non-empty "synccode" fields
+- use Ohm-JS to grok details.json
+- use Glue (tool) to emit code
 
 # Appendix
 
