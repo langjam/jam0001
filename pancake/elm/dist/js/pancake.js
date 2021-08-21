@@ -2924,21 +2924,46 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
+var $author$project$Language$AST$Actual = function (a) {
+	return {$: 'Actual', a: a};
+};
+var $author$project$Language$AST$Int = function (a) {
+	return {$: 'Int', a: a};
+};
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
 			f(x));
 	});
-var $author$project$Language$AST$Int = function (a) {
-	return {$: 'Int', a: a};
+var $elm$core$Array$repeat = F2(
+	function (n, e) {
+		return A2(
+			$elm$core$Array$initialize,
+			n,
+			function (_v0) {
+				return e;
+			});
+	});
+var $author$project$Language$AST$func = F2(
+	function (argc, exec) {
+		var dummyAtom = $author$project$Language$AST$Int(0);
+		return {
+			argi: 0,
+			args: A2($elm$core$Array$repeat, argc, dummyAtom),
+			func: exec
+		};
+	});
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
 };
-var $author$project$Language$Parser$instruction = function (_v0) {
-	return $elm$core$Maybe$Just(
-		_Utils_Tuple2(
-			$author$project$Language$AST$Alpha,
-			$author$project$Language$AST$Int(42)));
+var $author$project$Language$AST$toInt = function (atom) {
+	if (atom.$ === 'Int') {
+		var _int = atom.a;
+		return $elm$core$Maybe$Just(_int);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
 };
-var $elm$core$String$lines = _String_lines;
 var $elm$core$List$foldrHelper = F4(
 	function (fn, acc, ctr, ls) {
 		if (!ls.b) {
@@ -3020,10 +3045,30 @@ var $elm_community$maybe_extra$Maybe$Extra$traverse = function (f) {
 		},
 		$elm$core$Maybe$Just(_List_Nil));
 };
-var $author$project$Language$Parser$parse = A2(
+var $author$project$Language$Ops$sum = A2(
 	$elm$core$Basics$composeR,
-	$elm$core$String$lines,
-	$elm_community$maybe_extra$Maybe$Extra$traverse($author$project$Language$Parser$instruction));
+	$elm_community$maybe_extra$Maybe$Extra$traverse($author$project$Language$AST$toInt),
+	$elm$core$Maybe$map(
+		A2($elm$core$Basics$composeR, $elm$core$List$sum, $author$project$Language$AST$Int)));
+var $author$project$Language$Ops$add = function () {
+	var func = A2($elm$core$Basics$composeR, $elm$core$Array$toList, $author$project$Language$Ops$sum);
+	return A2($author$project$Language$AST$func, 2, func);
+}();
+var $author$project$Language$Parser$parse = function (_v0) {
+	return $elm$core$Maybe$Just(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				$author$project$Language$AST$Alpha,
+				$author$project$Language$AST$Int(1)),
+				_Utils_Tuple2(
+				$author$project$Language$AST$Alpha,
+				$author$project$Language$AST$Int(41)),
+				_Utils_Tuple2(
+				$author$project$Language$AST$Alpha,
+				$author$project$Language$AST$Actual($author$project$Language$Ops$add))
+			]));
+};
 var $author$project$Language$Pancake$compile = function (src) {
 	return A2(
 		$elm$core$Maybe$map,

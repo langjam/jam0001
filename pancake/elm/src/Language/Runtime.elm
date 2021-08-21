@@ -47,8 +47,8 @@ exec runtime instruction =
                         Ops.exec atom runtime.stack
                 in
                 case maybeStack of
-                    Just stack_ ->
-                        next { runtime | stack = stack_ }
+                    Just stack ->
+                        next { runtime | stack = stack }
 
                     Nothing ->
                         panic runtime

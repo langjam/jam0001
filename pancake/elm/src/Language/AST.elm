@@ -1,7 +1,6 @@
 module Language.AST exposing (..)
 
 import Array exposing (Array)
-import Maybe.Extra as MaybeX
 
 
 
@@ -111,9 +110,3 @@ toInt atom =
 
         _ ->
             Nothing
-
-
-sum : List Atom -> Maybe Atom
-sum =
-    MaybeX.traverse toInt
-        >> Maybe.map (List.sum >> Int)

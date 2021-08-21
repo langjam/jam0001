@@ -1,7 +1,9 @@
-module Language.Ops exposing (exec)
+module Language.Ops exposing (add, exec)
 
-import Language.AST as AST exposing (Atom(..), Func)
+import Array
+import Language.AST as AST exposing (Atom(..), Executioner, Func)
 import Language.Stack exposing (Stack)
+import Maybe.Extra as MaybeX
 
 
 exec : Atom -> Stack -> Maybe Stack
@@ -26,3 +28,19 @@ enoughArgs func stack =
 
     else
         Nothing
+
+
+add : Func
+add =
+    let
+        func : Executioner
+        func =
+            Array.toList >> sum
+    in
+    AST.func 2 func
+
+
+sum : List Atom -> Maybe Atom
+sum =
+    MaybeX.traverse AST.toInt
+        >> Maybe.map (List.sum >> Int)
