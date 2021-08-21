@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+_Thread_local struct Span _SPAN_TEMP;
+
 bool spanstreqstr(struct Span span, const char *spanned, const char *basic) {
     if (strlen(basic) != span.size) return false;
     return strncmp(spanned+span.from, basic, span.size) == 0;
@@ -18,3 +20,4 @@ bool spanstreqspanstr(struct Span span, const char *spanned, struct Span span2, 
 
     return true;
 }
+

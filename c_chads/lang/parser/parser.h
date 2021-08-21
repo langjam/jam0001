@@ -1,4 +1,5 @@
 #include "../lexer.h"
+#include "../eh.h"
 #include "../../aid/vec/vec.h"
 
 struct Parser_State {

@@ -6,10 +6,25 @@ typedef struct Token tok_t;
 typedef enum Parser_Node_Kind pnode_kind_t;
 
 static struct Parser_State parser;
+struct {
+    char unmatched;
+} error_handling = { 
+    .unmatched = 0
+};
+
+static char begindelim(char delim) {
+    char prev = error_handling.unmatched;
+    error_handling.unmatched = delim;
+    return prev;
+}
+
+static void enddelim(char prev) {
+    error_handling.unmatched = prev;
+}
 
 
 static void lineinfo() {
-    fprintf(stderr, "\n%zu:%zu\n", parser.lexer.line+1, parser.lexer.col+1);
+    eh_error(parser.current_token.line, parser.current_token.col, parser.lexer.src);
 }
 
 static tok_t pull() {
@@ -21,8 +36,16 @@ static tok_t pull() {
         exit(1);
     }
     if (tok.tt == TT_EOF) {
-        fprintf(stderr, "Unexpected end of file");
+        EH_MESSAGE("Unexpected end of file");
+        if (error_handling.unmatched != 0) {
+            EH_MESSAGE(", unclosed `%c`", error_handling.unmatched);
+        }
         lineinfo();
+        if (parser.lexer.src[tok.span.from] == '\"') {
+            fprintf(stderr, "(Probably due to unclosed \")\n");
+            eh_at_line(tok.line, parser.lexer.src);
+            eh_point(tok.col);
+        }
         exit(1);
     }
     return tok;
@@ -32,20 +55,22 @@ tok_t peek() {
     return parser.current_token;
 }
 
+static void stray(tok_t *tok) {
+    EH_MESSAGE("Stray `%.*s`", SPAN_PF(tok->span, parser.lexer.src));
+    lineinfo();
+    exit(1);
+}
+
 static void assert_tt(tok_t *tok, enum Token_Type tt) {
     if (tok->tt != tt) {
-        fprintf(stderr, "Expected %s got %s", TT_NAMES[tt], TT_NAMES[tok->tt]);
-        lineinfo();
-        exit(1);
+        stray(tok);
     }
 }
 
 static void skip_tt(enum Token_Type tt) {
     tok_t tok = pull();
     if (tok.tt != tt) {
-        fprintf(stderr, "Expected %s got %s", TT_NAMES[tt], TT_NAMES[tok.tt]);
-        lineinfo();
-        exit(1);
+        stray(&tok);
     }
 }
 
@@ -53,9 +78,7 @@ __attribute__((unused))
 static void skip_v(const string v) {
     tok_t tok = pull();
     if (!spanstreqstr(tok.span, parser.lexer.src, v)) {
-        fprintf(stderr, "Expected `%s` got `%.*s`\n", v, (int)tok.span.size, parser.lexer.src+tok.span.from);
-        lineinfo();
-        exit(1);
+        stray(&tok);
     }
 }
 
@@ -74,6 +97,7 @@ static pnode_t value();
 static pnode_t call(tok_t on) {
     assert_tt(&on, TT_IDENT);
     skip_tt(TT_LPAREN);
+    char delim = begindelim('(');
     pnode_t call_node = pnode_new(PN_CALL);
     call_node.data.call.name = on.span;
     while (peek().tt != TT_RPAREN) {
@@ -82,6 +106,7 @@ static pnode_t call(tok_t on) {
             skip_tt(TT_SEMI);
     }
     skip_tt(TT_RPAREN);
+    enddelim(delim);
     return call_node;
 }
 
@@ -90,6 +115,7 @@ static pnode_t declaration(tok_t on);
 static pnode_t value() {
     tok_t token = pull();
     pnode_t value_node;
+    char delim;
     switch (token.tt) {
         case TT_STRING:
             value_node = pnode_new(PN_STRING);
@@ -112,12 +138,14 @@ static pnode_t value() {
         case TT_PROC:
             value_node = pnode_new(PN_PROC);
             skip_tt(TT_LBRACE);
+            delim = begindelim('{');
             while (peek().tt != TT_RBRACE) {
                 // For now we are just gonna parse some calls
                 pnode_attach(&value_node, value());
                 skip_tt(TT_SEMI);
             }
             skip_tt(TT_RBRACE);
+            enddelim(delim);
             return value_node;
         default:
             fprintf(stderr, "This is a sign that we should improve error handling, please\n");

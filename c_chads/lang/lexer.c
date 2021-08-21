@@ -95,7 +95,7 @@ static enum Token_Type lex_str(struct Lexer_State *self) {
     rune ch;
     while (ch = lex_skip(self), ch != '"') {
         if (ch == '\0')
-            return TT_INVALID;
+            return TT_EOF;
         else if (ch == '\\') lex_skip(self);
     }
     return TT_STRING;
@@ -222,17 +222,27 @@ static void lex_skip_stuff(struct Lexer_State *self) {
 }
  
 struct Token lex_determine(struct Lexer_State *self) {
+    usize tok_line = self->line;
+    usize tok_col = self->col;
     lex_skip_stuff(self);
+    // Starting line/col pair for token
     const Lexer_Function lexfn[] = {
         lex_num, lex_str, lex_ident, lex_single_rune
     };
     const usize lexfn_count = sizeof(lexfn)/sizeof(Lexer_Function);
-    if (lex_eof(self))
-        return (struct Token) { .tt = TT_EOF };
     struct Token tok = invalid_token();
+
+    if (lex_eof(self)) {
+        tok.tt = TT_EOF; 
+        goto end;
+    }
+
     for (usize i = 0; i < lexfn_count; i += 1) {
         tok = lex_try(self, lexfn[i]);
         if (tok.tt != TT_INVALID) break;
     }
+end:
+    tok.line = tok_line;
+    tok.col = tok_col;
     return tok;
 }

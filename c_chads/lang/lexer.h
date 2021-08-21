@@ -38,6 +38,8 @@ extern const string TT_NAMES[];
 
 struct Token {
     enum Token_Type tt;
+    usize line;
+    usize col;
     struct Span span;
 };
 
