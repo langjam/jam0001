@@ -6,3 +6,8 @@
 var "Ryan Chandler"
 
 println(name)
+
+/** @identifier immutable_name */
+const "Ryan Chandler"
+
+println(immutable_name)

@@ -69,6 +69,27 @@ impl<'i> Interpreter<'i> {
                 };
 
                 self.environment.borrow_mut().set(name, &value);
+
+                self.header = None;
+            },
+            Statement::Const(Const { init }) => {
+                if self.header.is_none() {
+                    return Err(InterpreterError::MissingDefinitionHeader);
+                }
+
+                let (name) = match self.header.as_ref().unwrap() {
+                    Statement::DefinitionHeader(DefinitionHeader { identifier, .. }) => (identifier.clone()),
+                    _ => unreachable!()
+                };
+
+                let value = match self.execute_expression(init)? {
+                    Some(v) => v,
+                    None => unreachable!()
+                };
+
+                self.environment.borrow_mut().set(name, &Value::Const(Box::new(value)));
+
+                self.header = None;
             },
             Statement::FunctionDefinition(FunctionDefinition { body }) => {
                 if self.header.is_none() {

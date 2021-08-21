@@ -9,6 +9,7 @@ pub enum Value {
     Number(f64),
     Function(Function),
     Bool(bool),
+    Const(Box<Value>),
     Null,
 }
 
@@ -28,6 +29,7 @@ impl Value {
             Self::Number(_) => "number".to_owned(),
             Self::Bool(_) => "bool".to_owned(),
             Self::Null => "null".to_owned(),
+            Self::Const(constant) => constant.type_string(),
             _ => todo!()
         }
     }
@@ -39,6 +41,7 @@ impl Value {
             Self::Bool(b) => *b,
             Self::Null => false,
             Self::Function(_) => true,
+            Self::Const(constant) => constant.to_bool(),
         }
     }
 }
@@ -52,6 +55,7 @@ impl Display for Value {
             Self::Null => "null".to_owned(),
             Self::Bool(true) => "true".to_owned(),
             Self::Bool(false) => "false".to_owned(),
+            Self::Const(constant) => format!("{}", constant),
         })
     }
 }
