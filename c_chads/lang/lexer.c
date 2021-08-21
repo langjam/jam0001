@@ -228,7 +228,7 @@ static bool lex_skip_comment(struct Lexer_State *self) {
 static void lex_skip_stuff(struct Lexer_State *self) {
     while (lex_skip_blank(self) || lex_skip_comment(self));
 }
- 
+
 struct Token lex_determine(struct Lexer_State *self) {
     lex_skip_stuff(self);
     usize tok_line = self->line;

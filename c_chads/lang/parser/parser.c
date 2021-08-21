@@ -383,9 +383,11 @@ static pnode_t value() {
         }
         case TT_PROC:
             pull();
+            pnode_t left = delimited(PN_TYPELIST, "(", ")", false, pulldeclaration);
+            left.data.proc.return_type = typedecl();
             return pnode_binary(
                 PN_PROC, 
-                delimited(PN_TYPELIST, "(", ")", false, pulldeclaration),
+                left,
                 body()
             );
         case TT_LPAREN:

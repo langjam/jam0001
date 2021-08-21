@@ -45,6 +45,9 @@ struct Parser_Node {
             strview_t name;
         } decl;
         struct {
+            strview_t return_type;
+        } proc;
+        struct {
             strview_t val; 
         } string;
         struct {
