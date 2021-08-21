@@ -170,6 +170,52 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node) {
         case PN_IDENT: {
             ret = *get_var(node->data.ident.val);
         } break;
+        case PN_OPERATOR: {
+
+            struct Interpreter_Value 
+                left = intrp_run(pnode_left(node)),
+                right = intrp_run(pnode_right(node));
+            int* rp = &ret.data.intg.val;
+
+            ret.type = IT_INT;
+            if (node->data.op.op.view[1] != '=') {
+                int lv = left.data.intg.val, rv = right.data.intg.val;
+                switch (node->data.op.op.view[0]) {
+                case '+': *rp = lv + rv; break;
+                case '-': *rp = lv - rv; break;
+                case '*': *rp = lv * rv; break;
+                case '/': *rp = lv / rv; break;
+                case '%': *rp = lv % rv; break;
+
+                case '<': *rp = lv < rv; break;
+                case '>': *rp = lv > rv; break;
+                }
+            } else {
+                int *lv = &left.data.intg.val, *rv = &right.data.intg.val;
+                switch (node->data.op.op.view[0]) {
+                case '+': *rp = *lv += *rv; break;
+                case '-': *rp = *lv -= *rv; break;
+                case '*': *rp = *lv *= *rv; break;
+                case '/': *rp = *lv /= *rv; break;
+                case '%': *rp = *lv %= *rv; break;
+
+                case '>': *rp = *lv >= *rv; break;
+                case '<': *rp = *lv <= *rv; break;
+                case '=': *rp = *lv == *rv; break;
+                case '!': *rp = *lv != *rv; break;
+                }
+            }
+        } break;
+        case PN_UNARY: {
+
+            struct Interpreter_Value val = intrp_run(pnode_uvalue(node));
+
+            ret.type = IT_INT; 
+            switch (node->data.unary.op.view[0]) {
+                case '!': ret.data.intg.val = !val.data.intg.val; break;
+                case '-': ret.data.intg.val = -val.data.intg.val; break;
+            }
+        } break;
         default:
         break;
     }
