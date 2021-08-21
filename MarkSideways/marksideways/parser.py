@@ -171,10 +171,10 @@ def parse_entity(tokens):
   next_type = next_token.token_type
 
   if next_type == 'KEYWORD':
-    if next_type in ('true', 'false'):
+    if next_value in ('true', 'false'):
       tokens.pop()
-      return BooleanConstant(next_token, token_value == 'true')
-    if next_type == 'null':
+      return BooleanConstant(next_token, next_value == 'true')
+    if next_value == 'null':
       return NullConstant(next_token)
     raise Exception(next_token, "Unexpected usage of '" + next_value + "'.")
 

@@ -151,7 +151,9 @@ class FunctionInvocation(Expression):
       if value.is_error: return value
       return instance
     elif root_value.type == 'BUILTIN_FUNCTION':
-      return root_value.handler(self.open_paren, args)
+      output = root_value.handler(self.open_paren, args)
+      if output == None: output = NULL_VALUE
+      return output
     else:
       return new_error_value(self.expression.first_token, "This is not a function method or constructor and cannot be invoked like this.")
 
@@ -375,6 +377,14 @@ class ThisConstant(Expression):
       return new_error_value(self.first_token, "The 'this' constant cannot be used in this context. It may only be used inside a class constructor or method.")
     return scope.this_context
 
+class BooleanConstant(Expression):
+  def __init__(self, first_token, value):
+    super().__init__(first_token)
+    self.value = value
+    self.cached_value = TRUE_VALUE if value else FALSE_VALUE
+  def run(self, scope):
+    return self.cached_value
+
 class IntegerConstant(Expression):
   def __init__(self, first_token, value):
     super().__init__(first_token)
@@ -394,6 +404,30 @@ class FloatConstant(Expression):
     if self.cached_value == None:
       self.cached_value = FloatValue(self.value)
     return self.cached_value
+
+class UnaryPrefix(Expression):
+  def __init__(self, op, root):
+    super().__init__(op)
+    self.root = root
+  def run(self, scope):
+    root_value = self.root.run(scope)
+    if root_value.is_error: return root_value
+    if is_null(root_value): return to_null_error_value(self.first_token)
+    op = self.first_token.value
+    if op == '!':
+      if root_value.type != 'BOOL':
+        return new_error_value(self.first_token, "Cannot apply a ! operator to a type of " + root_value.type + ".")
+      return FALSE_VALUE if root_value.value else TRUE_VALUE
+    
+    if root_value.type == 'FLOAT' and op == '-':
+      return FloatValue(-root_value.value)
+    if root_value.type != 'INT':
+      return new_error_value(self.first_token, "Cannot apply the " + op + " operator to a type of " + root_value.type + ".")
+    if op == '-':
+      return get_integer_value(-root_value.value)
+      
+    return get_integer_value(~root_value.value)
+
 
 class WhileLoop(Executable):
   def __init__(self, while_token, condition, code):

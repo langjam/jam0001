@@ -11,6 +11,9 @@ _KEYWORDS = [
   'till',
   'thru',
   'do',
+  'true',
+  'false',
+  'null',
   # Don't plan on implementing these for the hackathon, but go ahead and reserve them
   'switch',
   'case',
