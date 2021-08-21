@@ -1,0 +1,20 @@
+/*
+    This function takes 3 arguments,
+    Let A be the product of argument 1 and argument 2,
+    It returns the difference of A and argument 3.
+ */
+function f;
+
+/*
+    This function takes 2 arguments,
+    Let A be the application of f on argument 1 and 42 and argument 2,
+    It returns the product of A and A.
+ */
+function g;
+
+/*
+    This function takes 1 argument,
+    Let A be the difference between argument 1 and 10,
+    It returns 0 if A and 1 otherwise.
+ */
+function equals_10;
