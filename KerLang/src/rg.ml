@@ -1,8 +1,6 @@
 
 (* Deterministic random number generator *)
 
-#use "lk_IR.ml";;
-
 open Int32;;
 
 (* Linear congruential generator state. *)
