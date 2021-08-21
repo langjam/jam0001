@@ -125,3 +125,15 @@ function setDiagram () {
     var diagramID = getID ();
     scopeAdd ('diagram', diagramID);
 }
+
+
+//////// details transpiler //////////
+
+function namify (s) {
+    return s
+	.trim ()
+	.replace (/"/g,'')
+	.replace (/ /g,'__');
+}
+
+
