@@ -1,4 +1,6 @@
-main = proc () int {
+# decl test
+# rstrst ^2
+main := proc () int {
     print("srtrst");
     return 42;
 };

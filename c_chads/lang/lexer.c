@@ -216,7 +216,6 @@ static bool lex_skip_comment(struct Lexer_State *self) {
     usize startpos = self->pos;
     if (lex_peek(self) == '#') {
         lex_skip(self);
-        lex_skip(self);
         rune ch;
         while (ch = lex_peek(self), !(ch == '\n' || ch == '\r'))
             lex_skip(self);
@@ -227,6 +226,16 @@ static bool lex_skip_comment(struct Lexer_State *self) {
  
 static void lex_skip_stuff(struct Lexer_State *self) {
     while (lex_skip_blank(self) || lex_skip_comment(self));
+}
+
+struct Span lex_get_comment(struct Lexer_State *self) {
+    while (lex_skip_blank(self));   
+    usize startpos = self->pos;
+    lex_skip_comment(self);
+    usize size = self->pos-startpos;
+    // Empty span, means no comment exists
+    if (size == 0) return (struct Span) { 0 };
+    return (struct Span) { .from = startpos+1, .size = size-1 };
 }
 
 struct Token lex_determine(struct Lexer_State *self) {

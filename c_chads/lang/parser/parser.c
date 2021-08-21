@@ -16,6 +16,25 @@ struct {
     .fail = false,
 };
 
+struct Vec OF(strview_t) preceding_comments;
+
+static void add_comments() {
+    // Nocom
+    struct Span spn = lex_get_comment(&parser.lexer);
+    while (!(spn.from == 0 && spn.size == 0)) {
+        strview_t view = strview_span(spn, parser.lexer.src);
+        printf("Adding comment %.*s\n", (int)view.size, view.view);
+        vec_push(&preceding_comments, &view);
+        spn = lex_get_comment(&parser.lexer);
+    }
+}
+
+static struct Vec leak_comments() {
+    struct Vec old = preceding_comments;
+    preceding_comments = vec_new(sizeof(strview_t));
+    return old;
+}
+
 static rune begindelim(rune delim) {
     rune prev = error_handling.unmatched;
     error_handling.unmatched = delim;
@@ -236,6 +255,7 @@ static pnode_t delimited(pnode_kind_t kind, const string open, const string shut
     rune delim = begindelim(*open);
     while (!check(shut)) {
         pnode_t v = callback();
+        add_comments();
         pnode_attach(&node, v);
         if (check(shut) && (!mustclose)) break;
         if (!check(shut) || mustclose || isinval(v)) { 
@@ -245,8 +265,8 @@ static pnode_t delimited(pnode_kind_t kind, const string open, const string shut
                 setexpect("Expected semicolon");
             skip_tt_panic(shut);
         }
-        setexpect(NULL);
     }
+    setexpect(NULL);
     enddelim(delim);
     skip_v(shut);
     return node;
@@ -430,14 +450,17 @@ static pnode_t declaration(tok_t on) {
     if (!check("=")) {
         decl_node.data.decl.type = typedecl();
     }
+    decl_node.data.decl.annotations = leak_comments();
     return decl_node;
 }
 
 
 void parser_init(const string src) {
+    preceding_comments = vec_new(sizeof(strview_t));
     parser = (struct Parser_State) {
         .lexer = lex_new(src)
     };
+    add_comments();
     parser.current_token = lex_determine(&parser.lexer);
 }
 
@@ -452,6 +475,7 @@ void parser_deinit() {
 pnode_t parser_parse_toplevel() {
     pnode_t node = pnode_listing(PN_TOPLEVEL);
     while (peek().tt != TT_EOF) {
+        add_comments();
         pnode_attach(&node, statement());
         setexpect("Expected semicolon");
         skip_tt(TT_SEMI);
