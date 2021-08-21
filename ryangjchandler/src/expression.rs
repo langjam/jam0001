@@ -23,6 +23,8 @@ impl Priority {
 pub enum Expression {
     String(String),
     Number(f64),
+    Bool(bool),
+    Null,
     GetIdentifier(String),
     Call(Call),
     Infix(Box<Expression>, TokenKind, Box<Expression>),

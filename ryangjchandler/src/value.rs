@@ -8,6 +8,7 @@ pub enum Value {
     String(String),
     Number(f64),
     Function(Function),
+    Bool(bool),
     Null,
 }
 
@@ -16,6 +17,7 @@ impl Value {
         match (r#type.into().as_str(), self) {
             ("string", Self::String(_)) => true,
             ("number", Self::Number(_)) => true,
+            ("bool", Self::Bool(_)) => true,
             _ => todo!(),
         }
     }
@@ -24,6 +26,8 @@ impl Value {
         match self {
             Self::String(_) => "string".to_owned(),
             Self::Number(_) => "number".to_owned(),
+            Self::Bool(_) => "bool".to_owned(),
+            Self::Null => "null".to_owned(),
             _ => todo!()
         }
     }
@@ -36,6 +40,8 @@ impl Display for Value {
             Self::Function(_) => format!("{:?}", self),
             Self::Number(n) => n.to_string(),
             Self::Null => "null".to_owned(),
+            Self::Bool(true) => "true".to_owned(),
+            Self::Bool(false) => "false".to_owned(),
         })
     }
 }

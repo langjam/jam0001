@@ -190,7 +190,10 @@ fn is_identifier(c: char) -> bool {
 
 fn get_keyword(keyword: &str) -> Option<TokenKind> {
     match_token! { keyword,
-        "fn" => TokenKind::Fn
+        "fn" => TokenKind::Fn,
+        "true" => TokenKind::True,
+        "false" => TokenKind::False,
+        "null" => TokenKind::Null
     }
 }
 
