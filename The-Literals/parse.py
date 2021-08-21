@@ -88,12 +88,22 @@ class Parser:
         elif token == Token.IDENTIFIER_WORD:
             self.parse_identifier()
         else:
-            raise UnexpectedTokenError(Token.IDENTIFIER_WORD, token) # TODO: could be either.
+            raise UnexpectedTokenError(
+                Token.IDENTIFIER_WORD, token
+            )  # TODO: could be either.
 
         potential_operator, next_value = self.peek_lexeme()
         if potential_operator == Token.BINOP or potential_operator == Token.COMPARISON:
             self.advance()  # we already have these values!
-            second_operand_token, second_operand_value = self.advance()
+            token, value = self.peek_lexeme()
+            if token == Token.NUMBER:
+                second_operand_token, second_operand_value = self.expect(Token.NUMBER)
+            elif token == Token.IDENTIFIER_WORD:
+                self.parse_identifier()
+            else:
+                raise UnexpectedTokenError(
+                    Token.IDENTIFIER_WORD, token
+                )  # TODO: could be either.
 
 
 if __name__ == "__main__":
@@ -146,6 +156,23 @@ if __name__ == "__main__":
         yield (Token.DOT, ".")
         yield (Token.EOF, "")
 
+    def if_stmt_compare_variable_and_variable():
+        yield (Token.BOF, "")
+        yield (Token.IF_KEYWORD, "If")
+        yield (Token.IDENTIFIER_WORD, "processor")
+        yield (Token.IDENTIFIER_WORD, "type")
+        yield (Token.COMPARISON, "is")
+        yield (Token.IDENTIFIER_WORD, "eight")
+        yield (Token.IDENTIFIER_WORD, "bit")
+        yield (Token.THEN, "then")
+        yield (Token.SETVAR, "set")
+        yield (Token.IDENTIFIER_WORD, "processor")
+        yield (Token.IDENTIFIER_WORD, "architecture")
+        yield (Token.TO, "to")
+        yield (Token.NUMBER, "6502")
+        yield (Token.DOT, ".")
+        yield (Token.EOF, "")
+
     parser = Parser(set_x().__next__)
     parser.parse()
 
@@ -153,4 +180,7 @@ if __name__ == "__main__":
     parser.parse()
 
     parser = Parser(if_stmt_compare_variable_and_constant().__next__)
+    parser.parse()
+
+    parser = Parser(if_stmt_compare_variable_and_variable().__next__)
     parser.parse()
