@@ -47,22 +47,52 @@ class ComstructExecutor:
         elif isinstance(node, StatementNode.StoredProcedureNode):
             return node
         elif isinstance(node, StatementNode.ExecuteStoredProcedureNode):
-            ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             for stmt_node in node.exec.content:
+                if type(stmt_node) == StatementNode.FunctionDescriptionNode:
+                    node.description = stmt_node.attributes
+                    break
+
+            if node.description is None:
+                node.description = []
+
+            ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
+
+            for stmt_node in node.exec.content:
+                # TODO Check for Return Value Type, but only if defined in Desc. Only set if type matches
                 ret = self.walkTree(stmt_node)
             return ret
         elif isinstance(node, StatementNode.FunctionDefinitionNode):
             return node
         elif isinstance(node, StatementNode.FunctionCallNode):
             processed_args = []
+            node_call = env[node.func_name].content
+
             for arg in node.args:
                 processed_args.append(self.walkTree(arg))
-            if env[node.func_name].content == "internal":
+            if node_call == "internal":
                 return self.walkTree(internals[node.func_name](processed_args))
+
+            for stmt_node in node_call.content:
+                if type(stmt_node) == StatementNode.FunctionDescriptionNode:
+                    node_call.description = stmt_node.attributes
+                    break
+
+            if node_call.description is None:
+                node_call.description = []
+
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
-            for func_node in env[node.func_name].content.content:
+
+            # TODO Save old env, build new one with the arguments specified in the desc.
+
+            ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
+            for func_node in node_call.content:
+                # TODO Check for Return Value Type, but only if defined in Desc. Only set if type matches
                 ret = self.walkTree(func_node)
+
+            # TODO Restore old env
+
             return ret
+
         elif isinstance(node, StatementNode.ForLoopExecutorNode):
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             prev = None

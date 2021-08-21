@@ -64,13 +64,15 @@ class StatementNode:
 
     class StoredProcedureNode(GenericNode):
 
-        def __init__(self, content):
+        def __init__(self, content, description=None):
             self.content = content
+            self.description = description
 
     class ExecuteStoredProcedureNode(GenericNode):
 
-        def __init__(self, _exec):
+        def __init__(self, _exec, description=None):
             self.exec = _exec
+            self.description = description
 
     class FunctionDefinitionNode(GenericNode):
 
@@ -97,4 +99,3 @@ class StatementNode:
 
         def __init__(self, attrs):
             self.attributes = attrs
-

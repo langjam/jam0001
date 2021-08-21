@@ -93,15 +93,13 @@ class FuncDescProcessor:
 
         for token in tokens:
             token = token.replace(r"*", "").strip()
-            if token.startswith("@"):
-                token = token[1:]
+            if token.startswith("- "):
+                token = token[2:]
                 if token.split(" ")[0] in self.valid_tokens:
                     if token.startswith("param"):
                         token = ("param", token.removeprefix("param ").strip().split(" ")[0])
                     elif token.startswith("returns"):
                         token = ("returns", token.removeprefix("returns ").strip().split(" ")[0])
                     ret.append(token)
-                else:
-                    print(f"[FunctionDescriptionProcessor] Invalid Token: {token}")
 
         return ret
