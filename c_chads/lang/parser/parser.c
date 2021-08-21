@@ -31,7 +31,7 @@ static tok_t pull() {
     tok_t tok = parser.current_token;
     parser.current_token = lex_determine(&parser.lexer);
     if (tok.tt == TT_INVALID) {
-        EH_MESSAGE("Invalid runeacter: `%.*s`\n", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
+        EH_MESSAGE("Invalid character: `%.*s`\n", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
         lineinfo();
         exit(1);
     }

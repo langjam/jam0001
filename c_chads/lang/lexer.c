@@ -73,12 +73,14 @@ static bool lex_is(struct Lexer_State *self, rune ch) {
  
 static rune lex_skip(struct Lexer_State *self) {
     rune ch = lex_peek(self);
-    self->col += 1;
+    if (ch != '\0') {
+        self->pos += 1;
+        self->col += 1;
+    }
     if (ch == '\n') {
         self->line += 1;
         self->col = 0;
     }
-    self->pos += 1;
     return ch;
 }
  
@@ -244,9 +246,9 @@ struct Token lex_determine(struct Lexer_State *self) {
     }
 end:
     // This is needed, because INVALID unwinds, while others don't
-    // Idk why i do that for EOF but it makes it work somehow too
-    if (tok.tt != TT_INVALID && tok.tt != TT_EOF)
+    if (tok.tt != TT_INVALID && tok.tt != TT_EOF && tok_col > 0)
         tok_col -= 1;
+
     tok.line = tok_line;
     tok.col = tok_col;
     return tok;
