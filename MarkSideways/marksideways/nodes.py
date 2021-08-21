@@ -290,7 +290,42 @@ class InlineIncrement(Expression):
     self.is_prefix = is_prefix
     self.is_increment = is_increment
   def run(self, scope):
-    starting_value = self.root.run(scope)
+    root_type = None
+    if isinstance(self.root, Variable):
+      root_type = 'VAR'
+      starting_value = self.root.run(scope)
+    elif isinstance(self.root, BracketIndex):
+      root_type = 'INDEX'
+      bracket_root = self.root.root.run(scope)
+      if bracket_root.is_error: return bracket_root
+      if is_null(bracket_root): return to_null_error_value(self.root.bracket_token)
+      bracket_index = self.root.index.run(scope)
+      if bracket_index.is_error: return bracket_index
+      if is_null(bracket_index): return to_null_error_value(self.root.bracket_token)
+      if bracket_root.type == 'ARRAY':
+        if bracket_index.type != 'INT': return new_error_value("Can only index into an array using an integer.")
+        index = bracket_index.value
+        if index < 0 or index >= len(bracket_root.value):
+          return new_error_value(self.bracket_token, "Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(root_value.value)) + ".")
+      elif bracket_root.type == 'DICTIONARY':
+        raise Exception("TODO: dictionaries")
+      else:
+        root_type = None
+      starting_value = bracket_root.value[index]
+    elif isinstance(self.root, DotField):
+      root_type = 'FIELD'
+      obj_root = self.root.root.run(scope)
+      if obj_root.type != 'INSTANCE':
+        if obj_root.is_error: return obj_root
+        if is_null(obj_root): return to_null_error_value(self.root.dot)
+        root_type = None
+      else:
+        starting_value = obj_root.fields.get(self.root.canonical_field_name)
+
+    if root_type == None:
+      return new_error_value(self.op_token, "The " + self.op_token.value + " op is not support on this sort of expression.")
+
+
     if starting_value.is_error: return starting_value
     if is_null(starting_value): return to_null_error_value(starting_value)
     if starting_value.type != 'INT': return new_error_value(self.op_token, "Can only use " + self.op_token.value + " on integers. This is a " + starting_value.type + ".")
@@ -300,15 +335,17 @@ class InlineIncrement(Expression):
     value_after = get_integer_value(n_after)
     expr_value = value_after if self.is_prefix else starting_value
 
-    if isinstance(self.root, Variable):
+    if root_type == 'VAR':
       scope.locals[self.root.canonical_name] = value_after
-      return expr_value
-    elif isinstance(self.root, BracketIndex):
-      raise Exception("TODO: ++ and -- on fields")
-    elif isinstance(self.root, DotField):
-      raise Exception("TODO: ++ and -- on fields")
-    else:
-      return new_error_value(self.op_token, "The " + self.op_token.value + " op is not support on this sort of expression.")
+    elif root_type == 'ARRAY_INDEX':
+      bracket_root.value[index] = value_after
+    elif root_type == 'DICTIONAR_KEY':
+      raise Exception("TODO: dictionaries")
+    elif root_type == 'FIELD':
+      obj_root.fields[self.root.canonical_field_name] = value_after
+
+    return expr_value
+
 
 class AssignStatement(Executable):
   def __init__(self, target_expression, assign_op, value_expression):

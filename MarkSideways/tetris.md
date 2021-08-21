@@ -44,6 +44,9 @@ this.overlayY = 0;
 this.overlayUsesTranspose = false;
 this.linesCleared = 0;
 this.fallCounter = 0;
+this.clearingCounterMax = 30;
+this.clearingCounter = null;
+this.clearingLines = null;
 
 ```
 
@@ -53,36 +56,42 @@ this.fallCounter = 0;
 
 ```
 
-for i = 0 till events.length {
-    event = events[i];
-    if event == 'left:press' {
-        this.tryMoveOverlay(-1, 0);
-    } else if event == 'right:press' {
-        this.tryMoveOverlay(1, 0);
-    } else if event == 'up:press' {
-        this.overlayRotate(true);
-    } else if event == 'space:press' {
-        this.overlayRotate(false);
-    }
-}
-
-fallCounterStart = 30.0;
-
-if this.overlay == null {
-    this.fallCounter = fallCounterStart;
-    this.createNewOverlay();
-}
-
-if this.fallCounter <= 0 {
-    this.fallCounter = fallCounterStart;
-    if !this.tryMoveOverlay(0, 1) {
-        this.flattenOverlay();
-        this.overlay = null;
-    }
+if this.clearingCounter != null {
+    this.performClearingLineUpdate();
 } else {
-    this.fallCounter -= this.getDropRate();
-    if game_is_key_pressed('down') {
-        this.fallCounter -= 10;
+
+    for i = 0 till events.length {
+        event = events[i];
+        if event == 'left:press' {
+            this.tryMoveOverlay(-1, 0);
+        } else if event == 'right:press' {
+            this.tryMoveOverlay(1, 0);
+        } else if event == 'up:press' {
+            this.overlayRotate(true);
+        } else if event == 'space:press' {
+            this.overlayRotate(false);
+        }
+    }
+
+    fallCounterStart = 30.0;
+
+    if this.overlay == null {
+        this.fallCounter = fallCounterStart;
+        this.createNewOverlay();
+    }
+
+    if this.fallCounter <= 0 {
+        this.fallCounter = fallCounterStart;
+        if !this.tryMoveOverlay(0, 1) {
+            this.flattenOverlay();
+            this.overlay = null;
+            this.checkForClearLines();
+        }
+    } else {
+        this.fallCounter -= this.getDropRate();
+        if game_is_key_pressed('down') {
+            this.fallCounter -= 10;
+        }
     }
 }
 
@@ -295,6 +304,83 @@ for y = 0 till 4 {
     t = this.overlay[0][y];
     this.overlay[0][y] = this.overlay[2][y];
     this.overlay[2][y] = t;
+}
+```
+
+### Check for Clear Lines
+
+```
+    linesToKeep = [];
+    linesToClear = [];
+    for y = 0 till 20 {
+        hasHoles = false;
+        for x = 0 till 10 {
+            if this.grid[x][y] == 0 {
+                hasHoles = true;
+                break;
+            }
+        }
+        if hasHoles {
+            linesToKeep.add(y);
+        } else {
+            linesToClear.add(y);
+        }
+    }
+
+    if linesToClear.length == 0 {
+        return;
+    }
+
+    this.clearingLines = linesToClear;
+    this.clearingCounter = 0;
+```
+
+### Perform Clearing Line Update
+
+```
+progress = 1.0 * this.clearingCounter / this.clearingCounterMax;
+clearThroughX = floor(progress * 10);
+for i = 0 till this.clearingLines.length {
+    y = this.clearingLines[i];
+    for x = 0 till clearThroughX {
+        this.grid[x][y] = 0;
+    }
+}
+
+if this.clearingCounter == this.clearingCounterMax {
+    this.removeAndCollapseLines(this.clearingLines);
+    this.clearingCounter = null;
+    this.linesCleared += this.clearingLines.length;
+    this.clearingLines = null;
+} else {
+    this.clearingCounter++;
+}
+```
+
+### Remove and Collapse Lines
+
+- `lines` - a list of the lines to remove
+
+```
+actualLine = 19;
+for y = 19 thru 0 {
+    keepThisLine = lines.length == 0 || lines[lines.length - 1] != y;
+    if !keepThisLine {
+        lines.pop();
+    }
+    if keepThisLine {
+        for x = 0 till 10 {
+            this.grid[x][actualLine] = this.grid[x][y];
+        }
+        actualLine--;
+    }
+}
+
+while actualLine >= 0 {
+    for x = 0 till 10 {
+        this.grid[x][actualLine] = 0;
+    }
+    actualLine--;
 }
 ```
 
