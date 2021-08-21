@@ -1,10 +1,9 @@
-use crate::frontend::Communicator;
 use train::vm::Data;
-use train::interface::{VmInterfaceMessage, Communicator};
+use train::interface::Communicator;
 use std::{thread, io};
 use train::ast::{Station, Train};
 
-struct CliRunner {
+pub(crate) struct CliRunner {
 
 }
 
@@ -18,6 +17,11 @@ impl CliRunner {
     pub fn run(&self, mut vm: Data) {
         loop {
             vm.do_current_step(self);
+
+            let mut input_text = String::new();
+            io::stdin()
+                .read_line(&mut input_text)
+                .expect("failed to read from stdin");
         }
     }
 }
@@ -33,10 +37,10 @@ impl Communicator for CliRunner {
             let trimmed = input_text.trim();
             match trimmed.parse::<i64>() {
                 Ok(i) => {
-                    return Ok(vec![i]),
+                    return Ok(vec![i]);
                 },
                 Err(..) => {
-                    log::error!("this was not an integer: {}. retry", trimmed),
+                    log::error!("this was not an integer: {}. retry", trimmed);
                 },
             };
         }
@@ -47,11 +51,13 @@ impl Communicator for CliRunner {
         Ok(())
     }
 
-    fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) {
+    fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), train::interface::CommunicatorError> {
         log::info!("simulation says: train {} moved from {} to {}", train.identifier, from_station.name, to_station.name);
+        Ok(())
     }
 
     fn train_to_start(&self, start_station: Station, train: Train) -> Result<(), train::interface::CommunicatorError> {
-        log::info!("simulation says: train {} moved starts at {}", train.identifier, start_station.name);
+        log::info!("simulation says: train {} starts at {}", train.identifier, start_station.name);
+        Ok(())
     }
 }

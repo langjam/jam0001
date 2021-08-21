@@ -2,14 +2,14 @@ mod frontend;
 
 use clap::{App, Arg};
 use clap::crate_authors;
-use crate::frontend::{Communicator, cli};
+use crate::frontend::cli;
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 use crate::frontend::web;
 use train::parse_and_check;
-use serde_json::error::Category::Data;
 use train::vm::Data;
+use crate::frontend::cli::CliRunner;
 
 #[tokio::main]
 async fn main() {
@@ -36,6 +36,9 @@ async fn main() {
 
 
     let program_path = Path::new(matches.value_of("program").unwrap());
+
+    log::info!("running: {:?}", program_path);
+
     let mut program_file = File::open(program_path).expect("file does not exist");
     let mut program = String::new();
     program_file.read_to_string(&mut program).expect("couldn't read");
@@ -48,14 +51,12 @@ async fn main() {
         }
     };
 
-    let (comm, vmi) = Communicator::new();
-
-    let vm = Data::new(ast, &vmi);
-
     if matches.is_present("cli") {
-        cli::run(comm, vm)
+        let runner = CliRunner::new();
+        let vm = Data::new(ast, &runner);
+        runner.run(vm);
     } else {
-        web::run(comm, ).await;
+        web::run().await;
     }
 
 

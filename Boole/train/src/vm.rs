@@ -107,7 +107,7 @@ impl Data {
         Ok(x)
     }
 
-    pub fn do_current_step(&mut self, interface: &dyn Communicator) {
+    pub fn do_current_step(&mut self, interface: &dyn Communicator) -> Result<(), VMError> {
         let mut targets = vec![];
         for (_, station_arc) in self.stations.iter() {
             let mut station = station_arc.lock()?;
@@ -352,9 +352,8 @@ impl Data {
             }
             station.trains[target.track].push_back(train);
         }
-        interface
-            .end_simulation_step()
-            .map_err(|_| VMError::ConnectionClosed)
+
+        Ok(())
     }
 }
 

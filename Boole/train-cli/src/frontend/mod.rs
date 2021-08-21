@@ -1,5 +1,4 @@
 use std::sync::mpsc::{Sender, Receiver, channel};
-use train::interface::{VmInterfaceMessage, VMInterface, OtherSideClosed};
 
 pub mod web;
 pub mod cli;
