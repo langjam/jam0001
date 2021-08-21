@@ -4,7 +4,7 @@ import { AppType } from './types'
 
 class TopicViewer extends Component<AppType, AppType> {
 
-    componentWillMount() {
+    UNSAFE_componentWillMount() {
         this.setState(this.props)
     }
 

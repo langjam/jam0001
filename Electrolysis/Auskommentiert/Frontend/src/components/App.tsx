@@ -5,6 +5,8 @@ import { BrowserRouter as Router, Route } from 'react-router-dom'
 import { TopicViewer } from './TopicViewer';
 import { AppType } from './types'
 import TopicCreate from './TopicCreate';
+import AnswerCreate from './AnswerCreate';
+import AnswerCreateTopic from './AnswerCreateTopic';
 
 let data: AppType = {
     topics: [
@@ -94,7 +96,7 @@ let data: AppType = {
 
 class App extends Component<{}, AppType> {
 
-    componentWillMount() {
+    UNSAFE_componentWillMount() {
         this.setState(data)
         //fetch("localhost:6789").then(data => data.json()).then(data => this.setState(data)).catch(reason => {})
     }
@@ -105,6 +107,12 @@ class App extends Component<{}, AppType> {
                 <Router>
                     <Route exact path="/create_topic">
                         <TopicCreate></TopicCreate>
+                    </Route>
+                    <Route exact path="/create_answer_comment">
+                        <AnswerCreate></AnswerCreate>
+                    </Route>
+                    <Route exact path="/create_answer_topic">
+                        <AnswerCreateTopic></AnswerCreateTopic>
                     </Route>
                     {
                         this.state.topics.map(topic =>

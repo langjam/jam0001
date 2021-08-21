@@ -5,12 +5,14 @@ import { Comment } from './Comment';
 import { TopicType } from './types'
 import '../css/Topic.css'
 import '../css/all.css'
+import { Link } from 'react-router-dom';
+import GlobalTopicStore from './GlobalTopicStore';
 
 
 class Topic extends Component<TopicType, TopicType> {
     comments: Array<ReactElement<any, any>> = [];
 
-    componentWillMount() {
+    UNSAFE_componentWillMount() {
         this.setState(this.props)
         for (let entry of this.props.comments) {
             let component = <Comment topic={entry.topic} id={entry.id} parent={entry.parent} position={entry.position} body={entry.body} answers={entry.answers} upvotes={entry.upvotes} creation={entry.creation}></Comment>
@@ -31,7 +33,9 @@ class Topic extends Component<TopicType, TopicType> {
                 <div>
                     <button onClick={() => this.upvote()}>{this.state.upvotes} &#8593;</button>
                     <button onClick={() => this.downvote()}>&#8595;</button>
-                    <button>Answer</button>
+                    <Link to="/create_answer_topic">
+                        <button onClick={() => GlobalTopicStore.setTopic(this.state)}>Answer</button>
+                    </Link>
                 </div>
                 <h3>Comments:</h3>
                 <>
