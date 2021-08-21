@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::io::Write;
 use std::iter::Peekable;
 
 const SOURCE: &str = r#"
@@ -9,11 +10,11 @@ const SOURCE: &str = r#"
 	(while true
 		(block
 			(print x)
-			(set x (* x 6))
+			(set x (* x 9))
 
 			(# "This is a comment, current value of x is" x)
 			(if (> x 10000000)
-				(panic)
+				(pause)
 				()
 			)
 		)
@@ -104,6 +105,8 @@ fn tokenize(source: &str) -> Vec<Token> {
 			}
 		}
 	}
+
+	finalize_current(source, &mut current, &mut current_start, &mut output, 0);
 
 	output
 }
@@ -546,6 +549,8 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 				"mod" => mod_impl(&args),
 
 				"print" => print_values(&args),
+
+				"pause" => pause(state, &args),
 				"panic" => panic_impl(state, &args),
 
 				name => {
@@ -703,6 +708,46 @@ fn insert_comment(state: &mut ScopeState, values: &[Value]) -> Value {
 	Value::None
 }
 
+fn pause(state: &mut ScopeState, values: &[Value]) -> Value {
+	if !values.is_empty() {
+		print!("Pausing!: ");
+		print_values(values);
+	} else {
+		println!("Pausing!");
+	}
+
+	println!();
+
+	loop {
+		print!("> ");
+		std::io::stdout().flush().unwrap();
+
+		let input = {
+			let mut input = String::new();
+			std::io::stdin().read_line(&mut input).unwrap();
+			input
+		};
+
+		match input.as_str().trim() {
+			"comments" => print_comments(state),
+
+			"return" => break,
+			"exit" => std::process::exit(0),
+
+			input => {
+				let tokens = tokenize(input);
+				let tree = parse_expression(&mut tokens.iter().peekable());
+				let result = evaluate(state, &tree);
+				print_values(&[result]);
+			}
+		}
+	}
+
+	println!();
+
+	Value::None
+}
+
 fn panic_impl(state: &ScopeState, values: &[Value]) -> Value {
 	if !values.is_empty() {
 		print!("Panic!: ");
@@ -720,7 +765,12 @@ fn panic_impl(state: &ScopeState, values: &[Value]) -> Value {
 	}
 
 	println!("========================================");
+	print_comments(state);
 
+	std::process::exit(-1);
+}
+
+fn print_comments(state: &ScopeState) {
 	let mut indent_level = 0;
 	for scope_index in 0..state.scopes.len() {
 		let scope = &state.scopes[scope_index];
@@ -737,8 +787,6 @@ fn panic_impl(state: &ScopeState, values: &[Value]) -> Value {
 			indent_level += 1;
 		}
 	}
-
-	std::process::exit(-1);
 }
 
 fn main() {
