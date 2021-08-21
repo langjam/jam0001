@@ -10,16 +10,17 @@ import os
 from matplotlib import pyplot as plt, patches
 import matplotlib
 
-matplotlib.use("TkAgg")
+# matplotlib.use("TkAgg")
 
 ATTRACTION = 0.5
 
 
 class Station:
-    def __init__(self, id, inputs, to):
+    def __init__(self, id, inputs, to, type):
         self.id = id
         self.inputs = inputs
         self.to = to
+        self.type = type
         self.x = random() * 2
         self.y = random() * 2
         self.force_x = 0
@@ -142,8 +143,8 @@ class World:
         # Direction 3 -> corner
 
         for station in self.stations:
-            for goal in station.to:
-                self.roads.append(self.a_star(station, goal))
+            for port, goal in enumerate(station.to):
+                self.roads.append((station.id, port, goal[0], self.a_star(station, goal)))
 
     def a_star(self, station, goal):
 
@@ -176,19 +177,24 @@ class World:
             g_score[loc] = 0
             f_score[loc] = goal.dist(loc[:2])
 
+        # TODO jumps moeten alle nodes weergeven en corners detecten
+
         while open_set:
             current = min(open_set, key=lambda x: f_score[x])
-            if current[:2] in goal_set or (current[:2] in self.filled and self.filled[current[:2]][1] == goal.id and self.filled[current[:2]][2] == port and self.filled[current[:2]][0]!=0):
+            if current[:2] in goal_set or (
+                    current[:2] in self.filled and self.filled[current[:2]][1] == goal.id and self.filled[current[:2]][
+                2] == port and self.filled[current[:2]][0] != 0):
                 if port not in goal.port_locs:
                     goal.port_locs[port] = came_from[current]
-                else:
-                    print("YUS")
+                # else:
+                #     print("YUS")
                 return self.reconstruct(came_from, current, goal.id, port)
 
             open_set.remove(current)
 
             if (current[0] + 1, current[1]) not in self.filled or self.filled[(current[0] + 1, current[1])][
-                1:] == [goal.id,port] or (current[0] + 1, current[1]) in goal_set:
+                                                                  1:] == [goal.id, port] or (
+            current[0] + 1, current[1]) in goal_set:
                 neighbour = (current[0] + 1, current[1], 1)
                 cost = [0, 1, 2, 3][current[2]]
                 tentative_score = g_score[current] + cost
@@ -210,7 +216,8 @@ class World:
                         open_set.add(neighbour)
 
             if (current[0] - 1, current[1]) not in self.filled or self.filled[(current[0] - 1, current[1])][
-                1:] == [goal.id,port] or (current[0] - 1, current[1]) in goal_set:
+                                                                  1:] == [goal.id, port] or (
+            current[0] - 1, current[1]) in goal_set:
                 neighbour = (current[0] - 1, current[1], 1)
                 cost = [0, 1, 2, 3][current[2]]
                 tentative_score = g_score[current] + cost
@@ -232,7 +239,8 @@ class World:
                         open_set.add(neighbour)
 
             if (current[0], current[1] + 1) not in self.filled or self.filled[(current[0], current[1] + 1)][
-                1:] == [goal.id,port] or (current[0], current[1]+1) in goal_set:
+                                                                  1:] == [goal.id, port] or (
+            current[0], current[1] + 1) in goal_set:
                 neighbour = (current[0], current[1] + 1, 2)
                 cost = [0, 2, 1, 3][current[2]]
                 tentative_score = g_score[current] + cost
@@ -254,7 +262,8 @@ class World:
                         open_set.add(neighbour)
 
             if (current[0], current[1] - 1) not in self.filled or self.filled[(current[0], current[1] - 1)][
-                1:] == [goal.id,port] or (current[0], current[1]-1) in goal_set:
+                                                                  1:] == [goal.id, port] or (
+            current[0], current[1] - 1) in goal_set:
                 neighbour = (current[0], current[1] - 1, 2)
                 cost = [0, 2, 1, 3][current[2]]
                 tentative_score = g_score[current] + cost
@@ -277,7 +286,7 @@ class World:
 
     def reconstruct(self, came_from, current, goal, port):
         total_path = [current[:2]]
-        self.filled[current[:2]] = (current[2], goal,port)
+        self.filled[current[:2]] = (current[2], goal, port)
         while current in came_from:
             current = came_from[current]
             self.filled[current[:2]] = (current[2], goal, port)
@@ -307,7 +316,7 @@ class World:
             ax.annotate(txt, (xs[i], ys[i]))
 
         for road in self.roads:
-            xs, ys = zip(*road)
+            xs, ys = zip(*road[3])
             xs = [x + 0.5 for x in xs]
             ys = [y + 0.5 for y in ys]
             ax.plot(xs, ys)
@@ -315,7 +324,110 @@ class World:
         plt.show()
 
     def to_json(self):
-        pass
+
+        lines = []
+        for id, route in enumerate(self.roads):
+            extended_line = route[3][:]
+            for i in range(id):
+                if route[3][-1] in self.roads[i][3]:
+                    extended_line.extend(self.roads[i][3][self.roads[i][3].index(route[3][-1]) + 1:])
+            lines.append(list(route[:3]) + [extended_line])
+
+        station_data = []
+        for _ in range(len(self.stations)):
+            station_data.append([False] * 8)
+
+        for route in self.roads:
+            exit_loc = route[3][1]
+
+            exit_ind = [
+                (self.stations[route[0]].x, self.stations[route[0]].y + 2),
+                (self.stations[route[0]].x + 1, self.stations[route[0]].y + 2),
+                (self.stations[route[0]].x + 2, self.stations[route[0]].y + 1),
+                (self.stations[route[0]].x + 2, self.stations[route[0]].y),
+                (self.stations[route[0]].x + 1, self.stations[route[0]].y - 1),
+                (self.stations[route[0]].x, self.stations[route[0]].y - 1),
+                (self.stations[route[0]].x - 1, self.stations[route[0]].y),
+                (self.stations[route[0]].x - 1, self.stations[route[0]].y + 1),
+            ].index(exit_loc)
+
+            station_data[route[0]][exit_ind] = True
+
+            inp_locs = [
+                (self.stations[route[2]].x, self.stations[route[2]].y + 2),
+                (self.stations[route[2]].x + 1, self.stations[route[2]].y + 2),
+                (self.stations[route[2]].x + 2, self.stations[route[2]].y + 1),
+                (self.stations[route[2]].x + 2, self.stations[route[2]].y),
+                (self.stations[route[2]].x + 1, self.stations[route[2]].y - 1),
+                (self.stations[route[2]].x, self.stations[route[2]].y - 1),
+                (self.stations[route[2]].x - 1, self.stations[route[2]].y),
+                (self.stations[route[2]].x - 1, self.stations[route[2]].y + 1),
+            ]
+
+            station_locs = [
+                (self.stations[route[2]].x, self.stations[route[2]].y),
+                (self.stations[route[2]].x + 1, self.stations[route[2]].y),
+                (self.stations[route[2]].x, self.stations[route[2]].y + 1),
+                (self.stations[route[2]].x + 1, self.stations[route[2]].y + 1)
+            ]
+
+            if route[3][-2] in inp_locs and route[3][-1] in station_locs:
+                station_data[route[2]][inp_locs.index(route[3][-2])] = True
+
+            station_data[route[0]][exit_ind] = True
+        # pprint(station_data)
+
+        tiles = set()
+
+        for road in self.roads:
+            path = road[3]
+
+            for i in range(1, len(path) - 1):
+                if abs(path[i - 1][0] - path[i + 1][0]) == 2:
+                    tiles.add(Tile(path[i][0], path[i][1], "Horizontal"))
+                if abs(path[i - 1][1] - path[i + 1][1]) == 2:
+                    tiles.add(Tile(path[i][0], path[i][1], "Vertical"))
+
+                if path[i - 1][0] == path[i][0] - 1 and path[i + 1][1] == path[i][1] - 1:
+                    tiles.add(Tile(path[i][0], path[i][1], "NW"))
+                if path[i - 1][1] == path[i][1] - 1 and path[i + 1][0] == path[i][0] - 1:
+                    tiles.add(Tile(path[i][0], path[i][1], "NW"))
+
+                if path[i - 1][0] == path[i][0] + 1 and path[i + 1][1] == path[i][1] - 1:
+                    tiles.add(Tile(path[i][0], path[i][1], "NE"))
+                if path[i - 1][1] == path[i][1] - 1 and path[i + 1][0] == path[i][0] + 1:
+                    tiles.add(Tile(path[i][0], path[i][1], "NE"))
+
+                if path[i - 1][0] == path[i][0] - 1 and path[i + 1][1] == path[i][1] + 1:
+                    tiles.add(Tile(path[i][0], path[i][1], "SW"))
+                if path[i - 1][1] == path[i][1] + 1 and path[i + 1][0] == path[i][0] - 1:
+                    tiles.add(Tile(path[i][0], path[i][1], "SW"))
+
+                if path[i - 1][0] == path[i][0] + 1 and path[i + 1][1] == path[i][1] + 1:
+                    tiles.add(Tile(path[i][0], path[i][1], "SE"))
+                if path[i - 1][1] == path[i][1] + 1 and path[i + 1][0] == path[i][0] + 1:
+                    tiles.add(Tile(path[i][0], path[i][1], "SE"))
+
+        data = {
+            "stations" : [{"x":station.x,"y":station.y,"stoppers":station_data[i],"type":station.type} for (i,station) in enumerate(self.stations)],
+            "lines" : [{"station_id":line[0], "station_track":line[1],"path":line[3]} for line in lines],
+            "tiles" : [{"x":tile.x,"y":tile.y,"type":tile.type} for tile in tiles]
+        }
+
+        return json.dumps(data,indent=4)
+
+class Tile:
+    def __init__(self, x, y, type):
+        self.x = x
+        self.y = y
+        self.type = type
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __hash__(self):
+        return hash((self.x,self.y))
+
 
 if __name__ == '__main__':
     if len(argv) == 2:
@@ -329,7 +441,7 @@ if __name__ == '__main__':
         data = json.load(f)
     pprint(data)
 
-    stations = [Station(id, d["inputs"], d["to"]) for id, d in enumerate(data)]
+    stations = [Station(id, d["inputs"], d["to"], d["type"]) for id, d in enumerate(data)]
     stations = StationGroup.build(stations)
     # stations.plot()
     stations.scale(3)
@@ -339,3 +451,7 @@ if __name__ == '__main__':
     world.build()
     print(world.roads)
     world.plot()
+    outp = world.to_json()
+
+    with open(f"{file}.result.json","w") as f:
+        f.write(outp)
