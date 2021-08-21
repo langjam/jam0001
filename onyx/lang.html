@@ -181,6 +181,10 @@ println["begin loop test"]
   i + 1 (call this i)
 } (while i < 10)
 println["end loop test"]`;
-input.oninput(new Event('ignored'));
+let handle = setInterval(() => {
+  if (!('lex' in window)) { return; }
+  clearInterval(handle);
+  input.oninput(new Event('ignored'))
+}, 50);
 </script>
 <script src="lang.js" defer></script>
