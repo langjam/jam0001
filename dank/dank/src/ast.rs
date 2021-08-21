@@ -9,12 +9,6 @@ pub type ExprPtr<'a> = Box<Expr<'a>>;
 pub type StmtPtr<'a> = Box<Stmt<'a>>;
 
 #[derive(Debug, Clone, PartialEq, AstToStr)]
-pub struct FileAst<'a> {
-    pub header_comments: Vec<HeaderComment<'a>>,
-    pub code: Ast<'a>,
-}
-
-#[derive(Debug, Clone, PartialEq, AstToStr)]
 pub struct HeaderComment<'a> {
     pub name: Vec<&'a str>,
     pub body: Vec<Stmt<'a>>,

@@ -123,17 +123,6 @@ peg::parser!(pub grammar dank() for str {
          = start:position!() "print" _ args:(expr() ** ",") end:position!()
          { Stmt { kind: StmtKind::Print(args), span: Span { start, end } } }
 
-    /// Prase a multi-line header comment (allowed only at the top of the file)
-    rule header_comment() -> HeaderComment<'input>
-        = "/*" name:ident_with_whitespace() ['\n' | '\r']?
-            ___ lines:(s:stmt() ___ {s})*
-        "*/" ___ {
-            HeaderComment {
-                name: name.into_iter().filter(|x| !x.is_empty()).collect(),
-                body: lines
-            }
-        }
-
     rule string() -> &'input str
         = s:$(['a'..='z'|'A'..='Z'|'0'..='9'|'_']*) { s }
 
@@ -166,12 +155,12 @@ peg::parser!(pub grammar dank() for str {
         // / _ s:(decl()) __ { Some(s) }
 
     /// Parses a file.
-    pub rule file() -> FileAst<'input>
-        = ___? header_comments:(header_comment()*)
+    pub rule file() -> Ast<'input>
+        = ___?
           lines:(line()*)
           ___?
         {
-            FileAst { header_comments, code: Ast { statements: lines } }
+            Ast { statements: lines }
         }
 });
 
@@ -197,55 +186,6 @@ pub mod tests {
     }
 
     #[test]
-    fn header_comments() {
-        let test = r#"
-
-        /* this is another header comment */ 
-        /* this_is_a_header_comment 
-
-        print("code inside the comment");
-
-        */
-
-
-        /* 
-            print("no name in this one");
-        */
-        "#;
-
-        test_eq!(
-            test,
-            r#"FileAst
-  header_comments= 
-    HeaderComment
-      name= 
-        "this"
-        "is"
-        "another"
-        "header"
-        "comment"
-      body= 
-    HeaderComment
-      name= 
-        "this_is_a_header_comment"
-      body= 
-        StmtKind::Print
-          args= 
-            ExprKind::Literal
-              field0: Str("code inside the comment")
-    HeaderComment
-      name= 
-      body= 
-        StmtKind::Print
-          args= 
-            ExprKind::Literal
-              field0: Str("no name in this one")
-  code: Ast
-    statements="#
-        )
-    }
-
-    #[test]
     fn lone_comment() {
         let test = r#"
         
@@ -254,14 +194,11 @@ pub mod tests {
         "#;
         assert_eq!(
             dank::file(test).unwrap(),
-            FileAst {
-                header_comments: vec![],
-                code: Ast {
-                    statements: vec![LineComment {
-                        body: CommentBody::Text(" test comment".into()),
-                        stmt: None,
-                    }],
-                }
+            Ast {
+                statements: vec![LineComment {
+                    body: CommentBody::Text(" test comment".into()),
+                    stmt: None,
+                }],
             }
         )
     }
@@ -283,27 +220,25 @@ pub mod tests {
         test_eq!(
             test,
             r#"
-FileAst
-  header_comments= 
-  code: Ast
-    statements= 
-      LineComment
-        body: CommentBody::Text
-          text: " attached comment"
-        stmt: StmtKind::Print
-          args= 
-            ExprKind::Variable
-              name: "variable"
-      LineComment
-        body: CommentBody::Text
-          text: " detached comment"
-        stmt: None
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::Print
-          args= 
-            ExprKind::Variable
-              name: "some_statement_way_down_below"
+Ast
+  statements= 
+    LineComment
+      body: CommentBody::Text
+        text: " attached comment"
+      stmt: StmtKind::Print
+        args= 
+          ExprKind::Variable
+            name: "variable"
+    LineComment
+      body: CommentBody::Text
+        text: " detached comment"
+      stmt: None
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::Print
+        args= 
+          ExprKind::Variable
+            name: "some_statement_way_down_below"
 "#
         );
     }
@@ -320,26 +255,24 @@ FileAst
         test_eq!(
             test,
             r#"
-FileAst
-  header_comments= 
-  code: Ast
-    statements= 
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::Block
-          statements= 
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::Block
-          statements= 
-            StmtKind::Print
-              args= 
-                ExprKind::Literal
-                  field0: Str("code inside the block")
-            StmtKind::LetDecl
-              name: "x"
-              initializer: ExprKind::Literal
-                field0: Num(5.0)
+Ast
+  statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::Block
+        statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::Block
+        statements= 
+          StmtKind::Print
+            args= 
+              ExprKind::Literal
+                field0: Str("code inside the block")
+          StmtKind::LetDecl
+            name: "x"
+            initializer: ExprKind::Literal
+              field0: Num(5.0)
 "#
         );
     }
@@ -352,25 +285,23 @@ FileAst
         test_eq!(
             test,
             r#"
-FileAst
-  header_comments= 
-  code: Ast
-    statements= 
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::While
-          condition: ExprKind::Literal
-            field0: Bool(true)
-          body: StmtKind::Block
-            statements= 
-              StmtKind::Print
-                args= 
-                  ExprKind::Binary
-                    left: ExprKind::Literal
-                      field0: Str("hello")
-                    op: BinOpKind::Add
-                    right: ExprKind::Literal
-                      field0: Str("world")
+Ast
+  statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::While
+        condition: ExprKind::Literal
+          field0: Bool(true)
+        body: StmtKind::Block
+          statements= 
+            StmtKind::Print
+              args= 
+                ExprKind::Binary
+                  left: ExprKind::Literal
+                    field0: Str("hello")
+                  op: BinOpKind::Add
+                  right: ExprKind::Literal
+                    field0: Str("world")
 "#
         );
     }
@@ -385,58 +316,57 @@ FileAst
         "#;
         test_eq!(
             test,
-            r#"FileAst
-  header_comments= 
-  code: Ast
-    statements= 
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "a"
-          initializer: ExprKind::Binary
-            left: ExprKind::Literal
-              field0: Num(1.0)
-            op: BinOpKind::Add
-            right: ExprKind::Binary
-              left: ExprKind::Binary
-                left: ExprKind::Literal
-                  field0: Num(2.0)
-                op: BinOpKind::Mul
-                right: ExprKind::Literal
-                  field0: Num(3.0)
-              op: BinOpKind::Div
-              right: ExprKind::Literal
-                field0: Num(4.0)
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "b"
-          initializer: ExprKind::Unary
-            op: UnOpKind::Neg
-            operand: ExprKind::Literal
-              field0: Bool(false)
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "c"
-          initializer: ExprKind::Literal
-            field0: Null
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "d"
-          initializer: ExprKind::Binary
+            r#"
+Ast
+  statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "a"
+        initializer: ExprKind::Binary
+          left: ExprKind::Literal
+            field0: Num(1.0)
+          op: BinOpKind::Add
+          right: ExprKind::Binary
             left: ExprKind::Binary
-              left: ExprKind::Variable
-                name: "a"
-              op: BinOpKind::And
-              right: ExprKind::Variable
-                name: "b"
-            op: BinOpKind::Or
-            right: ExprKind::Unary
-              op: UnOpKind::Not
-              operand: ExprKind::Variable
-                name: "c""#
+              left: ExprKind::Literal
+                field0: Num(2.0)
+              op: BinOpKind::Mul
+              right: ExprKind::Literal
+                field0: Num(3.0)
+            op: BinOpKind::Div
+            right: ExprKind::Literal
+              field0: Num(4.0)
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "b"
+        initializer: ExprKind::Unary
+          op: UnOpKind::Neg
+          operand: ExprKind::Literal
+            field0: Bool(false)
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "c"
+        initializer: ExprKind::Literal
+          field0: Null
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "d"
+        initializer: ExprKind::Binary
+          left: ExprKind::Binary
+            left: ExprKind::Variable
+              name: "a"
+            op: BinOpKind::And
+            right: ExprKind::Variable
+              name: "b"
+          op: BinOpKind::Or
+          right: ExprKind::Unary
+            op: UnOpKind::Not
+            operand: ExprKind::Variable
+              name: "c""#
         );
     }
 
@@ -454,62 +384,60 @@ FileAst
         "#;
         test_eq!(
             test,
-            r#"FileAst
-  header_comments= 
-  code: Ast
-    statements= 
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "a"
-          initializer: ExprKind::Literal
-            field0: Num(3.141592)
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "b"
-          initializer: ExprKind::Literal
-            field0: Str("hello")
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "c"
-          initializer: ExprKind::Literal
-            field0: Bool(true)
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "d"
-          initializer: ExprKind::Literal
-            field0: Bool(false)
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "e"
-          initializer: ExprKind::Literal
-            field0: Null
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "f"
-          initializer: ExprKind::ObjectLiteral
-            field0= 
-              tuple
-                field0: "object"
-                field1: ExprKind::Literal
-                  field0: Str("value")
-              tuple
-                field0: "second"
-                field1: ExprKind::Literal
-                  field0: Num(2.0)
-      LineComment
-        body: CommentBody::Empty
-        stmt: StmtKind::LetDecl
-          name: "g"
-          initializer: None"#
+            r#"
+Ast
+  statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "a"
+        initializer: ExprKind::Literal
+          field0: Num(3.141592)
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "b"
+        initializer: ExprKind::Literal
+          field0: Str("hello")
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "c"
+        initializer: ExprKind::Literal
+          field0: Bool(true)
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "d"
+        initializer: ExprKind::Literal
+          field0: Bool(false)
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "e"
+        initializer: ExprKind::Literal
+          field0: Null
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "f"
+        initializer: ExprKind::ObjectLiteral
+          field0= 
+            tuple
+              field0: "object"
+              field1: ExprKind::Literal
+                field0: Str("value")
+            tuple
+              field0: "second"
+              field1: ExprKind::Literal
+                field0: Num(2.0)
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "g"
+        initializer: None"#
         );
     }
-
     pub trait AsDisplay: std::fmt::Display {
         fn as_display(&self) -> DisplayAsDebugWrapper<&'_ Self> {
             DisplayAsDebugWrapper(self)

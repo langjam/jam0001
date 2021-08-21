@@ -18,30 +18,7 @@ impl<'a> Evaluator<'a> {
         Self { env }
     }
 
-    pub fn eval(&mut self, ast: &FileAst<'a>) -> Result<(), EvalError> {
-        for header in &ast.header_comments {
-            // If the comment doesn't have a name, execute it as a block
-            if header.name.is_empty() {
-                match self.eval_block(&header.body) {
-                    Ok(_) => (),
-                    Err(e) => {
-                        // TODO: add a flag for this
-                        #[cfg(debug_assertions)]
-                        eprintln!("{:?}", e);
-                    }
-                }
-            } else {
-                // Otherwise, create a function and store it in the environment.
-            }
-            let name: Cow<'a, str> = header.name.join("").into();
-            let func = Ptr::new(Function {
-                name: name.clone(),
-                args: vec![],
-                body: header.body.clone(),
-            });
-            self.env.add(name.clone(), Value::Fn(func));
-        }
-
+    pub fn eval(&mut self, ast: &Ast<'a>) -> Result<(), EvalError> {
         Ok(())
     }
 
