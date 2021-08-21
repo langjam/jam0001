@@ -10,7 +10,7 @@ var "Ryan"
 
 println(name)
 
-/** @identifier immutable_name */
+/** @identifier immutable_name * @type string */
 const "Ryan Chandler"
 
 println(immutable_name)

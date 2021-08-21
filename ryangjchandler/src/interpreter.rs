@@ -82,9 +82,9 @@ impl<'i> Interpreter<'i> {
                 if self.header.is_none() {
                     return Err(InterpreterError::MissingDefinitionHeader);
                 }
-
-                let (name) = match self.header.as_ref().unwrap() {
-                    Statement::DefinitionHeader(DefinitionHeader { identifier, r#type, .. }) => (identifier.clone()),
+                
+                let (name, r#type) = match self.header.as_ref().unwrap() {
+                    Statement::DefinitionHeader(DefinitionHeader { identifier, r#type, .. }) => (identifier.clone(), r#type.clone()),
                     _ => unreachable!()
                 };
 
@@ -92,6 +92,12 @@ impl<'i> Interpreter<'i> {
                     Some(v) => v,
                     None => unreachable!()
                 };
+
+                if let Some(t) = r#type {
+                    if ! value.is_type(t.clone()) {
+                        return Err(InterpreterError::VariableOrConstantTypeError(name.clone(), t, value.type_string()));
+                    }
+                }
 
                 self.environment.borrow_mut().set(name, &Value::Const(Box::new(value)));
 
