@@ -41,7 +41,15 @@ fn run_source(source: String) -> anyhow::Result<()> {
     match res {
         Ok(value::Value::Void) => (),
         Ok(val) => println!("> {}", val),
-        Err(err) => todo!("error reporting"),
+        Err(err) => {
+            eprintln!("error at: {}", &source[err.span.start..err.span.end]);
+            eprintln!("error type: {}", match err.cause {
+                error::RuntimeErrorCause::MissingVariable => "missing variable",
+                error::RuntimeErrorCause::MissingFunction => "missing function",
+                error::RuntimeErrorCause::TypeError => "type error",
+                error::RuntimeErrorCause::Immutable => "tried to assign to a constant"
+            });
+        },
     }
 
     Ok(())

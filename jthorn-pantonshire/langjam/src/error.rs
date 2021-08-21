@@ -11,6 +11,7 @@ pub enum RuntimeErrorCause {
     MissingVariable,
     MissingFunction,
     TypeError,
+    Immutable,
 }
 
 impl RuntimeError {

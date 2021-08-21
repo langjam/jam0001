@@ -11,7 +11,7 @@ alphanumeric = { (alpha | number | "_" | "-")+ }
 identAny = { alpha | alpha ~ alphanumeric }
 ident = { !((^"then" | ^"as") ~ (hws | NEWLINE | EOI)) ~ identAny }
 
-stringContents = { (!("\"") ~ ANY) }
+stringContents = { (!("\"") ~ ANY)* }
 string = { "\"" ~ stringContents ~ "\"" }
 
 //expressions
@@ -43,46 +43,24 @@ primary     = { number | litTrue | litFalse | ident | string | "(" ~ hws* ~ expr
 
 //statements
 varStmt = { ^"stores" ~ hws+ ~ expr ~ hws+ ~ ^"in" ~ hws+ ~ ident }
-loopStmt = { ^"repeat" ~ hws+ ~ "(" ~ stmt ~ ")" ~ hws+ ~ number ~ hws+ ~ ^"times" }
+loopStmt = { ^"repeat" ~ hws+ ~ "(" ~ hws* ~ comment ~ hws* ~ ")" ~ hws+ ~ expr ~ hws+ ~ ^"times" }
 // printStmt = { ("prints" | "print") ~ hws+ ~ expr }
 callStmt = { ident ~ (hws+ ~ expr ~ (hws* ~ "," ~ hws* ~ expr)*)? } //TODO
 listStmt = { ident | ident ~ "," ~ listStmt }
 argsStmt = {"takes" ~ hws+ ~ listStmt}
-condStmt = {"if" ~ hws+ ~ expr ~ hws+ ~ "then" ~ hws+ ~ stmt ~ hws+ ~ "else" ~ hws+ ~ stmt}
-stmt = { argsStmt | varStmt | loopStmt | condStmt | callStmt }
+condStmt = {"if" ~ hws+ ~ expr ~ hws+ ~ "do" ~ hws+ ~ comment ~ hws+ ~ "else" ~ hws+ ~ comment}
+consStmt = {"constant" ~ hws+ ~ ident ~ hws+ ~ "is" ~ hws+ ~ expr}
+returnStmt = { ^"outputs" ~ hws+ ~ expr }
+stmt = { argsStmt | varStmt | loopStmt | condStmt | consStmt | returnStmt | callStmt }
 //comment = { (stmt ~ hws* | literal ~ hws* )+ }
 comment = { stmt ~ ((hws | ",") ~ hws* ~ "then" ~ hws+ ~ stmt)* }
-commentStmt = { "//" ~ hws* ~ comment ~ vws+ ~ ident }
+commentStmt = { "//" ~ hws* ~ (fnIntro ~ hws+)? ~ comment ~ vws+ ~ ^"function" ~ hws+ ~ ident ~ hws* ~ "(" ~ hws* ~ (ident ~ (hws* ~ "," ~ hws* ~ ident)*)? ~ hws* ~ ")" }
 semanticBody = {commentStmt ~ (vws+ ~ semanticBody)*}
 syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (("\n")*~mainStmt~("\n")*)* ~ "}"}
 mainStmt = { ident ~"<-"~ mainStmt | ident ~ "(" ~ mainStmt ~ ")" | ident }
-program = {semanticBody ~ syntaxBody|semanticBody}
+program = {vws* ~ semanticBody ~ syntaxBody|semanticBody ~ vws*}
 
-
-//This is a function that stores 6 in x and then prints "hi"
-//example
-//print "hello world"
-//hello
-//6 + 3
-//expr1
-//Store an expression using stores () in a and then print a
-//b
-//On the other hand we save a statemet using stores <>
-//c
-
-//main {
-//example
-//b(expr1)
-//c(a)
-//}
-
-//run literals will run the program specified below it
-//run
-//example
-//b(expr1)
-//b(a)
-//c(hello)
-
+fnIntro = _{ (^"a" ~ hws+ ~ ^"function" ~ hws+ ~ ^"which") | (^"this" ~ hws+ ~ ^"function") }
 
 
 

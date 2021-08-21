@@ -32,6 +32,7 @@ pub struct Function {
     pub span: Span,
     pub name: String,
     pub body: Vec<Stmt>,
+    pub params: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -41,6 +42,8 @@ pub enum Stmt {
     Loop(LoopStmt),
     Call(CallStmt),
     Cond(CondStmt),
+    Cons(ConsStmt),
+    Return(ReturnStmt),
 }
 
 #[derive(Debug)]
@@ -64,8 +67,8 @@ pub struct VarStmt {
 #[derive(Debug)]
 pub struct LoopStmt {
     pub span: Span,
-    pub loops: usize,
-
+    pub loops: Expr,
+    pub stmts: Vec<Stmt>,
 }
 
 #[derive(Debug)]
@@ -77,9 +80,25 @@ pub struct CallStmt {
 
 #[derive(Debug)]
 pub struct CondStmt {
+    pub span: Span,
     pub cond: Expr,
-    pub span1: Span,
-    pub span2: Span 
+    pub stmt1: Vec<Stmt>,
+    pub stmt2: Vec<Stmt>
+}
+
+#[derive(Debug)]
+pub struct ReturnStmt {
+    pub span: Span,
+    pub expr: Expr,
+}
+
+#[derive(Debug)]
+pub struct ConsStmt {
+
+    pub span: Span,
+    pub name: String,
+    pub expr: Expr
+
 }
 
 #[derive(Debug)]
@@ -155,11 +174,15 @@ fn parse_semantic_body(semantic_body: Pair) -> Vec<Function> {
         let mut pairs = function_pair.into_inner();
         let statements = parse_comment(pairs.next().unwrap());
         let function_name = pairs.next().unwrap().as_str().to_lowercase();
+        let function_params = pairs
+            .map(|ident| ident.as_str().to_owned())
+            .collect::<Vec<_>>();
 
         Function {
             span: function_span,
             name: function_name,
             body: statements,
+            params: function_params,
         }
     });
 
@@ -188,9 +211,31 @@ fn parse_statement(pair: Pair) -> Stmt {
             })
         },
 
+        Rule::consStmt => {
+            let span = pair.as_span().into();
+            let mut pairs = pair.into_inner();
+            let name = pairs.next().unwrap().as_str().to_owned();
+            let expr = parse_expr(pairs.next().unwrap());
+            Stmt::Cons(ConsStmt {
+                span,
+                name,
+                expr,
+            })
+        },
+
         Rule::argsStmt => todo!("args statement"),
 
-        Rule::loopStmt => todo!("loop statement"),
+        Rule::loopStmt => {
+            let span = pair.as_span().into();
+            let mut pairs = pair.into_inner();
+            let stmts = parse_comment(pairs.next().unwrap());
+            let loops = parse_expr(pairs.next().unwrap());
+            Stmt::Loop(LoopStmt {
+                span,
+                loops,
+                stmts,
+            })
+        },
 
         Rule::callStmt => {
             let span = pair.as_span().into();
@@ -209,7 +254,28 @@ fn parse_statement(pair: Pair) -> Stmt {
             })
         },
 
-        Rule::condStmt => todo!("cond statement"),
+        Rule::condStmt => {
+            let span = pair.as_span().into();
+            let mut pairs = pair.into_inner();
+            let condition = parse_expr(pairs.next().unwrap());
+            let branch1 = parse_comment(pairs.next().unwrap());
+            let branch2 = parse_comment(pairs.next().unwrap());
+            Stmt::Cond(CondStmt {
+                span,
+                cond: condition,
+                stmt1: branch1,
+                stmt2: branch2,
+            })
+        },
+
+        Rule::returnStmt => {
+            let span = pair.as_span().into();
+            let expr = parse_expr(pair.into_inner().next().unwrap());
+            Stmt::Return(ReturnStmt {
+                span,
+                expr,
+            })
+        },
 
         _ => unreachable!(),
     }

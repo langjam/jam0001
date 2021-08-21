@@ -8,7 +8,8 @@ pub enum Value {
     Bool(bool),
     Int(i64),
     String(String),
-    File(Rc<File>),
+    Function(String),
+    // File(Rc<File>),
 }
 
 impl Value {
@@ -18,7 +19,8 @@ impl Value {
             Value::Bool(val) => Some(format!("{}", val)),
             Value::Int(val) => Some(format!("{}", val)),
             Value::String(val) => Some(val.clone()),
-            Value::File(_) => None,
+            Value::Function(_) => None,
+            // Value::File(_) => None,
         }
     }
 
@@ -28,7 +30,8 @@ impl Value {
             Value::Bool(val) => Some(if *val { 1 } else { 0 }),
             Value::Int(val) => Some(*val),
             Value::String(val) => val.parse().ok(),
-            Value::File(_) => None,
+            Value::Function(_) => None,
+            // Value::File(_) => None,
         }
     }
 }
@@ -39,8 +42,8 @@ impl fmt::Display for Value {
             Value::Void => write!(f, ""),
             Value::Bool(val) => write!(f, "{}", val),
             Value::Int(val) => write!(f, "{}", val),
-            Value::String(val) => write!(f, "{:?}", val),
-            Value::File(val) => write!(f, "{:?}", val),
+            Value::String(val) => write!(f, "{}", val),
+            // Value::File(val) => write!(f, "{:?}", val),
         }
     }
 }
@@ -51,7 +54,7 @@ impl PartialEq for Value {
             (Self::Bool(lhs), Self::Bool(rhs)) => lhs == rhs,
             (Self::Int(lhs), Self::Int(rhs)) => lhs == rhs,
             (Self::String(lhs), Self::String(rhs)) => lhs == rhs,
-            (Self::File(lhs), Self::File(rhs)) => Rc::ptr_eq(lhs, rhs),
+            // (Self::File(lhs), Self::File(rhs)) => Rc::ptr_eq(lhs, rhs),
 
             (Self::String(val), other) | (other, Self::String(val)) => match other.coerce_string() {
                 Some(ref coerced) => val == coerced,

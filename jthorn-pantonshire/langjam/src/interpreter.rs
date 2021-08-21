@@ -7,34 +7,44 @@ use crate::parser::{Span, Program, BinaryOp, UnaryOp, Expr, ExprKind, Function, 
 use crate::stdlib;
 
 pub struct Interpreter {
-    functions: Store<Function>,
-    global: RefCell<Store<Value>>,
+    functions: HashMap<String, Function>,
+    global: RefCell<Store>,
 }
 
-pub type VariableStore = Store<Value>;
+#[derive(Copy, Clone, Debug)]
+pub enum Mutability {
+    Mutable,
+    Immutable,
+}
 
-pub struct Store<T>(HashMap<String, T>);
+#[derive(Clone, Debug)]
+pub struct Store(HashMap<String, (Value, Mutability)>);
 
-impl<T> Store<T> {
+impl Store {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
 
-    pub fn get<'a, 'k>(&'a self, name: &'k str) -> Option<&'a T> {
+    pub fn get<'a, 'k>(&'a self, name: &'k str) -> Option<&'a (Value, Mutability)> {
         self.0.get(name)
     }
 
-    pub fn store(&mut self, name: String, val: T) {
-        self.0.insert(name, val);
+    pub fn store(&mut self, name: String, val: Value, mutability: Mutability) -> Result<(), ()> {
+        if let Some((_, Mutability::Immutable)) = self.0.get(&name) {
+            Err(())
+        } else {
+            self.0.insert(name, (val, mutability));
+            Ok(())
+        }
     }
 }
 
 impl Interpreter {
     pub fn new(program: Program) -> Self {
-        let mut functions = Store::new();
+        let mut functions = HashMap::<String, Function>::new();
 
         for function in program.functions {
-            functions.store(function.name.clone(), function);
+            functions.insert(function.name.clone(), function);
         }
 
         Self {
@@ -48,50 +58,96 @@ impl Interpreter {
             .get("main")
             .expect("no main function found");
 
-        self.exec_fn(main_function, &[])
+        self.exec_fn(main_function, Vec::new())
     }
 
-    //TODO: bind arguments to local variables
-    pub fn exec_fn(&self, function: &Function, args: &[Value]) -> RuntimeResult<Value> {
-        let mut local = VariableStore::new();
+    pub fn exec_fn(&self, function: &Function, args: Vec<Value>) -> RuntimeResult<Value> {
+        let mut local = Store::new();
         
-        for stmt in &function.body {
-            match stmt {
-                Stmt::Args(args_stmt) => todo!(),
-
-                Stmt::Var(var_stmt) => {
-                    let val = self.eval_expr(&local, &var_stmt.value)?;
-                    local.store(var_stmt.variable.clone(), val);
-                },
-
-                Stmt::Loop(loop_stmt) => todo!(),
-
-                Stmt::Call(call_stmt) => {
-                    let call_args = call_stmt.args
-                        .iter()
-                        .map(|expr| self.eval_expr(&local, expr))
-                        .collect::<RuntimeResult<Vec<_>>>()?;
-
-                    let call_out = if let Some(function) = self.functions.get(&call_stmt.function) {
-                        self.exec_fn(function, &call_args)?
-                    } else if let Some(out) = stdlib::call_std_fn(&call_stmt.function, &call_args) {
-                        out
-                    } else {
-                        return Err(RuntimeErrorCause::MissingFunction.error(call_stmt.span));
-                    };
-
-                    //TODO: do something with call_out
-                },
-
-                Stmt::Cond(cond_stmt) => todo!(),
-            }
+        for (param, arg) in function.params.iter().zip(args.into_iter()) {
+            local.store(param.clone(), arg, Mutability::Mutable).ok();
         }
 
-        //TODO: returning values from functions
+        for stmt in &function.body {
+            if let Some(return_value) = self.eval_stmt(&mut local, stmt)? {
+                return Ok(return_value);
+            }
+        }
+        
         Ok(Value::Void)
     }
 
-    fn eval_expr(&self, local: &VariableStore, expr: &Expr) -> RuntimeResult<Value> {
+    fn eval_stmt(&self, local: &mut Store, stmt: &Stmt) -> RuntimeResult<Option<Value>> {
+        match stmt {
+            Stmt::Args(args_stmt) => todo!(),
+
+            Stmt::Var(var_stmt) => {
+                let val = self.eval_expr(&local, &var_stmt.value)?;
+                local.store(var_stmt.variable.clone(), val, Mutability::Mutable)
+                    .map_err(|_| RuntimeErrorCause::Immutable.error(var_stmt.value.span))?;
+            },
+
+            Stmt::Loop(loop_stmt) => {
+                let iter = match self.eval_expr(local, &loop_stmt.loops)? {
+                    Value::Int(loops) => loops,
+                    _ => return Err(RuntimeErrorCause::TypeError.error(loop_stmt.loops.span)),
+                };
+
+                for _ in 0..iter {
+                    for stmt in &loop_stmt.stmts {
+                        self.eval_stmt(local, stmt)?;
+                    }
+                }
+            },
+
+            Stmt::Call(call_stmt) => {
+                let call_args = call_stmt.args
+                    .iter()
+                    .map(|expr| self.eval_expr(&local, expr))
+                    .collect::<RuntimeResult<Vec<_>>>()?;
+
+                let call_out = if let Some(function) = self.functions.get(&call_stmt.function) {
+                    self.exec_fn(function, call_args)?
+                } else if let Some(out) = stdlib::call_std_fn(&call_stmt.function, &call_args) {
+                    out
+                } else {
+                    return Err(RuntimeErrorCause::MissingFunction.error(call_stmt.span));
+                };
+
+                //TODO: do something with call_out
+            },
+
+            Stmt::Cond(cond_stmt) => {
+                let cond = match self.eval_expr(&local, &cond_stmt.cond)? {
+                    Value::Bool(a) => a,
+                    _ => return Err(RuntimeErrorCause::TypeError.error(cond_stmt.span)),
+                };
+                if cond {
+                    for stmt in &cond_stmt.stmt1 {
+                        self.eval_stmt(local, stmt)?;
+                    }
+                } else {
+                    for stmt in &cond_stmt.stmt2 {
+                        self.eval_stmt(local, stmt)?;
+                    }
+                }
+            },
+
+            Stmt::Cons(cons_stmt) => {
+                let expr = self.eval_expr(&local, &cons_stmt.expr)?;
+                local.store(cons_stmt.name.clone(), expr, Mutability::Immutable)
+                    .map_err(|_| RuntimeErrorCause::Immutable.error(cons_stmt.span))?;
+            },
+
+            Stmt::Return(return_stmt) => {
+                return Ok(Some(self.eval_expr(local, &return_stmt.expr)?))
+            },
+        } 
+
+        Ok(None)
+    }
+
+    fn eval_expr(&self, local: &Store, expr: &Expr) -> RuntimeResult<Value> {
         match &expr.kind {
             ExprKind::Value(value) => Ok(value.clone()),
 
@@ -108,7 +164,7 @@ impl Interpreter {
             
             ExprKind::Variable(variable ) => local
                 .get(variable)
-                .cloned()
+                .map(|(val, _) | val.clone())
                 .ok_or_else(|| RuntimeErrorCause::MissingVariable.error(expr.span)),
         }
     }
