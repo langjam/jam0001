@@ -5,7 +5,7 @@
 
 open Int32;;
 
-(* Linear congruential generator *)
+(* Linear congruential generator state. *)
 type lcg_t = int32;;
 
 let i32 (x: int) = Int32.of_int x ;;
@@ -17,11 +17,13 @@ let lsh32 (x: int32) (y: int) = Int32.shift_left x y ;;
 let xor32 (x: int32) (y: int32) = Int32.logxor x y ;;
 
 let lcg_helf_iter (lcg: lcg_t): lcg_t =
-  (* GNU libc parameters, see
-   * https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use *)
+  (* GNU libc parameters, see the table at
+   * https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use
+   * although rand is probably not just a LCG. *)
   (mod32 (add32 (mul32 lcg (i32 1103515245)) (i32 12345)) (i32 2147483648))
 ;;
 
+(* Randomp number generator state. *)
 type rg_t = lcg_t;;
 
 let rg_step (rg: rg_t): rg_t * int32 =
