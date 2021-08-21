@@ -77,3 +77,6 @@ def markdown_tokenize(filename, text):
       raise Exception("Unknown line type: " + line_type)
     i += 1
   return chunks
+
+def code_tokenize(filename, code):
+  raise Exception("Not implemented")

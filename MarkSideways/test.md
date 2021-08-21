@@ -1,26 +1,43 @@
 # Sample code file
 
-This is an intro paragraph
+This is an intro paragraph explaining what my code does.
 
 ```
-This is the entry point of execution
-All class names are hoisted
+
+print("Hello, World!")
+
+example = CountTo10Example.init()
+example.LoopExample()
+
 ```
 
-## This is a heading
+## Count To 10 Example
 
 Some text here
 
 ```
+print("Getting ready to count")
+```
 
-This is the static constructor
+### Loop example
+
+This is an example of an argument:
+
+- `begin` -- where to start counting
+- `end` -- where the counting stops (inclusive)
 
 ```
 
-### This is a sub heading
+for i = begin to end {
+  print(i + " Mississippi")
+}
 
-Weeeeeee!
+this.ClosingMessage()
 
 ```
-This is a method body
+
+### Closing Message
+
+```
+print("Ready or not, here I come!")
 ```
