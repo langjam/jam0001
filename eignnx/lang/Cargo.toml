@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 nom = "6.2.1"
 nom-supreme = "0.5.0"
+displaydoc = "0.2.3"

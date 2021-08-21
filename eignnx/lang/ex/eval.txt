@@ -1,2 +1,2 @@
-[[fn x: _ ->
-    x] "asdf"]
+[[fn f: [Text -> Text] ->
+    [f "asdf"]] [fn y: Text -> "qwer"]]

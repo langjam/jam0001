@@ -1,6 +1,7 @@
+use core::panic;
 use std::fmt::Display;
 
-use crate::ast::Tm;
+use crate::ast::{Tm, Ty};
 
 pub type Env = Vec<ValBinding>;
 
@@ -8,13 +9,15 @@ pub type Env = Vec<ValBinding>;
 pub enum Val {
     Text(String),
     Closure(Env, String, Tm),
+    TyClosure(Env, String, Tm),
 }
 
 impl Display for Val {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Val::Text(txt) => write!(f, "{:?}", txt),
-            Val::Closure(_env, param, _body) => write!(f, "[fn {} -> ...]", param),
+            Val::Closure(_env, param, body) => write!(f, "[fn {} -> {}]", param, body),
+            Val::TyClosure(_env, ty_var, body) => write!(f, "[tyfn {} -> {}]", ty_var, body),
         }
     }
 }
@@ -22,6 +25,7 @@ impl Display for Val {
 #[derive(Debug, Clone)]
 pub enum ValBinding {
     VarBind(String, Val),
+    TyVarBind(String, Ty),
 }
 
 pub struct Eval {
@@ -75,6 +79,20 @@ impl Eval {
                     result
                 } else {
                     panic!("Expected a closure, got {:?}", func);
+                }
+            }
+
+            Tm::TyLam(_loc, ty_var, body) => {
+                Val::TyClosure(self.env.clone(), ty_var.clone(), body.as_ref().clone())
+            }
+
+            Tm::TyApp(_loc, ty_func, ty_arg) => {
+                if let Val::TyClosure(env, ty_var, body) = self.eval(&ty_func) {
+                    self.env.extend(env);
+                    self.env.push(ValBinding::TyVarBind(ty_var, ty_arg.clone()));
+                    self.eval(&body)
+                } else {
+                    panic!("Expected a type closure, got {:?}", ty_func);
                 }
             }
         }

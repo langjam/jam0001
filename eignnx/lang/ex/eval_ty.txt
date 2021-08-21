@@ -1,0 +1,5 @@
+[[{
+    tyfn T -> fn f: [T -> T] -> fn x: T -> [f [f x]]
+    Text}
+    fn x: Text -> "qwer"]
+    "asdf"]
