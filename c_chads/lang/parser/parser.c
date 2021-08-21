@@ -64,6 +64,10 @@ tok_t peek() {
     return parser.current_token;
 }
 
+bool check(const string against) {
+    return spanstreqstr(parser.current_token.span, parser.lexer.src, against);
+}
+
 static void stray(tok_t *tok) {
     EH_MESSAGE("Stray `%.*s`", SPAN_PF(tok->span, parser.lexer.src));
     if (error_handling.expected != NULL) {
@@ -96,33 +100,84 @@ static void skip_v(const string v) {
         stray(&tok);
     }
 }
-
+/*
 static pnode_t pnode_new(pnode_kind_t kind) {
     return (pnode_t) {
         .kind = kind,
         .children = vec_new(sizeof(pnode_t))
     };
-}
+}*/
 
 static void pnode_attach(pnode_t *left, pnode_t right) {
     vec_push(&left->children, &right);
 }
 
-static pnode_t assignment();
-static pnode_t call(tok_t on) {
-    assert_tt(&on, TT_IDENT);
-    skip_tt(TT_LPAREN);
-    rune delim = begindelim('(');
-    pnode_t call_node = pnode_new(PN_CALL);
-    call_node.data.call.name = strview_span(on.span, parser.lexer.src);
-    while (peek().tt != TT_RPAREN) {
-        pnode_attach(&call_node, assignment());  
-        if (peek().tt != TT_RPAREN)
+static pnode_t pnode_listing(pnode_kind_t kind) {
+    return (pnode_t) {
+        .kind = kind,
+        .addressing = PA_LISTING,
+        .children = vec_new(sizeof(pnode_t))
+    };
+}
+
+static pnode_t pnode_binary(pnode_kind_t kind, pnode_t left, pnode_t right) {
+    pnode_t node = {
+        .kind = kind,
+        .addressing = PA_BINARY,
+        .children = vec_new(sizeof(pnode_t))
+    };
+    pnode_attach(&node, left);
+    pnode_attach(&node, right);
+    return node;
+}
+
+pnode_t *pnode_left(pnode_t *of) {
+    if (!(of->addressing == PA_BINARY)) {
+        fprintf(stderr, "Internal error: Invalid addressing mode for binary expression, %d", of->addressing);
+        exit(1);
+    }
+    return vec_get(&of->children, 0);
+}
+
+pnode_t *pnode_right(pnode_t *of) {
+    if (!(of->addressing == PA_BINARY)) {
+        fprintf(stderr, "Internal error: Invalid addressing mode for binary expression, %d", of->addressing);
+        exit(1);
+    }
+    return vec_get(&of->children, 1);
+}
+
+static pnode_t pnode_endpoint(pnode_kind_t kind) {
+    return (pnode_t) {
+        .kind = kind,
+        .addressing = PA_ENDPOINT,
+        .children = vec_new(sizeof(pnode_t))
+    };
+}
+
+static pnode_t delimited(pnode_kind_t kind, const string open, const string shut, bool mustclose, pnode_t callback()) {
+    pnode_t node = pnode_listing(kind);
+    rune delim = begindelim(*open);
+    skip_v(open);
+    while (!check(shut)) {
+        pnode_attach(&node, callback());
+        if (!check(shut) || mustclose)
             skip_tt(TT_SEMI);
     }
-    skip_tt(TT_RPAREN);
     enddelim(delim);
-    return call_node;
+    skip_v(shut);
+    return node;
+}
+
+
+static pnode_t assignment();
+static pnode_t value();
+static pnode_t maybe_call() {
+    pnode_t left = value();
+ //   fprintf(stderr, "Token: %.*s\n", (int)parser.current_token.span.size, parser.current_token.span.from+parser.lexer.src);
+    if (!check("("))
+        return left;
+    return pnode_binary(PN_CALL, left, delimited(PN_PARAMS, "(", ")", false, assignment));
 }
 
 static pnode_t declaration(tok_t on);
@@ -135,70 +190,45 @@ static strview_t typedecl() {
     return strview_span(token.span, parser.lexer.src);
 }
 
-static pnode_t value();
 static pnode_t assignment() {
-    pnode_t left = value();
+    pnode_t left = maybe_call();
     if (peek().tt != TT_ASSIGN)
         return left;
     skip_tt(TT_ASSIGN);
-    pnode_t right = value();
-    pnode_t decl_node = pnode_new(PN_ASSIGN);
-    // Attach value
-    pnode_attach(&decl_node, left);
-    pnode_attach(&decl_node, right);
-    return decl_node;
+    pnode_t right = maybe_call();
+    return pnode_binary(PN_ASSIGN, left, right);
+}
+
+static pnode_t pulldeclaration() {
+    return declaration(pull());
 }
 
 static pnode_t value() {
     tok_t token = pull();
     pnode_t value_node;
-    rune delim;
     switch (token.tt) {
         case TT_STRING:
-            value_node = pnode_new(PN_STRING);
+            value_node = pnode_endpoint(PN_STRING);
             value_node.data.string.val = strview_span(token.span, parser.lexer.src);
             return value_node;
         case TT_NUMBER:
-            value_node = pnode_new(PN_NUMBER);
+            value_node = pnode_endpoint(PN_NUMBER);
             value_node.data.number.val = strview_span(token.span, parser.lexer.src);
             return value_node;
         case TT_IDENT:
             if (peek().tt == TT_DEF)
                 return declaration(token);
-            if (peek().tt == TT_LPAREN)
-                return call(token);
             else {
-                value_node = pnode_new(PN_IDENT);
+                value_node = pnode_endpoint(PN_IDENT);
                 value_node.data.ident.val = strview_span(token.span, parser.lexer.src);
                 return value_node;
             }
         case TT_PROC:
-            value_node = pnode_new(PN_PROC);
-            if (peek().tt != TT_LBRACE) {
-                pnode_t param_node = pnode_new(PN_PARAMLIST);
-                skip_tt(TT_LPAREN);
-                delim = begindelim('(');
-                while (peek().tt != TT_RPAREN) {
-                    // For now we are just gonna parse some calls
-                    pnode_attach(&param_node, declaration(pull()));
-                    if (peek().tt != TT_RPAREN)
-                        skip_tt(TT_SEMI);
-                }
-                skip_tt(TT_RPAREN);
-                enddelim(delim);
-
-                pnode_attach(&value_node, param_node);
-            }  
-            skip_tt(TT_LBRACE);
-            delim = begindelim('{');
-            while (peek().tt != TT_RBRACE) {
-                // For now we are just gonna parse some calls
-                pnode_attach(&value_node, assignment());
-                skip_tt(TT_SEMI);
-            }
-            skip_tt(TT_RBRACE);
-            enddelim(delim);
-            return value_node;
+            return pnode_binary(
+                PN_PROC, 
+                delimited(PN_TYPELIST, "(", ")", false, pulldeclaration),
+                delimited(PN_BODY, "{", "}", true, assignment)
+            );
         default:
             stray(&token);
             exit(1);
@@ -210,11 +240,11 @@ static pnode_t declaration(tok_t on) {
     setexpect("`:` followed by type");
     skip_tt(TT_DEF);
     setexpect(NULL);
-    pnode_t decl_node = pnode_new(PN_DECL);
-    decl_node.data.def.name = strview_span(on.span, parser.lexer.src);
-    decl_node.data.def.type = strview_from("_");
+    pnode_t decl_node = pnode_endpoint(PN_DECL);
+    decl_node.data.decl.name = strview_span(on.span, parser.lexer.src);
+    decl_node.data.decl.type = strview_from("_");
     if (peek().tt != TT_ASSIGN) {
-        decl_node.data.def.type = typedecl();
+        decl_node.data.decl.type = typedecl();
     }
     return decl_node;
 }
@@ -236,7 +266,7 @@ void parser_deinit() {
 }
 
 pnode_t parser_parse_toplevel() {
-    pnode_t node = pnode_new(PN_TOPLEVEL);
+    pnode_t node = pnode_listing(PN_TOPLEVEL);
     while (peek().tt != TT_EOF) {
         pnode_attach(&node, assignment());
         setexpect("semicolon");

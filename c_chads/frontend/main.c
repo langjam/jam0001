@@ -7,11 +7,26 @@
 void print_ast(struct Parser_Node *node, usize depth) {
     for (usize i = 0; i < depth; i += 1) 
         printf("    ");
+
+    switch (node->addressing) {
+        case PA_LISTING:
+            printf("[]");
+            break;
+        case PA_BINARY:
+            printf("++");
+            break;
+        case PA_ENDPOINT:
+            printf("->");
+            break;
+    }
     switch (node->kind) {
         case PN_TOPLEVEL:
             printf("Toplevel\n");
             break;
-        case PN_PARAMLIST:
+        case PN_TYPELIST:
+            printf("TypeList\n");
+            break;
+        case PN_PARAMS:
             printf("Params\n");
             break;
         case PN_BODY:
@@ -27,7 +42,7 @@ void print_ast(struct Parser_Node *node, usize depth) {
             printf("Proc\n");
             break;
         case PN_CALL:
-            printf("Call(name = %.*s)\n", (int)node->data.call.name.size, node->data.call.name.view);
+            printf("Call\n");
             break;
         case PN_STRING:
             printf("String(%.*s)\n", (int)node->data.string.val.size, node->data.string.val.view);
