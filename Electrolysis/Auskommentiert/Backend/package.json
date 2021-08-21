@@ -12,6 +12,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@types/express": "^4.17.13",
+    "express": "^4.17.1",
     "tspeg": "^3.1.0"
   },
   "devDependencies": {

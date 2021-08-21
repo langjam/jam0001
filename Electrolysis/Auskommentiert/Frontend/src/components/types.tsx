@@ -5,23 +5,20 @@ type AppType = {
 }
 
 type TopicType = {
-    id: number
-    heading: string,
-    body: string,
+    id: string
+    title: string,
+    content: string,
     comments: CommentType[],
     upvotes: number,
-    creation: number
+    date: number
 }
 
 type CommentType = {
-    topic: number,
-    id: number,
-    parent: number,
-    position: number,
-    body: string,
-    answers: CommentType[],
+    id: string,
+    content: string,
+    children: CommentType[],
     upvotes: number,
-    creation: number
+    date: number
 }
 
 export type { AppType, TopicType, CommentType }

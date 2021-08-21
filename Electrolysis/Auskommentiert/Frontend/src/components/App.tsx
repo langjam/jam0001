@@ -4,96 +4,81 @@ import { Topic } from './Topic';
 import { BrowserRouter as Router, Route } from 'react-router-dom'
 import { TopicViewer } from './TopicViewer';
 import { AppType } from './types'
+import TopicCreate from './TopicCreate';
+import AnswerCreate from './AnswerCreate';
+import AnswerCreateTopic from './AnswerCreateTopic';
 
 let data: AppType = {
     topics: [
         {
-            id: 1,
-            heading: "Hi",
-            body: "Test Body",
+            id: "1",
+            title: "Hi",
+            content: "Test Body",
             upvotes: 0,
             comments: [
                 {
-                    topic: 1,
-                    id: 1,
-                    parent: 0,
-                    position: 0,
-                    body: "Ich bin ein Kommentar",
-                    answers: [
+                    id: "1",
+                    content: "Ich bin ein Kommentar",
+                    children: [
                         {
-                            topic: 1,
-                            id: 2,
-                            parent: 1,
-                            position: 0,
-                            body: "Unterkommentar",
-                            answers: [],
+                            id: "2",
+                            content: "Unterkommentar",
+                            children: [],
                             upvotes: 0,
-                            creation: Date.now()
+                            date: Date.now()
                         },
                         {
-                            topic: 1,
-                            id: 3,
-                            parent: 1,
-                            position: 1,
-                            body: "Zweiter Unterkommentar",
-                            answers: [
+                            id: "3",
+                            content: "Zweiter Unterkommentar",
+                            children: [
                                 {
-                                    topic: 1,
-                                    id: 4,
-                                    parent: 3,
-                                    position: 0,
-                                    body: "Antwort",
-                                    answers: [],
+                                    id: "4",
+                                    content: "Antwort",
+                                    children: [],
                                     upvotes: 0,
-                                    creation: Date.now()
+                                    date: Date.now()
                                 }
                             ],
                             upvotes: 0,
-                            creation: Date.now()
+                            date: Date.now()
                         }
                     ],
                     upvotes: 0,
-                    creation: Date.now()
+                    date: Date.now()
                 }
             ],
-            creation: Date.now()
+            date: Date.now()
         },
         {
-            id: 2,
-            heading: "Programming",
-            body: "Body",
+            id: "2",
+            title: "Programming",
+            content: "Body",
             upvotes: 0,
             comments: [
                 {
-                    topic: 2,
-                    id: 1,
-                    parent: 0,
-                    position: 0,
-                    body: "Ich bin ein Kommentar",
-                    answers: [
+                    id: "1",
+                    content: "Ich bin ein Kommentar",
+                    children: [
                         {
-                            topic: 2,
-                            id: 2,
-                            parent: 1,
-                            position: 0,
-                            body: "Unterkommentar",
-                            answers: [],
+                            id: "2",
+                            content: "Unterkommentar",
+                            children: [],
                             upvotes: 0,
-                            creation: Date.now()
+                            date: Date.now()
                         }
                     ],
                     upvotes: 0,
-                    creation: Date.now()
+                    date: Date.now()
                 }
             ],
-            creation: Date.now()
+            date: Date.now()
         }
     ]
 }
 
 class App extends Component<{}, AppType> {
 
-    componentWillMount() {
+    UNSAFE_componentWillMount() {
         this.setState(data)
         //fetch("localhost:6789").then(data => data.json()).then(data => this.setState(data)).catch(reason => {})
     }
@@ -102,10 +87,19 @@ class App extends Component<{}, AppType> {
         return (
             <div>
                 <Router>
+                    <Route exact path="/create_topic">
+                        <TopicCreate></TopicCreate>
+                    </Route>
+                    <Route exact path="/create_answer_comment">
+                        <AnswerCreate></AnswerCreate>
+                    </Route>
+                    <Route exact path="/create_answer_topic">
+                        <AnswerCreateTopic></AnswerCreateTopic>
+                    </Route>
                     {
                         this.state.topics.map(topic =>
                             <Route key={topic.id} exact path={"/topic/" + topic.id}>
-                                <Topic id={topic.id} heading={topic.heading} body={topic.body} comments={topic.comments} upvotes={topic.upvotes} creation={topic.creation} />
+                                <Topic id={topic.id} title={topic.title} content={topic.content} comments={topic.comments} upvotes={topic.upvotes} date={topic.date} />
                             </Route>
                         )
                     }
