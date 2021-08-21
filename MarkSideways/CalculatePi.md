@@ -14,7 +14,7 @@ You can adjust the number of points to use in the simulation by passing the numb
 
 ```
 if args.length == 1 {
-    test_count = parseInt(args[0]);
+    test_count = parse_int(args[0]);
 }
 ```
 However, if you do not pass in anything, `1000` is used as a default:
@@ -39,7 +39,7 @@ for i = 1 thru test_count {
 With the number of hits within the circle known, we can perform the final estimation for the value of &pi;:
 
 ```
-pi_estimate = 4 * hits / test_count;
+pi_estimate = 4.0 * hits / test_count;
 print(pi_estimate);
 ```
 

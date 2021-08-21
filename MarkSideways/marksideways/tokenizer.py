@@ -247,7 +247,7 @@ def code_tokenize(filename, code):
     if continuous_chain_size > 1:
       new_token_value = ''
       for j in range(continuous_chain_size):
-        new_token_value += tokens[i + j]
+        new_token_value += tokens[i + j].value
       new_tokens.append(Token(filename, new_token_value, token.line, token.col, 'FLOAT'))
     else:
       new_tokens.append(token)

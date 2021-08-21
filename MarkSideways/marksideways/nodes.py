@@ -151,7 +151,7 @@ class FunctionInvocation(Expression):
       if value.is_error: return value
       return instance
     elif root_value.type == 'BUILTIN_FUNCTION':
-      return root_value.handler(args)
+      return root_value.handler(self.open_paren, args)
     else:
       return new_error_value(self.expression.first_token, "This is not a function method or constructor and cannot be invoked like this.")
 
@@ -261,7 +261,23 @@ class BracketIndex(Expression):
     self.root = root_expression
     self.bracket_token = bracket_token
     self.index = index_expression
-  
+  def run(self, scope):
+    root_value = self.root.run(scope)
+    if root_value.is_error: return root_value
+    if is_null(root_value): return to_null_error_value(self.bracket_token)
+    if root_value.type == 'ARRAY':
+      index_value = self.index.run(scope)
+      if index_value.is_error: return index_value
+      if is_null(index_value): return to_null_error_value(self.index.first_token)
+      if index_value.type != 'INT': return new_error_value("Can only index into an array using an integer.")
+      index = index_value.value
+      if index < 0 or index >= len(root_value.value):
+        return new_error_value("Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(root_value.valueu)) + ".")
+      return root_value.value[index]
+    elif root_value.type == 'DICTIONARY':
+      raise Exception("TODO: bracket on dictionary")
+    else:
+      return new_error_value(self.bracket_token, "Using square brackets to index into this a " + root_value.type + " type is not allowed.")
 class InlineIncrement(Expression):
   def __init__(self, first_token, op_token, expression, is_prefix, is_increment):
     super().__init__(first_token)
@@ -270,20 +286,22 @@ class InlineIncrement(Expression):
     self.is_prefix = is_prefix
     self.is_increment = is_increment
   def run(self, scope):
-    starting_value = self.expression.run(scope)
+    starting_value = self.root.run(scope)
     if starting_value.is_error: return starting_value
     if is_null(starting_value): return to_null_error_value(starting_value)
     if starting_value.type != 'INT': return new_error_value(self.op_token, "Can only use " + self.op_token.value + " on integers. This is a " + starting_value.type + ".")
 
     n_before = starting_value.value
     n_after = n_before + (1 if self.is_increment else -1)
-    new_value = get_integer_value(n_after if self.is_prefix else n_before)
+    value_after = get_integer_value(n_after)
+    expr_value = value_after if self.is_prefix else starting_value
 
-    if instanceof(self.expression, Variable):
-      scope.locals[self.expression.canonical_name] = new_value
-    elif instanceof(self.expression, BracketIndex):
+    if isinstance(self.root, Variable):
+      scope.locals[self.root.canonical_name] = value_after
+      return expr_value
+    elif isinstance(self.root, BracketIndex):
       raise Exception("TODO: ++ and -- on fields")
-    elif instanceof(self.expression, DotField):
+    elif isinstance(self.root, DotField):
       raise Exception("TODO: ++ and -- on fields")
     else:
       return new_error_value(self.op_token, "The " + self.op_token.value + " op is not support on this sort of expression.")
@@ -365,6 +383,16 @@ class IntegerConstant(Expression):
   def run(self, scope):
     if self.cached_value == None:
       self.cached_value = get_integer_value(self.value)
+    return self.cached_value
+
+class FloatConstant(Expression):
+  def __init__(self, first_token, value):
+    super().__init__(first_token)
+    self.value = value
+    self.cached_value = None
+  def run(self, scope):
+    if self.cached_value == None:
+      self.cached_value = FloatValue(self.value)
     return self.cached_value
 
 class WhileLoop(Executable):

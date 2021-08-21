@@ -4,6 +4,7 @@ from .nodes import *
 from .parser import parse_code
 from .util import *
 from .values import *
+from .builtinlib import generate_builtins
 
 class Runner:
   def __init__(self, filename, text):
@@ -108,18 +109,6 @@ def parse_code_lines(parent, lines):
   code = '\n'.join(parent.code_lines) + '\n'
   tokens = code_tokenize(filename, code)
   parent.code = parse_code(tokens)
-
-def generate_builtins():
-  
-  def builtin_print(args):
-    print(' '.join(map(lambda arg: arg.to_string(), args)))
-    return NULL_VALUE
-  
-  PRINT = BuiltInFunction('print', builtin_print)
-
-  return {
-    'print': PRINT,
-  }
 
 def gather_user_entities(root):
   output = {}
