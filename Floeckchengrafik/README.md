@@ -7,7 +7,7 @@
 1. [Compiling the Interpreter](#Compiling-the-Interpreter)
 2. [Variable Assignment](#Variable-assignment-)
 3. [Variable calling](#Variable-calling-)
-4. [Arithmetip operations](#Arithmetic-Operations-)
+4. [Arithmetic operations](#Arithmetic-Operations-)
 5. [Function Definition](#Function-Definition-)
 6. [Function Calling](#Function-Calling-)
 7. [For Loops](#For-Loops-)
