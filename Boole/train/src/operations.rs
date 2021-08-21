@@ -1,3 +1,4 @@
+
 #[derive(EnumIter, Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Operation {
     Nothing,
