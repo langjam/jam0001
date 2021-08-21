@@ -41,7 +41,7 @@ let speclist =
 let () =
   Arg.parse speclist anon_fun usage_msg;
   if !input_files = "" then
-    Printf.eprintf "%s\n" usage_msg
+    Arg.usage speclist usage_msg
   else
     parse_file !input_files
     |> Kerlang.Kl_codegen.emit_kl_ir
