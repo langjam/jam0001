@@ -1,14 +1,19 @@
 package shared
 
-const TT_int string = "TT_int"
-const TT_plus = "TT_plus"
-const TT_minus = "TT_minus"
-const TT_mul = "TT_mul"
-const TT_div = "TT_div"
-const TT_lparen = "TT_lparen"
-const TT_rparen = "TT_rparen"
+const (
+	TTnull        = iota
+	TTlparen      // (
+	TTrparen      // )
+	TTopenBlock   // {
+	TTcloseBlock  // }
+	TTinstruction // set, m etc.
+	TTstring      // "string"
+	TTnumber      // 1, 3.5
+	TTconst       // true, false
+	TTref         // $number
+)
 
 type Token struct {
-	Type  string
+	Type  int
 	Value string
 }

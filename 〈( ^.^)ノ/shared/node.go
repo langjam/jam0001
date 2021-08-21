@@ -1,7 +1,7 @@
 package shared
 
 type Node struct {
-	Val         Token
-	IsEpression bool
-	Children    []Node
+	Val          Token
+	IsExpression bool
+	Children     []Node
 }
