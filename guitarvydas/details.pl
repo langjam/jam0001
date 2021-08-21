@@ -24,9 +24,9 @@ height(id8, 125).
 name(id1, "Details").
 value(id4, "top level").
 value(id5, "rects").
-value(id6, "&lt;div&gt;swipl -q \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(fb).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(rects).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'printRects.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'halt.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; | ./augment__fb&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;").
+value(id6, "swipl -q    -g 'consult(fb).'    -g 'consult(rects).'    -g 'printRects.'    -g 'halt.'   | ./augment__fb").
 value(id7, "bounding boxes").
-value(id8, "&lt;div&gt;&lt;div&gt;swipl -q \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(fb).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(boundingBoxes).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'printBB.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'halt.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; | ./augment__fb&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;/div&gt;").
+value(id8, "swipl -q    -g 'consult(fb).'    -g 'consult(boundingBoxes).'    -g 'printBB.'    -g 'halt.'   | ./augment__fb").
 vertex(id4, "").
 vertex(id5, "").
 vertex(id6, "").

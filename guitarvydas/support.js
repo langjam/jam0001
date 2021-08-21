@@ -14,12 +14,17 @@ function expandStyle (s) {
 	.replace (/([^=]+)=([^;]+);/g, '$1="$2" ');
     return sx;
 }
-function nameMangle (s) {
+function strMangle (s) {
     return s
+        // convert names to be acceptable to SWIPL
 	.replace (/-/g, '__')
 	.replace (/__g/g, '-g')
 	.replace (/__q/g, '-q')
 	.replace (/\\/g, '\\\\')
+
+        // remove HTML junk added by drawio
+	.replace (/&[^ ]+;/g, '')
+	.replace (/\\\\/g, '')
 }
 
 

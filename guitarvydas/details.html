@@ -317,7 +317,7 @@ CellAttribute =     EllipseAttribute
 
 <p>emit (tofb1):</p>
 <textarea id="tofb1semantics" rows="1" cols="90" placeholder="tofb1 semantics" style="background-color:oldlace;">
-Diagrams [@ds] = {{ resetNames (); }}[[${nameMangle (ds)}]]
+Diagrams [@ds] = {{ resetNames (); }}[[${strMangle (ds)}]]
 Diagram [k @a k2 graphmodel k3] = {{ scopeAdd ('diagramid', '') }}[[${a}${graphmodel}]]
 Attribute [a] = [[${a}]]
 NameAttribute [an k s] = [[]]
@@ -450,7 +450,7 @@ Tofb{
 
 <p>emit (tofb):</p>
 <textarea id="tofbsemantics" rows="1" cols="90" placeholder="tofb semantics" style="background-color:oldlace;">
-Diagrams [@ds] = [[${nameMangle (ds)}]]
+Diagrams [@ds] = [[${strMangle (ds)}]]
 Diagram [k @a k2 graphmodel k3] = {{scopeAdd ('diagramid', 'yyy'); }}[[${a}${graphmodel}]]
 Attribute [a] = [[${a}]]
 NameAttribute [an k s] = [[name(${getDiagramID()}, ${s}).\n]]
