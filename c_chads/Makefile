@@ -19,7 +19,7 @@ test:
 	./bin/test
 
 run: all
-	./bin/COLAN-21
+	./bin/COLAN-21 input.cln
 
 clean:
 	if [ -d "./bin" ]; then rm -r ./bin; fi
