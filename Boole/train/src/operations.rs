@@ -6,6 +6,7 @@ pub enum Operation {
     Input,
     SwitchEqZero,
     SwitchGteZero,
+    SwitchEmpty,
 
     Duplicate,
     Rotate,
@@ -29,6 +30,7 @@ impl Operation {
             Operation::Input => "input",
             Operation::SwitchEqZero => "switch eq",
             Operation::SwitchGteZero => "switch gte",
+            Operation::SwitchEmpty => "switch empty",
             Operation::Duplicate => "duplicate",
             Operation::Rotate => "rotate",
             Operation::DeleteTop => "delete top",
@@ -49,6 +51,7 @@ impl Operation {
             Operation::Input => 0,
             Operation::SwitchEqZero => 1,
             Operation::SwitchGteZero => 1,
+            Operation::SwitchEmpty => 1,
 
             Operation::Duplicate => 1,
             Operation::Rotate => 1,

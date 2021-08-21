@@ -176,6 +176,22 @@ impl Data {
                         }
                     }
                 }
+                Operation::SwitchEmpty => {
+                    if let Some(x) = station.trains[0].pop_front() {
+                        let xcln = x.clone();
+                        let st = x.lock()?;
+                        let val = st
+                            .train
+                            .second_class_passengers.len();
+                        if val == 0 {
+                            let target = station.output.clone()[0].clone();
+                            targets.push((xcln, target, station.station.clone(), 0));
+                        } else {
+                            let target = station.output.clone()[1].clone();
+                            targets.push((xcln, target, station.station.clone(), 0));
+                        }
+                    }
+                }
                 Operation::Duplicate => {
                     if let Some(x) = station.trains[0].front().cloned() {
                         station.trains[1].push_back(x);
@@ -651,6 +667,71 @@ mod tests {
                 Station {
                     name: "Other".to_string(),
                     operation: Operation::SwitchEqZero,
+                    output: vec![
+                        Target {
+                            span: Span::from_length(0, 1),
+                            station: "Test".to_string(),
+                            track: 0,
+                        },
+                        Target {
+                            span: Span::from_length(0, 1),
+                            station: "Test".to_string(),
+                            track: 0,
+                        },
+                    ],
+                },
+            ],
+        };
+        let (sender, receiver) = channel();
+        let i = VMInterface::new(sender);
+        let mut pp = Data::new(program, &i);
+        pp.do_current_step(&i).unwrap();
+        let other = pp.stations.get("Other").unwrap().lock().unwrap();
+        assert_eq!(other.trains[1].len(), 0);
+        assert_eq!(other.trains[0].len(), 1);
+        while let Ok(t) = receiver.recv_timeout(Duration::from_millis(10)) {
+            println!("{:?}", t);
+        }
+    }
+
+
+    #[test]
+    fn switch_empty(){
+        let program = Program {
+            trains: vec![Train {
+                config: TrainConfig {
+                    primary_color: ColorChoice::LightRed.color(),
+                    secondary_color: ColorChoice::DarkRed.color(),
+                    length: 1,
+                },
+                start: Target {
+                    span: Span::from_length(0, 1),
+                    track: 0,
+                    station: "Test".to_string(),
+                },
+                first_class_passengers: vec![],
+                second_class_passengers: vec![],
+            }],
+            stations: vec![
+                Station {
+                    name: "Test".to_string(),
+                    operation: Operation::SwitchEmpty,
+                    output: vec![
+                        Target {
+                            span: Span::from_length(0, 1),
+                            station: "Other".to_string(),
+                            track: 0,
+                        },
+                        Target {
+                            span: Span::from_length(0, 1),
+                            station: "Other".to_string(),
+                            track: 1,
+                        },
+                    ],
+                },
+                Station {
+                    name: "Other".to_string(),
+                    operation: Operation::SwitchEmpty,
                     output: vec![
                         Target {
                             span: Span::from_length(0, 1),
