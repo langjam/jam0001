@@ -148,41 +148,94 @@ Control structures
 Flamingo of course provides basic control structures. `if` comes in two versions: with `else` and without. The `if` condition must be of type bool (the bool literals are written `yes` and `no`):
 
 ```
-if yes
+if yes [
     println "Hello, world."
-end
+]
 
-if no
+if no [
     println "Bye."
-end
+]
 
-if yes
+if yes [
     println "Print this."
-    if no
+    if no [
         println "But not this."
-    end
-end
+    ]
+]
 
-if no
+if no [
     println "This shouldn’t occur."
-else
+] else [
     println "But this should."
-end
+]
 ```
 
 There is also a `for` loop that can iterate over lists.
 
 ```
-for ch in ('a 'b 'c)
+for ch ('a 'b 'c) [
     println ch
-end
+]
 ```
 
-It executes the block for every element of the given list which is bound to the given variable. If the variable is `_`, no value will be bound to it. There is a builtin function `iota` that takes an integer **n** and returns a list containing the natural numbers 0 ≤ i < n. `iota` can be used with a `for` loop if you want to repeat an action several times.
+It executes the block for every element of the given list which is bound to the given variable. If the variable is `_`, no value will be bound to it. There is a builtin function `iota` that takes an integer _n_ and returns a list containing the natural numbers 0 ≤ _i_ < _n_. `iota` can be used with a `for` loop if you want to repeat an action several times.
+
+
+Blocks
+------
+
+In the previous section we saw the use of blocks. Blocks are code that is enclosed in `[` and `]`. They are not executed when encountered but rather stored as a block value that can be executed at a later time with the builtin `eval` function. The result of this call is the last expression that was evaluted in the block. An empty block results in `no`.
+
+```
+bind 'block [ * 2 3]
+println eval block
+```
+
+You can pass arguments to blocks via the `apply` builtin. They can be accessed from within the block via the `geparam` builtin.
+
+```
+bind 'twice [ * 2 getparam 0 ]
+println apply twice (3)
+```
+
+`apply` takes a block and a list of values, and evaluates the block with the arguments. `eval` is therefore equivalent to `apply` with an empty argument list.
+
+There is another way to evaluate a block. To be called like regular builtin functions the parser needs to know how many arguments it should parse to pass to the block but a block doesn’t any information about how many arguments it wants. This information is easy to supply but it is not associated with the block value but with a variable instead. You can set the `'arity` associative value on a variable to tell the parser how many parameter a block takes.
+
+```
+bind 'inc [ + 1 getparam 0 ]
+assoc 'inc 'arity 1
+println inc 5
+```
+
+When a variable name is evaluted, its value is lookup in the current environment. If it is a builtin function or a block and the variable has an arity associated, the parser parses a function call. There is the `&` operator that is similiar in function to `'`. It lookups variables without trying to parse function calls, you always get just the stored value.
+
+```
+println &inc
+```
+
+Blocks can also be concatenated via the `+` builtin. A concatenated block just evaluates the statements of the first block and the statements of the second block, just as if you had written them one after the other.
+
+```
+bind 'greeter [ println "Hello." ]
+bind 'dec [ - getparam 0 1 ]
+assoc 'dec 'arity 1
+store 'dec + greeter &dec
+println dec 5
+```
+
+That means you can modify the code stored in a variable after it has already been defined. Take the following example where we programmatically store the parameter in a variable:
+
+```
+bind 'square [ * x x ]
+assoc 'square 'arity 1
+store 'square + [ bind 'x getparam 0 ] &square
+println square 3
+```
 
 
 Reference
 ---------
 
 String list: `<<` val... `>>`
-Values enclosed by `<<` and `>>` and evaluated, converting to string and concatenated resulting in a string value.
+You can enclose several values (separated by whitespace) in `<<` and `>>`. They are evaluated, converted to string and concatenated.

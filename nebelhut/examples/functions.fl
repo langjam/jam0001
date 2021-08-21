@@ -1,0 +1,22 @@
+bind 'block [ * 2 3 ]
+println block
+println eval block
+
+bind 'twice [ * 2 getparam 0 ]
+println apply twice (3)
+
+bind 'inc [ + 1 getparam 0 ]
+assoc 'inc 'arity 1
+println inc 5
+println &inc
+
+bind 'greeter [ println "Hello." ]
+bind 'dec [ - getparam 0 1 ]
+assoc 'dec 'arity 1
+store 'dec + greeter &dec
+println dec 5
+
+bind 'square [ * x x ]
+assoc 'square 'arity 1
+store 'square + [ bind 'x getparam 0 ] &square
+println square 3
