@@ -1,9 +1,10 @@
-"ertywety";;
+def my_text = "ertywety";;
+
+def double = fn f: [Text -> Text] -> fn x: Text ->
+    [f [f x]];;
 
 {
-    [[fn f: [Text -> Text] -> fn x: Text -> [f [f x]]
-        fn x: Text -> "qwer"]
-        "asdf"];
-
-    "poiu"
+    [[double fn x: Text -> my_text] "asdf"];
+    "poiu";
+    my_text
 };;

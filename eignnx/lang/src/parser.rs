@@ -14,7 +14,7 @@ use nom_supreme::{final_parser::final_parser, ParserExt};
 
 use crate::ast::{Loc, Tm, Ty};
 
-const KEYWORDS: &'static [&'static str] = &["fn", "any", "tyfn"];
+const KEYWORDS: &'static [&'static str] = &["fn", "any", "def"];
 
 pub fn parse_from_file(path: impl AsRef<Path>) -> Result<Tm, String> {
     let src = std::fs::read_to_string(&path).map_err(|e| format!("{}", e))?;
@@ -37,13 +37,7 @@ fn top_lvl_block_tm<'i>(i: &'i str) -> IResult<&'i str, Tm> {
 }
 
 fn tm(i: &str) -> IResult<&str, Tm> {
-    alt((var_tm, text_tm, lam_tm, app_tm, block_tm))(i)
-}
-
-#[test]
-fn test_tm() {
-    let (i, tm) = tm(r#"tyfn X -> fn x: X -> x"#).unwrap();
-    assert_eq!(i, "");
+    alt((var_tm, text_tm, lam_tm, app_tm, block_tm, def_tm))(i)
 }
 
 fn var_tm(i: &str) -> IResult<&str, Tm> {
@@ -85,6 +79,17 @@ fn block_tm(i: &str) -> IResult<&str, Tm> {
         ws::allowed::before(tm),
     ))
     .map(|tms| Tm::Block(Loc, tms))
+    .parse(i)
+}
+
+fn def_tm(i: &str) -> IResult<&str, Tm> {
+    tuple((
+        tag("def"),
+        ws::required::before(identifier),
+        ws::allowed::before(tag("=")),
+        ws::allowed::before(tm),
+    ))
+    .map(|(_, name, _, body)| Tm::Def(Loc, name.to_string(), Box::new(body)))
     .parse(i)
 }
 

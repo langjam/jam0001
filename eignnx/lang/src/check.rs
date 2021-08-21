@@ -105,6 +105,12 @@ impl Check {
                     Ok(Ty::Builtin(BuiltinTy::Void))
                 }
             }
+
+            Tm::Def(_loc, name, tm) => {
+                let tm_ty = self.infer(tm)?;
+                self.bind_tm_var(name, &tm_ty);
+                Ok(Ty::Builtin(BuiltinTy::Void))
+            }
         }
     }
 

@@ -83,13 +83,22 @@ impl Eval {
 
             Tm::Block(_loc, tms) => {
                 if let Some((last, init)) = tms.split_last() {
+                    let old_env = self.env.clone();
                     for tm in init {
                         self.eval(tm);
                     }
-                    self.eval(last)
+                    let result = self.eval(last);
+                    self.env = old_env;
+                    result
                 } else {
                     Val::Void
                 }
+            }
+
+            Tm::Def(_loc, name, body) => {
+                let body = self.eval(body);
+                self.bind(name.clone(), body);
+                Val::Void
             }
         }
     }

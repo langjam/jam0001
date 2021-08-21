@@ -19,6 +19,7 @@ pub enum Tm {
     Lam(Loc, String, Ty, Box<Tm>),
     App(Loc, Box<Tm>, Box<Tm>),
     Block(Loc, Vec<Tm>),
+    Def(Loc, String, Box<Tm>),
 }
 
 impl Display for Tm {
@@ -36,6 +37,7 @@ impl Display for Tm {
                 writeln!(f, "{}", "}")?;
                 Ok(())
             }
+            Tm::Def(_, name, tm) => write!(f, "def {} = {}", name, tm),
         }
     }
 }
@@ -48,6 +50,7 @@ impl Tm {
             Tm::Lam(loc, _, _, _) => loc,
             Tm::App(loc, _, _) => loc,
             Tm::Block(loc, _) => loc,
+            Tm::Def(loc, _, _) => loc,
         }
     }
 }
