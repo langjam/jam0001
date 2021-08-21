@@ -1,24 +1,42 @@
+use serde::Serialize;
 
-#[derive(EnumIter, Debug, Copy, Clone, Eq, PartialEq)]
+
+#[derive(EnumIter, Debug, Copy, Clone, Eq, PartialEq, Serialize)]
 pub enum Operation {
+    #[serde(rename="nothing")]
     Nothing,
+    #[serde(rename="print")]
     Print,
+    #[serde(rename="input")]
     Input,
+    #[serde(rename="switch_eqz")]
     SwitchEqZero,
+    #[serde(rename="switch_gtez")]
     SwitchGteZero,
+    #[serde(rename="switch_empty")]
     SwitchEmpty,
 
+    #[serde(rename="duplicate")]
     Duplicate,
+    #[serde(rename="rotate")]
     Rotate,
+    #[serde(rename="delete_top")]
     DeleteTop,
+    #[serde(rename="transfer")]
     Transfer,
 
+    #[serde(rename="add")]
     Add,
+    #[serde(rename="sub")]
     Sub,
+    #[serde(rename="mul")]
     Mul,
+    #[serde(rename="div")]
     Div,
+    #[serde(rename="mod")]
     Mod,
 
+    #[serde(rename="delete")]
     Delete,
 }
 

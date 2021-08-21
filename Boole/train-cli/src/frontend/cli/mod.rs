@@ -3,9 +3,7 @@ use train::interface::Communicator;
 use std::{thread, io};
 use train::ast::{Station, Train};
 
-pub(crate) struct CliRunner {
-
-}
+pub(crate) struct CliRunner {}
 
 impl CliRunner {
     pub fn new() -> Self {
@@ -16,7 +14,7 @@ impl CliRunner {
 
     pub fn run(&self, mut vm: Data) {
         loop {
-            vm.do_current_step(self);
+            vm.do_current_step(self).expect("failed");
 
             let mut input_text = String::new();
             io::stdin()
@@ -53,11 +51,6 @@ impl Communicator for CliRunner {
 
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), train::interface::CommunicatorError> {
         log::info!("simulation says: train {} moved from {} to {}", train.identifier, from_station.name, to_station.name);
-        Ok(())
-    }
-
-    fn train_to_start(&self, start_station: Station, train: Train) -> Result<(), train::interface::CommunicatorError> {
-        log::info!("simulation says: train {} starts at {}", train.identifier, start_station.name);
         Ok(())
     }
 }

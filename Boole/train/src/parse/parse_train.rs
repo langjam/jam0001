@@ -1,7 +1,6 @@
 use crate::parse::parser::*;
 use crate::ast::*;
 use crate::wishes::parse_wishes::parse_wishes;
-use std::cell::Cell;
 
 impl<'a> Parser<'a> {
     pub fn parse_target(&mut self) -> ParseResult<Target> {

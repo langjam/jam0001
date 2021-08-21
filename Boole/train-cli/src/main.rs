@@ -53,10 +53,10 @@ async fn main() {
 
     if matches.is_present("cli") {
         let runner = CliRunner::new();
-        let vm = Data::new(ast, &runner);
+        let vm = Data::new(ast);
         runner.run(vm);
     } else {
-        web::run().await;
+        web::run(ast).await;
     }
 
 

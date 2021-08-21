@@ -72,7 +72,7 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn new(program: Program, interface: &dyn Communicator) -> Data {
+    pub fn new(program: Program) -> Data {
         let mut stations = HashMap::new();
         for station in program.stations {
             stations.insert(
@@ -90,9 +90,6 @@ impl Data {
                 .unwrap()
                 .lock()
                 .unwrap();
-            interface
-                .train_to_start(st.station.clone(), td.lock().unwrap().train.clone())
-                .unwrap_or(());
             st.trains[target.track].push_back(td);
         }
         Self { stations, trains }
@@ -857,6 +854,7 @@ mod tests {
     fn duplicate() {
         let program = Program {
             trains: vec![Train {
+                identifier: 0,
                 config: TrainConfig {
                     primary_color: ColorChoice::LightRed.color(),
                     secondary_color: ColorChoice::DarkRed.color(),

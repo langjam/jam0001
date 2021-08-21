@@ -14,6 +14,11 @@ For some examples, please refer to the [shunting yard](shunting_yard)
 cargo run -- shunting_yard/truth_machine.train
 ```
 
+This program uses python. By default, it calls the "python" executable, and expects at least
+python 3.8. However, if your operating system sucks and only provides python 2 for instance,
+or defaults to python 2 when python is called: set the "PYTHON_EXECUTABLE" environment
+variable to your preferred python executable that's at least python3.8.
+
 # LangJam
 
 This programming language was written as a submission to the first LangJam
