@@ -119,11 +119,17 @@ func getType(inp string) int {
 }
 
 var precedenceMap map[string]int = map[string]int{
-	"+": 2,
-	"-": 2,
-	"*": 3,
-	"/": 3,
-	"^": 4,
+	"==": 1,
+	"!=": 1,
+	"<":  1,
+	">":  1,
+	"<=": 1,
+	">=": 1,
+	"+":  2,
+	"-":  2,
+	"*":  3,
+	"/":  3,
+	"^":  4,
 }
 
 func shouldPop(o1, o2 string) bool {

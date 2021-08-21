@@ -16,6 +16,7 @@ const instruction_size_max = 5
 
 func (l *Lexer) make_identifier_token() (shared.Token, error) {
 	if l.current_char == 'm' {
+		l.advance()
 		return shared.Token{Type: shared.TTinstruction, Value: II_m}, nil
 	}
 

@@ -80,7 +80,6 @@ func (l *Lexer) make_tokens() ([]shared.Token, error) {
 		if err != nil {
 			return []shared.Token{}, err
 		}
-		// l.advance()
 	}
 	return tokens, nil
 }
