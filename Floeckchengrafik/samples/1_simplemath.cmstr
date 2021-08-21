@@ -1,6 +1,4 @@
 2? comment: just is an expression
-3?
-50?
 a = 3?
 
 comment: This is a comment and not ඞ || AMOGUS ||
@@ -12,3 +10,6 @@ c = 2?
 d = 10?
 
 the_answer_to_everything = d+d+d+d+c? comment: 42
+
+comment: In the State we are currently working, you can only view everything via debugger.
+comment: There might be an Update for this Test to print the final stuff to the terminal.
