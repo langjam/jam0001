@@ -89,8 +89,8 @@ let parse_operation (comment : tok list) : operation =
   | [] -> failwith "no operation"
   | t::q -> (
     match string_of_tok t with
-    | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in If (f (List.rev prev), f a, f b)
-    | "addition" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Sum (f a, f b)
+    | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in If (f a, f (List.rev prev), f b)
+    | "sum" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Sum (f a, f b)
     | "difference" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Diff (f a, f b)
     | "product" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Prod (f a, f b)
     | "division" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Div (f a, f b)
@@ -157,3 +157,17 @@ and compile_value env = function
   | Cst n -> Kl_IR.Cst n
   | Var x -> List.assoc x env
   | Hole -> failwith "remaning hole in expression, can't compile it down to Kl_IR"
+
+let parse_file f =
+  let lexbuf = Lexing.from_channel (open_in f) in
+  let blocks = ref [] in
+  Lexing.set_filename lexbuf f;
+  try while true do
+    blocks := Kl_parser.block lexbuf::!blocks
+  done;
+  failwith "should not happen"
+  with
+  | Kl_parser.Eof ->
+    List.map generate_function (List.rev !blocks)
+  | Kl_parser.SyntaxError msg ->
+    failwith msg
