@@ -66,10 +66,28 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 				Children: []shared.Node{
 					{Val: tok},
 					out[index]}}
+
+		case shared.TTwhile:
+			if len(*toks) <= 1 {
+				break
 			}
+
+			*toks = (*toks)[1:]
+			out = append(out,
+				shared.Node{
+					IsExpression: true,
+					Children: append(
+						append(
+							[]shared.Node{{Val: tok}},
+							GenerateAst(toks)...),
+						GenerateAst(toks)...)})
 
 		default:
 			out = append(out, shared.Node{Val: tok})
+		}
+
+		if len(*toks) < 1 {
+			break
 		}
 
 		*toks = (*toks)[1:]
