@@ -62,6 +62,11 @@ class StatementNode:
         def __init__(self, var):
             self.var = var
 
+    class StoredProcedureNode(GenericNode):
+
+        def __init__(self, content):
+            self.content = content
+
     class FunctionDefinitionNode(GenericNode):
 
         def __init__(self, content, args):

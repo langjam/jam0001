@@ -21,6 +21,7 @@ TYPE = typeclass()?
 myclass = class({ 
     comment = function({
         comment: Kommentar
+        x = comment: Kommentar
     }, TYPE.NUM, TYPE.OBJ, TYPE.STR)?
 })?
 ```

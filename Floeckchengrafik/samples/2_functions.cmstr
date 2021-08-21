@@ -1,5 +1,7 @@
-comment: x = function({
+x = function({
+    y=1?
+}: \\ Test \\)?
 
-comment: } : ARG_1 : ARG_2 : ARG_3)?
-
-x(1 : 2 : 3)?
+x()?
+x()?
+x()?

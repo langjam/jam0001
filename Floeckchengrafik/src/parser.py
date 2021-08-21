@@ -4,6 +4,7 @@ from lexer import ComstructLexer
 from application_stack_utils import StatementNode
 
 
+# noinspection PyUnusedLocal
 class ComstructParser(Parser):
     tokens = ComstructLexer.tokens
 
@@ -15,6 +16,14 @@ class ComstructParser(Parser):
     def exprs(self, p):
         return p.exprs0 + p.exprs1
 
+    @_("LBRACE exprs RBRACE")
+    def expr(self, p):
+        return StatementNode.StoredProcedureNode(p.exprs)
+
+    @_("LBRACE RBRACE")
+    def expr(self, p):
+        return StatementNode.StoredProcedureNode([])
+
     @_("NUMBER")
     def expr(self, p):
         return StatementNode.LiterallyNode(p.NUMBER)
@@ -22,6 +31,10 @@ class ComstructParser(Parser):
     @_("NAME")
     def expr(self, p):
         return StatementNode.VarNode(p.NAME)
+
+    @_("MLCOMMENT")
+    def expr(self, p):
+        return StatementNode.LiterallyNode(p.MLCOMMENT)
 
     @_("expr PLUS expr")
     def expr(self, p):

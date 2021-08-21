@@ -36,7 +36,7 @@ if __name__ == '__main__':
     tree = cparser.parse(tokens)
 
     print("Begin Execution")
-    # ComstructExecutor(tree)
+    ComstructExecutor(tree)
 
-    # environment = executor.env
+    environment = executor.env
     print("End Executions")

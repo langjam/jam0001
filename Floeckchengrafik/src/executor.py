@@ -1,7 +1,8 @@
 from application_stack_utils import StatementNode
+from internals import env as internal_env, internals
 
 
-env = dict()
+env = internal_env
 
 
 class ComstructExecutor:
@@ -43,10 +44,11 @@ class ComstructExecutor:
         elif isinstance(node, StatementNode.LiterallyNode):
             return node.var
         elif isinstance(node, StatementNode.FunctionDefinitionNode):
-            return self.walkTree(node.content)
+            return self.walkTree(node.content)  # TODO
         elif isinstance(node, StatementNode.FunctionCallNode):
-            env[node.func_name].args = node.args
-            ret: StatementNode.GenericNode
-            for func_node in env[node.func_name].content:
+            if env[node.func_name].content == "internal":
+                return internals[node.func_name](node.args)
+            ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
+            for func_node in env[node.func_name].content.content:
                 ret = self.walkTree(func_node)
             return ret
