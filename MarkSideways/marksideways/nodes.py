@@ -42,6 +42,8 @@ class ClassDefinition(Node):
     # These are for the constructor
     self.code_lines = []
     self.code = []
+    self.arg_tokens = []
+    self.arg_names = []
   
   def add_method(self, method_def):
     name = canonicalize_identifier(method_def.name)
@@ -50,6 +52,10 @@ class ClassDefinition(Node):
     self.methods[name] = method_def
     self.method_order.append(method_def)
   
+  def add_argument(self, token, name):
+    self.arg_tokens.append(token)
+    self.arg_names.append(name)
+
   def add_code(self, text, line_offset):
     _add_code_impl(self.code_lines, text, line_offset)
 

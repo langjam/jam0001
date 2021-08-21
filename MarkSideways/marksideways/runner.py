@@ -30,6 +30,7 @@ def _parse_markdown_structure(items):
       class_def = ClassDefinition(item['token'], item['value'])
       active_class = class_def
       root.add_class(class_def)
+      active_method = None
     
     elif item['type'] == "method":
       method_def = MethodDefinition(item['token'], item['value'])
@@ -40,16 +41,22 @@ def _parse_markdown_structure(items):
       active_method = method_def
     
     elif item['type'] == "argument":
-      if active_method == None:
-        pass # Just ignore it! It is a bonafied comment
-      elif len(active_method.code_lines) > 0:
-        raise ParserException(item['token'], "Cannot declare arguments in a method after code has already been defined")
+      arg_name = item['value']
+      arg_token = item['token']
+      if active_method != None:
+        if len(active_method.code_lines) > 0:
+          raise ParserException(arg_token, "Cannot declare arguments in a method after code has already been defined")
+        active_method.add_argument(arg_token, arg_name)
+      elif active_class != None:
+        active_class.add_argument(arg_token, arg_name)
       else:
-        active_method.add_argument(item['token'], item['value'])
+        pass # Just ignore it! It is a regular comment in a bulleted list
     
     elif item['type'] == "code":
       if active_method != None:
         active_method.add_code(item['value'], item['line_offset'])
+      elif active_class != None:
+        active_class.add_code(item['value'], item['line_offset'])
       else:
         root.add_code(item['value'], item['line_offset'])
   

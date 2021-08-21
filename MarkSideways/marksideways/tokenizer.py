@@ -67,7 +67,7 @@ def markdown_tokenize(filename, text):
         i += 1
       if not cleanly_closed:
         raise ParserException(start_token, "Unclosed code block starting here!")
-      code = '\n'.join(lines[start_line + 1:end_line])
+      code = '\n'.join(lines[start_line:end_line])
       chunks.append({
         "type": "code",
         "value": code,
