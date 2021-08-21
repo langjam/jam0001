@@ -2,8 +2,11 @@ package evaluator
 
 import (
 	"bufio"
-	"fmt"
 	"os"
+
+	"fmt"
+
+	"github.com/grossamos/jam0001/lexer"
 )
 
 const shell_prompt = "〈( ^.^)ノ >>> "
@@ -13,8 +16,9 @@ func RunShell() {
 	for {
 		fmt.Print(shell_prompt)
 		input, _ := reader.ReadString('\n')
+		// input := "while"
 
 		// actually do some cool stuff
-		fmt.Println(input)
+		fmt.Println(lexer.RunLexer(input))
 	}
 }

@@ -25,12 +25,11 @@ func (p *Parser) make_ast() []shared.Node {
 			p.open_paren += 1
 			p.toks = p.toks[1:]
 
-			out = append(out,
+			out[len(out)-1].Children = append(
+				out[len(out)-1].Children,
 				shared.Node{
 					IsExpression: true,
 					Children:     p.make_ast()})
-
-			continue
 
 		case shared.TTrparen, shared.TTcloseBlock:
 			p.open_paren -= 1
@@ -44,16 +43,11 @@ func (p *Parser) make_ast() []shared.Node {
 				p.toks[0].Type == shared.TTlparen {
 				p.open_paren += 1
 
-				p.toks = p.toks[1:]
+				out = append(out,
+					shared.Node{
+						IsExpression: true,
+						Children:     []shared.Node{{Val: tok}}})
 			}
-
-			out = append(out,
-				shared.Node{
-					IsExpression: true,
-					Children: append(
-						[]shared.Node{{Val: tok}},
-						p.make_ast()...)})
-
 			continue
 
 		case shared.TTstring, shared.TTref:
@@ -65,9 +59,7 @@ func (p *Parser) make_ast() []shared.Node {
 				out = append(out,
 					shared.Node{
 						IsExpression: true,
-						Children: append(
-							[]shared.Node{{Val: tok}},
-							p.make_ast()...)})
+						Children:     []shared.Node{{Val: tok}}})
 
 				continue
 			} else {
@@ -94,15 +86,10 @@ func (p *Parser) make_ast() []shared.Node {
 				break
 			}
 
-			p.toks = p.toks[1:]
 			out = append(out,
 				shared.Node{
 					IsExpression: true,
-					Children: append(
-						append(
-							[]shared.Node{{Val: tok}},
-							p.make_ast()...),
-						p.make_ast()...)})
+					Children:     []shared.Node{{Val: tok}}})
 
 		default:
 			out = append(out, shared.Node{Val: tok})
