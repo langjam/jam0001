@@ -1,0 +1,79 @@
+use std::str::FromStr;
+use crate::model::{Term, Keyword, Op};
+
+grammar;
+
+
+pub Program: Vec<Box<Term>> = {
+    <v: Term*> => v
+}
+
+
+Term: Box<Term> = {
+    <s:Str> => Box::new(Term::String(<>)),
+    <k:Key> => Box::new(Term::Key(<>)),
+    Operation,
+}
+
+Expr: Box<Term> = {
+    <n:Num> => Box::new(Term::Number(<>)),
+    <n:Name> => Box::new(Term::Ident(<>)),
+}
+
+Operation: Box<Term> = {
+    <e:Operation> "+" <f:Factor> => Box::new(Term::Operation(Op::Add(<>))),
+    <e:Operation> "-" <f:Factor> => Box::new(Term::Operation(Op::Subtract(<>))),
+    Factor
+
+}
+
+Factor: Box<Term> = {
+    <e:Factor> "*" <f:Expr> => Box::new(Term::Operation(Op::Multiply(<>))),
+    <e:Factor> "/" <f:Expr> => Box::new(Term::Operation(Op::Divide(<>))),
+    Expr
+}
+
+
+Key: Keyword = {
+    "takes" => Keyword::Takes,
+    "function" => Keyword::Function,
+    "call" => Keyword::Call,
+    "returns" => Keyword::Returns,
+    "equals" => Keyword::Equals,
+    "prints" => Keyword::Prints,
+    "is" => Keyword::Is,
+    "and" => Keyword::And,
+    "or" => Keyword::Or,
+    "in" => Keyword::In,
+    "if" => Keyword::If,
+    "for" => Keyword::For,
+    "while" => Keyword::While,
+    "end" => Keyword::End,
+    "nothing" => Keyword::Nothing,
+}
+
+Name: String = <s:r"[A-Za-z~][A-Za-z0-9]*"> => s.into();
+Str: String = <s:r#""[^"]*""#> => s.strip_prefix('"').unwrap().strip_suffix('"').unwrap().to_string();
+Num: f32 = <n:r"[0-9]+"> => f32::from_str(n).unwrap();
+
+
+match{
+    "takes",
+    "function",
+    "call",
+    "returns",
+    "nothing",
+    "equals",
+    "is",
+    "and",
+    "or",
+    "in",
+    "if",
+    "for",
+    "while",
+    "prints",
+    "end",
+    r"\s*" => {},
+}else {
+    _
+}
