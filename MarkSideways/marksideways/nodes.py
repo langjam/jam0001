@@ -520,6 +520,25 @@ class WhileLoop(Executable):
         if result.type == 'BREAK': return None
         if result.type == 'RETURN': return result
 
+class DoWhileLoop(Executable):
+  def __init__(self, do_token, code, condition):
+    super().__init__(do_token)
+    self.code = code
+    self.condition = condition
+  def run(self, scope):
+    while True:
+      result = run_code_block(self.code, scope)
+      if result != None:
+        if result.type == 'EXCEPTION': return result
+        if result.type == 'BREAK': return None
+        if result.type == 'RETURN': return result
+      
+      condition = self.condition.run(scope)
+      if condition.is_error: return error_status_from_value(condition)
+      if condition.type != 'BOOL': return new_error_status(self.condition.first_token, "do-while loops must have a boolean as their condition.")
+      if not condition.value: return None
+
+
 class ForLoop(Executable):
   def __init__(self, for_token, variable_token, loop_op_token, start_expr, end_expr, code):
     super().__init__(for_token)

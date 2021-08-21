@@ -5,6 +5,7 @@ This file isn't really a snazzy demo of the markdown integration. It's more of j
 ```
 
 testWhileLoop();
+testDoWhileLoop();
 
 sumTest = sumNumbers1To100();
 print("Sum of the numbers from 1 to 100:", sumTest);
@@ -19,6 +20,16 @@ while i < 10 {
     print("while: " + i);
     i += 2;
 }
+```
+
+### test do-while loop
+
+```
+i = 4;
+do {
+    print(i);
+    i--;
+} while(i >= 0);
 ```
 
 ### sum numbers 1 to 100

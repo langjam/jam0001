@@ -108,6 +108,14 @@ def parse_while_loop(tokens):
   code = parse_code_block(tokens)
   return WhileLoop(while_token, condition, code)
 
+def parse_do_while_loop(tokens):
+  do_token = tokens.pop_expected('do')
+  code = parse_code_block(tokens)
+  tokens.pop_expected('while')
+  condition = parse_expression(tokens)
+  tokens.pop_expected(';')
+  return DoWhileLoop(do_token, code, condition)
+
 class OpChainParser:
   def __init__(self, ops, next_parser_func):
     self.ops = list_to_lookup(ops)
