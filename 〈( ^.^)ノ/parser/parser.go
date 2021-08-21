@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/grossamos/jam0001/shared"
 )
@@ -30,6 +31,7 @@ func (p *Parser) make_ast() []shared.Node {
 				shared.Node{
 					IsExpression: true,
 					Children:     p.make_ast()})
+			continue
 
 		case shared.TTrparen, shared.TTcloseBlock:
 			p.open_paren -= 1
@@ -82,8 +84,8 @@ func (p *Parser) make_ast() []shared.Node {
 		case shared.TTwhile:
 			p.needed_blocks += 1
 			if len(p.toks) <= 1 {
-				// TODO: add error here
-				break
+				fmt.Println((&MissingBlockError{tok.Pos}).Error())
+				os.Exit(1)
 			}
 
 			out = append(out,
@@ -108,6 +110,9 @@ func (p *Parser) make_ast() []shared.Node {
 func GenerateAst(toks []shared.Token) []shared.Node {
 	parser := Parser{toks, 0, 0}
 	ast := parser.make_ast()
-	fmt.Println(parser.needed_blocks, parser.open_paren)
+	if parser.needed_blocks != 0 {
+		fmt.Println((&MissingBlockError{toks[0].Pos}).Error())
+		os.Exit(1)
+	}
 	return ast
 }

@@ -49,7 +49,6 @@ func (l *Lexer) make_tokens() ([]shared.Token, error) {
 			tokens = append(tokens, char_token)
 			l.advance()
 		} else if l.current_char == ' ' || l.current_char == '\n' || l.current_char == '\t' {
-			fmt.Println(1, l.current_char, 1)
 			l.advance()
 		} else if l.current_char == '.' || strings.ContainsRune(digitChars, l.current_char) {
 			var num_token shared.Token
