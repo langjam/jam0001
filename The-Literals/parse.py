@@ -44,9 +44,36 @@ class Parser:
         token, value = self.peek_lexeme()
         while token == Token.FUNCTION:
             self.parse_function()
+            token, value = self.peek_lexeme()
 
     def parse_function(self):
-        raise NotImplemented()
+        token, value = self.advance()
+        self.expect(Token.EOL)
+        self.expect(Token.HFILL)
+        token, value = self.expect(token.FUNCTION_NAME)
+        self.expect(Token.DOT)
+        self.expect(Token.EOL)
+
+        token, value = self.peek_lexeme()
+        while token == Token.HFILL:
+            self.advance()
+            token, value = self.peek_lexeme()
+            if token == Token.PARAM:
+                self.parse_param()
+            elif token == Token.EOL:
+                self.advance()
+            token, value = self.peek_lexeme()
+
+        if token == Token.END_DEF:
+            self.advance()
+            self.expect(Token.EOL)
+            self.advance()
+            return
+
+    def parse_param(self):
+        self.advance()
+        self.parse_identifier()
+        self.expect(Token.EOL)
 
     def parse_stmts(self):
         stmts_end_tokens = [Token.LEAVE_FUNC, Token.EOF]
@@ -167,12 +194,64 @@ if __name__ == "__main__":
         yield (Token.NUMBER, "6502")
         yield (Token.DOT, ".")
 
+    def function_definition_no_params_no_return():
+        yield (Token.FUNCTION, "/**")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.FUNCTION_NAME, "Opens the pod bay doors")
+        yield (Token.DOT, ".")
+        yield (Token.EOL, "\n")
+        yield (Token.END_DEF, "*/")
+        yield (Token.EOL, "\n")
+
+    def function_definition_params_no_return():
+        yield (Token.FUNCTION, "/**")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.FUNCTION_NAME, "Multiplies by two")
+        yield (Token.DOT, ".")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.PARAM, "@param")
+        yield (Token.IDENTIFIER_WORD, "the")
+        yield (Token.IDENTIFIER_WORD, "number")
+        yield (Token.EOL, "\n")
+        yield (Token.END_DEF, "*/")
+        yield (Token.EOL, "\n")
+
+    def function_definition_params_and_return():
+        yield (Token.FUNCTION, "/**")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.FUNCTION_NAME, "Multiplies by two")
+        yield (Token.DOT, ".")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.PARAM, "@param")
+        yield (Token.IDENTIFIER_WORD, "the")
+        yield (Token.IDENTIFIER_WORD, "number")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.RETURNVAR, "@return")
+        yield (Token.IDENTIFIER_WORD, "the")
+        yield (Token.IDENTIFIER_WORD, "result")
+        yield (Token.EOL, "\n")
+        yield (Token.END_DEF, "*/")
+        yield (Token.EOL, "\n")
+
     def program(*fragments):
         def generator():
             yield (Token.BOF, "")
             for fragment in fragments:
                 yield from fragment()
             yield (Token.EOF, "")
+
         return generator().__next__
 
     parser = Parser(program())
@@ -193,5 +272,16 @@ if __name__ == "__main__":
     parser = Parser(program(if_stmt_compare_variable_and_variable))
     parser.parse()
 
-    parser = Parser(program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant))
+    parser = Parser(
+        program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
+    )
     parser.parse()
+
+    parser = Parser(program(function_definition_no_params_no_return))
+    parser.parse()
+
+    parser = Parser(program(function_definition_params_no_return))
+    parser.parse()
+
+    # parser = Parser(program(function_definition_params_and_return))
+    # parser.parse()
