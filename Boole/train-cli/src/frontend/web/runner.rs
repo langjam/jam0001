@@ -11,6 +11,7 @@ use std::io::Write;
 use std::process::{Command, ExitStatus};
 use crate::frontend::web::MessageToWebpage;
 use futures_util::SinkExt;
+use std::sync::mpsc::Sender;
 
 #[derive(Serialize)]
 struct VisualizerStation {
@@ -21,13 +22,21 @@ struct VisualizerStation {
 
 pub struct WebRunner {
     program: Program,
+    response_tx: Sender<MessageToWebpage>,
 }
 
+
 impl WebRunner {
-    pub fn new(program: Program) -> Self {
+    pub fn new(program: Program, response_tx: Sender<MessageToWebpage>) -> Self {
         Self {
             program,
+            response_tx,
         }
+    }
+
+    pub fn send(&self, m: MessageToWebpage) -> Result<(), CommunicatorError> {
+        self.response_tx.send(m).map_err(|_| CommunicatorError)?;
+        Ok(())
     }
 
     pub fn generate_visualizer_file(&self, connection_id: i64) -> PathBuf {
@@ -53,7 +62,7 @@ impl WebRunner {
             })
         }
 
-        let serialized = serde_json::to_string(&res).expect("failed to serialize program");
+        let serialized = serde_json::to_string_pretty(&res).expect("failed to serialize program");
 
         let mut path = PathBuf::new();
         path.push("visualizer");
@@ -113,10 +122,20 @@ impl Communicator for WebRunner {
     }
 
     fn print(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
-        todo!()
+        self.send(MessageToWebpage::Print(data))
+    }
+
+    fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
+        self.send(MessageToWebpage::PrintChar(data))
     }
 
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), CommunicatorError> {
-        todo!()
+        self.send(MessageToWebpage::MoveTrain {
+            from_station,
+            to_station,
+            train,
+            start_track,
+            end_track,
+        })
     }
 }

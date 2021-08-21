@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicI64, Ordering};
 
+#[derive(Debug)]
 pub struct CommunicatorError;
 
 pub trait Communicator {

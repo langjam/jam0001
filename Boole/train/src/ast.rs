@@ -1,6 +1,7 @@
 use crate::operations::Operation;
 use crate::parse::parser::Span;
 use crate::wishes::TrainConfig;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Program {
@@ -8,7 +9,7 @@ pub struct Program {
     pub stations: Vec<Station>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 pub struct Train {
     pub identifier: i64,
     pub start: Target,
@@ -18,21 +19,21 @@ pub struct Train {
 }
 
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 pub struct FirstClassPassenger {
     pub name: String,
     pub data: String,
 }
 
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 pub struct SecondClassPassenger {
     pub name: String,
     pub data: i64
 }
 
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 pub struct Station {
     pub name: String,
     pub operation: Operation,
@@ -40,7 +41,7 @@ pub struct Station {
 }
 
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 pub struct Target {
     pub span: Span,
     pub station: String,
