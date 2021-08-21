@@ -344,6 +344,10 @@ static pnode_t statement() {
         enddelim(delim);
         return pnode_binary(PN_WHILE, left, body());
     }
+    if (check("return")) {
+        skip_v("return");
+        return pnode_unary(PN_RETURN, most_important_expression());
+    }
     else if (check("if")) {
         skip_v("if");
         rune delim = begindelim('(');
@@ -383,11 +387,15 @@ static pnode_t value() {
         }
         case TT_PROC:
             pull();
-            return pnode_binary(
+            pnode_t left = delimited(PN_TYPELIST, "(", ")", false, pulldeclaration);
+            strview_t returntype = typedecl();
+            value_node = pnode_binary(
                 PN_PROC, 
-                delimited(PN_TYPELIST, "(", ")", false, pulldeclaration),
+                left,
                 body()
             );
+            value_node.data.proc.return_type = returntype;
+            return value_node;
         case TT_LPAREN:
             skip_tt(TT_LPAREN);
             value_node = most_important_expression();
