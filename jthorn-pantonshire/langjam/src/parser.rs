@@ -1,0 +1,366 @@
+use anyhow::Context;
+use pest::Parser;
+
+use crate::value;
+
+#[derive(pest_derive::Parser)]
+#[grammar = "grammar.pest"]
+struct LangParser;
+
+type Pair<'a> = pest::iterators::Pair<'a, Rule>;
+
+#[derive(Copy, Clone, Debug)]
+pub struct Span {
+    pub start: usize,
+    pub end: usize,
+}
+
+impl From<pest::Span<'_>> for Span {
+    fn from(span: pest::Span<'_>) -> Self {
+        Self {
+            start: span.start(),
+            end: span.end(),
+        }
+    }
+}
+
+pub struct Program {
+    pub functions: Vec<Function>,
+}
+
+pub struct Function {
+    pub span: Span,
+    pub name: String,
+    pub body: Vec<Stmt>,
+}
+
+#[derive(Debug)]
+pub enum Stmt {
+    Args(ArgsStmt),
+    Var(VarStmt),
+    Loop(LoopStmt),
+    Print(PrintStmt),
+    Cond(CondStmt),
+}
+
+#[derive(Debug)]
+pub struct ArgsStmt {
+    pub span: Span,
+    pub args: Vec<Arg>,
+}
+
+#[derive(Debug)]
+pub struct Arg {
+    pub span: Span,
+    pub name: String,
+}
+
+#[derive(Debug)]
+pub struct VarStmt {
+    pub variable: String,
+    pub value: Expr,
+}
+
+#[derive(Debug)]
+pub struct LoopStmt {
+    pub span: Span,
+    pub loops: usize,
+
+}
+
+#[derive(Debug)]
+pub struct PrintStmt {
+    pub value: String
+}
+
+#[derive(Debug)]
+pub struct CondStmt {
+    pub cond: Expr,
+    pub span1: Span,
+    pub span2: Span 
+}
+
+#[derive(Debug)]
+pub struct Expr {
+    pub span: Span,
+    pub kind: ExprKind,
+}
+
+#[derive(Debug)]
+pub enum ExprKind {
+    Value(value::Value),
+    Variable(String),
+    Unary(UnaryOp, Box<Expr>),
+    Binary(BinaryOp, Box<Expr>, Box<Expr>),
+ 
+}
+
+#[derive(Debug)]
+pub enum BinaryOp {
+    Eq,
+    Neq,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    And,
+    Or,
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+#[derive(Debug)]
+pub enum UnaryOp {
+    Not,
+    Minus,
+}
+
+pub fn parse(source: &str) -> anyhow::Result<Program> {
+    let program = LangParser::parse(Rule::program, source)
+        .context("parse error")?
+        .next()
+        .context("empty program")?;
+
+    let mut functions = Vec::new();
+
+    for pair in program.into_inner() {
+        match pair.as_rule() {
+            Rule::semanticBody => {
+                functions.extend(parse_semantic_body(pair).into_iter());
+            },
+
+            Rule::syntaxBody => todo!(),
+
+            _ => unreachable!(),
+        }
+    }
+
+    todo!()
+}
+
+fn parse_semantic_body(semantic_body: Pair) -> Vec<Function> {
+    let mut functions = Vec::new();
+
+    let mut pairs = semantic_body.into_inner();
+
+    functions.push({
+        let function_pair = pairs.next().unwrap();
+        let function_span = Span::from(function_pair.as_span());
+        let mut pairs = function_pair.into_inner();
+        let statements = parse_comment(pairs.next().unwrap());
+        let function_name = pairs.next().unwrap().as_str().to_owned();
+
+        Function {
+            span: function_span,
+            name: function_name,
+            body: statements,
+        }
+    });
+
+    if let Some(semantic_body) = pairs.next() {
+        functions.extend(parse_semantic_body(semantic_body).into_iter());
+    }
+
+    functions
+}
+
+fn parse_comment(comment: Pair) -> Vec<Stmt> {
+    comment.into_inner().map(parse_statement).collect()
+}
+
+fn parse_statement(pair: Pair) -> Stmt {
+    let pair = pair.into_inner().next().unwrap();
+    match pair.as_rule() {
+        Rule::varStmt => {
+            let mut pairs = pair.into_inner();
+            let expr = parse_expr(pairs.next().unwrap());
+            let variable = pairs.next().unwrap().as_str().to_owned();
+            Stmt::Var(VarStmt {
+                variable,
+                value: expr,
+            })
+        },
+
+        Rule::argsStmt => todo!("args statement"),
+        Rule::loopStmt => todo!("loop statement"),
+        Rule::printStmt => todo!("print statement"),
+        Rule::condStmt => todo!("cond statement"),
+        _ => unreachable!(),
+    }
+}
+
+fn parse_expr(pair: Pair) -> Expr {
+    fn parse_equality(pair: Pair) -> Expr {
+        let span = Span::from(pair.as_span());
+        let mut pairs = pair.into_inner();
+        let lhs = parse_comparison(pairs.next().unwrap());
+
+        match pairs.next() {
+            Some(op) => {
+                let op = match op.as_rule() {
+                    Rule::opNeq => BinaryOp::Neq,
+                    Rule::opEq => BinaryOp::Eq,
+                    _ => unreachable!(),
+                };
+    
+                let rhs = parse_comparison(pairs.next().unwrap());
+
+                Expr {
+                    span,
+                    kind: ExprKind::Binary(op, Box::new(lhs), Box::new(rhs))
+                }
+            },
+
+            None => lhs,
+        }
+    }
+
+    fn parse_comparison(pair: Pair) -> Expr {
+        let span = Span::from(pair.as_span());
+        let mut pairs = pair.into_inner();
+        let lhs = parse_term_or(pairs.next().unwrap());
+        
+        match pairs.next() {
+            Some(op) => {
+                let op = match op.as_rule() {
+                    Rule::opGt => BinaryOp::Gt,
+                    Rule::opGe => BinaryOp::Ge,
+                    Rule::opLt => BinaryOp::Lt,
+                    Rule::opLe => BinaryOp::Le,
+                    _ => unreachable!(),
+                };
+    
+                let rhs = parse_term_or(pairs.next().unwrap());
+
+                Expr {
+                    span,
+                    kind: ExprKind::Binary(op, Box::new(lhs), Box::new(rhs))
+                }
+            },
+
+            None => lhs,
+        }
+    }
+
+    fn parse_term_or(pair: Pair) -> Expr {
+        let span = Span::from(pair.as_span());
+        let mut pairs = pair.into_inner();
+        let lhs = parse_factor_and(pairs.next().unwrap());
+        
+        match pairs.next() {
+            Some(op) => {
+                let op = match op.as_rule() {
+                    Rule::opSub => BinaryOp::Sub,
+                    Rule::opAdd => BinaryOp::Add,
+                    Rule::opOr => BinaryOp::Or,
+                    _ => unreachable!(),
+                };
+    
+                let rhs = parse_factor_and(pairs.next().unwrap());
+
+                Expr {
+                    span,
+                    kind: ExprKind::Binary(op, Box::new(lhs), Box::new(rhs))
+                }
+            },
+
+            None => lhs,
+        }
+    }
+
+    fn parse_factor_and(pair: Pair) -> Expr {
+        let span = Span::from(pair.as_span());
+        let mut pairs = pair.into_inner();
+        let lhs = parse_unary(pairs.next().unwrap());
+        
+        match pairs.next() {
+            Some(op) => {
+                let op = match op.as_rule() {
+                    Rule::opDiv => BinaryOp::Div,
+                    Rule::opMul => BinaryOp::Mul,
+                    Rule::opAnd => BinaryOp::Add,
+                    _ => unreachable!(),
+                };
+    
+                let rhs = parse_unary(pairs.next().unwrap());
+
+                Expr {
+                    span,
+                    kind: ExprKind::Binary(op, Box::new(lhs), Box::new(rhs))
+                }
+            },
+
+            None => lhs,
+        }
+    }
+
+    fn parse_unary(pair: Pair) -> Expr {
+        let span = Span::from(pair.as_span());
+        let mut pairs = pair.into_inner();
+        let first = pairs.next().unwrap();
+
+        match first.as_rule() {
+            Rule::primary => parse_primary(first),
+            _ => {
+                let op = match first.as_rule() {
+                    Rule::opNot => UnaryOp::Not,
+                    Rule::opNeg => UnaryOp::Minus,
+                    _ => unreachable!(),
+                };
+
+                let expr = parse_unary(pairs.next().unwrap());
+
+                Expr {
+                    span,
+                    kind: ExprKind::Unary(op, Box::new(expr))
+                }
+            },
+        }
+    }
+
+    fn parse_primary(pair: Pair) -> Expr {
+        let pair = pair.into_inner().next().unwrap();
+        let span = Span::from(pair.as_span());
+
+        match pair.as_rule() {
+            Rule::number => Expr {
+                span,
+                kind: ExprKind::Value(value::Value::Int(pair.as_str().parse().unwrap()))
+            },
+
+            Rule::litTrue => Expr {
+                span,
+                kind: ExprKind::Value(value::Value::Bool(true))
+            },
+
+            Rule::litFalse => Expr {
+                span,
+                kind: ExprKind::Value(value::Value::Bool(false))
+            },
+
+            Rule::string => Expr {
+                span,
+                kind: ExprKind::Value(value::Value::String(pair.as_str().to_owned()))
+            },
+
+            Rule::alphanumeric => Expr {
+                span,
+                kind: ExprKind::Variable(pair.as_str().to_owned())
+            },
+
+            Rule::expr => parse_expr(pair),
+
+            Rule::equality => parse_equality(pair),
+
+            _ => unreachable!(),
+        } 
+    }
+
+    let lhs = pair.into_inner().next().unwrap();
+    let res = parse_equality(lhs);
+    println!("{:?}", res);
+    println!();
+    res
+}

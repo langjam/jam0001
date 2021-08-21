@@ -1,3 +1,6 @@
+mod error;
+mod parser;
+mod value;
 mod interpreter;
 
 use std::fs;
@@ -7,10 +10,6 @@ use std::path::PathBuf;
 use anyhow::Context;
 use clap::Clap;
 use pest::Parser;
-
-#[derive(pest_derive::Parser)]
-#[grammar = "grammar.pest"]
-struct LangParser;
 
 #[derive(Clap)]
 struct Opts {
@@ -34,16 +33,9 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn run_source(source: String) -> anyhow::Result<()> {
-    let ast = LangParser::parse(Rule::program, &source)
-        .expect("parse error"); //temporary shitty error message
+    let ast = parser::parse(&source)?;
 
-    for pair in ast {
-        match pair {
-            _ => todo!(),
-        }
-    }
-
-    Ok(())
+    todo!()
 }
 
 fn run_cli() -> anyhow::Result<()> {

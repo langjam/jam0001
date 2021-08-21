@@ -1,39 +1,83 @@
-//Ignore whitespace
-WHITESPACE = _{ " " }
+//Horizontal whitespace
+hws = _{ " " | "\t" }
+//Vertical whitespace
+vws = _{ hws* ~ NEWLINE ~ hws* }
 
-//basic stuff
+//basic definitions
 digit = {'0'..'9'}
 alpha = {('a'..'z'|'A'..'Z')+}
 number = {digit+}
 alphanumeric = {(alpha|number)+}
-literal = {alphanumeric}
+literal = {alpha | alpha ~ alphanumeric}
+string = {"\"" ~ literal ~ "\""}
 
 //expressions
+opNeq = { "!=" }
+opEq  = { "==" }
+opGt  = { ">" }
+opGe  = { ">=" }
+opLt  = { "<" }
+opLe  = { "<=" }
+opSub = { "-" }
+opAdd = { "+" }
+opOr  = { "or" | "||" }
+opDiv = { "/" }
+opMul = { "*" }
+opAnd = { "and" | "&&" }
+opNot = { "not" | "!" }
+opNeg = { "-" }
+
+litTrue  = { "true" }
+litFalse = { "false" }
+
 expr  = { equality }
-equality    = { comparison ~ ( ( "!=" | "==" ) ~  comparison )*}
-comparison  = { termOr ~ (( ">" | ">=" | "<" | "<=" ) ~ termOr )*}
-termOr      = {factorAnd ~  ( ( "-" | "+" ) ~  factorAnd )*}
-factorAnd   = {unary ~ ( "/" | "*" | "and") ~  unary | unary }
-unary       = {("not" | "-") ~ unary | primary}
-primary     = {number | alphanumeric | "true" | "false" | "(" ~ expr~")"}
+equality    = { comparison ~ (hws* ~ (opNeq | opEq) ~ hws* ~ comparison )* }
+comparison  = { termOr ~ (hws* ~ (opGt | opGe | opLt | opLe) ~ hws* ~ termOr )* }
+termOr      = { factorAnd ~ (hws* ~ (opSub | opAdd | opOr) ~ hws* ~ factorAnd )* }
+factorAnd   = { unary ~ (hws* ~ (opDiv | opMul | opAnd) ~ hws* ~ unary)? }
+unary       = { (opNot | opNeg) ~ hws* ~ unary | primary }
+primary     = { number | litTrue | litFalse | alphanumeric | string | "(" ~ hws* ~ expr ~ hws* ~ ")" }
+
+//statements
+varStmt = {"stores" ~ hws+ ~ expr ~ hws+ ~ "in" ~ hws+ ~ literal}
+loopStmt = {"repeat" ~ hws+ ~ "(" ~ stmt ~ ")" ~ hws+ ~ number ~ hws+ ~ "times"}
+printStmt = {("prints" | "print") ~ hws+ ~ string}
+listStmt = {literal | literal ~ "," ~ listStmt}
+argsStmt = {"takes" ~ hws+ ~ listStmt}
+condStmt = {"if" ~ hws+ ~ expr ~ hws+ ~ "then" ~ hws+ ~ stmt ~ hws+ ~ "else" ~ hws+ ~ stmt}
+stmt = {argsStmt | varStmt | loopStmt | printStmt | condStmt}
+//comment = { (stmt ~ hws* | literal ~ hws* )+ }
+comment = { stmt ~ (hws* ~ stmt)* }
+commentStmt = { "//" ~ hws* ~ comment ~ vws+ ~ literal }
+semanticBody = {commentStmt ~ (vws+ ~ semanticBody)*}
+syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (("\n")*~mainStmt~("\n")*)* ~ "}"}
+mainStmt = {literal ~"<-"~ mainStmt | literal ~ "(" ~ mainStmt ~ ")"|literal}
+program = {semanticBody ~ syntaxBody|semanticBody}
 
 
-//Singular deterministic values
-//Store 1 in x
+//This is a function that stores 6 in x and then prints "hi"
+//example
+//print "hello world"
+//hello
+//6 + 3
+//expr1
+//Store an expression using stores () in a and then print a
+//b
+//On the other hand we save a statemet using stores <>
+//c
 
-//Non-determinism (possible higher-order functions)
-//Store 5 as in b
+//main {
+//example
+//b(expr1)
+//c(a)
+//}
 
-// James' grammar ================================
-//require immediate newline for comments
-varStmt = {"stores" ~ " " ~ expr ~ " in " ~ literal}
-loopStmt = {"repeat "~ "(" ~ statement ~ ") " ~ number ~ " times"}
-statement = {varStmt | loopStmt}
-action = {statement}
-fnStmt  = {(action ~ " then " ~ fnStmt)+ | action}
-comments = {"//" ~ fnStmt ~ "\n" ~ (literal ~ (" ")*)}
-program = {(comments ~ "\n")*}
-// ==============================================
+//run literals will run the program specified below it
+//run
+//example
+//b(expr1)
+//b(a)
+//c(hello)
 
 
 
