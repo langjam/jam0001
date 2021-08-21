@@ -15,6 +15,7 @@ impl<'a> Parser<'a> {
                     return Err(ParserError {
                         span: Span::from_length(self.current, 1),
                         error: String::from("Expected the start of a new train or station here."),
+                        input: self.input.to_string(),
                     })
                 }
             }
@@ -38,7 +39,6 @@ mod tests {
                 println!("{:?}", program);
             }
             Err(err) => {
-                err.print(test);
                 assert!(false);
             }
         }

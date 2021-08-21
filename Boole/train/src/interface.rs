@@ -1,19 +1,21 @@
-use crate::ast::Station;
+use crate::ast::{Station, Train};
 use std::sync::mpsc::{Sender, Receiver, channel, RecvError};
 use std::sync::{Arc, Mutex};
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicI64, Ordering};
 
+
 pub struct Input {
     value: Vec<i64>
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum VmInterfaceMessage {
     AskForInput(i64),
     Print(Vec<i64>),
-    MoveTrain((), ()),
+    MoveTrain(Station, Station, Train, usize, usize),
     EndSimulationStep,
+    StartTrain(Station, Train),
 }
 
 /// Interface for the virtual machine itself to send messages over to a frontend
@@ -57,8 +59,12 @@ impl VMInterface {
     pub fn print(&self, data: Vec<i64>) -> Result<(), OtherSideClosed> {
         self.sender.send(VmInterfaceMessage::Print(data)).map_err(|_| OtherSideClosed)
     }
-    pub fn move_train(&self, from_station: Station, to_station: Station) -> Result<(), OtherSideClosed> {
-        self.sender.send(VmInterfaceMessage::MoveTrain((), ())).map_err(|_| OtherSideClosed)
+    pub fn move_train(&self, from_station:Station, to_station:Station, train:Train, start_track:usize, end_track:usize) -> Result<(), OtherSideClosed> {
+        self.sender.send(VmInterfaceMessage::MoveTrain(from_station, to_station, train, start_track, end_track)).map_err(|_| OtherSideClosed)
+    }
+
+    pub fn train_to_start(&self, start_station:Station, train:Train) -> Result<(), OtherSideClosed>{
+        self.sender.send(VmInterfaceMessage::StartTrain(start_station, train)).map_err(|_|OtherSideClosed)
     }
     pub fn end_simulation_step(&self) -> Result<(), OtherSideClosed> {
         self.sender.send(VmInterfaceMessage::EndSimulationStep).map_err(|_| OtherSideClosed)
