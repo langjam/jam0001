@@ -438,8 +438,8 @@ mod tests {
                     Train {
                         identifier: 0,
                         config: TrainConfig {
-                            primary_color: ColorChoice::LightRed.color(),
-                            secondary_color: ColorChoice::DarkRed.color(),
+                            primary_color: ColorChoice::LightRed,
+                            secondary_color: ColorChoice::DarkRed,
                             length: 1,
                         },
                         start: Target {
@@ -456,8 +456,8 @@ mod tests {
                     Train {
                         identifier: 0,
                         config: TrainConfig {
-                            primary_color: ColorChoice::LightRed.color(),
-                            secondary_color: ColorChoice::DarkRed.color(),
+                            primary_color: ColorChoice::LightRed,
+                            secondary_color: ColorChoice::DarkRed,
                             length: 1,
                         },
                         start: Target {
@@ -523,8 +523,8 @@ mod tests {
             trains: vec![Train {
                 identifier: 0,
                 config: TrainConfig {
-                    primary_color: ColorChoice::LightRed.color(),
-                    secondary_color: ColorChoice::DarkRed.color(),
+                    primary_color: ColorChoice::LightRed,
+                    secondary_color: ColorChoice::DarkRed,
                     length: 1,
                 },
                 start: Target {
@@ -633,8 +633,8 @@ mod tests {
         //     trains: vec![Train {
         //         identifier: 0,
         //         config: TrainConfig {
-        //             primary_color: ColorChoice::LightRed.color(),
-        //             secondary_color: ColorChoice::DarkRed.color(),
+        //             primary_color: ColorChoice::LightRed,
+        //             secondary_color: ColorChoice::DarkRed,
         //             length: 1,
         //         },
         //         start: Target {
@@ -679,8 +679,8 @@ mod tests {
             trains: vec![Train {
                 identifier: 0,
                 config: TrainConfig {
-                    primary_color: ColorChoice::LightRed.color(),
-                    secondary_color: ColorChoice::DarkRed.color(),
+                    primary_color: ColorChoice::LightRed,
+                    secondary_color: ColorChoice::DarkRed,
                     length: 1,
                 },
                 start: Target {
@@ -746,8 +746,8 @@ mod tests {
             trains: vec![Train {
                 identifier: 0,
                 config: TrainConfig {
-                    primary_color: ColorChoice::LightRed.color(),
-                    secondary_color: ColorChoice::DarkRed.color(),
+                    primary_color: ColorChoice::LightRed,
+                    secondary_color: ColorChoice::DarkRed,
                     length: 1,
                 },
                 start: Target {
@@ -810,8 +810,8 @@ mod tests {
             trains: vec![Train {
                 identifier: 0,
                 config: TrainConfig {
-                    primary_color: ColorChoice::LightRed.color(),
-                    secondary_color: ColorChoice::DarkRed.color(),
+                    primary_color: ColorChoice::LightRed,
+                    secondary_color: ColorChoice::DarkRed,
                     length: 1,
                 },
                 start: Target {
@@ -859,8 +859,8 @@ mod tests {
             trains: vec![Train {
                 identifier: 0,
                 config: TrainConfig {
-                    primary_color: ColorChoice::LightRed.color(),
-                    secondary_color: ColorChoice::DarkRed.color(),
+                    primary_color: ColorChoice::LightRed,
+                    secondary_color: ColorChoice::DarkRed,
                     length: 1,
                 },
                 start: Target {
@@ -904,8 +904,8 @@ mod tests {
             trains: vec![Train {
                 identifier: 0,
                 config: TrainConfig {
-                    primary_color: ColorChoice::LightRed.color(),
-                    secondary_color: ColorChoice::DarkRed.color(),
+                    primary_color: ColorChoice::LightRed,
+                    secondary_color: ColorChoice::DarkRed,
                     length: 1,
                 },
                 start: Target {
@@ -959,8 +959,8 @@ mod tests {
             trains: vec![Train {
                 identifier: 0,
                 config: TrainConfig {
-                    primary_color: ColorChoice::LightRed.color(),
-                    secondary_color: ColorChoice::DarkRed.color(),
+                    primary_color: ColorChoice::LightRed,
+                    secondary_color: ColorChoice::DarkRed,
                     length: 1,
                 },
                 start: Target {
@@ -1019,8 +1019,8 @@ mod tests {
                 Train {
                     identifier: 0,
                     config: TrainConfig {
-                        primary_color: ColorChoice::LightRed.color(),
-                        secondary_color: ColorChoice::DarkRed.color(),
+                        primary_color: ColorChoice::LightRed,
+                        secondary_color: ColorChoice::DarkRed,
                         length: 1,
                     },
                     start: Target {
@@ -1051,8 +1051,8 @@ mod tests {
                 Train {
                     identifier: 0,
                     config: TrainConfig {
-                        primary_color: ColorChoice::LightRed.color(),
-                        secondary_color: ColorChoice::DarkRed.color(),
+                        primary_color: ColorChoice::LightRed,
+                        secondary_color: ColorChoice::DarkRed,
                         length: 1,
                     },
                     start: Target {
