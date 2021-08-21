@@ -364,6 +364,10 @@ class AssignStatement(Executable):
     else:
       return new_error_status(self.assign_op, "Cannot assign to this type of expression.")
 
+_SHORT_CIRCUIT_OPS = {}
+for t in ['&&', '||', '??']:
+  _SHORT_CIRCUIT_OPS[t] = True
+
 class OpChain(Expression):
   def __init__(self, expressions, ops):
     super().__init__(expressions[0].first_token)
@@ -374,9 +378,16 @@ class OpChain(Expression):
     if expression.is_error: return expression
     left = expression
     for i in range(1, len(self.expressions)):
+      op = self.ops[i - 1]
+      if _SHORT_CIRCUIT_OPS.get(op, False):
+        if op == '&&' and left.type == 'BOOL' and not left.value:
+          return FALSE_VALUE
+        if op == '||' and left.type == 'BOOL' and left.value:
+          return TRUE_VALUE
+        if op == '??' and left.type != 'NULL':
+          return left
       right = self.expressions[i].run(scope)
       if right.is_error: return right
-      op = self.ops[i - 1]
       combined = perform_op(op, left, op.value, right)
       if combined.is_error: return combined
       left = combined

@@ -58,6 +58,12 @@ OP_MATRIX = {
   'INSTANCE==INSTANCE': lambda t, a, b: get_bool_value(a.instance == b.instance),
   'NULL==NULL': lambda t, a, b: TRUE_VALUE,
   'BUILTIN_FUNCTION==BUILTIN_FUNCTION': lambda t, a, b: get_bool_value(a.handler == b.handler),
+  
+  # NOTE: these are short-circuiting ops which is handled in the OpChain's .run() method 
+  # specifically. All short-circuiting cases are handled before it gets to this point, so
+  # this is okay.
+  'BOOL&&BOOL': lambda t, a, b: get_bool_value(a.value and b.value),
+  'BOOL||BOOL': lambda t, a, b: get_bool_value(a.value or b.value),
 }
 
 def perform_op(throw_token, left, op, right):
@@ -72,6 +78,13 @@ def perform_op(throw_token, left, op, right):
       if left.value == '': return right
       if right.value == '': return left
       return StringValue(left.to_string() + right.to_string())
+    
+    # The short-circuiting of the left side being null is already handled directly
+    # in the OpChain.run() method. If it gets to this point, it means that the left
+    # side was null.
+    if op == '??':
+      return right
+
     if left.type == 'NULL': new_error_value(throw_token, "Null reference error: the left side of this op was null")
     if right.type == 'NULL': new_error_value(throw_token, "Null reference error: the right side of this op was null")
     return new_error_value(throw_token, "The op " + op + " is not defined for the types " + left.type + " and " + right.type + ".")
