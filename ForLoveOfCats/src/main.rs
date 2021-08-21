@@ -13,6 +13,10 @@ const SOURCE: &str = r#"
 	(while (!= x 11)
 		(block
 			(say_hello x)
+			(if (== x 5)
+				(print "Number is five")
+				()
+			)
 			(set x (+ x 1))
 		)
 	)
@@ -108,6 +112,8 @@ fn tokenize(source: &str) -> Vec<Token> {
 
 #[derive(Debug, Clone, PartialEq)]
 enum TreeNode {
+	Unit,
+
 	StringLiteral(String),
 
 	IntegerLiteral(i64),
@@ -121,6 +127,12 @@ enum TreeNode {
 	While {
 		expr: Box<TreeNode>,
 		body: Box<TreeNode>,
+	},
+
+	If {
+		expr: Box<TreeNode>,
+		true_body: Box<TreeNode>,
+		false_body: Box<TreeNode>,
 	},
 
 	Define {
@@ -202,7 +214,7 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 	let ident = if let Some(Token::Ident(literal)) = tokens.next() {
 		literal
 	} else {
-		panic!("First token after open paren must be ident");
+		return TreeNode::Unit;
 	};
 
 	match *ident {
@@ -261,6 +273,20 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
 
 			TreeNode::While { expr, body }
+		}
+
+		"if" => {
+			let expr = Box::new(parse_expression(tokens));
+			let true_body = Box::new(parse_expression(tokens));
+			let false_body = Box::new(parse_expression(tokens));
+
+			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+
+			TreeNode::If {
+				expr,
+				true_body,
+				false_body,
+			}
 		}
 
 		"lambda" => {
@@ -398,6 +424,8 @@ impl ScopeState {
 
 fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 	match node {
+		TreeNode::Unit => Value::None,
+
 		TreeNode::StringLiteral(string) => Value::String(string.to_string()),
 
 		&TreeNode::IntegerLiteral(num) => Value::I64(num),
@@ -442,7 +470,7 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 		TreeNode::While { expr, body } => {
 			let mut result = Value::None;
 
-			for _ in 0..20 {
+			loop {
 				let expr_result = evaluate(state, expr);
 				let should_loop = !matches!(expr_result, Value::Bool(false));
 				if !should_loop {
@@ -455,6 +483,21 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 			}
 
 			result
+		}
+
+		TreeNode::If {
+			expr,
+			true_body,
+			false_body,
+		} => {
+			let expr_result = evaluate(state, expr);
+			let truthy = !matches!(expr_result, Value::Bool(false));
+
+			if truthy {
+				evaluate(state, true_body)
+			} else {
+				evaluate(state, false_body)
+			}
 		}
 
 		TreeNode::Call { name, args } => {
