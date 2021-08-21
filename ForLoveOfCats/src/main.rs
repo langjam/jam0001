@@ -12,11 +12,11 @@ const SOURCE: &str = r#"
 	(define x 1)
 	(while (!= x 11)
 		(block
-			(say_hello x)
-			(if (== x 5)
-				(print "Number is five")
+			(if (<= x 5)
+				(print "Number is less than or equal to five")
 				()
 			)
+			(say_hello x)
 			(set x (+ x 1))
 		)
 	)
@@ -521,6 +521,11 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 				"!=" => all_not_equal(&args),
 				"!" => invert_bool(&args),
 
+				"<" => less(&args),
+				"<=" => less_equal(&args),
+				">" => greater(&args),
+				">=" => greater_equal(&args),
+
 				"print" => print_values(&args),
 
 				name => {
@@ -627,6 +632,36 @@ fn invert_bool(values: &[Value]) -> Value {
 		_ => Value::Bool(false),
 	}
 }
+
+macro_rules! two_arg_int_bool_function {
+	( $name:ident, $a:ident, $b:ident, $expr:expr ) => {
+		fn $name(values: &[Value]) -> Value {
+			if values.len() != 2 {
+				panic!(
+					"{} arguments to builtin function only taking two arguments",
+					values.len()
+				);
+			}
+
+			fn unwrap(value: &Value) -> i64 {
+				match value {
+					&Value::I64(num) => num,
+					_ => panic!("Expected integer argument"),
+				}
+			}
+
+			let $a = unwrap(&values[0]);
+			let $b = unwrap(&values[1]);
+
+			Value::Bool($expr)
+		}
+	};
+}
+
+two_arg_int_bool_function!(less, a, b, a < b);
+two_arg_int_bool_function!(less_equal, a, b, a <= b);
+two_arg_int_bool_function!(greater, a, b, a > b);
+two_arg_int_bool_function!(greater_equal, a, b, a >= b);
 
 fn print_values(values: &[Value]) -> Value {
 	let count = values.len();
