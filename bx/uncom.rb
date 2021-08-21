@@ -63,7 +63,7 @@ def do_words(words)
 	words.split(" ").each do |word|
 		uncom.do_word word
 	end
-	puts "-> " + unc[Aom.data.inspect
+	puts "-> " + uncom.data.inspect
 	uncom
 end
 
@@ -82,10 +82,13 @@ class Uncom
 		@dict = [$uncom_words.merge({}), {}]
 		# storage for locals, mirrors dict, should get pushed / popped when dict does
 		@vars = [{}, {}]
+
 		# TODO:
 		# place "instruction pointer" at the start of the string
-		# decide on how functions are declared
 		# instruction pointer
+
+		# decide on how functions are declared
+
 		# return stack, saves locations in source to come back to
 	end
 
@@ -144,14 +147,6 @@ class Uncom
 
 		# string -> lookup word
 
-		# found local -> do word
-		if @dict.last.member? word then
-			# TODO
-		elsif word.length > 1 and word[-1] == "=" then
-		# matches local= -> make local
-			# TODO
-		end
-
 		# found global -> do word
 		if @dict.first.member? word then
 			func.push @dict.first[word]
@@ -159,7 +154,17 @@ class Uncom
 		# matches $global= -> make global
 		elsif word[0] == "$" and word[-1] == "=" then
 			@dict.first.merge! gen_variable_funcs(word[0..-2], @vars.first)
-			return do_word(word) # that word we just made has to get called now
+			return do_word(word) # word we just made has to get pushed now
+		end
+
+		# found local -> do word
+		if @dict.last.member? word then
+			func.push @dict.last[word]
+			return try_apply_stacks()
+		elsif word.length > 1 and word[-1] == "=" then
+		# matches local= -> make local
+			@dict.last.merge! gen_variable_funcs(word[0..-2], @vars.last)
+			return do_word(word) # word we just made has to get pushed now
 		end
 
 		raise "word #{word} not found"
