@@ -7,6 +7,27 @@
 ArenaAllocator arena;
 #define frame_arena arena
 
+struct Atom {
+    s32 inner;
+};
+
+bool operator==(Atom a, Atom b) { return a.inner == b.inner; }
+bool operator!=(Atom a, Atom b) { return a.inner != b.inner; }
+
+Array<Slice<u8>> intern_pool = {.data = NULL, .count = 0, .capacity = 0, .arena = &arena};
+
+Atom intern(Slice<u8> n) {
+    for (s32 i = 0; i < intern_pool.count; i++)
+        if (intern_pool.data[i] == n)
+            return {(s32)i};
+
+    array_push(&intern_pool, n);
+    return {(s32)intern_pool.count - 1};
+}
+
+#define ATOMFMT(a) STRFMT(intern_pool[(a).inner])
+Atom atom_doc, atom_len, atom_testwith, atom_source, atom_line, atom_col, atom_arity;
+
 enum { MAX_ARITY = 16 };
 
 enum TokenType {
@@ -58,6 +79,7 @@ struct Token {
         s64 i;
         f64 f;
         Slice<u8> s;
+        Atom atom;
     };
 };
 
@@ -67,7 +89,7 @@ const char *format_token(Token tok) {
     } else if (tok.type == Token_Float) {
         return tprint("%g", tok.f);
     } else if (tok.type == Token_Ident) {
-        return tprint("%.*s", STRFMT(tok.s));
+        return tprint("%.*s", ATOMFMT(tok.atom));
     } else if (tok.type == Token_String) {
         // TODO Escape
         return tprint("\"%.*s\"", STRFMT(tok.s));
@@ -147,16 +169,17 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
         Token tok = {};
         tok.loc = *loc;
         tok.type = Token_Ident;
-        tok.s.data = src->data;
+        Slice<u8> ident = {.data = src->data, .count = 0};
         while (src->count && (is_ident_char((*src)[0]) || ((*src)[0] >= '0' && (*src)[0] <= '9'))) {
-            tok.s.count += 1;
+            ident.count += 1;
             source_advance(src, loc, 1);
         }
-        if (tok.s == lit_slice("if")) tok.type = Token_KwIf;
-        if (tok.s == lit_slice("else")) tok.type = Token_KwElse;
-        if (tok.s == lit_slice("for")) tok.type = Token_KwFor;
-        if (tok.s == lit_slice("macro")) tok.type = Token_KwMacro;
-        if (tok.s == lit_slice("return")) tok.type = Token_KwReturn;
+        if (ident == lit_slice("if")) tok.type = Token_KwIf;
+        if (ident == lit_slice("else")) tok.type = Token_KwElse;
+        if (ident == lit_slice("for")) tok.type = Token_KwFor;
+        if (ident == lit_slice("macro")) tok.type = Token_KwMacro;
+        if (ident == lit_slice("return")) tok.type = Token_KwReturn;
+        tok.atom = intern(ident);
         return tok;
     } else if ((*src)[0] == '"') {
         Token tok = {};
@@ -261,6 +284,7 @@ struct Value {
         s64 i;
         f64 f;
         Slice<u8> s;
+        Atom atom;
         ValComment c;
         ValBuiltin bf;
         Slice<Value> list;
@@ -277,7 +301,7 @@ bool operator==(const Value &a, const Value &b) {
         case Value_Bool: return a.b == b.b;
         case Value_Int: return a.i == b.i;
         case Value_Float: return a.f == b.f;
-        case Value_Ident: return a.s == b.s;
+        case Value_Ident: return a.atom == b.atom;
         case Value_String: return a.s == b.s;
         case Value_Builtin: return a.bf.fn == b.bf.fn;
         case Value_List: {
@@ -307,9 +331,9 @@ FORCEINLINE static inline bool operator!=(const Value &a, const Value &b) {
 }
 
 struct Symbol {
-    Slice<u8> name;
-    Array<Value> assoc;
+    Atom name;
     Value value;
+    Array<Value> assoc;
 };
 
 struct EnvPage {
@@ -338,7 +362,7 @@ void free_environment(Env *env) {
     }
 }
 
-Symbol *bind(Env *env, Slice<u8> name) {
+Symbol *bind(Env *env, Atom name) {
     for (EnvPage *cur = env->first_page; cur; cur = cur->next)
         for (s32 i = 0; i < cur->count; i++)
             if (cur->syms[i].name == name)
@@ -352,12 +376,12 @@ Symbol *bind(Env *env, Slice<u8> name) {
     if (!*page) *page = (EnvPage *)calloc(1, sizeof **page);
     assert((*page)->count < ARRAY_COUNT(EnvPage::syms));
     Symbol *sym = (*page)->syms + (*page)->count++;
-    sym->name = copy_slice_to_arena(&arena, name);
+    sym->name = name;
     sym->assoc.arena = &arena;
     return sym;
 }
 
-Symbol *try_lookup(Env *env, Slice<u8> name) {
+Symbol *try_lookup(Env *env, Atom name) {
     while (env) {
         for (EnvPage *cur = env->first_page; cur; cur = cur->next)
             for (s32 i = 0; i < cur->count; i++)
@@ -368,30 +392,30 @@ Symbol *try_lookup(Env *env, Slice<u8> name) {
     return NULL;
 }
 
-Symbol *lookup(Env *env, Slice<u8>name, SourceLoc loc) {
+Symbol *lookup(Env *env, Atom name, SourceLoc loc) {
     Symbol *sym = try_lookup(env, name);
     if (sym) return sym;
 
-    fprintf(stderr, "%s:%d:%d: Cannot reference unknown name '%.*s'.\n", LOCFMT(loc), STRFMT(name));
+    fprintf(stderr, "%s:%d:%d: Cannot reference unknown name '%.*s'.\n", LOCFMT(loc), ATOMFMT(name));
     exit(1);
 }
 
-void assoc(Symbol *sym, Slice<u8> key, Value val) {
+void assoc(Symbol *sym, Atom key, Value val) {
     assert((sym->assoc.count & 1) == 0);
     for (s32 i = 0; i < sym->assoc.count; i += 2) {
-        if (sym->assoc[i].s == key) {
+        if (sym->assoc[i].atom == key) {
             sym->assoc[i + 1] = val;
             return;
         }
     }
-    array_push(&sym->assoc, {.type = Value_Ident, .s = key});
+    array_push(&sym->assoc, {.type = Value_Ident, .atom = key});
     array_push(&sym->assoc, val);
 }
 
-bool getassoc(Symbol *sym, Slice<u8> key, Value *out) {
+bool getassoc(Symbol *sym, Atom key, Value *out) {
     assert((sym->assoc.count & 1) == 0);
     for (s32 i = 0; i < sym->assoc.count; i += 2) {
-        if (sym->assoc[i].s == key) {
+        if (sym->assoc[i].atom == key) {
             if (out) *out = sym->assoc[i + 1];
             return true;
         }
@@ -422,7 +446,7 @@ const char *format_value(Value val, bool inspect) {
         case Value_Bool: return val.b ? "yes" : "no";
         case Value_Int: return tprint("%ld", val.i);
         case Value_Float: return tprint("%g", val.f);
-        case Value_Ident: return tprint("%s%.*s", inspect ? "'" : "", STRFMT(val.s));
+        case Value_Ident: return tprint("%s%.*s", inspect ? "'" : "", ATOMFMT(val.atom));
         case Value_String: return inspect ? tprint("\"%.*s\"", /* TODO Escape */ STRFMT(val.s)) : tprint("%.*s", STRFMT(val.s));
         case Value_Comment: return tprint("{ %s }", format_value(*val.c.value, false));
         case Value_Builtin: return "<builtin>";
@@ -491,11 +515,11 @@ Value b_println(Slice<Value> args, Env *env, SourceLoc loc) {
 
 Value b_bind(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("bind", 0, Value_Ident);
-    Symbol *sym = bind(env, args[0].s);
+    Symbol *sym = bind(env, args[0].atom);
     sym->assoc.count = 0;
     sym->value = args[1];
     if (env->stashed_comment.type) {
-        assoc(sym, lit_slice("doc"), env->stashed_comment);
+        assoc(sym, atom_doc, env->stashed_comment);
         env->stashed_comment = {};
     }
     return args[1];
@@ -503,8 +527,8 @@ Value b_bind(Slice<Value> args, Env *env, SourceLoc loc) {
 
 Value b_store(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("store", 0, Value_Ident);
-    Symbol *sym = try_lookup(env, args[0].s);
-    if (!sym) sym = bind(env, args[0].s);
+    Symbol *sym = try_lookup(env, args[0].atom);
+    if (!sym) sym = bind(env, args[0].atom);
     sym->value = args[1];
     return args[1];
 }
@@ -513,14 +537,14 @@ Value b_store(Slice<Value> args, Env *env, SourceLoc loc) {
 Value b_assoc(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("assoc", 0, Value_Ident);
     CHECK_ARG("assoc", 1, Value_Ident);
-    Symbol *sym = lookup(env, args[0].s, loc);
-    assoc(sym, args[1].s, args[2]);
+    Symbol *sym = lookup(env, args[0].atom, loc);
+    assoc(sym, args[1].atom, args[2]);
     return args[2];
 }
 
 Value b_assoclist(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("assoclist", 0, Value_Ident);
-    Symbol *sym = lookup(env, args[0].s, loc);
+    Symbol *sym = lookup(env, args[0].atom, loc);
     return {.type = Value_List, .list = array_slice(&sym->assoc)};
 }
 
@@ -709,11 +733,11 @@ Value b_getloc(Slice<Value> args, Env *env, SourceLoc loc) {
 
     Array<Value> list = {};
     list.arena = &arena;
-    array_push(&list, {.type = Value_Ident, .s = lit_slice("source")});
+    array_push(&list, {.type = Value_Ident, .atom = atom_source});
     array_push(&list, {.type = Value_String, .s = str_slice(args[0].c.loc.srcname)});
-    array_push(&list, {.type = Value_Ident, .s = lit_slice("line")});
+    array_push(&list, {.type = Value_Ident, .atom = atom_line});
     array_push(&list, {.type = Value_Int, .i = args[0].c.loc.line});
-    array_push(&list, {.type = Value_Ident, .s = lit_slice("col")});
+    array_push(&list, {.type = Value_Ident, .atom = atom_col});
     array_push(&list, {.type = Value_Int, .i = args[0].c.loc.col});
     return {.type = Value_List, .list = array_slice(&list)};
 }
@@ -760,7 +784,7 @@ Value b_testtable(Slice<Value> args, Env *env, SourceLoc loc) {
         BucketArray<u8> buf = {};
         buf.arena = &arena;
         concat_write(&buf, lit_slice("TESTWITH "));
-        concat_write(&buf, args[0].s);
+        concat_write(&buf, intern_pool[args[0].atom.inner]);
         concat_bytes(&buf, ' ');
         concat_write(&buf, str_slice(tprint("%d", i)));
         concat_bytes(&buf, ' ');
@@ -912,7 +936,7 @@ Slice<Token> eval_macro(Slice<Token> tokens, Slice<Slice<Token>> params) {
             s64 arg = get_macro_param_ref(&tokens, params.count, "", loc);
             for (Token &tok : params[arg])
                 array_push(&out, tok);
-        } else if (tokens[0].type == Token_Ident && tokens[0].s == lit_slice("len")) {
+        } else if (tokens[0].type == Token_Ident && tokens[0].atom == atom_len) {
             slice_advance(&tokens, 1);
             s64 arg = get_macro_param_ref(&tokens, params.count, "len", loc);
             array_push(&out, {.loc = loc, .type = Token_Int, .i = params[arg].count});
@@ -954,7 +978,7 @@ Value eval(Slice<Token> *tokens, Env *env) {
         return {.type = Value_Comment, .c = {.loc = tok.loc, .value = copy_to_arena(&arena, s)}};
     } else if (tok.type == Token_Ident) {
         slice_advance(tokens, 1);
-        Symbol *sym = lookup(env, tok.s, tok.loc);
+        Symbol *sym = lookup(env, tok.atom, tok.loc);
         if (sym->value.type == Value_Builtin) {
             Value args[16];
             for (s32 i = 0; i < sym->value.bf.arity; i++)
@@ -962,15 +986,15 @@ Value eval(Slice<Token> *tokens, Env *env) {
             return sym->value.bf.fn({.data = args, .count = sym->value.bf.arity}, env, tok.loc);
         } else if (sym->value.type == Value_Block) {
             Value arity;
-            if (getassoc(sym, lit_slice("arity"), &arity)) {
+            if (getassoc(sym, atom_arity, &arity)) {
                 if (arity.type != Value_Int) {
                     fprintf(stderr, "%s:%d:%d: Associated arity for %.*s is not an integer but %s.\n", LOCFMT(tok.loc),
-                        STRFMT(sym->name), format_value_type(arity.type));
+                        ATOMFMT(sym->name), format_value_type(arity.type));
                     exit(1);
                 }
                 if (arity.i > MAX_ARITY) {
                     fprintf(stderr, "%s:%d:%d: %.*s exceeds maximum arity of %d arguments.\n", LOCFMT(tok.loc),
-                        STRFMT(sym->name), MAX_ARITY);
+                        ATOMFMT(sym->name), MAX_ARITY);
                     exit(1);
                 }
                 Value args[MAX_ARITY];
@@ -1004,7 +1028,7 @@ Value eval(Slice<Token> *tokens, Env *env) {
         Token tok = (*tokens)[0];
         if (tok.type == Token_Ident) {
             slice_advance(tokens, 1);
-            return {.type = Value_Ident, .s = tok.s};
+            return {.type = Value_Ident, .atom = tok.atom};
         } else {
             fprintf(stderr, "%s:%d:%d: Cannot quote expression beginning with %s.\n", LOCFMT(tok.loc), format_token(tok));
             exit(1);
@@ -1018,7 +1042,7 @@ Value eval(Slice<Token> *tokens, Env *env) {
         Token tok = (*tokens)[0];
         if (tok.type == Token_Ident) {
             slice_advance(tokens, 1);
-            return lookup(env, tok.s, tok.loc)->value;
+            return lookup(env, tok.atom, tok.loc)->value;
         } else {
             fprintf(stderr, "%s:%d:%d: An identifier is required for function quoting, not %s.\n", LOCFMT(tok.loc), format_token(tok));
             exit(1);
@@ -1103,7 +1127,7 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
             fprintf(stderr, "Expected identifier in for header, got: %s.\n", tokens->count ? format_token((*tokens)[0]) : "EOF");
             exit(1);
         }
-        Slice<u8> var = (*tokens)[0].s;
+        Atom var = (*tokens)[0].atom;
         slice_advance(tokens, 1);
         Value list = eval(tokens, env);
         if (list.type != Value_List) {
@@ -1118,7 +1142,7 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
         Value result = {.type = Value_Bool, .b = false};
         for (s64 i = 0; i < list.list.count; i++) {
             Env newenv = new_environment(env);
-            if (var != lit_slice("_"))
+            if (intern_pool[var.inner] != lit_slice("_"))
                 bind(&newenv, var)->value = list.list.data[i];
             result = exec_block(body.body, &newenv);
             if (result.type == Value_Return) return result;
@@ -1136,7 +1160,7 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
             fprintf(stderr, "%s:%d:%d: Macro name must be an identifier, not %s.\n", LOCFMT(loc), format_token((*tokens)[0]));
             exit(1);
         }
-        Slice<u8> name = (*tokens)[0].s;
+        Atom name = (*tokens)[0].atom;
         slice_advance(tokens, 1);
         if (!tokens->count) {
             fprintf(stderr, "%s:%d:%d: Macro definition requires parameter count.\n", LOCFMT(loc));
@@ -1173,7 +1197,7 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
             Value have;
             while (tests.count) {
                 SourceLoc loc = tests[0].loc;
-                if (tests[0].type != Token_Ident || tests[0].s != lit_slice("TESTWITH")) {
+                if (tests[0].type != Token_Ident || tests[0].atom != atom_testwith) {
                     fprintf(stderr, "%s:%d:%d: Unexpected token in TESTWITH directive: %s.\n", LOCFMT(tests[0].loc), format_token(tests[0]));
                     exit(1);
                 }
@@ -1184,7 +1208,7 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
                     fprintf(stderr, "Expected identifier in TESTWITH directive, got: %s.\n", tests.count ? format_token(tests[0]) : "EOF");
                     exit(1);
                 }
-                Slice<u8> var = tests[0].s;
+                Atom var = tests[0].atom;
                 slice_advance(&tests, 1);
                 Value input = eval(&tests, env);
                 Value expected = eval(&tests, env);
@@ -1194,7 +1218,7 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
                 have = eval(&stmt, &newenv);
                 if (have != expected) {
                     fprintf(stderr, "%s:%d:%d: TESTWITH failure: With %.*s=%s the statement produced %s but %s was required.\n",
-                        LOCFMT(loc), STRFMT(var), format_value(input, true), format_value(have, true), format_value(expected, true));
+                        LOCFMT(loc), ATOMFMT(var), format_value(input, true), format_value(have, true), format_value(expected, true));
                     exit(1);
                 }
                 free_environment(&newenv);
@@ -1240,8 +1264,22 @@ void usage() {
 }
 
 int main(int argc, char **argv) {
+    intern(lit_slice("</>")); // Make Atom(0) invalid.
+    atom_doc = intern(lit_slice("doc"));
+    atom_len = intern(lit_slice("len"));
+    atom_testwith = intern(lit_slice("TESTWITH"));
+    atom_source = intern(lit_slice("source"));
+    atom_line = intern(lit_slice("line"));
+    atom_col = intern(lit_slice("col"));
+    atom_arity = intern(lit_slice("arity"));
+
     Env env = new_environment(NULL);
-#define BIND_BUILTIN1(nam, fnname, arty) do { assert((arty) < MAX_ARITY); bind(&env, lit_slice(nam))->value = {.type = Value_Builtin, .bf = {.name = nam, .arity = arty, .fn = fnname}}; } while (0)
+#define BIND_BUILTIN1(nam, fnname, arty) \
+    do { \
+        assert((arty) < MAX_ARITY); \
+        Value v = {.type = Value_Builtin, .bf = {.name = (nam), .arity = arty, .fn = fnname}}; \
+        bind(&env, intern(lit_slice(nam)))->value = v; \
+    } while (0)
 #define BIND_BUILTIN(nam, arty) BIND_BUILTIN1(#nam, b_##nam, arty)
     BIND_BUILTIN(println, 1);
     BIND_BUILTIN(bind, 2);
@@ -1277,11 +1315,11 @@ int main(int argc, char **argv) {
     BIND_BUILTIN1("float->int", b_float2int, 1);
 #undef BIND_BUILTIN
 #undef BIND_BUILTIN1
-    bind(&env, lit_slice("yes"))->value = {.type = Value_Bool, .b = true};
-    bind(&env, lit_slice("no"))->value = {.type = Value_Bool, .b = false};
+    bind(&env, intern(lit_slice("yes")))->value = {.type = Value_Bool, .b = true};
+    bind(&env, intern(lit_slice("no")))->value = {.type = Value_Bool, .b = false};
     {
         Token body[] = {
-            {.loc = {}, .type = Token_Ident, .s = lit_slice("bind")},
+            {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("bind"))},
             {.loc = {}, .type = Token_Quote, {}},
             {.loc = {}, .type = Token_Comma, {}},
             {.loc = {}, .type = Token_Int, .i = 0},
@@ -1290,31 +1328,31 @@ int main(int argc, char **argv) {
                 {.loc = {}, .type = Token_Int, .i = 2},
             {.loc = {}, .type = Token_Rbracket, {}},
 
-            {.loc = {}, .type = Token_Ident, .s = lit_slice("assoc")},
+            {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("assoc"))},
             {.loc = {}, .type = Token_Quote, {}},
             {.loc = {}, .type = Token_Comma, {}},
             {.loc = {}, .type = Token_Int, .i = 0},
             {.loc = {}, .type = Token_Quote, {}},
-            {.loc = {}, .type = Token_Ident, .s = lit_slice("arity")},
+            {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("arity"))},
             {.loc = {}, .type = Token_Comma, {}},
-            {.loc = {}, .type = Token_Ident, .s = lit_slice("len")},
+            {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("len"))},
             {.loc = {}, .type = Token_Int, .i = 1},
 
             {.loc = {}, .type = Token_Comma, {}},
             {.loc = {}, .type = Token_KwFor, {}},
             {.loc = {}, .type = Token_Int, .i = 1},
             {.loc = {}, .type = Token_Lbracket, {}},
-                {.loc = {}, .type = Token_Ident, .s = lit_slice("store")},
+                {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("store"))},
                 {.loc = {}, .type = Token_Quote, {}},
                 {.loc = {}, .type = Token_Comma, {}},
                 {.loc = {}, .type = Token_Int, .i = 0},
-                {.loc = {}, .type = Token_Ident, .s = lit_slice("+")},
+                {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("+"))},
                 {.loc = {}, .type = Token_Lbracket, {}},
-                    {.loc = {}, .type = Token_Ident, .s = lit_slice("bind")},
+                    {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("bind"))},
                     {.loc = {}, .type = Token_Quote, {}},
                     {.loc = {}, .type = Token_Comma, {}},
                     {.loc = {}, .type = Token_Int, .i = 3},
-                    {.loc = {}, .type = Token_Ident, .s = lit_slice("getparam")},
+                    {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("getparam"))},
                     {.loc = {}, .type = Token_Comma, {}},
                     {.loc = {}, .type = Token_Int, .i = 4},
                 {.loc = {}, .type = Token_Rbracket, {}},
@@ -1323,7 +1361,7 @@ int main(int argc, char **argv) {
                 {.loc = {}, .type = Token_Int, .i = 0},
             {.loc = {}, .type = Token_Rbracket, {}},
         };
-        bind(&env, lit_slice("defun"))->value = {.type = Value_Macro, .macro = {.param_count = 3, .body = {.data = body, .count = ARRAY_COUNT(body)}}};
+        bind(&env, intern(lit_slice("defun")))->value = {.type = Value_Macro, .macro = {.param_count = 3, .body = {.data = body, .count = ARRAY_COUNT(body)}}};
     }
 
     if (argc == 1) {
