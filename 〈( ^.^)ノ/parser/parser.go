@@ -1,11 +1,15 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/grossamos/jam0001/shared"
 )
 
 type Parser struct {
-	toks []shared.Token
+	toks          []shared.Token
+	open_paren    int
+	needed_blocks int
 }
 
 func (p *Parser) make_ast() []shared.Node {
@@ -15,7 +19,10 @@ func (p *Parser) make_ast() []shared.Node {
 		tok := p.toks[0]
 
 		switch tok.Type {
-		case shared.TTlparen, shared.TTopenBlock:
+		case shared.TTopenBlock:
+			p.needed_blocks -= 1
+		case shared.TTlparen:
+			p.open_paren += 1
 			p.toks = p.toks[1:]
 
 			out = append(out,
@@ -26,6 +33,7 @@ func (p *Parser) make_ast() []shared.Node {
 			continue
 
 		case shared.TTrparen, shared.TTcloseBlock:
+			p.open_paren -= 1
 			p.toks = p.toks[1:]
 			return out
 
@@ -34,6 +42,7 @@ func (p *Parser) make_ast() []shared.Node {
 
 			if len(p.toks) > 0 &&
 				p.toks[0].Type == shared.TTlparen {
+				p.open_paren += 1
 
 				p.toks = p.toks[1:]
 			}
@@ -50,7 +59,7 @@ func (p *Parser) make_ast() []shared.Node {
 		case shared.TTstring, shared.TTref:
 			if len(p.toks) > 1 &&
 				(p.toks)[1].Type == shared.TTlparen {
-
+				p.open_paren += 1
 				p.toks = (p.toks)[1:]
 
 				out = append(out,
@@ -79,7 +88,9 @@ func (p *Parser) make_ast() []shared.Node {
 					out[index]}}
 
 		case shared.TTwhile:
+			p.needed_blocks += 1
 			if len(p.toks) <= 1 {
+				// TODO: add error here
 				break
 			}
 
@@ -108,6 +119,8 @@ func (p *Parser) make_ast() []shared.Node {
 }
 
 func GenerateAst(toks []shared.Token) []shared.Node {
-	parser := Parser{toks}
-	return parser.make_ast()
+	parser := Parser{toks, 0, 0}
+	ast := parser.make_ast()
+	fmt.Println(parser.needed_blocks, parser.open_paren)
+	return ast
 }
