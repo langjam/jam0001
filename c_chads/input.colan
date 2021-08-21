@@ -1,3 +1,4 @@
 main = proc () int {
+    print("srtrst");
     return 42;
 };
