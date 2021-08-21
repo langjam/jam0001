@@ -5,6 +5,8 @@
 char* sfio_read_text(const char *path) 
 {
     FILE *f = fopen(path, "r");
+    if (f == NULL) 
+        return NULL;
     fseek(f, 0, SEEK_END);
     size_t fsz = (size_t) ftell(f);
     fseek(f, 0, SEEK_SET);

@@ -9,8 +9,10 @@ struct Parser_State {
 enum Parser_Node_Kind {
     PN_DECL,
     PN_STRING,
+    PN_IDENT,
+    PN_NUMBER,
     PN_PROC,
-    PN_CALL
+    PN_CALL,
 };
 
 struct Parser_Node {
@@ -26,6 +28,12 @@ struct Parser_Node {
         struct {
             struct Span val; 
         } string;
+        struct {
+            struct Span val; 
+        } number;
+        struct {
+            struct Span val; 
+        } ident;
     } data;
 };
 
