@@ -1,17 +1,11 @@
 (block
-	(# "Defining x to be one")
-	(define x 1)
+	(define string "Hello world!")
 
-	(while (< x 1000000)
+	(define end 1)
+	(while (<= end (len string))
 		(block
-			(print x)
-			(set x (* x 3))
-
-			(# "This is a comment, current value of x is" x)
-			(if (or (< x 100) (> x 1000))
-				(pause)
-				()
-			)
+			(print (slice string 0 end))
+			(set end (+ end 1))
 		)
 	)
 )

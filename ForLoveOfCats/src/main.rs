@@ -530,6 +530,9 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 				"and" => logical_and(&args),
 				"or" => logical_or(&args),
 
+				"len" => len_impl(&args),
+				"slice" => slice_impl(&args),
+
 				"print" => print_values(&args),
 
 				"pause" => pause(state, &args),
@@ -701,6 +704,47 @@ two_arg_int_function!(greater, a, b, a > b, Bool);
 two_arg_int_function!(greater_equal, a, b, a >= b, Bool);
 
 two_arg_int_function!(mod_impl, a, b, a % b, I64);
+
+fn unwrap_integer(value: &Value) -> i64 {
+	match *value {
+		Value::I64(value) => value,
+		_ => panic!("Expected integer"),
+	}
+}
+
+fn unwrap_usize(value: i64) -> usize {
+	if value < 0 {
+		panic!("Negative integer used as index");
+	}
+
+	value as usize
+}
+
+fn slice_impl(values: &[Value]) -> Value {
+	if values.len() != 3 {
+		panic!("Expected 3 arguments to slice, got {}", values.len());
+	}
+
+	let value = &values[0];
+	let start = unwrap_usize(unwrap_integer(&values[1]));
+	let end = unwrap_usize(unwrap_integer(&values[2]));
+
+	match value {
+		Value::String(string) => Value::String(string[start..end].to_string()),
+		_ => panic!("Cannot slice non-string"),
+	}
+}
+
+fn len_impl(values: &[Value]) -> Value {
+	if values.len() != 1 {
+		panic!("Expected 1 argument to len, got {}", values.len());
+	}
+
+	match &values[0] {
+		Value::String(string) => Value::I64(string.len() as i64),
+		_ => panic!("Cannot get len of non-string"),
+	}
+}
 
 fn print_values(values: &[Value]) -> Value {
 	let count = values.len();
