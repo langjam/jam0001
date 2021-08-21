@@ -1,0 +1,19 @@
+{
+  "name": "bubblegum",
+  "version": "1.0.0",
+  "description": "[delete this and put your project build and use instructions here]",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "TeamHTP",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "remark-gfm": "^2.0.0",
+    "remark-parse": "^10.0.0",
+    "unified": "^10.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.3.5"
+  }
+}
