@@ -1,0 +1,87 @@
+
+----------------------------------------------
+
+is <X> a palindrome?
+  match <X>
+    <>          -> yes
+    <a>         -> yes
+    <a><B><a> -> is <B> a palindrome?
+
+Example: are there an even number of |s in |||?
+
+are there an even number of <a>s in <B>?
+  match <B>
+    <> -> yes
+    <a><a><X> -> are there an even number of <a>s in <X>?
+    <x> -> no
+
+not _
+  yes -> no
+  no  -> yes
+
+<a> and <b>
+  match <a>, <b>
+    yes, yes -> yes
+    <x>      -> no
+
+<a> or <b>
+  match <a>, <b>
+    no, yes  -> yes
+    yes, no  -> yes
+    yes, yes -> yes
+    <_>      -> no
+    
+<A> xor <B>
+  match <A>, <B>
+    <x>, <x> -> no
+    <_>      -> yes
+
+are there not <x>?
+  not are there <x>?
+
+are there an odd number of <a>s in <B>?
+  are there not an even number of <a>s in <X>?
+
+ + 
+  <>
+
+<X>| * <Y>|
+  <X> times add <Y>| to <Y>|
+
+<I>| times add <X>| to <Y>|
+  <I> times add <X>| to <X>|<Y>|
+
+<> times add <X> to <Y>|
+  <Y>|
+
+<> * <Y>
+  <>
+
+<X> * <>
+  <>
+
+<X>| - <Y>|
+  <X> - <Y>
+
+<X> - <>
+  <X>
+
+<> - <Y>
+  <>
+
+<X> ^ <Y>|
+  <Y> times multiply <X> by <X>
+
+<I>| times multiply <X> by <Y>
+  <I> times multiply <X> * <Y> by <Y>
+  
+<> times multiply <X> by <Y>
+  <X>
+
+<X> ^ <>
+  |
+  
+divide _ by two
+  <X><X> -> <X>
+  <_> -> ?
+

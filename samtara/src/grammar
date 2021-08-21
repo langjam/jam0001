@@ -1,0 +1,19 @@
+
+char = { [^\n<>] }
+
+pattern = { "<" + [a-zA-Z] + ">"}
+
+pattern = {
+  (variable | char)+
+}
+
+rule = {
+  pattern + "\n" +
+  indent + "match " + pattern + "\n" +
+  indent +
+  (pattern + (\s+) + "->" + string + "\n")+ +
+  dedent + dedent
+}
+
+code = { rule* }
+
