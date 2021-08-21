@@ -58,6 +58,16 @@ def parse_code_block(tokens):
     output.append(line)
   return output
 
+def parse_break_statement(tokens):
+  token = tokens.pop_expected('break')
+  tokens.pop_expected(';')
+  return BreakStatement(token)
+
+def parse_continue_statement(tokens):
+  token = tokens.pop_expected('continue')
+  tokens.pop_expected(';')
+  return ContinueStatement(token)
+
 def parse_if_statement(tokens):
   if_token = tokens.pop_expected('if')
   condition = parse_expression(tokens)
