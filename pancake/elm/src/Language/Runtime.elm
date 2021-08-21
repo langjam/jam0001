@@ -1,15 +1,18 @@
 module Language.Runtime exposing (..)
 
 import Array
-import Language.AST as AST exposing (AST, Code, Instruction(..))
+import Language.AST as AST exposing (AST, Code, Instruction, Universe(..))
 import Language.Ops as Ops
+import Language.Stack exposing (Stack)
+import Maybe.Extra as MaybeX
 
 
 type alias Runtime =
-    { stack : List Int
+    { stack : Stack
     , ast : Code
     , ip : Int -- instruction pointer
     , ok : Bool
+    , universe : Universe
     }
 
 
@@ -19,29 +22,44 @@ init ast =
     , ast = AST.toCode ast
     , ip = 0
     , ok = True
+    , universe = Alpha
     }
 
 
 step : Runtime -> Runtime
 step runtime =
-    case Array.get runtime.ip runtime.ast of
-        Nothing ->
-            { runtime | ok = False }
+    MaybeX.unwrap (panic runtime) (exec runtime) <| Array.get runtime.ip runtime.ast
 
-        Just instruction ->
-            exec runtime instruction
+
+next : Runtime -> Runtime
+next runtime =
+    { runtime | ip = runtime.ip + 1 }
 
 
 exec : Runtime -> Instruction -> Runtime
 exec runtime instruction =
     case instruction of
-        Int int ->
-            { runtime | stack = int :: runtime.stack }
+        ( universe, atom ) ->
+            if runtime.universe == universe then
+                let
+                    maybeStack =
+                        Ops.exec atom runtime.stack
+                in
+                case maybeStack of
+                    Just stack_ ->
+                        next { runtime | stack = stack_ }
 
-        Add ->
-            case Ops.add runtime.stack of
-                Nothing ->
-                    { runtime | ok = False }
+                    Nothing ->
+                        panic runtime
 
-                Just stack ->
-                    { runtime | stack = stack }
+            else
+                runtime
+
+
+
+-- UTIL
+
+
+panic : Runtime -> Runtime
+panic runtime =
+    { runtime | ok = False }
