@@ -12,8 +12,5 @@
     "remark-gfm": "^2.0.0",
     "remark-parse": "^10.0.0",
     "unified": "^10.1.0"
-  },
-  "devDependencies": {
-    "typescript": "^4.3.5"
   }
 }
