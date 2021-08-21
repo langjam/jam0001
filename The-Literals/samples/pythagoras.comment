@@ -1,0 +1,17 @@
+This is a sample .comment program. This line, ironically, is ignored because it is not a comment.
+
+/**
+ * Calculates a hypotenuse.
+ *
+ * @param a
+ * @param b
+ * @returns c squared
+ */
+// Set a squared to a * a.
+// Set b squared to b * b.
+// Set c squared to a squared + b squared.
+
+The main program is below!
+
+// Calculate a hypotenuse with a as 3 and b as 4.
+// Print it.
