@@ -1,19 +1,33 @@
+# Tokenise a file.
+# Owes a debt of gratitude to the scanner in https://craftinginterpreters.com/scanning.html.
+
 from enum import Enum, auto
 
 
 class Token(Enum):
+    and_call_it = auto()
     binop = auto()
     bof = auto()
+    code = auto()
+    comparison = auto()
+    done = auto()
+    ditto = auto()
+    dot = auto()
     eof = auto()
     eol = auto()
     function = auto()
-    hfill = auto()
+    function_name = auto()
     header_end = auto()
+    hfill = auto()
     identifier = auto()
-    code = auto()
+    if_keyword = auto()
+    negative = auto()
     number = auto()
     param = auto()
     returnvar = auto()
+    setvar = auto()
+    then = auto()
+    to = auto()
 
 
 class Tokeniser:
@@ -22,6 +36,7 @@ class Tokeniser:
         self.start = 0
         self.current = 0
         self.token = None
+        self.line = 1
 
     def done(self):
         return self.current >= len(self.text)
@@ -37,18 +52,12 @@ class Tokeniser:
         peeked = self.text[self.current : self.current + n]
         return peeked
 
-    def match(self, expected):
-        if self.done():
-            return False
-        if self.text[self.current] != expected:
-            return False
-        self.current += 1
-        return True
-
     def advance_if(self, *args):
-        for s in args:
+        # Sort args into reversed order of length for greedy matching.
+        sorted_args = sorted(args, key=len, reverse=True)
+        for s in sorted_args:
             peeked = self.peek(len(s))
-            if peeked == s:
+            if peeked.lower() == s.lower():
                 self.current += len(s)
                 return True
         return False
@@ -58,13 +67,22 @@ class Tokeniser:
             self.advance()
         return Token.function
 
+    def function_name(self):
+        # A function name is terminated by a full stop and cannot go onto the next line.
+        while self.peek() not in (".", "\n", ""):
+            self.advance()
+        if not self.done() and self.text[self.current] == ".":
+            return Token.function_name
+
     def ignore(self):
         while self.peek() != "\n":
             self.advance()
 
     def identifier(self):
-        while self.peek().isalnum() or self.peek() == "'":
+        p = self.peek()
+        while p.isalnum() or p == "'":
             self.advance()
+            p = self.peek()
         return Token.identifier
 
     def number(self):
@@ -72,19 +90,10 @@ class Tokeniser:
             self.advance()
         return Token.number
 
-    # TODO:
-    # - function name
-    # - Negative numbers
-    # - and call it
-    # - and we're done
-    # - if
-    # - then
-    # - set
-    # - to
-    # - dot
     def scan_token(self):
         ch = self.advance()
         if ch in "\n":
+            self.line += 1
             return Token.eol
 
         # Contextual scanning for tokens that can appear at the start of a line.
@@ -109,24 +118,69 @@ class Tokeniser:
             # Is it an ignored line?
             if ch.isalpha():
                 self.ignore()
-        else:
+
+        elif self.last == Token.hfill:
             if self.advance_if("@param"):
                 return Token.param
 
             if self.advance_if("@return"):
                 return Token.returnvar
 
-            # Is it an identifier?
+            # Is it a function name?
             if ch.isalpha():
-                return self.identifier()
+                return self.function_name()
+        else:
+            if self.advance_if("and we're done"):
+                return Token.done
 
-            # Is it a number?
+            if self.advance_if("If"):
+                return Token.if_keyword
+
+            if self.advance_if("then"):
+                return Token.then
+
+            if self.advance_if("set"):
+                return Token.setvar
+
+            if self.advance_if("to"):
+                return Token.to
+
+            if self.advance_if("ditto"):
+                return Token.ditto
+
+            if self.advance_if("and call it"):
+                return Token.and_call_it
+
+            if ch == ".":
+                return Token.dot
+
+            # Is it a positive number?
             if ch.isdigit():
                 return self.number()
-            
-            # Is it a binary operator?
-            if ch == '+' or ch == '-' or ch == '/' or ch == '*' or ch == '%':
+
+            # Is it a negative number?
+            if ch == "-" and self.peek().isdigit():
+                return Token.negative
+
+            # Is it a binary operator on numbers?
+            is_operator = ch in "+-/*%"
+            is_spaced = self.peek().isspace()
+            if is_operator and is_spaced:
                 return Token.binop
+
+            # Is it a boolean comparison?
+            if self.advance_if(
+                "is",
+                "is less than",
+                "is greater than",
+                "is less than or equal to",
+                "is greater than or equal to",
+            ):
+                return Token.comparison
+
+            # Is it an identifier? This MUST go at the end because of how vague it is.
+            if ch.isalpha():
+                return self.identifier()
 
         return None
 
