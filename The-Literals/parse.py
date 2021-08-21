@@ -30,7 +30,7 @@ class Parser:
         token, value = self.advance()
         if token != expected_token:
             raise UnexpectedTokenError(expected_token, token)
-        return (token, value)
+        return token, value
 
     def parse(self):
         print(self.parse_program())
@@ -66,11 +66,7 @@ class Parser:
         token, value = self.advance()
         if token != Token.TO:
             raise UnexpectedTokenError(Token.TO, token)
-        token, value = self.advance()
-        if token != Token.NUMBER:
-            raise UnexpectedTokenError(Token.NUMBER, token)
-        
-        return 
+        self.parse_operand()
 
     def parse_identifier(self):
         identifier_words = []
@@ -84,22 +80,21 @@ class Parser:
     def parse_if_stmt(self):
         condition = self.parse_expr()
         self.expect(Token.THEN)
-        stmt = self.parse_stmt()
+        stmt = self.parse_stmt_contents()
         if condition:
             stmt.run()
 
     def parse_expr(self):
-        first_operand_token, first_operand_value = self.expect(Token.NUMBER)
-        if first_operand_token != Token.NUMBER:
-            raise UnexpectedTokenError(Token.NUMBER, first_operand_token)
-        # TODO: make it work for variables.
+        first_operand = self.parse_operand()
         operator_token, operator_value = self.peek_lexeme()
         if operator_token == Token.BINOP or operator_token == Token.COMPARISON:
             return self.parse_operation(
-                first_operand_value, operator_token, operator_value
+                first_operand, operator_token, operator_value
             )
         else:
-            return first_operand_value
+            return first_operand
+
+
 
     def parse_operation(self, first_operand_value, operator_token, operator_value):
         self.advance()  # we already have these values!
@@ -116,19 +111,24 @@ class Parser:
             )
         return result
 
+    def parse_operand(self):
+        token, value = self.peek_lexeme()
+        if token == Token.NUMBER:
+            operand_token, operand_value = self.expect(Token.NUMBER)
+        elif token == Token.IDENTIFIER_WORD:
+            self.parse_identifier()
+        else:
+            raise UnexpectedTokenError(
+                Token.IDENTIFIER_WORD, token
+            )  # TODO: could be either.
 
 if __name__ == "__main__":
-    # input_file = "samples/fib.comment"
-    # with open(input_file, "r") as f:
-    #     text = f.read()
-
-    # tokeniser = Tokeniser(text)
 
     def empty_program():
         yield (Token.BOF, "")
         yield (Token.EOF, "")
 
-    def set_x():
+    def set_var_to_constant():
         yield (Token.BOF, "")
         yield (Token.SETVAR, "Set")
         yield (Token.IDENTIFIER_WORD, "x")
@@ -143,9 +143,75 @@ if __name__ == "__main__":
         yield (Token.NUMBER, "100")
         yield (Token.EOF, "")
 
-    def if_stmt():
-        # TODO: put an if statement here to parse.
-        pass
+    def set_var_to_var():
+        yield (Token.BOF, "")
+        yield (Token.SETVAR, "Set")
+        yield (Token.IDENTIFIER_WORD, "retirement")
+        yield (Token.IDENTIFIER_WORD, "age")
+        yield (Token.TO, "to")
+        yield (Token.IDENTIFIER_WORD, "pension")
+        yield (Token.IDENTIFIER_WORD, "age")
+        yield (Token.DOT, ".")
+        yield (Token.EOF, "")
 
-    parser = Parser(set_x().__next__)
+    def if_stmt_compare_constants():
+        yield (Token.BOF, "")
+        yield (Token.IF_KEYWORD, "If")
+        yield (Token.NUMBER, "6800")
+        yield (Token.COMPARISON, "is")
+        yield (Token.NUMBER, "6800")
+        yield (Token.THEN, "then")
+        yield (Token.SETVAR, "set")
+        yield (Token.IDENTIFIER_WORD, "successor")
+        yield (Token.TO, "to")
+        yield (Token.NUMBER, "68000")
+        yield (Token.DOT, ".")
+        yield (Token.EOF, "")
+
+    def if_stmt_compare_variable_and_constant():
+        yield (Token.BOF, "")
+        yield (Token.IF_KEYWORD, "If")
+        yield (Token.IDENTIFIER_WORD, "processor")
+        yield (Token.IDENTIFIER_WORD, "type")
+        yield (Token.COMPARISON, "is")
+        yield (Token.NUMBER, "6800")
+        yield (Token.THEN, "then")
+        yield (Token.SETVAR, "set")
+        yield (Token.IDENTIFIER_WORD, "processor")
+        yield (Token.IDENTIFIER_WORD, "type")
+        yield (Token.TO, "to")
+        yield (Token.NUMBER, "68000")
+        yield (Token.DOT, ".")
+        yield (Token.EOF, "")
+
+    def if_stmt_compare_variable_and_variable():
+        yield (Token.BOF, "")
+        yield (Token.IF_KEYWORD, "If")
+        yield (Token.IDENTIFIER_WORD, "processor")
+        yield (Token.IDENTIFIER_WORD, "type")
+        yield (Token.COMPARISON, "is")
+        yield (Token.IDENTIFIER_WORD, "eight")
+        yield (Token.IDENTIFIER_WORD, "bit")
+        yield (Token.THEN, "then")
+        yield (Token.SETVAR, "set")
+        yield (Token.IDENTIFIER_WORD, "processor")
+        yield (Token.IDENTIFIER_WORD, "architecture")
+        yield (Token.TO, "to")
+        yield (Token.NUMBER, "6502")
+        yield (Token.DOT, ".")
+        yield (Token.EOF, "")
+
+    parser = Parser(set_var_to_constant().__next__)
+    parser.parse()
+
+    parser = Parser(set_var_to_var().__next__)
+    parser.parse()
+
+    parser = Parser(if_stmt_compare_constants().__next__)
+    parser.parse()
+
+    parser = Parser(if_stmt_compare_variable_and_constant().__next__)
+    parser.parse()
+
+    parser = Parser(if_stmt_compare_variable_and_variable().__next__)
     parser.parse()
