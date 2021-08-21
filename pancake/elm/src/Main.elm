@@ -1,6 +1,8 @@
 port module Main exposing (..)
 
-import Language.Pancake exposing (compile)
+import Exchange exposing (..)
+import Language.AST as AST exposing (Universe(..))
+import Language.Pancake as Pancake
 import Language.Runtime exposing (Runtime)
 import Platform exposing (Program, worker)
 
@@ -28,7 +30,7 @@ type Model
 
 type Msg
     = GotSrc String
-    | GotCommd String
+    | GotStep Bool
 
 
 
@@ -50,7 +52,7 @@ main =
 
 init : Flags -> ( Model, Cmd Msg )
 init _ =
-    ( Idle, event "ready" )
+    ( Idle, Cmd.none )
 
 
 
@@ -61,15 +63,15 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotSrc sourceCode ->
-            case compile sourceCode of
+            case Pancake.compile sourceCode of
                 Nothing ->
-                    ( Idle, event "compilation fail" )
+                    ( Idle, result compilationFail )
 
                 Just runtime ->
-                    ( Compiled runtime, event "compilation ok" )
+                    ( Compiled runtime, result compilationOk )
 
-        GotCommd command ->
-            ( model, Cmd.none )
+        GotStep _ ->
+            ( model, state <| StateInfo <| AST.universeToString Alpha )
 
 
 
@@ -78,17 +80,23 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    src GotSrc
+    Sub.batch
+        [ compile GotSrc
+        , step GotStep
+        ]
 
 
 
 -- PORTS
 
 
-port src : (String -> msg) -> Sub msg
+port compile : (String -> msg) -> Sub msg
 
 
-port event : String -> Cmd msg
+port result : CompilationResult -> Cmd msg
 
 
-port commd : (String -> msg) -> Sub msg
+port step : (Bool -> msg) -> Sub msg
+
+
+port state : StateInfo -> Cmd msg

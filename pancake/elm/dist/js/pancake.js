@@ -2832,26 +2832,43 @@ var $elm$core$Result$isOk = function (result) {
 		return false;
 	}
 };
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$Main$event = _Platform_outgoingPort('event', $elm$json$Json$Encode$string);
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
-	return _Utils_Tuple2(
-		$author$project$Main$Idle,
-		$author$project$Main$event('ready'));
+	return _Utils_Tuple2($author$project$Main$Idle, $elm$core$Platform$Cmd$none);
 };
 var $author$project$Main$GotSrc = function (a) {
 	return {$: 'GotSrc', a: a};
 };
+var $author$project$Main$GotStep = function (a) {
+	return {$: 'GotStep', a: a};
+};
+var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Main$src = _Platform_incomingPort('src', $elm$json$Json$Decode$string);
+var $author$project$Main$compile = _Platform_incomingPort('compile', $elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $author$project$Main$step = _Platform_incomingPort('step', $elm$json$Json$Decode$bool);
 var $author$project$Main$subscriptions = function (_v0) {
-	return $author$project$Main$src($author$project$Main$GotSrc);
+	return $elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				$author$project$Main$compile($author$project$Main$GotSrc),
+				$author$project$Main$step($author$project$Main$GotStep)
+			]));
 };
 var $elm$json$Json$Decode$succeed = _Json_succeed;
+var $author$project$Language$AST$Alpha = {$: 'Alpha'};
 var $author$project$Main$Compiled = function (a) {
 	return {$: 'Compiled', a: a};
 };
-var $author$project$Language$AST$Alpha = {$: 'Alpha'};
+var $author$project$Exchange$StateInfo = function (mode) {
+	return {mode: mode};
+};
+var $author$project$Exchange$CompilationResult = function (successful) {
+	return {successful: successful};
+};
+var $author$project$Exchange$compilationFail = $author$project$Exchange$CompilationResult(false);
+var $author$project$Exchange$compilationOk = $author$project$Exchange$CompilationResult(true);
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -3013,8 +3030,50 @@ var $author$project$Language$Pancake$compile = function (src) {
 		$author$project$Language$Runtime$init,
 		$author$project$Language$Parser$parse(src));
 };
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $author$project$Main$result = _Platform_outgoingPort(
+	'result',
+	function ($) {
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'successful',
+					$elm$json$Json$Encode$bool($.successful))
+				]));
+	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Main$state = _Platform_outgoingPort(
+	'state',
+	function ($) {
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'mode',
+					$elm$json$Json$Encode$string($.mode))
+				]));
+	});
+var $author$project$Language$AST$universeToString = function (universe) {
+	if (universe.$ === 'Alpha') {
+		return 'normal';
+	} else {
+		return 'comment';
+	}
+};
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		if (msg.$ === 'GotSrc') {
@@ -3023,16 +3082,19 @@ var $author$project$Main$update = F2(
 			if (_v1.$ === 'Nothing') {
 				return _Utils_Tuple2(
 					$author$project$Main$Idle,
-					$author$project$Main$event('compilation fail'));
+					$author$project$Main$result($author$project$Exchange$compilationFail));
 			} else {
 				var runtime = _v1.a;
 				return _Utils_Tuple2(
 					$author$project$Main$Compiled(runtime),
-					$author$project$Main$event('compilation ok'));
+					$author$project$Main$result($author$project$Exchange$compilationOk));
 			}
 		} else {
-			var command = msg.a;
-			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			return _Utils_Tuple2(
+				model,
+				$author$project$Main$state(
+					$author$project$Exchange$StateInfo(
+						$author$project$Language$AST$universeToString($author$project$Language$AST$Alpha))));
 		}
 	});
 var $elm$core$Platform$worker = _Platform_worker;

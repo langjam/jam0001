@@ -21,6 +21,13 @@ type Universe
     | Omega
 
 
+type alias Func =
+    { args : Array Atom
+    , argi : Int
+    , func : Array Atom -> Maybe Atom
+    }
+
+
 type Atom
     = Int Int
     | Add
@@ -43,9 +50,19 @@ sum =
 
 
 
--- Maybe Atom
+-- AST UTILS
 
 
 toCode : AST -> Code
 toCode =
     Array.fromList
+
+
+universeToString : Universe -> String
+universeToString universe =
+    case universe of
+        Alpha ->
+            "normal"
+
+        Omega ->
+            "comment"

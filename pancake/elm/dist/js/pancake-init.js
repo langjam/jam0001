@@ -1,19 +1,29 @@
 /* Util. */
 function compile(data) {
-  src.send(data);
+  compiler.send(data)
 }
 
-function onPulse(pulse) {
-  console.log("got pulse:", pulse);
+function step() {
+  steper.send(true)
+}
+
+function onResult(compilationResult) {
+  console.log("compilation result:", compilationResult)
+}
+
+function onState(status) {
+  console.log("status:", status)
 }
 
 /* Elm stuff. */
-const app = Elm.Main.init();
+const app = Elm.Main.init()
 
 /* Ports. */
-const src = app.ports.src;
-const commd = app.ports.commd;
-const event = app.ports.event;
+const compiler = app.ports.compile // ->
+const result = app.ports.result // <-
+const steper = app.ports.step // ->
+const state = app.ports.state // <-
 
 /* Subscriptions. */
-event.subscribe(onPulse);
+result.subscribe(onResult)
+state.subscribe(onState)
