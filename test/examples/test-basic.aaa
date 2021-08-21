@@ -7,3 +7,13 @@ let stuff = add(<number>);
 
 print(<number>);
 print(<arithmetic>(<number>));
+
+let fn = { |x y|: z
+    // arg0
+    x;
+    // arg1
+    y;
+    let z = add(<arg>);
+};
+
+print(fn(1 2));

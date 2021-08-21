@@ -92,6 +92,11 @@ void FunctionNode::dump(int indent)
     // FIXME
 }
 
+Value FunctionNode::execute(Context&)
+{
+    return { NonnullRefPtr<FunctionNode>(*this) };
+}
+
 void Call::dump(int indent)
 {
     ASTNode::dump(indent);
@@ -118,7 +123,38 @@ Value Call::execute(Context& context)
                 crs->values.append(execute(entry));
             return Value { move(crs) };
         }
-        return { Empty{} };
+        if (auto ptr = callee.value.template get_pointer<NonnullRefPtr<FunctionNode>>()) {
+            FunctionNode* node_ptr = ptr->ptr();
+            context.scope.template empend();
+            context.comment_scope.template empend();
+            auto& scope = context.scope.last();
+            size_t i = 0;
+            for (auto& param : node_ptr->parameters()) {
+                if (arguments.size() > i)
+                    scope.set(param->name(), arguments[i]);
+                else
+                    scope.set(param->name(), { Empty {} });
+                ++i;
+            }
+
+            if (node_ptr->return_())
+                scope.set(node_ptr->return_()->name(), { Empty {} });
+
+            auto old_comments = move(context.unassigned_comments);
+            for (auto& node : node_ptr->body())
+                node->run(context);
+
+            Value result { Empty{} };
+            if (node_ptr->return_())
+                result = scope.get(node_ptr->return_()->name()).value();
+
+            context.scope.take_last();
+            context.comment_scope.take_last();
+            context.unassigned_comments = move(old_comments);
+
+            return result;
+        }
+        return { Empty {} };
     };
 
     return execute(fn);

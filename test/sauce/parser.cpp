@@ -1,7 +1,7 @@
 #include "parser.h"
 #include <AK/TypeCasts.h>
 
-Result<Vector<NonnullRefPtr<ASTNode>>, ParseError> Parser::parse_toplevel()
+Result<Vector<NonnullRefPtr<ASTNode>>, ParseError> Parser::parse_toplevel(bool for_func)
 {
     Vector<NonnullRefPtr<ASTNode>> nodes;
     for (;;) {
@@ -11,6 +11,9 @@ Result<Vector<NonnullRefPtr<ASTNode>>, ParseError> Parser::parse_toplevel()
 
         auto token = maybe_token.release_value();
         if (token.type == Token::Type::Eof)
+            break;
+
+        if (for_func && token.type == Token::Type::CloseBrace)
             break;
 
         m_unconsumed_tokens.enqueue(token);
@@ -180,7 +183,42 @@ Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_mention()
 
 Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_function()
 {
-    return make_error_here("Unimplemented: function");
+    auto brace = consume().release_value().type;
+    VERIFY(brace == Token::Type::OpenBrace);
+    Vector<NonnullRefPtr<Variable>> parameters;
+    RefPtr<Variable> return_;
+
+    if (peek().type == Token::Type::Pipe) {
+        (void)consume();
+        while (peek().type != Token::Type::Pipe) {
+            if (peek().type == Token::Type::Eof)
+                return make_error_here("Expected pipe '|' but found eof");
+
+            auto variable = parse_variable();
+            if (variable.is_error())
+                return variable.release_error();
+
+            parameters.append(variable.release_value());
+        }
+        (void)consume();
+    }
+
+    if (peek().type == Token::Type::Colon) {
+        (void)consume();
+        auto ret_ = parse_variable();
+        if (ret_.is_error())
+            return ret_.release_error();
+
+        return_ = ret_.release_value();
+    }
+
+    auto body = parse_toplevel(true);
+    if (body.is_error())
+        return body.release_error();
+
+    (void)consume();
+
+    return static_ptr_cast<ASTNode>(create<FunctionNode>(move(parameters), move(return_), body.release_value()));
 }
 
 Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_call(NonnullRefPtr<ASTNode> callee)

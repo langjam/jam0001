@@ -16,7 +16,7 @@ public:
     {
     }
 
-    Result<Vector<NonnullRefPtr<ASTNode>>, ParseError> parse_toplevel();
+    Result<Vector<NonnullRefPtr<ASTNode>>, ParseError> parse_toplevel(bool for_func = false);
 
 private:
     Token peek()
@@ -89,7 +89,7 @@ direct_mention :: OpenMention Identifier+ CloseMention
 
 indirect_mention :: OpenIndirectMention expression CloseMention
 
-parameters :: Pipe (variable (, variable)*)? Pipe
+parameters :: Pipe variable* Pipe
 
 return :: Colon variable
 

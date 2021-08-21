@@ -41,7 +41,7 @@ Result<Token, LexError> Lexer::next()
             else if (ch == '{')
                 return emit_token(Token::Type::OpenBrace, "{"sv);
             else if (ch == '}')
-                return emit_token(Token::Type::OpenBrace, "}"sv);
+                return emit_token(Token::Type::CloseBrace, "}"sv);
             else if (ch == ':')
                 return emit_token(Token::Type::Colon, ":"sv);
             else if (ch == ';')

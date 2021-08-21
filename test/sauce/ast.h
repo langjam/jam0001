@@ -90,21 +90,27 @@ private:
     RefPtr<ASTNode> m_node;
 };
 
+class Variable;
+
 class FunctionNode : public ASTNode {
 public:
-    explicit FunctionNode(Vector<NonnullRefPtr<ASTNode>> parameters, RefPtr<ASTNode> return_, Vector<NonnullRefPtr<ASTNode>> expressions)
+    explicit FunctionNode(Vector<NonnullRefPtr<Variable>> parameters, RefPtr<Variable> return_, Vector<NonnullRefPtr<ASTNode>> expressions)
         : m_parameters(move(parameters))
         , m_return(move(return_))
         , m_expressions(move(expressions))
     {
     }
 
+    auto& parameters() const { return m_parameters; }
+    auto& return_() const { return m_return; }
+    auto& body() { return m_expressions; }
+
 private:
-    virtual Value execute(Context&) override { return { Empty {} }; }
+    virtual Value execute(Context&) override;
     virtual void dump(int indent) override;
 
-    Vector<NonnullRefPtr<ASTNode>> m_parameters;
-    RefPtr<ASTNode> m_return;
+    Vector<NonnullRefPtr<Variable>> m_parameters;
+    RefPtr<Variable> m_return;
     Vector<NonnullRefPtr<ASTNode>> m_expressions;
 };
 

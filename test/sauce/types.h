@@ -11,12 +11,9 @@ struct Type {
     // ...
 };
 
-struct Fun {
-    // ...
-};
-
 struct CommentResolutionSet;
 struct Context;
+struct FunctionNode;
 
 struct Value;
 struct NativeFunctionType {
@@ -25,7 +22,7 @@ struct NativeFunctionType {
 };
 
 struct Value {
-    Variant<Empty, int, String, Type*, Fun*, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType> value;
+    Variant<Empty, int, String, Type*, NonnullRefPtr<FunctionNode>, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType> value;
 };
 
 struct CommentResolutionSet : public AK::RefCounted<CommentResolutionSet> {

@@ -23,7 +23,7 @@ Value lang$print(Context&, void* ptr, size_t count)
     Function<void(Value const&)> print_value = [&](Value const& value) {
         value.value.visit(
             [](Empty) { out("<empty>"); },
-            [](Fun*) { out("<fn ref>"); },    // FIXME
+            [](NonnullRefPtr<FunctionNode> const&) { out("<fn ref>"); },    // FIXME
             [](Type*) { out("<type ref>"); }, // FIXME
             [&print_value](NonnullRefPtr<CommentResolutionSet> const& rs) {
                 out("<Comment resolution set: {{");
@@ -73,7 +73,7 @@ Value lang$sub(Context&, void* ptr, size_t count)
     for (auto& arg : args) {
         arg.value.visit(
             [&](Empty) { append(Empty {}); },
-            [&](Fun*) { append(String("<function>"sv)); },
+            [&](NonnullRefPtr<FunctionNode> const&) { append(String("<function>"sv)); },
             [&](Type*) { append(String("<type>"sv)); },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) {
                 for (auto& entry : crs->values)
@@ -82,7 +82,7 @@ Value lang$sub(Context&, void* ptr, size_t count)
             [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
             [&](auto const& value) { append(value); });
     }
-    return { move(accumulator).downcast<Empty, int, String, Type*, Fun*, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
+    return { move(accumulator).downcast<Empty, int, String, Type*, NonnullRefPtr<FunctionNode>, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
 }
 
 Value lang$add(Context&, void* ptr, size_t count)
@@ -121,7 +121,7 @@ Value lang$add(Context&, void* ptr, size_t count)
     for (auto& arg : args) {
         arg.value.visit(
             [&](Empty) { append(String("<empty>"sv)); },
-            [&](Fun*) { append(String("<function>"sv)); },
+            [&](NonnullRefPtr<FunctionNode> const&) { append(String("<function>"sv)); },
             [&](Type*) { append(String("<type>"sv)); },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) {
                 for (auto& entry : crs->values)
@@ -130,7 +130,7 @@ Value lang$add(Context&, void* ptr, size_t count)
             [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
             [&](auto const& value) { append(value); });
     }
-    return { move(accumulator).downcast<Empty, int, String, Type*, Fun*, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
+    return { move(accumulator).downcast<Empty, int, String, Type*, NonnullRefPtr<FunctionNode>, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
 }
 
 void initialize_base(Context& context)
