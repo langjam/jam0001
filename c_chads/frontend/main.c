@@ -55,6 +55,9 @@ void print_ast(struct Parser_Node *node, usize depth) {
         case PN_ASSIGN:
             printf("Assignment\n");
             break;
+        case PN_RETURN:
+            printf("Return\n");
+            break;
         case PN_PROC:
             printf("Proc(return=%.*s)\n", (int)node->data.proc.return_type.size, node->data.proc.return_type.view);
             break;

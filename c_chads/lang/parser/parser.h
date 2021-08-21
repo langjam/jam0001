@@ -18,6 +18,7 @@ enum Parser_Node_Addressing {
 
 enum Parser_Node_Kind {
     PN_INVAL,    // ENDPOINT, USED INTERNALLY BY PARSER DONT TOUCH
+    PN_RETURN,   // UNARY
     PN_TYPELIST, // LISTING
     PN_UNARY,    // UNARY
     PN_OPERATOR, // BINARY
