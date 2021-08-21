@@ -118,6 +118,25 @@ class FuncHeader:
         return f"FUNC (NAME:{self.func_name}, PARAMS:{self.params}, RETURNS:{self.return_var}"
 
 
+class Stmts:
+    def __init__(self, stmt_list):
+        self.stmt_list = stmt_list
+        self.current_index = 0
+        self.length = len(stmt_list)
+
+    def __repr__(self):
+        return str(self.stmt_list)
+
+    def execute(self):
+        while self.current_index < self.length:
+            next_stmt = self.stmt_list[self.current_index]
+            if (
+                True
+            ):  # TODO: build in a check here to ensure not a JUMP stmt or return from function
+                next_stmt.execute()
+            self.current_index += 1
+
+
 class Program:
     def __init__(self, funcs: "list[FuncHeader]", stmts):
         self.funcs = funcs

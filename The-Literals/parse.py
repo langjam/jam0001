@@ -1,4 +1,4 @@
-from abstract_syntax_trees import Binop, Comparison, FuncHeader, IfStmt, Number, Parameter, Program, SetStmt, Variable
+from abstract_syntax_trees import Binop, Comparison, FuncHeader, IfStmt, Number, Parameter, Program, SetStmt, Stmts, Variable
 from run_code import apply_binop, apply_comparison
 from tokenise import Token, Tokeniser
 
@@ -109,7 +109,7 @@ class Parser:
                 done = True
             else:
                 stmts.append(self.parse_stmt())
-        return stmts
+        return Stmts(stmts)
 
     def parse_stmt(self):
         contents = self.parse_stmt_contents()
