@@ -2,21 +2,25 @@
 #include <stdlib.h>
 #include "glen3_base.h"
 #include "glen3_storage.h"
+#include <math.h>
 
 ArenaAllocator arena;
 #define frame_arena arena
 
+enum { MAX_ARITY = 16 };
+
 enum TokenType {
-    Token_EOF = 1, Token_Int, Token_Ident, Token_Comment, Token_String, Token_Lparen, Token_Rparen,
+    Token_EOF = 1, Token_Int, Token_Float, Token_Ident, Token_Comment, Token_String, Token_Lparen, Token_Rparen,
     Token_Lbracket, Token_Rbracket, Token_Quote, Token_Line, Token_Lstrlist, Token_Rstrlist, Token_Amp,
     Token_Comma,
-    Token_KwIf, Token_KwElse, Token_KwFor, Token_KwMacro,
+    Token_KwIf, Token_KwElse, Token_KwFor, Token_KwMacro, Token_KwReturn,
 };
 
 const char *format_token_type(TokenType type) {
     switch (type) {
         case Token_EOF: return "EOF";
         case Token_Int: return "<int>";
+        case Token_Float: return "<float>";
         case Token_Ident: return "<ident>";
         case Token_Comment: return "<comment>";
         case Token_String: return "<string>";
@@ -34,6 +38,7 @@ const char *format_token_type(TokenType type) {
         case Token_KwElse: return "else";
         case Token_KwFor: return "for";
         case Token_KwMacro: return "macro";
+        case Token_KwReturn: return "return";
     }
     assert(!"Unreachable");
     return "<invalid>";
@@ -51,6 +56,7 @@ struct Token {
     TokenType type;
     union {
         s64 i;
+        f64 f;
         Slice<u8> s;
     };
 };
@@ -58,6 +64,8 @@ struct Token {
 const char *format_token(Token tok) {
     if (tok.type == Token_Int) {
         return tprint("%ld", tok.i);
+    } else if (tok.type == Token_Float) {
+        return tprint("%g", tok.f);
     } else if (tok.type == Token_Ident) {
         return tprint("%.*s", STRFMT(tok.s));
     } else if (tok.type == Token_String) {
@@ -75,7 +83,7 @@ bool is_ident_char(u8 ch) {
         (ch >= 'A' && ch <= 'Z') ||
         (ch >= 'a' && ch <= 'z') ||
         ch == '_' || ch == '+' || ch == '-' || ch == '*' || ch == '/' ||
-        ch == '<' || ch == '>' || ch == '=';
+        ch == '<' || ch == '>' || ch == '=' || ch == '.';
 }
 
 void source_advance(Slice<u8> *src, SourceLoc *loc, s32 n = 1) {
@@ -102,8 +110,8 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
     }
     if (!src->count) return {.loc = *loc, .type = Token_EOF, {}};
 
-    if (src->count >= 2 && (*src)[0] == '<' && (*src)[0] == '<') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Lstrlist, {}}; }
-    if (src->count >= 2 && (*src)[0] == '>' && (*src)[0] == '>') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Rstrlist, {}}; }
+    if (src->count >= 2 && (*src)[0] == '<' && (*src)[1] == '<') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Lstrlist, {}}; }
+    if (src->count >= 2 && (*src)[0] == '>' && (*src)[1] == '>') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Rstrlist, {}}; }
 
     if (((*src)[0] >= '0' && (*src)[0] <= '9') || ((*src)[0] == '-' && src->count > 1 && (*src)[1] >= '0' && (*src)[1] <= '9')) {
         s64 sign = 1;
@@ -118,7 +126,22 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
             tok.i = 10 * tok.i + ((*src)[0] - '0');
             source_advance(src, loc, 1);
         }
-        tok.i *= sign;
+        if (!src->count || (*src)[0] != '.') {
+            tok.i *= sign;
+            return tok;
+        }
+        source_advance(src, loc, 1);
+
+        tok.type = Token_Float;
+        s64 dec = 0;
+        while (src->count && ((*src)[0] >= '0' && (*src)[0] <= '9')) {
+            dec = 10 * dec + ((*src)[0] - '0');
+            source_advance(src, loc, 1);
+        }
+        f64 fdec = dec;
+        while (fdec >= 1) fdec *= 0.1;
+
+        tok.f = sign * (tok.i + fdec);
         return tok;
     } else if (is_ident_char((*src)[0])) {
         Token tok = {};
@@ -133,6 +156,7 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
         if (tok.s == lit_slice("else")) tok.type = Token_KwElse;
         if (tok.s == lit_slice("for")) tok.type = Token_KwFor;
         if (tok.s == lit_slice("macro")) tok.type = Token_KwMacro;
+        if (tok.s == lit_slice("return")) tok.type = Token_KwReturn;
         return tok;
     } else if ((*src)[0] == '"') {
         Token tok = {};
@@ -158,8 +182,8 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
         s32 balance = 1;
         while (src->count) {
             u8 ch = (*src)[0];
-            if (ch != '{') balance += 1;
-            if (ch != '}') balance -= 1;
+            if (ch == '{') balance += 1;
+            if (ch == '}') balance -= 1;
             source_advance(src, loc, 1);
             if (balance == 0) break;
             array_push(&s, ch);
@@ -207,7 +231,8 @@ Slice<Token> tokenize(const char *srcname, Slice<u8> src) {
 }
 
 enum ValueType {
-    Value_Bool = 1, Value_Int, Value_Ident, Value_String, Value_List, Value_Comment, Value_Builtin, Value_Block, Value_Macro,
+    Value_Bool = 1, Value_Int, Value_Float, Value_Ident, Value_String, Value_List, Value_Comment, Value_Builtin, Value_Block, Value_Macro,
+    Value_Return,
 };
 
 struct Value;
@@ -234,12 +259,14 @@ struct Value {
     union {
         bool b;
         s64 i;
+        f64 f;
         Slice<u8> s;
         ValComment c;
         ValBuiltin bf;
         Slice<Value> list;
         Slice<Token> body;
         ValMacro macro;
+        Value *ret;
     };
 };
 
@@ -249,6 +276,7 @@ bool operator==(const Value &a, const Value &b) {
     switch (a.type) {
         case Value_Bool: return a.b == b.b;
         case Value_Int: return a.i == b.i;
+        case Value_Float: return a.f == b.f;
         case Value_Ident: return a.s == b.s;
         case Value_String: return a.s == b.s;
         case Value_Builtin: return a.bf.fn == b.bf.fn;
@@ -267,6 +295,7 @@ bool operator==(const Value &a, const Value &b) {
         } break;
         case Value_Block: return false;
         case Value_Macro: return false;
+        case Value_Return: assert(!"Unreachable"); return false;
     }
 
     assert(!"Unreachable");
@@ -283,31 +312,65 @@ struct Symbol {
     Value value;
 };
 
+struct EnvPage {
+    Symbol syms[32];
+    s32 count;
+    EnvPage *next;
+};
+
 struct Env {
     Env *super;
-    Array<Symbol> symtab;
+    EnvPage *first_page;
     Slice<Value> params;
     Value stashed_comment;
 };
 
-Symbol *bind(Env *env, Slice<u8> name) {
-    for (Symbol &sym : env->symtab)
-        if (sym.name == name)
-            return &sym;
+Env new_environment(Env *super) {
+    return {.super = super, .first_page = NULL, .params = {}, .stashed_comment = {}};
+}
 
-    Symbol *sym = array_push(&env->symtab);
+void free_environment(Env *env) {
+    EnvPage *cur = env->first_page;
+    while (cur) {
+        EnvPage *next = cur->next;
+        free(cur);
+        cur = next;
+    }
+}
+
+Symbol *bind(Env *env, Slice<u8> name) {
+    for (EnvPage *cur = env->first_page; cur; cur = cur->next)
+        for (s32 i = 0; i < cur->count; i++)
+            if (cur->syms[i].name == name)
+                return cur->syms + i;
+
+    EnvPage **page = &env->first_page;
+    while (*page) {
+        if ((*page)->count < ARRAY_COUNT(EnvPage::syms)) break;
+        page = &(*page)->next;
+    }
+    if (!*page) *page = (EnvPage *)calloc(1, sizeof **page);
+    assert((*page)->count < ARRAY_COUNT(EnvPage::syms));
+    Symbol *sym = (*page)->syms + (*page)->count++;
     sym->name = copy_slice_to_arena(&arena, name);
     sym->assoc.arena = &arena;
     return sym;
 }
 
-Symbol *lookup(Env *env, Slice<u8> name, SourceLoc loc) {
+Symbol *try_lookup(Env *env, Slice<u8> name) {
     while (env) {
-        for (Symbol &sym : env->symtab)
-            if (sym.name == name)
-                return &sym;
+        for (EnvPage *cur = env->first_page; cur; cur = cur->next)
+            for (s32 i = 0; i < cur->count; i++)
+                if (cur->syms[i].name == name)
+                    return cur->syms + i;
         env = env->super;
     }
+    return NULL;
+}
+
+Symbol *lookup(Env *env, Slice<u8>name, SourceLoc loc) {
+    Symbol *sym = try_lookup(env, name);
+    if (sym) return sym;
 
     fprintf(stderr, "%s:%d:%d: Cannot reference unknown name '%.*s'.\n", LOCFMT(loc), STRFMT(name));
     exit(1);
@@ -340,6 +403,7 @@ const char *format_value_type(ValueType type) {
     switch (type) {
         case Value_Bool: return "bool";
         case Value_Int: return "int";
+        case Value_Float: return "float";
         case Value_Ident: return "ident";
         case Value_String: return "string";
         case Value_List: return "list";
@@ -347,6 +411,7 @@ const char *format_value_type(ValueType type) {
         case Value_Builtin: return "builtin";
         case Value_Block: return "block";
         case Value_Macro: return "macro";
+        case Value_Return: assert(!"Unreachable"); return "<invalid>";
     }
     assert(!"Unreachable");
     return "<invalid>";
@@ -356,6 +421,7 @@ const char *format_value(Value val, bool inspect) {
     switch (val.type) {
         case Value_Bool: return val.b ? "yes" : "no";
         case Value_Int: return tprint("%ld", val.i);
+        case Value_Float: return tprint("%g", val.f);
         case Value_Ident: return tprint("%s%.*s", inspect ? "'" : "", STRFMT(val.s));
         case Value_String: return inspect ? tprint("\"%.*s\"", /* TODO Escape */ STRFMT(val.s)) : tprint("%.*s", STRFMT(val.s));
         case Value_Comment: return tprint("{ %s }", format_value(*val.c.value, false));
@@ -383,6 +449,7 @@ const char *format_value(Value val, bool inspect) {
             return (char *)bucket_array_linearize(buf, &arena).data;
         } break;
         case Value_Macro: return tprint("<macro/%ld +%dl>", val.macro.param_count, val.macro.body.count);
+        case Value_Return: assert(!"Unreachable"); break;
     }
     assert(!"Unreachable");
     return "<invalid>";
@@ -436,7 +503,8 @@ Value b_bind(Slice<Value> args, Env *env, SourceLoc loc) {
 
 Value b_store(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("store", 0, Value_Ident);
-    Symbol *sym = bind(env, args[0].s);
+    Symbol *sym = try_lookup(env, args[0].s);
+    if (!sym) sym = bind(env, args[0].s);
     sym->value = args[1];
     return args[1];
 }
@@ -461,6 +529,10 @@ Value b_add(Slice<Value> args, Env *env, SourceLoc loc) {
 
     if (args[0].type == Value_Int && args[1].type == Value_Int) {
         return {.type = Value_Int, .i = args[0].i + args[1].i};
+    } else if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Float, .f = fa + fb};
     } else if (args[0].type == Value_Block && args[1].type == Value_Block) {
         Array<Token> body = array_alloc<Token>(&arena, args[0].body.count + args[1].body.count);
         for (Token &tok : args[0].body) array_push(&body, tok);
@@ -472,7 +544,7 @@ Value b_add(Slice<Value> args, Env *env, SourceLoc loc) {
         for (Value &val : args[1].list) array_push(&list, val);
         return {.type = Value_List, .list = array_slice(&list)};
     } else {
-        fprintf(stderr, "%s:%d:%d: +: Incompatible argument types %s and %s. Required are int,int or block,block.\n", LOCFMT(loc),
+        fprintf(stderr, "%s:%d:%d: +: Incompatible argument types %s and %s.\n", LOCFMT(loc),
             format_value_type(args[0].type), format_value_type(args[1].type));
         exit(1);
     }
@@ -480,38 +552,76 @@ Value b_add(Slice<Value> args, Env *env, SourceLoc loc) {
 
 Value b_sub(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env;
-    CHECK_ARG("-", 0, Value_Int);
-    CHECK_ARG("-", 1, Value_Int);
-
-    return {.type = Value_Int, .i = args[0].i - args[1].i};
+    if (args[0].type == Value_Int && args[1].type == Value_Int) {
+        return {.type = Value_Int, .i = args[0].i - args[1].i};
+    } else if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Float, .f = fa - fb};
+    } else {
+        fprintf(stderr, "%s:%d:%d: -: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+            format_value_type(args[0].type), format_value_type(args[1].type));
+        exit(1);
+    }
 }
 
 Value b_mul(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env;
-    CHECK_ARG("*", 0, Value_Int);
-    CHECK_ARG("*", 1, Value_Int);
-
-    return {.type = Value_Int, .i = args[0].i * args[1].i};
+    if (args[0].type == Value_Int && args[1].type == Value_Int) {
+        return {.type = Value_Int, .i = args[0].i * args[1].i};
+    } else if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Float, .f = fa * fb};
+    } else {
+        fprintf(stderr, "%s:%d:%d: *: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+            format_value_type(args[0].type), format_value_type(args[1].type));
+        exit(1);
+    }
 }
 
 Value b_div(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env;
-    CHECK_ARG("/", 0, Value_Int);
-    CHECK_ARG("/", 1, Value_Int);
+    if (args[0].type == Value_Int && args[1].type == Value_Int) {
+        return {.type = Value_Int, .i = args[0].i / args[1].i};
+    } else if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Float, .f = fa / fb};
+    } else {
+        fprintf(stderr, "%s:%d:%d: /: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+            format_value_type(args[0].type), format_value_type(args[1].type));
+        exit(1);
+    }
+}
 
-    return {.type = Value_Int, .i = args[0].i / args[1].i};
+Value b_fdiv(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+
+    if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Float, .f = fa / fb};
+    } else {
+        fprintf(stderr, "%s:%d:%d: /.: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+            format_value_type(args[0].type), format_value_type(args[1].type));
+        exit(1);
+    }
 }
 
 Value b_mod(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env;
-    CHECK_ARG("mod", 0, Value_Int);
-    CHECK_ARG("mod", 1, Value_Int);
-
-    if (!args[1].i) {
-        fprintf(stderr, "%s:%d:%d: mod: Encountered zero divisor.\n", LOCFMT(loc));
+    if (args[0].type == Value_Int && args[1].type == Value_Int) {
+        return {.type = Value_Int, .i = args[0].i % args[1].i};
+    } else if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Float, .f = fmod(fa, fb)};
+    } else {
+        fprintf(stderr, "%s:%d:%d: mod: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+            format_value_type(args[0].type), format_value_type(args[1].type));
         exit(1);
     }
-    return {.type = Value_Int, .i = args[0].i % args[1].i};
 }
 
 Value b_eq(Slice<Value> args, Env *env, SourceLoc loc) {
@@ -527,35 +637,63 @@ Value b_ne(Slice<Value> args, Env *env, SourceLoc loc) {
 }
 
 Value b_lt(Slice<Value> args, Env *env, SourceLoc loc) {
-    (void)env; (void)loc;
-    CHECK_ARG("<", 0, Value_Int);
-    CHECK_ARG("<", 1, Value_Int);
-
-    return {.type = Value_Bool, .b = args[0].i < args[1].i};
+    (void)env;
+    if (args[0].type == Value_Int && args[1].type == Value_Int) {
+        return {.type = Value_Bool, .b = args[0].i < args[1].i};
+    } else if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Bool, .b = fa < fb};
+    } else {
+        fprintf(stderr, "%s:%d:%d: <: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+            format_value_type(args[0].type), format_value_type(args[1].type));
+        exit(1);
+    }
 }
 
 Value b_le(Slice<Value> args, Env *env, SourceLoc loc) {
-    (void)env; (void)loc;
-    CHECK_ARG("<=", 0, Value_Int);
-    CHECK_ARG("<=", 1, Value_Int);
-
-    return {.type = Value_Bool, .b = args[0].i <= args[1].i};
+    (void)env;
+    if (args[0].type == Value_Int && args[1].type == Value_Int) {
+        return {.type = Value_Bool, .b = args[0].i <= args[1].i};
+    } else if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Bool, .b = fa <= fb};
+    } else {
+        fprintf(stderr, "%s:%d:%d: <=: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+            format_value_type(args[0].type), format_value_type(args[1].type));
+        exit(1);
+    }
 }
 
 Value b_ge(Slice<Value> args, Env *env, SourceLoc loc) {
-    (void)env; (void)loc;
-    CHECK_ARG(">=", 0, Value_Int);
-    CHECK_ARG(">=", 1, Value_Int);
-
-    return {.type = Value_Bool, .b = args[0].i >= args[1].i};
+    (void)env;
+    if (args[0].type == Value_Int && args[1].type == Value_Int) {
+        return {.type = Value_Bool, .b = args[0].i >= args[1].i};
+    } else if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Bool, .b = fa >= fb};
+    } else {
+        fprintf(stderr, "%s:%d:%d: >=: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+            format_value_type(args[0].type), format_value_type(args[1].type));
+        exit(1);
+    }
 }
 
 Value b_gt(Slice<Value> args, Env *env, SourceLoc loc) {
-    (void)env; (void)loc;
-    CHECK_ARG(">", 0, Value_Int);
-    CHECK_ARG(">", 1, Value_Int);
-
-    return {.type = Value_Bool, .b = args[0].i > args[1].i};
+    (void)env;
+    if (args[0].type == Value_Int && args[1].type == Value_Int) {
+        return {.type = Value_Bool, .b = args[0].i > args[1].i};
+    } else if ((args[0].type == Value_Int || args[0].type == Value_Float) && (args[1].type == Value_Int || args[1].type == Value_Float)) {
+        f64 fa = args[0].type == Value_Int ? args[0].i : args[0].f;
+        f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
+        return {.type = Value_Bool, .b = fa > fb};
+    } else {
+        fprintf(stderr, "%s:%d:%d: >: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+            format_value_type(args[0].type), format_value_type(args[1].type));
+        exit(1);
+    }
 }
 
 Value b_tostring(Slice<Value> args, Env *env, SourceLoc loc) {
@@ -649,17 +787,20 @@ Value exec_block(Slice<Token> tokens, Env *env);
 
 Value b_eval(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("eval", 0, Value_Block);
-    return exec_block(args[0].body, env);
+    Value result = exec_block(args[0].body, env);
+    if (result.type == Value_Return) result = *result.ret;
+    return result;
 }
 
 Value b_apply(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("apply", 0, Value_Block);
     CHECK_ARG("apply", 1, Value_List);
-    Env newenv = {};
-    newenv.super = env;
-    newenv.symtab.arena = &arena;
+    Env newenv = new_environment(env);
     newenv.params = args[1].list;
-    return exec_block(args[0].body, &newenv);
+    Value result = exec_block(args[0].body, &newenv);
+    if (result.type == Value_Return) result = *result.ret;
+    free_environment(&newenv);
+    return result;
 }
 
 Value b_getparam(Slice<Value> args, Env *env, SourceLoc loc) {
@@ -669,6 +810,41 @@ Value b_getparam(Slice<Value> args, Env *env, SourceLoc loc) {
         exit(1);
     }
     return env->params[args[0].i];
+}
+
+Value b_floor(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("floor", 0, Value_Float);
+
+    return {.type = Value_Float, .f = floor(args[0].f)};
+}
+
+Value b_sqrt(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("sqrt", 0, Value_Float);
+
+    return {.type = Value_Float, .f = sqrt(args[0].f)};
+}
+
+Value b_sin(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("sin", 0, Value_Float);
+
+    return {.type = Value_Float, .f = sin(args[0].f)};
+}
+
+Value b_cos(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("cos", 0, Value_Float);
+
+    return {.type = Value_Float, .f = cos(args[0].f)};
+}
+
+Value b_float2int(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("float->int", 0, Value_Float);
+
+    return {.type = Value_Int, .i = (s64)args[0].f};
 }
 
 Slice<Token> get_macro_arg(Slice<Token> *tokens) {
@@ -766,6 +942,9 @@ Value eval(Slice<Token> *tokens, Env *env) {
     if (tok.type == Token_Int) {
         slice_advance(tokens, 1);
         return {.type = Value_Int, .i = tok.i};
+    } else if (tok.type == Token_Float) {
+        slice_advance(tokens, 1);
+        return {.type = Value_Float, .f = tok.f};
     } else if (tok.type == Token_String) {
         slice_advance(tokens, 1);
         return {.type = Value_String, .s = tok.s};
@@ -777,11 +956,10 @@ Value eval(Slice<Token> *tokens, Env *env) {
         slice_advance(tokens, 1);
         Symbol *sym = lookup(env, tok.s, tok.loc);
         if (sym->value.type == Value_Builtin) {
-            Array<Value> args = {};
-            args.arena = &arena;
+            Value args[16];
             for (s32 i = 0; i < sym->value.bf.arity; i++)
-                array_push(&args, eval(tokens, env));
-            return sym->value.bf.fn(array_slice(&args), env, tok.loc);
+                args[i] = eval(tokens, env);
+            return sym->value.bf.fn({.data = args, .count = sym->value.bf.arity}, env, tok.loc);
         } else if (sym->value.type == Value_Block) {
             Value arity;
             if (getassoc(sym, lit_slice("arity"), &arity)) {
@@ -790,15 +968,20 @@ Value eval(Slice<Token> *tokens, Env *env) {
                         STRFMT(sym->name), format_value_type(arity.type));
                     exit(1);
                 }
-                Array<Value> args = {};
-                args.arena = &arena;
+                if (arity.i > MAX_ARITY) {
+                    fprintf(stderr, "%s:%d:%d: %.*s exceeds maximum arity of %d arguments.\n", LOCFMT(tok.loc),
+                        STRFMT(sym->name), MAX_ARITY);
+                    exit(1);
+                }
+                Value args[MAX_ARITY];
                 for (s64 i = 0; i < arity.i; i++)
-                    array_push(&args, eval(tokens, env));
-                Env newenv = {};
-                newenv.super = env;
-                newenv.symtab.arena = &arena;
-                newenv.params = array_slice(&args);
-                return exec_block(sym->value.body, &newenv);
+                    args[i] =  eval(tokens, env);
+                Env newenv = new_environment(env);
+                newenv.params = {.data = args, .count = arity.i};
+                Value result = exec_block(sym->value.body, &newenv);
+                if (result.type == Value_Return) result = *result.ret;
+                free_environment(&newenv);
+                return result;
             } else {
                 return sym->value;
             }
@@ -934,13 +1117,12 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
         }
         Value result = {.type = Value_Bool, .b = false};
         for (s64 i = 0; i < list.list.count; i++) {
-            Env newenv = {};
-            newenv.super = env;
-            if (var != lit_slice("_")) {
-                newenv.symtab.arena = &arena;
+            Env newenv = new_environment(env);
+            if (var != lit_slice("_"))
                 bind(&newenv, var)->value = list.list.data[i];
-            }
             result = exec_block(body.body, &newenv);
+            if (result.type == Value_Return) return result;
+            free_environment(&newenv);
         }
         return {.type = Value_Bool, .b = true};
     } else if ((*tokens)[0].type == Token_KwMacro) {
@@ -971,6 +1153,14 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
         Value val = {.type = Value_Macro, .macro = macro};
         bind(env, name)->value = val;
         return val;
+    } else if ((*tokens)[0].type == Token_KwReturn) {
+        slice_advance(tokens, 1);
+        Value result = {.type = Value_Return, .ret = NULL};
+        if (tokens->count)
+            result.ret = copy_to_arena(&arena, eval(tokens, env));
+        else
+            result.ret = copy_to_arena(&arena, (Value){.type = Value_Bool, .b = false});
+        return result;
     } else {
         SourceLoc loc = (*tokens)[0].loc;
         if (env->stashed_comment.type == Value_Comment &&
@@ -999,9 +1189,7 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
                 Value input = eval(&tests, env);
                 Value expected = eval(&tests, env);
                 stmt = *tokens;
-                Env newenv = {};
-                newenv.symtab.arena = &arena;
-                newenv.super = env;
+                Env newenv = new_environment(env);
                 bind(&newenv, var)->value = input;
                 have = eval(&stmt, &newenv);
                 if (have != expected) {
@@ -1009,6 +1197,7 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
                         LOCFMT(loc), STRFMT(var), format_value(input, true), format_value(have, true), format_value(expected, true));
                     exit(1);
                 }
+                free_environment(&newenv);
             }
             *tokens = stmt;
             return have;
@@ -1038,8 +1227,10 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
 
 Value exec_block(Slice<Token> tokens, Env *env) {
     Value result = {.type = Value_Bool, .b = false};
-    while (tokens.count)
+    while (tokens.count) {
         result = exec_stmt(&tokens, env);
+        if (result.type == Value_Return) break;
+    }
     return result;
 }
 
@@ -1049,9 +1240,8 @@ void usage() {
 }
 
 int main(int argc, char **argv) {
-    Env env = {};
-    env.symtab.arena = &arena;
-#define BIND_BUILTIN1(nam, fnname, arty) bind(&env, lit_slice(nam))->value = {.type = Value_Builtin, .bf = {.name = nam, .arity = arty, .fn = fnname}}
+    Env env = new_environment(NULL);
+#define BIND_BUILTIN1(nam, fnname, arty) do { assert((arty) < MAX_ARITY); bind(&env, lit_slice(nam))->value = {.type = Value_Builtin, .bf = {.name = nam, .arity = arty, .fn = fnname}}; } while (0)
 #define BIND_BUILTIN(nam, arty) BIND_BUILTIN1(#nam, b_##nam, arty)
     BIND_BUILTIN(println, 1);
     BIND_BUILTIN(bind, 2);
@@ -1062,6 +1252,7 @@ int main(int argc, char **argv) {
     BIND_BUILTIN1("-", b_sub, 2);
     BIND_BUILTIN1("*", b_mul, 2);
     BIND_BUILTIN1("/", b_div, 2);
+    BIND_BUILTIN1("/.", b_fdiv, 2);
     BIND_BUILTIN(mod, 2);
     BIND_BUILTIN1("=", b_eq, 2);
     BIND_BUILTIN1("<>", b_ne, 2);
@@ -1079,6 +1270,11 @@ int main(int argc, char **argv) {
     BIND_BUILTIN(eval, 1);
     BIND_BUILTIN(apply, 2);
     BIND_BUILTIN(getparam, 1);
+    BIND_BUILTIN(floor, 1);
+    BIND_BUILTIN(sqrt, 1);
+    BIND_BUILTIN(sin, 1);
+    BIND_BUILTIN(cos, 1);
+    BIND_BUILTIN1("float->int", b_float2int, 1);
 #undef BIND_BUILTIN
 #undef BIND_BUILTIN1
     bind(&env, lit_slice("yes"))->value = {.type = Value_Bool, .b = true};
