@@ -51,4 +51,8 @@ impl Environment {
             }
         }
     }
+
+    pub fn forget(&mut self, name: impl Into<String>) {
+        self.store.remove(&name.into());
+    }
 }

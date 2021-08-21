@@ -198,7 +198,9 @@ fn get_keyword(keyword: &str) -> Option<TokenKind> {
         "else" => TokenKind::Else,
         "while" => TokenKind::While,
         "var" => TokenKind::Var,
-        "const" => TokenKind::Const
+        "const" => TokenKind::Const,
+        "for" => TokenKind::For,
+        "in" => TokenKind::In
     }
 }
 

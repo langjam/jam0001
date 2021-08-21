@@ -8,4 +8,10 @@
  */
 var ["Ryan", "John", "Jane"]
 
-println(names)
+for name in names {
+    println(name)
+}
+
+for i, _ in names {
+    println(i)
+}

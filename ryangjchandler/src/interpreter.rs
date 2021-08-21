@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use thiserror::Error;
 
-use crate::ast::{Program, Statement, FileHeader, DefinitionHeader, FunctionDefinition, If, While, Var, Const};
+use crate::ast::{Program, Statement, FileHeader, DefinitionHeader, FunctionDefinition, If, While, Var, Const, ForIn};
 use crate::expression::{Expression, Call, Assign};
 use crate::environment::Environment;
 use crate::value::{Value, Function, NativeFunction};
@@ -155,7 +155,45 @@ impl<'i> Interpreter<'i> {
                         None => unreachable!()
                     }
                 }
-            }
+            },
+            Statement::ForIn(ForIn { ref counter, iterator, iterable, body }) => {
+                let iterable = match self.execute_expression(iterable)? {
+                    Some(e) => e,
+                    None => unreachable!()
+                };
+
+                let r#type = iterable.type_string();
+
+                if r#type != "list" && r#type != "string" {
+                    return Err(InterpreterError::IteratingOnNonIterable);
+                }
+
+                let items = match iterable {
+                    Value::List(items) => items,
+                    Value::String(s) => {
+                        s.chars().collect::<Vec<_>>().iter().map(|c| Value::String(c.to_string())).collect()
+                    },
+                    _ => unreachable!()
+                };
+
+                for (i, item) in items.iter().enumerate() {
+                    if counter.is_some() {
+                        self.environment.borrow_mut().set(counter.clone().unwrap(), &Value::Number(i as f64));
+                    }
+
+                    self.environment.borrow_mut().set(iterator.clone(), item);
+
+                    for statement in &body {
+                        self.execute_statement(statement.clone())?;
+                    }
+                }
+
+                if counter.is_some() {
+                    self.environment.borrow_mut().forget(counter.clone().unwrap());
+                }
+                
+                self.environment.borrow_mut().forget(iterator.clone());
+            },
             _ => todo!()
         };
 
@@ -385,6 +423,9 @@ pub enum InterpreterError {
 
     #[error("Trying to assign value to constant {0}.")]
     AssigningToConstant(String),
+
+    #[error("Trying to iterate over a non-iterable value.")]
+    IteratingOnNonIterable,
 }
 
 pub fn interpret<'i>(program: Program) -> Result<(), InterpreterError> {

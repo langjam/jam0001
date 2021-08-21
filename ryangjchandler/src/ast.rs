@@ -12,9 +12,18 @@ pub enum Statement {
     While(While),
     Var(Var),
     Const(Const),
+    ForIn(ForIn),
 
     // TODO: Remove this nasty ass placeholder.
     Empty
+}
+
+#[derive(Debug, Clone)]
+pub struct ForIn {
+    pub counter: Option<String>,
+    pub iterator: String,
+    pub iterable: Expression,
+    pub body: Vec<Statement>,
 }
 
 #[derive(Debug, Clone)]

@@ -3,7 +3,7 @@ use std::mem::discriminant;
 use thiserror::Error;
 
 use crate::token::{Token, TokenKind};
-use crate::ast::{Program, Statement, FileHeader, FunctionDefinition, DefinitionHeader, If, While, Var, Const};
+use crate::ast::{Program, Statement, FileHeader, FunctionDefinition, DefinitionHeader, If, While, Var, Const, ForIn};
 use crate::expression::{Expression, Priority, Call, Assign};
 
 #[derive(Debug, Clone)]
@@ -77,8 +77,42 @@ impl<'p> Parser<'p> {
             TokenKind::While => self.parse_while(),
             TokenKind::Var => self.parse_var(),
             TokenKind::Const => self.parse_const(),
+            TokenKind::For => self.parse_for_in(),
             _ => self.parse_expression_statement(),
         }
+    }
+
+    pub fn parse_for_in(&mut self) -> Result<Statement, ParserError> {
+        self.expect_token_and_read(TokenKind::For)?;
+        
+        let iterator = match self.expect_token_and_read(TokenKind::Identifier("".to_string()))? {
+            Token { kind: TokenKind::Identifier(i), .. } => i,
+            _ => unreachable!(),
+        };
+
+        let mut counter = None;
+
+        if self.current_is(TokenKind::Comma) {
+            self.expect_token_and_read(TokenKind::Comma)?;
+
+            counter = Some(match self.expect_token_and_read(TokenKind::Identifier("".to_string())) ? {
+                Token { kind: TokenKind::Identifier(i), .. } => i,
+                _ => unreachable!()
+            });
+        }
+
+        self.expect_token_and_read(TokenKind::In)?;
+
+        let iterable = self.expect_expression(Priority::Lowest)?;
+
+        let body = self.parse_block()?;
+
+        Ok(Statement::ForIn(ForIn {
+            counter: if counter.is_some() { Some(iterator.clone()) } else { counter.clone() },
+            iterator: if counter.is_none() { iterator } else { counter.unwrap() },
+            iterable: iterable,
+            body: body,
+        }))
     }
 
     pub fn parse_var(&mut self) -> Result<Statement, ParserError> {
