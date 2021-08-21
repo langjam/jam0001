@@ -2,12 +2,17 @@ out("before if")?
 
 x = 1?
 
-if(1 == x : {
+out(if(1 == x : {
 	out("I am here !!1!")?
-})?
+	2?
+}))?
 
 if(1 != x : {
 	out("This isnt printed at all")?
 })?
 
 out("after if")?
+
+exit()?
+
+out("no")?

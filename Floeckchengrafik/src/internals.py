@@ -1,23 +1,11 @@
 from application_stack_utils import StatementNode
 
 
-def function(args):
-    return StatementNode.FunctionDefinitionNode(args[0], args[1:len(args)])
-
-
 def out(args):
     for i in args:
         print(i, end=" ")
 
     print()
-
-
-def readline(args):
-    return input(args[0] if len(args) == 1 else "")
-
-
-def length(args):
-    return len(args[0])
 
 
 def when(args):
@@ -27,11 +15,12 @@ def when(args):
 
 
 internals = {
-    "function": function,
+    "function": lambda args: StatementNode.FunctionDefinitionNode(args[0], args[1:len(args)]),
     "out": out,
-    "readline": readline,
-    "length": length,
+    "readline": lambda args: input(args[0] if len(args) == 1 else ""),
+    "length": lambda args: len(args[0]),
     "if": when,
+    "exit": lambda args: exit(args[0] if len(args) == 1 else 0),
 }
 
 env = {
@@ -40,4 +29,5 @@ env = {
     "readline": StatementNode.FunctionDefinitionNode("internal", []),
     "length": StatementNode.FunctionDefinitionNode("internal", []),
     "if": StatementNode.FunctionDefinitionNode("internal", []),
+    "exit": StatementNode.FunctionDefinitionNode("internal", []),
 }

@@ -8,6 +8,7 @@
 - [x] Have FUN!
 - [x] Implement a cli interpreter
 - [x] Implement length()
+- [x] Implement exit()
 - [ ] Implement Lists
 - [ ] Implement Classes
 - [x] Implement If
