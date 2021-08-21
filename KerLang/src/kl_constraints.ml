@@ -157,17 +157,3 @@ and compile_value env = function
   | Cst n -> Kl_IR.Cst n
   | Var x -> List.assoc x env
   | Hole -> failwith "remaning hole in expression, can't compile it down to Kl_IR"
-
-let parse_file f =
-  let lexbuf = Lexing.from_channel (open_in f) in
-  let blocks = ref [] in
-  Lexing.set_filename lexbuf f;
-  try while true do
-    blocks := Kl_parser.block lexbuf::!blocks
-  done;
-  failwith "should not happen"
-  with
-  | Kl_parser.Eof ->
-    List.map generate_function (List.rev !blocks)
-  | Kl_parser.SyntaxError msg ->
-    failwith msg
