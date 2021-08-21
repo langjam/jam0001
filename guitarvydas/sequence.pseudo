@@ -2,13 +2,7 @@
 
 {
   "children": ["rects", "bounding boxes" ],
-  "connections": [
-    {
-      "name":"x2",
-      "source": {"component":"rects", "port":"fb"},
-      "target": {"component":"bounding boxes", "port":"in"}
-    }
-  ],
+  "connections": [],
   "diagram":"id1",
   "id":"id4",
   "inputs": [],
@@ -22,14 +16,14 @@
   "id":"id5",
   "inputs": [],
   "name":"rects",
-  "outputs": ["fb" ]
+  "outputs": []
 }
 {
   "children": [],
   "connections": [],
   "diagram":"id1",
   "id":"id6",
-  "inputs": ["in" ],
+  "inputs": [],
   "name":"bounding boxes",
   "outputs": []
 }

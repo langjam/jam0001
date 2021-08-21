@@ -31,6 +31,11 @@ diagramContains(id1, id5).
 diagramContains(id1, id6).
 diagramContains(id1, id7).
 diagramContains(id1, id8).
+factcomponentname(id4,"top level").
+factcomponentname(id5,"rects").
+factcomponentname(id6,"c3").
+factcomponentname(id7,"bounding boxes").
+factcomponentname(id8,"c4").
 fillColor(id6, "red").
 fillColor(id8, "red").
 height(id4, 250).
@@ -61,6 +66,8 @@ t(id5,160).
 t(id6,195).
 t(id7,160).
 t(id8,195).
+unknowncomponentname(id2,"c1").
+unknowncomponentname(id3,"c2").
 value(id4, "top level").
 value(id5, "rects").
 value(id6, "&lt;div&gt;swipl -q \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(fb).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(rects).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'printRects.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'halt.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; | ./augment__fb&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;").

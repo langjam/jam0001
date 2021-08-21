@@ -30,6 +30,10 @@ swipl -g 'consult(fb).'  -g 'consult(onSameDiagram).' -g 'consult(containsport).
 printAllDirections (){
 swipl -g 'consult(fb).'  -g 'consult(onSameDiagram).' -g 'consult(portdirection).' -g 'printAllDirections.' -g 'halt.' | ./augment-fb.bash 
 }
+assignNames (){
+swipl -g 'consult(fb).'  -g 'consult(onSameDiagram).' -g 'consult(component).' -g 'consult(names).' -g 'printNames.' -g 'halt.' | ./augment-fb.bash 
+}
+
 # pipeline
 allContains1
 printAllDeepContains
@@ -38,10 +42,13 @@ designRuleRectanglesMustNotIntersectOnTheSameDiagram
 printAllPortContains
 printAllDirections
 
+assignNames
+
 # convert fb.pl to "structured" form
 swipl -g 'use_module(library(http/json))' \
       -g 'consult(fb).' \
       -g 'consult(component).' \
+      -g 'consult(names).' \
       -g 'consult(jsoncomponent).'\
       -g 'allc.'\
       -g 'halt.'

@@ -6,6 +6,12 @@ title:  "Jam0001"
 
 Transpile drawings to code using drawio, PROLOG, Ohm-JS.
 
+Components on the drawings are concurrent by default.
+
+Two transpilers (languages) are created:
+1. sequencing
+2. details.
+
 # Introduction
 
 The following is a discussion about the [language jam](https://github.com/langjam/langjam).

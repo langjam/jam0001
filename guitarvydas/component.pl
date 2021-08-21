@@ -1,6 +1,9 @@
 :- dynamic edge/2.
 :- dynamic ellipse/2.
 
+component(C):-
+    rect(C,_).
+
 component(Diagram,C,Name,Ins,Outs,Children,Connections) :-
     diagramContains(Diagram,C),
     rect(C,_),
@@ -82,15 +85,3 @@ connectionOf(C,connection{name:ConnectionName,source:pair{component:SourceName,p
     getname(C,TargetParent,TargetName),
     gensym(x,ConnectionName).
     
-componentname(C,Name):-
-    fillColor(C,"red"),
-    gensym(c,Name),
-    !.
-componentname(C,Name):-
-    value(C,Name).
-
-getname(Parent,Child,Name):-
-    Child \= Parent,
-    componentname(Child,Name),
-    !.
-getname(_,_,self).
