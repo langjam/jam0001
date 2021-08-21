@@ -104,6 +104,7 @@ class ComstructParser(Parser):
                 newargs.append(walk_tree_func(elem))
 
             node.var = newargs
+
         return StatementNode.LiterallyNode(p.arglist, walk_function=walk)
 
     @_('expr')

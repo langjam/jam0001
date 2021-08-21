@@ -1,7 +1,6 @@
 from application_stack_utils import StatementNode
 from internals import env as internal_env, internals
 
-
 env = internal_env
 
 

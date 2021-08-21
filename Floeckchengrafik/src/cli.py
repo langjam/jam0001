@@ -6,7 +6,6 @@ from lexer import ComstructLexer
 from parser import ComstructParser
 from executor import ComstructExecutor
 
-
 if __name__ == '__main__':
 
     clexer = ComstructLexer()
