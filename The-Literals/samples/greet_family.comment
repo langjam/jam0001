@@ -4,7 +4,7 @@ This is a sample .comment program. This line, ironically, is ignored because it 
  * Greets a family.
  *
  * @param family's size
-*/
+ */
 // Set number of questions asked to 0.
 // Ask the user for "the first family member's name" and call it name.
 // Print "Say hello to {name} for me!".
