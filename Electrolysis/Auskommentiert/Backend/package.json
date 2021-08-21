@@ -4,8 +4,9 @@
   "description": "",
   "main": "build/main.js",
   "scripts": {
-    "build": "node_modules/.bin/tspeg src/grammar.peg src/grammar.ts && tsc",
-    "start": "npm run build && node build/main.js",
+    "build": "node_modules/.bin/tspeg src/compiler/grammar.peg src/compiler/grammar.ts && tsc",
+    "start_compiler": "npm run build && node build/compiler/main.js",
+    "start_webserver": "npm run build && node build/webserver/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

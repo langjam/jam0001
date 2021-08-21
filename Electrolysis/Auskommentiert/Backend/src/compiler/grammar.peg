@@ -9,7 +9,7 @@ ManipulationComment := base=ManipulationCommentBase _ self={'including' _ 'self'
 ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate
 ManipulationCommentSwap := 'swap' _ target=CommentSelector
 ManipulationCommentMove := 'move' _ target=CommentSelector
-ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'clockwise' | 'counterclockwise'}
+ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
 CommentSelector := count='[0-9]+' _ 'comments' _ dir={'above' | 'below'}
 
 AssignmentComment := varName=VarName _ 'is' _ rhsExpr=Expression
@@ -25,4 +25,4 @@ MulExpression := lhs=DotExpression _ '\*' _ rhs=AtomicExpression
 DivExpression := lhs=DotExpression _ '\/' _ rhs=AtomicExpression
 
 
-AtomicExpression := varName=VarName | num='[0-9]+'
+AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+'

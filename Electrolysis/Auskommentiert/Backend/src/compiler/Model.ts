@@ -6,9 +6,11 @@ import {parse} from "./grammar";
 
 class ModelComment extends WrappedComment {
     private children : WrappedComment[];
-    constructor(content : Comment, upvotes : number, id : string, date: Date, children : WrappedComment[]) {
-        super(content, upvotes, id, date);
+    private astString : string;
+    constructor(ast : Comment, astString : string, upvotes : number, id : string, date: Date, children : WrappedComment[]) {
+        super(ast, upvotes, id, date);
         this.children = children;
+        this.astString = astString;
     }
 }
 
@@ -64,14 +66,16 @@ class ModelCommentProvider extends CommentProvider {
 
 export class Model {
     private mPosts : Map<string, ModelPost> = new Map();
-
     addPost(post : any): void {
         let comments : ModelComment[] = [];
-        for(let topLevelComment of post["topLevelComments"]) {
+        for(let topLevelComment of post.comments) {
             comments.push(this.parseComment(topLevelComment));
         }
         this.mPosts.set(post.id, new ModelPost(post.title, post.id, post.upvotes, comments));
         console.log(inspect(this.mPosts, false, null, true));
+    }
+    addComment(postId : string, comment : ModelComment) {
+        
     }
     makeCommentProvider(postId : string) : CommentProvider {
         return new ModelCommentProvider(this, postId);
@@ -85,7 +89,8 @@ export class Model {
             throw new Error(parseResult.errs[0].toString());
         }
         return new ModelComment(
-            parseResult.ast.comment, 
+            parseResult.ast.comment,
+            jsonComment.content, 
             jsonComment.upvotes, 
             jsonComment.id,
             jsonComment.date,
