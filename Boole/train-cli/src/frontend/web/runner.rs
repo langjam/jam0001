@@ -116,6 +116,10 @@ impl Communicator for WebRunner {
         todo!()
     }
 
+    fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
+        todo!()
+    }
+
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), CommunicatorError> {
         todo!()
     }

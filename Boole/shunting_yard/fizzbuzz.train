@@ -1,0 +1,243 @@
+[LOCOMOTIVE]
+start at incrementeradd track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 0
+
+[LOCOMOTIVE]
+start at incrementeradd track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 1
+
+{incrementeradd}
+operation: add
+track 1: go to incrementerdup track 1
+track 2: go to incrementeradd track 2
+
+{incrementerdup}
+operation: duplicate
+track 1: go to incrementeradd track 1
+track 2: go to duppre15 track 1
+
+
+
+
+[LOCOMOTIVE]
+start at mod15 track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 15
+
+{duppre15}
+operation: duplicate
+track 1: go to transferpre15 track 1
+track 2: go to transferpre15 track 2
+
+{transferpre15}
+operation: transfer
+track 1: go to yeet track 1
+track 2: go to mod15 track 1
+
+{mod15}
+operation: mod
+track 1: go to check15 track 1
+track 2: go to mod15 track 2
+
+{check15}
+operation: switch eq
+track 1: go to plus15 track 2
+track 2: go to droppost15 track 1
+
+{droppost15}
+operation: delete top
+track 1: go to duppre5 track 1
+
+[LOCOMOTIVE]
+start at plus15 track 1
+[FIRST CLASS]
+[SECOND CLASS]
+f: 102
+i: 105
+z: 122
+z: 122
+b: 98
+u: 117
+z: 122
+z: 122
+
+{plus15}
+operation: add
+track 1: go to dup15 track 1
+track 2: go to yeet track 1
+
+{dup15}
+operation: duplicate
+track 1: go to plus15 track 1
+track 2: go to printstrd10 track 1
+
+
+
+
+[LOCOMOTIVE]
+start at mod5 track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 5
+
+{duppre5}
+operation: duplicate
+track 1: go to transferpre5 track 1
+track 2: go to transferpre5 track 2
+
+{transferpre5}
+operation: transfer
+track 1: go to yeet track 1
+track 2: go to mod5 track 1
+
+{mod5}
+operation: mod
+track 1: go to check5 track 1
+track 2: go to mod5 track 2
+
+{check5}
+operation: switch eq
+track 1: go to plus5 track 2
+track 2: go to droppost5 track 1
+
+{droppost5}
+operation: delete top
+track 1: go to duppre3 track 1
+
+[LOCOMOTIVE]
+start at plus5 track 1
+[FIRST CLASS]
+[SECOND CLASS]
+b: 98
+u: 117
+z: 122
+z: 122
+
+{plus5}
+operation: add
+track 1: go to dup5 track 1
+track 2: go to yeet track 1
+
+{dup5}
+operation: duplicate
+track 1: go to plus5 track 1
+track 2: go to printstrd5 track 1
+
+
+
+
+[LOCOMOTIVE]
+start at mod3 track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 3
+
+{duppre3}
+operation: duplicate
+track 1: go to transferpre3 track 1
+track 2: go to transferpre3 track 2
+
+{transferpre3}
+operation: transfer
+track 1: go to yeet track 1
+track 2: go to mod3 track 1
+
+{mod3}
+operation: mod
+track 1: go to check3 track 1
+track 2: go to mod3 track 2
+
+{check3}
+operation: switch eq
+track 1: go to plus3 track 2
+track 2: go to droppost3 track 1
+
+{droppost3}
+operation: delete top
+track 1: go to printnumd1 track 1
+
+[LOCOMOTIVE]
+start at plus3 track 1
+[FIRST CLASS]
+[SECOND CLASS]
+f: 102
+i: 105
+z: 122
+z: 122
+
+{plus3}
+operation: add
+track 1: go to dup3 track 1
+track 2: go to yeet track 1
+
+{dup3}
+operation: duplicate
+track 1: go to plus3 track 1
+track 2: go to printstr track 1
+
+
+
+
+
+
+
+
+{printnumd1}
+operation: nothing
+track 1: go to printnum track 1
+
+{printnum}
+operation: print number
+track 1: go to yeet track 1
+
+{printstrd10}
+operation: nothing
+track 1: go to printstrd9 track 1
+
+{printstrd9}
+operation: nothing
+track 1: go to printstrd8 track 1
+
+{printstrd8}
+operation: nothing
+track 1: go to printstrd7 track 1
+
+{printstrd7}
+operation: nothing
+track 1: go to printstrd6 track 1
+
+{printstrd6}
+operation: nothing
+track 1: go to printstrd5 track 1
+
+{printstrd5}
+operation: nothing
+track 1: go to printstrd4 track 1
+
+{printstrd4}
+operation: nothing
+track 1: go to printstrd3 track 1
+
+{printstrd3}
+operation: nothing
+track 1: go to printstrd2 track 1
+
+{printstrd2}
+operation: nothing
+track 1: go to printstrd1 track 1
+
+{printstrd1}
+operation: nothing
+track 1: go to printstr track 1
+
+{printstr}
+operation: print string
+track 1: go to yeet track 1
+
+{yeet}
+operation: delete
