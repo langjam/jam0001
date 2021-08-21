@@ -10,12 +10,22 @@ class TopicViewer extends Component<AppType, AppType> {
 
     render() {
         return <div>
-            {this.state.topics.map(topic =>
-                <Link to={"topic/" + topic.id}>
-                    <p>{topic.heading}</p>
+            <div>
+                <Link to="create_topic">
+                    <button>Create Topic</button>
                 </Link>
-            )}
-        </div>
+            </div>
+            <div>
+                <h2>Topics</h2>
+            </div>
+            <div>
+                {this.state.topics.map(topic =>
+                    <Link to={"topic/" + topic.id}>
+                        <p>{topic.heading}</p>
+                    </Link>
+                )}
+            </div>
+        </div >
 
     }
 }

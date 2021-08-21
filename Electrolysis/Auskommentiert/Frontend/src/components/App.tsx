@@ -4,6 +4,7 @@ import { Topic } from './Topic';
 import { BrowserRouter as Router, Route } from 'react-router-dom'
 import { TopicViewer } from './TopicViewer';
 import { AppType } from './types'
+import TopicCreate from './TopicCreate';
 
 let data: AppType = {
     topics: [
@@ -102,6 +103,9 @@ class App extends Component<{}, AppType> {
         return (
             <div>
                 <Router>
+                    <Route exact path="/create_topic">
+                        <TopicCreate></TopicCreate>
+                    </Route>
                     {
                         this.state.topics.map(topic =>
                             <Route key={topic.id} exact path={"/topic/" + topic.id}>

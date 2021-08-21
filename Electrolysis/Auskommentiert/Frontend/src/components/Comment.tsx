@@ -22,10 +22,12 @@ class Comment extends Component<CommentType, CommentType> {
         return (
             <div className="">
                 <div className="body comment">
-                    <p>{this.state.body}</p>
+                    <p className="content">{this.state.body}</p>
                     <button onClick={() => this.upvote()}>{this.state.upvotes} &#8593;</button>
                     <button onClick={() => this.downvote()}>&#8595;</button>
                     <button>Answer</button>
+                    <button>Up</button>
+                    <button>Down</button>
                 </div>
 
                 <div className="indent">
