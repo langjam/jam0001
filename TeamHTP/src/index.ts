@@ -1,42 +1,18 @@
-import {unified} from 'unified'
-import remarkParse from 'remark-parse'
-import remarkGfm from 'remark-gfm'
+import fs from 'fs'
+
 import {startRepl} from './Repl'
-import {wrap, Tag} from './Types'
+import {wrap, Tag, List} from './Types'
 import Runtime from './Runtime'
+import {mdastToMd, mdToMdast} from './Markdown'
 
-const src = `
-# Things I'm here to do
-[TodoList]::
-- [ ] kick ass
-- [ ] chew bubble gum
+const srcPath = process.argv[2];
 
-[Heading]::
-# Things I have
-- [ ] bubble gum
-
-\`\`\`bubbglegum
-def check(n) {
-    test
-}
-\`\`\`
-
-[TodoList]: kickass (
-  [self CheckItem:"kick ass"]
-  if false or \${true and true} or true {
-    a
-    !@#$%^&*
-    {}:"<>?|\`~\\\\,./
-  }
-)
-`
+console.log(srcPath)
+const src = fs.readFileSync(srcPath).toString();
 
 const runtime = new Runtime()
 
-const docTree = unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .parse(src)
+const docTree = mdToMdast(src)
 
 let lastTag: Tag | undefined = undefined
 for (const child of docTree.children) {
@@ -49,7 +25,11 @@ for (const child of docTree.children) {
     }
 }
 
-console.log(runtime)
+const list = <List>runtime.getTag('TodoList').getChild()
+const updatedListItem = list.checkItem('**kick ass**')
+if (updatedListItem !== undefined) {
+    console.log(mdastToMd(updatedListItem))
+}
 
 startRepl((input) => {
     console.log(input)

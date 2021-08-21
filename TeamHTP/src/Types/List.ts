@@ -1,9 +1,26 @@
 import Base from './Base'
-import {List as MdastList} from "mdast";
+import {List as MdastList, ListItem} from "mdast";
+import {mdastListItemToMd} from "../Markdown";
 
 class List extends Base {
     getMdastContent(): MdastList {
         return <MdastList>this.mdastContent
+    }
+
+    /**
+     * Checks the first item of the list with the given name.
+     * @param itemName
+     * @returns ListItem that was updated, or undefined if no item with the given name was found in the list.
+     */
+    checkItem(itemName: string): ListItem | undefined {
+        for (const listItem of this.getMdastContent().children) {
+            const listItemMd = mdastListItemToMd(listItem)
+            if (itemName === listItemMd && !listItem.checked) {
+                listItem.checked = true
+                return listItem
+            }
+        }
+        return undefined
     }
 }
 

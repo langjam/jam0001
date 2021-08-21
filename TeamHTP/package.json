@@ -12,6 +12,7 @@
   "author": "TeamHTP",
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "mdast-util-gfm": "^1.0.0",
     "remark-gfm": "^2.0.0",
     "remark-parse": "^10.0.0",
     "unified": "^10.1.0"
