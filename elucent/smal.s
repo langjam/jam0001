@@ -8,7 +8,7 @@ HEAP_B: .quad 0     # pointer to heap B
 VARENV: .quad 0     # pointer to env
 VCOUNT: .quad 0     # number of entries in env
 HALTED: .quad 0     # whether or not we've halted
-CALLBACK: .quad 0   # optional function pointer to call
+CSTACK: .quad 0     # space to store return addresses for smalang calls
 OPCODE: .space 1024 # pointers for all ascii chars
 IOBUF: .space 256   # buffer for io formatting
 
@@ -173,6 +173,12 @@ reserve_stack:
     mov r12, r13
     ret
 
+reserve_cstack:
+    mov rdi, 1048576
+    call mmap
+    mov [rip + CSTACK], rax
+    ret
+
 reserve_code:   
     mov ecx, [rsp + 8]  # get argc
     cmp ecx, 2
@@ -266,39 +272,33 @@ setup_opcode:
 #  - char = 0
 #  - int = 1
 #  - string = 2
-#  - func = 3
+#  - native func = 3
+#  - user func = 4
 
 letter:
-    sub r12, 8
-    mov [r12], rdi
-    ret
+    call push_stack # push rdi, tag == 0 (char)
+    ret 
 
 digit:
-    sub dil, 48      # minus '0'
-    cmp r12, r13
-    je .single_digit
-    cmp DWORD PTR [r12 + 4], 1
-    jne .single_digit
-    mov ecx, DWORD PTR [r12]
-    mov edx, 10
-    imul ecx, edx
-    add ecx, edi
-    mov DWORD PTR [r12], ecx
-    ret
-.single_digit:
-    mov rcx, 1      # int tag
-    shl rcx, 32
-    movzx rdi, dil
-    or rcx, rdi
-    sub r12, 8
-    mov [r12], rcx
-    ret
+    call push_stack # push rdi, tag == 0 (char)
+    ret 
 
 halt:
     call space
+    sub QWORD PTR [rip + CSTACK], 8
+    mov rbx, QWORD PTR [rip + CSTACK]
+    mov rbx, [rbx]
+    test rbx, rbx
+    jnz .halt_end
+
+    # when the return address is nullptr, we exit the program
     mov QWORD PTR [rip + HALTED], 1
+
+    cmp r12, r13
+    je .halt_end    # skip printing if stack is empty
     mov rdi, [r12]
     call putv
+.halt_end:
     ret
 
 # like a memcpy, but iterates inversely through the source string
@@ -333,11 +333,34 @@ gc_memcpy:            # we keep rsi, rdi, r14, r15, rdx, rcx alive
 .gc_memcpy_end:
     ret
 
+invoke:
+    push rdi        # function value is stored in rdi
+    push rcx
+    xor rcx, rcx
+    mov ecx, edi
+    lea rdi, [rcx + r14 + 8]    # compute fn ptr
+    mov rcx, [rdi]
+    call rcx
+
+    pop rcx
+    pop rsi
+    ret
+
 pop_stack:
+    mov rax, [r12]
     add r12, 8
     ret
 
 push_stack:
+    cmp r12, r13
+    je .push_stack_value
+    cmp DWORD PTR [r12 + 4], 3  # is the top of the stack a function?
+    jne .push_stack_value
+
+    xchg [r12], rdi             # swap function into rdi
+    call invoke
+    ret
+.push_stack_value:
     sub r12, 8
     mov [r12], rdi
     ret 
@@ -525,6 +548,34 @@ space:
     #  - rdx points to the end of a string
     #  - rax has the length of the string
     #  - rcx should be past the end of the stack
+    mov r12, rsi 
+    test rax, rax
+    jz .space_end
+    cmp BYTE PTR [rsi - 1], 48
+    jl .space_alloc_string
+    cmp BYTE PTR [rsi - 1], 57
+    jg .space_alloc_string
+    # otherwise our first char is between 0 and 9, so it's a number
+    xor rdi, rdi
+    dec rsi
+.space_number_loop:
+    test rax, rax
+    jz .space_number_end
+    mov ecx, 10
+    imul edi, ecx
+    xor rcx, rcx
+    mov cl, BYTE PTR [rsi]
+    sub cl, 48
+    add rdi, rcx
+    dec rax
+    dec rsi
+    jmp .space_number_loop
+.space_number_end:
+    mov rax, 1
+    shl rax, 32
+    or rdi, rax     # add int type
+    jmp .space_push
+.space_alloc_string:
     lea rcx, [rax + 15]
     and cl, 248     # align 8
     sub r15, rcx    # allocate rcx bytes on heap
@@ -539,7 +590,6 @@ space:
     sub rsi, 1
     call inv_memcpy
     
-    mov r12, rcx
     mov rdi, r15
     sub rdi, r14
 
@@ -559,22 +609,13 @@ space:
     shr rcx, 32     # get type
     cmp ecx, 3      # is it a function?
     jne .space_push
-    
-    xor rcx, rcx
-    mov ecx, edi
-    add rcx, r14
-    mov rcx, [rcx + 8]
-    call rcx        # call function
+
+    cmp r12, r13    # if the stack is empty, save the function for later
+    je .space_push
+    call invoke     # call function (should still be in rdi)
     jmp .space_end
 .space_push:
     call push_stack # push rdi
-
-    cmp QWORD PTR [CALLBACK], 0
-    je .space_end
-
-    xor rax, rax
-    xchg rax, QWORD PTR [CALLBACK]
-    call rax
 .space_end:
     ret
 
@@ -623,13 +664,15 @@ alloc_string:  # rdi = string ptr, rsi = size
     or rax, rdx
     ret    
 
-alloc_fn:   # rdi = fn ptr
-    sub r15, 16
+alloc_fn:   # rdi = fn ptr, rsi = size (at least 8)
+    lea rdx, [rsi + 15]
+    and dl, 248 # align 8
+    sub r15, rdx
     cmp r15, r14   
     jge .alloc_fn_success
     call do_collection
 .alloc_fn_success:
-    mov QWORD PTR [r15], 16
+    mov QWORD PTR [r15], rdx
     mov QWORD PTR [r15 + 8], rdi
     mov rdx, r15
     sub rdx, r14
@@ -644,16 +687,23 @@ _start: # entry point
     call reserve_heap   # set up heap
     call reserve_stack  # set up stack
     call reserve_env    # set up env
+    call reserve_cstack # set up call stack
     call setup_opcode   # populate opcode table
     call prelude        # primitive defs
 
     mov rbp, rsp        # set up stack
+    mov rax, QWORD PTR [rip + CSTACK]
+    mov QWORD PTR [rax], 0          # outermost return addr is nullptr 
+    add QWORD PTR [rip + CSTACK], 8 # increment callstack pointer by 8
+
     call run
     call exit
 
 .data
 
 inc_name: .asciz "inc"
+dup_name: .asciz "dup"
+add_name: .asciz "+"
 
 .text
 
@@ -661,16 +711,56 @@ inc_native:
     inc DWORD PTR [r12]
     ret
 
+dup_native:
+    mov rdi, QWORD PTR [r12]
+    call push_stack
+    ret
+
+add_native:
+    lea rdi, [partial_add_native]
+    mov rsi, 16     # alloc new closure with 1 capture
+    call alloc_fn
+    push rax
+    call pop_stack                  # get underlying int (capture)
+    mov QWORD PTR [r15 + 16], rax   # store capture in closure
+    pop rdi
+    call push_stack                 # push our function value
+    ret
+
+partial_add_native:
+    mov rax, QWORD PTR [rdi + 8]    # get capture
+    add DWORD PTR [r12], eax        # add capture to stack
+    ret
+
+def_builtin:    # rdi = name, rsi = size, rdx = addr
+    push rdx
+    call alloc_string
+    pop rdi
+    mov rsi, 8  # only fn ptr, no closures are built in
+    mov rcx, rax
+    call alloc_fn
+    mov rsi, rax
+    mov rdi, rcx
+    call def_var
+    ret
+
 prelude:
     # inc
     lea rdi, [rip + inc_name]
     mov rsi, 3
-    call alloc_string
-    mov rcx, rax
-    lea rdi, [rip + inc_native]
-    call alloc_fn
-    mov rsi, rax
-    mov rdi, rcx 
-    call def_var
+    lea rdx, [rip + inc_native]
+    call def_builtin
+
+    # dup
+    lea rdi, [rip + dup_name]
+    mov rsi, 3
+    lea rdx, [rip + dup_native]
+    call def_builtin
+
+    # add
+    lea rdi, [rip + add_name]
+    mov rsi, 1
+    lea rdx, [rip + add_native]
+    call def_builtin
 
     ret
