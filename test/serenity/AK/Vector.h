@@ -778,7 +778,20 @@ private:
     size_t m_size { 0 };
     size_t m_capacity { 0 };
 
-    alignas(StorageType) unsigned char m_inline_buffer_storage[sizeof(StorageType) * inline_capacity];
+
+    static constexpr size_t xsize() {
+        if constexpr (inline_capacity > 0)
+            return sizeof(StorageType);
+        return 0;
+    }
+
+    static constexpr size_t align() {
+        if constexpr (inline_capacity > 0)
+            return alignof(StorageType);
+        return 1;
+    }
+
+    alignas(align()) unsigned char m_inline_buffer_storage[xsize() * inline_capacity];
     StorageType* m_outline_buffer { nullptr };
 };
 

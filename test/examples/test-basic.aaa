@@ -52,4 +52,4 @@ let Vec3 = { |T|: res
 
 let any = record { x };
 
-print(Vec3(any));
+print(Vec3(any)(1 "test" 3).x);

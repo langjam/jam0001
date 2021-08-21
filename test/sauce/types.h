@@ -33,6 +33,11 @@ struct Context;
 struct FunctionNode;
 
 struct Value;
+struct RecordValue {
+    NonnullRefPtr<Type> type;
+    Vector<Value> members;
+};
+
 struct NativeFunctionType {
     Value (*fn)(Context&, void*, size_t);
     Vector<String> comments;
@@ -47,7 +52,7 @@ struct FunctionValue {
 };
 
 struct Value {
-    Variant<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType> value;
+    Variant<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType, RecordValue> value;
 };
 
 struct CommentResolutionSet : public AK::RefCounted<CommentResolutionSet> {

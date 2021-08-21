@@ -94,7 +94,7 @@ Value IndirectMention::execute(Context& context)
     auto mention = m_node->run(context);
     if (!mention.value.has<String>())
         return { Empty {} };
-    
+
     auto words = mention.value.get<String>().split(' ');
     return create<DirectMention>(move(words))->run(context);
 }
@@ -185,6 +185,42 @@ Value Call::execute(Context& context)
 
             return result;
         }
+        if (auto ptr = callee.value.template get_pointer<NonnullRefPtr<Type>>()) {
+            Type* type_ptr = ptr->ptr();
+            if (auto type = type_ptr->decl.template get_pointer<NativeType>()) {
+                if (arguments.is_empty()) {
+                    return { Empty {} };
+                }
+                switch (*type) {
+                case NativeType::Any:
+                    return arguments.first();
+                case NativeType::Int:
+                    if (arguments.first().value.template has<int>())
+                        return arguments.first();
+                    return { Empty {} }; // FIXME: String -> Int conversion
+                case NativeType::String:
+                    if (arguments.first().value.template has<String>())
+                        return arguments.first();
+                    return { Empty {} }; // FIXME: Int -> String conversion
+                }
+            }
+
+            auto& fields = type_ptr->decl.template get<Vector<TypeName>>();
+            Vector<Value> values;
+            size_t index = 0;
+            for (auto& type_name : fields) {
+                if (arguments.size() <= index)
+                    values.append({ Empty {} });
+                else
+                    values.append(
+                        create<Call>(
+                            static_ptr_cast<ASTNode>(create<SyntheticNode>(Value { type_name.type })),
+                            Vector { static_ptr_cast<ASTNode>(create<SyntheticNode>(arguments[index])) })
+                            ->run(context));
+                ++index;
+            }
+            return { RecordValue { *type_ptr, move(values) } };
+        }
         return { Empty {} };
     };
 
@@ -262,7 +298,7 @@ void MemberAccess::dump(int indent)
 Value MemberAccess::execute(Context& context)
 {
     auto value = m_base->run(context);
-    Function<Value(Value&)> visit = [&](auto& value) {
+    Function<Value(Value const&)> visit = [&](auto const& value) {
         return value.value.visit(
             [](Empty) -> Value { return { Empty {} }; },
             [&](String const& string) -> Value {
@@ -273,12 +309,29 @@ Value MemberAccess::execute(Context& context)
             [&](int value) -> Value {
                 if (m_property.is_one_of("negated"sv, "neg"sv))
                     return { -value };
-                
+
                 return { Empty {} };
             },
             [](FunctionValue const&) -> Value { return { Empty {} }; },
             [](NativeFunctionType const&) -> Value { return { Empty {} }; },
             [](NonnullRefPtr<Type> const&) -> Value { return { Empty {} }; },
+            [&](RecordValue const& rv) -> Value {
+                if (rv.type->decl.template has<NativeType>())
+                    return visit(rv.members.first());
+                Optional<size_t> pindex;
+                size_t index = 0;
+                for (auto& entry : rv.type->decl.template get<Vector<TypeName>>()) {
+                    if (entry.name == m_property) {
+                        pindex = index;
+                        break;
+                    }
+                    ++index;
+                }
+                if (!pindex.has_value())
+                    return { Empty {} };
+
+                return rv.members.at(*pindex);
+            },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) -> Value {
                 auto res_crs = create<CommentResolutionSet>();
                 for (auto& entry : crs->values)

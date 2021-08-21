@@ -18,6 +18,22 @@ private:
     virtual Value execute(Context&) = 0;
 };
 
+class SyntheticNode : public ASTNode {
+public:
+    explicit SyntheticNode(Value value)
+        : m_value(move(value))
+    {
+    }
+
+    auto& value() const { return m_value; }
+
+private:
+    virtual Value execute(Context&) { return m_value; }
+    virtual void dump(int indent) override { ASTNode::dump(indent); }
+
+    Value m_value;
+};
+
 class Statement : public ASTNode {
 public:
     explicit Statement(RefPtr<ASTNode> node)

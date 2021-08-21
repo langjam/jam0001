@@ -23,8 +23,8 @@ Value lang$print(Context&, void* ptr, size_t count)
     Function<void(Value const&)> print_value = [&](Value const& value) {
         value.value.visit(
             [](Empty) { out("<empty>"); },
-            [](FunctionValue const&) { out("<fn ref>"); }, // FIXME
-            [](NonnullRefPtr<Type> const&) { out("<type ref>"); },                            // FIXME
+            [](FunctionValue const&) { out("<fn ref>"); },         // FIXME
+            [](NonnullRefPtr<Type> const&) { out("<type ref>"); }, // FIXME
             [&print_value](NonnullRefPtr<CommentResolutionSet> const& rs) {
                 out("<Comment resolution set: {{");
                 auto first = true;
@@ -37,6 +37,17 @@ Value lang$print(Context&, void* ptr, size_t count)
                 out("}}>");
             },
             [](NativeFunctionType const& fnptr) { out("<fnptr at {:p}>", fnptr.fn); },
+            [&](RecordValue const& rv) {
+                out("(");
+                auto first = true;
+                for (auto& entry : rv.members) {
+                    if (!first)
+                        out(" ");
+                    first = false;
+                    print_value(entry);
+                }
+                out(")");
+            },
             [](auto const& value) { out("{}", value); });
     };
     for (auto& arg : args) {
@@ -53,7 +64,7 @@ Value lang$sub(Context&, void* ptr, size_t count)
 {
     Span<Value> args { reinterpret_cast<Value*>(ptr), count };
     Variant<Empty, int> accumulator { Empty {} };
-    auto append = [&](auto arg) {
+    auto append = [&](auto&& arg) {
         Variant<Empty, int> value { Empty {} };
         if constexpr (requires { arg.template has<int>(); }) {
             if (arg.template has<Empty>() || arg.template has<int>())
@@ -80,16 +91,17 @@ Value lang$sub(Context&, void* ptr, size_t count)
                     append(entry.value);
             },
             [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
+            [&](RecordValue const& rv) { append(String("<record>")); },
             [&](auto const& value) { append(value); });
     }
-    return { move(accumulator).downcast<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
+    return { move(accumulator).downcast<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType, RecordValue>() };
 }
 
 Value lang$add(Context&, void* ptr, size_t count)
 {
     Span<Value> args { reinterpret_cast<Value*>(ptr), count };
     Variant<Empty, int, String> accumulator { Empty {} };
-    auto append = [&](auto arg) {
+    auto append = [&](auto&& arg) {
         Variant<Empty, int, String> value { Empty {} };
         if constexpr (requires { arg.template has<int>(); }) {
             if (arg.template has<Empty>() || arg.template has<int>() || arg.template has<String>())
@@ -128,9 +140,10 @@ Value lang$add(Context&, void* ptr, size_t count)
                     append(entry.value);
             },
             [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
+            [&](RecordValue const& rv) { append(String("<record>"sv)); },
             [&](auto const& value) { append(value); });
     }
-    return { move(accumulator).downcast<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
+    return { move(accumulator).downcast<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType, RecordValue>() };
 }
 
 Value lang$cond(Context&, void* ptr, size_t count)
@@ -149,11 +162,14 @@ Value lang$cond(Context&, void* ptr, size_t count)
                     return true;
                 },
                 [&](NativeFunctionType const&) -> bool { return true; },
+                [](RecordValue const&) { return true; },
                 [&](auto const& value) -> bool {
                     if constexpr (requires { (bool)value; })
                         return (bool)value;
-                    else
+                    else if constexpr (requires { value.is_empty(); })
                         return !value.is_empty();
+                    else
+                        return true;
                 }))
             return value;
     }
