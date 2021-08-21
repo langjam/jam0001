@@ -7,6 +7,7 @@ import Data.Nat
 import Data.List
 
 
+
 symValue : String -> Context -> Either Expr String
 symValue s ctx = 
   case lookup s ctx of
@@ -22,18 +23,20 @@ mutual
          _ => Right "Sorry."
   
   exprValue : Expr -> Context -> Either Expr String
-  exprValue (Natural k) ctx = Left $ Natural k
-  exprValue (Finite k j) ctx = Left $ Finite (k `mod` j) j
+  exprValue (Array0 k) ctx = Left $ Array0 k
+  exprValue (Array1 k) ctx = Left $ Array1 k
+  exprValue (Array2 k) ctx = Left $ Array2 k
+
   exprValue (Symbol x) ctx = symValue x ctx
   exprValue (Quoted x) ctx = Left x
+  exprValue (Function f) ctx = Left $ Function f
   
-  exprValue (Array Nil) ctx = Right "Called ()"
-  exprValue (Array (x::xs)) ctx =
+  exprValue (ConsList Nil) ctx = Right "Called ()"
+  exprValue (ConsList (x::xs)) ctx =
     case (exprValue x ctx, exprListValue xs ctx) of
-         (Left (Function f), Left args) => f $ Left $ Array $ args
+         (Left (Function f), Left args) => f (ConsList args)
          _ => Right "Tried to call a non-function"
 
-  exprValue (Function f) ctx = Left $ Function f
 
 public export
 jValue : Expr -> Either Expr String
