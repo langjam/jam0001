@@ -26,7 +26,8 @@ impl<'a> Parser<'a> {
             if res.len() != 2 {
                 return Err(ParserError {
                     span: Span::from_length(self.current, line.len()),
-                    error: format!("Line must contain a `: ` to split name and text.")
+                    error: format!("Line must contain a `: ` to split name and text."),
+                    input: self.input.to_string()
                 })
             } else {
                 first_class_passengers.push(FirstClassPassenger {name: String::from(res[0]), data: String::from(res[1])})
@@ -43,7 +44,8 @@ impl<'a> Parser<'a> {
             if res.len() != 2 {
                 return Err(ParserError {
                     span: Span::from_length(self.current, line.len()),
-                    error: format!("Line must contain a `: ` to split name and text.")
+                    error: format!("Line must contain a `: ` to split name and text."),
+                    input: self.input.to_string(),
                 })
             } else {
                 if let Ok(data) = res[1].parse() {
@@ -51,7 +53,8 @@ impl<'a> Parser<'a> {
                 } else {
                     return Err(ParserError {
                         span: Span::from_length(self.current + res[0].len() + 2, res[1].len()),
-                        error: format!("Data must be a number.")
+                        error: format!("Data must be a number."),
+                        input: self.input.to_string(),
                     })
                 }
             }

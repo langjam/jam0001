@@ -19,7 +19,7 @@ pub fn parse_and_check(input: &str) -> ParseResult<Program> {
     let mut parser = Parser::new(input);
     let program = parser.parse_program()?;
 
-    check::check(&program)?;
+    check::check(&program, input)?;
 
     Ok(program)
 }

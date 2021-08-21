@@ -15,6 +15,7 @@ impl<'a> Parser<'a> {
                 Err(ParserError {
                     span: Span::from_length(self.current, 0),
                     error: format!("Unexpected end of file."),
+                    input: self.input.to_string(),
                 })
             }
             Some(line) => {
@@ -42,6 +43,7 @@ impl<'a> Parser<'a> {
             Err(ParserError {
                 span: Span::from_length(self.current, word.len()),
                 error: format!("Expected a number here."),
+                input: self.input.to_string(),
             })
         }
     }
@@ -53,7 +55,8 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserError {
                 span: Span::from_length(self.current, 1),
-                error: format!("Expected the exact text '{}' here.", exact)
+                error: format!("Expected the exact text '{}' here.", exact),
+                input: self.input.to_string(),
             })
         }
     }
@@ -67,7 +70,8 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserError {
                 span: Span::from_length(self.current, line.len()),
-                error: format!("Expected the exact line '{}' here.", exact)
+                error: format!("Expected the exact line '{}' here.", exact),
+                input: self.input.to_string(),
             })
         }
     }

@@ -21,7 +21,8 @@ impl<'a> Parser<'a> {
             None => {
                 return Err(ParserError {
                     span: Span::from_length(self.current, op_text.len()),
-                    error: format!("Operation not found.")
+                    error: format!("Operation not found."),
+                    input: self.input.to_string(),
                 })
             }
         };

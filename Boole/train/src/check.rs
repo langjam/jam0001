@@ -2,7 +2,7 @@ use crate::ast::{Program, Target};
 use crate::parse::parser::{ParseResult, ParserError};
 use std::collections::{HashMap};
 
-pub fn check(program: &Program) -> ParseResult<()> {
+pub fn check<'a>(program: &Program, input: &str) -> ParseResult<()> {
     let stations = program.stations.iter().map(|s| (s.name.to_lowercase(), s)).collect::<HashMap<_, _>>();
 
     let check_target = |target: &Target| -> ParseResult<()> {
@@ -10,13 +10,15 @@ pub fn check(program: &Program) -> ParseResult<()> {
             if target.track >= station.operation.input_track_count() {
                 return Err(ParserError {
                     span: target.span,
-                    error: format!("Track does not exist at the station.")
+                    error: format!("Track does not exist at the station."),
+                    input: input.to_string(),
                 })
             }
         } else {
             return Err(ParserError {
                 span: target.span,
-                error: format!("Name does not exist.")
+                error: format!("Name does not exist."),
+                input: input.to_string()
             })
         }
         Ok(())

@@ -6,15 +6,13 @@ use crate::frontend::Communicator;
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
-use train::ast::Program;
 use crate::frontend::web;
-
-fn parse(v: &str) -> Program {todo!()}
+use train::parse_and_check;
 
 #[tokio::main]
 async fn main() {
     pretty_env_logger::env_logger::builder()
-        .filter_level(log::LevelFilter::Debug)
+        .filter_level(log::LevelFilter::Info)
         .init();
 
 
@@ -40,7 +38,13 @@ async fn main() {
     let mut program = String::new();
     program_file.read_to_string(&mut program).expect("couldn't read");
 
-    // let ast = parse(&program);
+    let ast = match parse_and_check(&program) {
+        Ok(program) => program,
+        Err(err) => {
+            log::error!("{}", err);
+            return;
+        }
+    };
 
     let (comm, vmi) = Communicator::new();
 
