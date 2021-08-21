@@ -1,4 +1,5 @@
 const std = @import("std");
+const debug = std.debug;
 const Token = @import("Token.zig");
 
 bytes: []const u8,
@@ -26,26 +27,27 @@ pub fn next(self: *Self) ?Token {
         ':' => self.lexColon(),
         '=' => self.lexEquals(),
         '0'...'9' => self.lexNumber(),
+        'a'...'z', 'A'...'Z', '_' => self.lexIdent(),
         '#' => self.lexOcto(),
         '+' => self.lexPlus(),
+        ',' => Token{ .ty = .punct_comma, .offset = self.i.? },
         '-' => Token{ .ty = .punct_dash, .offset = self.i.? },
+        '{' => Token{ .ty = .punct_lbrace, .offset = self.i.? },
+        '}' => Token{ .ty = .punct_rbrace, .offset = self.i.? },
+        '(' => Token{ .ty = .punct_lparen, .offset = self.i.? },
+        ')' => Token{ .ty = .punct_rparen, .offset = self.i.? },
         '/' => Token{ .ty = .punct_slash, .offset = self.i.? },
         '*' => Token{ .ty = .punct_star, .offset = self.i.? },
-        else => Token{ .ty = .unknown, .offset = self.i.? },
+        else => result: {
+            //debug.print("\n{u}\n", .{b});
+            break :result Token{ .ty = .unknown, .offset = self.i.? };
+        },
     };
 }
 
 // Lex funcs.
 fn lexColon(self: *Self) Token {
-    var ty: Token.Type = .punct_colon;
-
-    if (self.peek()) |pb| {
-        switch (pb) {
-            '=' => ty = .op_define,
-            '#' => ty = .com_end,
-            else => {},
-        }
-    }
+    const ty: Token.Type = if (self.skip('=')) .op_define else .punct_colon;
 
     return .{
         .ty = ty,
@@ -54,11 +56,29 @@ fn lexColon(self: *Self) Token {
 }
 
 fn lexEquals(self: *Self) Token {
-    const ty: Token.Type = if (self.peekIs('=')) .op_equals else .punct_equal;
+    const ty: Token.Type = if (self.skip('=')) .op_equals else .punct_equal;
 
     return .{
         .ty = ty,
         .offset = self.i.?,
+    };
+}
+
+fn isIdent(b: u8) bool {
+    return ('a' <= b and b <= 'z') or ('A' <= b and b <= 'Z') or ('0' <= b and b <= '9') or '_' == b;
+}
+
+fn lexIdent(self: *Self) Token {
+    const start = self.i.?;
+    self.run(isIdent);
+    const src = self.bytes[start .. self.i.? + 1];
+
+    const ty: Token.Type = if (std.mem.eql(u8, src, "fn")) .kw_fn else .ident;
+
+    return .{
+        .ty = ty,
+        .src = src,
+        .offset = start,
     };
 }
 
@@ -78,24 +98,36 @@ fn lexNumber(self: *Self) Token {
 }
 
 fn lexOcto(self: *Self) Token {
-    var ty: Token.Type = .punct_octo;
-
-    if (self.peek()) |pb| {
-        switch (pb) {
-            ':' => ty = .com_start,
-            '=' => ty = .com_insert,
-            else => {},
-        }
-    }
-
-    return .{
-        .ty = ty,
+    var token = Token{
+        .ty = .punct_octo,
         .offset = self.i.?,
     };
+
+    if (self.skip('=')) {
+        token.ty = .com_insert;
+    } else if (self.skip(':')) {
+        token.ty = .comment;
+        var nest_level: usize = 1;
+
+        while (self.advance()) |cb| {
+            if ('\n' == cb) {
+                break;
+            } else if ('#' == cb and self.skip(':')) {
+                nest_level += 1;
+            } else if (':' == cb and self.skip('#')) {
+                if (nest_level > 0) nest_level -= 1;
+                if (nest_level == 0) break;
+            }
+        }
+
+        token.src = self.bytes[token.offset .. self.i.? + 1];
+    }
+
+    return token;
 }
 
 fn lexPlus(self: *Self) Token {
-    const ty: Token.Type = if (self.peekIs('+')) .op_concat else .punct_plus;
+    const ty: Token.Type = if (self.skip('+')) .op_concat else .punct_plus;
 
     return .{
         .ty = ty,

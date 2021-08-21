@@ -1,14 +1,81 @@
 const std = @import("std");
+const Call = @import("ast.zig").Call;
+const Function = @import("ast.zig").Function;
 const Infix = @import("ast.zig").Infix;
 const Node = @import("ast.zig").Node;
 const Parser = @import("Parser.zig");
 
 allocator: *std.mem.Allocator,
+global: Env,
 parser: *Parser,
 
 const Self = @This();
 
+pub const Env = struct {
+    funcs: std.StringHashMap(Function),
+    vars: std.StringHashMap(Value),
+    parent: ?*Env,
+
+    pub fn init(allocator: *std.mem.Allocator, parent: ?*Env) Env {
+        return .{
+            .funcs = std.StringHashMap(Function).init(allocator),
+            .vars = std.StringHashMap(Value).init(allocator),
+            .parent = parent,
+        };
+    }
+
+    pub fn deinit(self: *Env) void {
+        self.funcs.deinit();
+        self.vars.deinit();
+    }
+
+    // Variables.
+    pub fn getVar(self: Env, name: []const u8) ?Value {
+        if (self.vars.get(name)) |v| {
+            return v;
+        } else if (self.parent) |p| {
+            return p.getVar(name);
+        } else {
+            return null;
+        }
+    }
+
+    pub fn insertVar(self: *Env, name: []const u8, value: Value) !void {
+        try self.vars.put(name, value);
+    }
+
+    pub fn updateVar(self: *Env, name: []const u8, value: Value) bool {
+        if (self.vars.getPtr(name)) |p| {
+            p.* = value;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    pub fn delVar(self: *Env, name: []const u8) void {
+        self.vars.remove(name);
+    }
+
+    // Funcs
+    pub fn getFunc(self: Env, name: []const u8) ?Function {
+        if (self.funcs.get(name)) |f| {
+            return f;
+        } else if (self.parent) |p| {
+            return p.getFunc(name);
+        } else {
+            return null;
+        }
+    }
+
+    pub fn insertFunc(self: *Env, name: []const u8, func: Function) !void {
+        try self.funcs.put(name, func);
+    }
+};
+
 pub const Value = union(enum) {
+    comment,
+    function,
     integer: isize,
 
     pub fn format(value: Value, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
@@ -16,6 +83,7 @@ pub const Value = union(enum) {
         _ = options;
 
         switch (value) {
+            .comment, .function => {},
             .integer => |i| _ = try writer.print("{}", .{i}),
         }
     }
@@ -24,56 +92,92 @@ pub const Value = union(enum) {
 pub fn init(allocator: *std.mem.Allocator, parser: *Parser) Self {
     return .{
         .allocator = allocator,
+        .global = Env.init(allocator, null),
         .parser = parser,
     };
 }
 
-pub fn evalAll(self: *Self) !Value {
-    return eval(try self.parser.parseAll());
+pub fn deinit(self: *Self) void {
+    self.global.deinit();
 }
 
-pub fn eval(node: Node) anyerror!Value {
+pub fn evalAll(self: *Self) !Value {
+    return self.eval(try self.parser.parseAll(), &self.global);
+}
+
+pub fn eval(self: *Self, node: Node, env: *Env) anyerror!Value {
     return switch (node) {
-        .infix => |i| evalInfix(i),
-        .integer => |i| .{ .integer = try std.fmt.parseInt(isize, i.token.src.?, 10) },
-        .program => |p| try evalProgram(p),
+        .call => |c| try self.evalFnCall(c, env),
+        .ident => |tn| env.getVar(tn.token.src.?) orelse @panic("Undeclared identifier!"),
+        .function => |f| result: {
+            try env.insertFunc(f.name.src.?, f);
+            break :result .function;
+        },
+        .comment => .comment,
+        .infix => |i| self.evalInfix(i, env),
+        .integer => |tn| .{ .integer = try std.fmt.parseInt(isize, tn.token.src.?, 10) },
+        .program => |p| try self.evalProgram(p, env),
         else => @panic("Unknown node type!"),
     };
 }
 
 // Eval funcs.
-fn evalInfix(i: Infix) !Value {
+fn evalFnCall(self: *Self, c: Call, env: *Env) !Value {
+    const func = env.getFunc(c.name.src.?) orelse @panic("Undefined function!");
+    var fn_env = Env.init(self.allocator, env);
+    defer fn_env.deinit();
+
+    if (c.args.len != func.params.len) @panic("Function call args and params count mismatch!");
+    for (func.params) |param, i| {
+        const value = try self.eval(c.args[i], env);
+        try fn_env.insertVar(param.src.?, value);
+    }
+
+    var value: Value = undefined;
+    for (func.body) |node| {
+        value = try self.eval(node, &fn_env);
+    }
+
+    return value;
+}
+
+fn evalInfix(self: *Self, i: Infix, env: *Env) !Value {
+    // Going out on a limb here assuming the types. Cowboy programming, big time!
     return switch (i.op.ty) {
-        // Going out on a limb here assuming their ints. Cowboy programming, big time!
+        .op_define => result: {
+            const value = try self.eval(i.rhs.*, env);
+            try env.insertVar(i.lhs.ident.token.src.?, value);
+            break :result value;
+        },
         .punct_plus => result: {
-            const lhs_v = try eval(i.lhs.*);
-            const rhs_v = try eval(i.rhs.*);
+            const lhs_v = try self.eval(i.lhs.*, env);
+            const rhs_v = try self.eval(i.rhs.*, env);
             break :result Value{ .integer = lhs_v.integer + rhs_v.integer };
         },
         .punct_dash => result: {
-            const lhs_v = try eval(i.lhs.*);
-            const rhs_v = try eval(i.rhs.*);
+            const lhs_v = try self.eval(i.lhs.*, env);
+            const rhs_v = try self.eval(i.rhs.*, env);
             break :result Value{ .integer = lhs_v.integer - rhs_v.integer };
         },
         .punct_slash => result: {
-            const lhs_v = try eval(i.lhs.*);
-            const rhs_v = try eval(i.rhs.*);
+            const lhs_v = try self.eval(i.lhs.*, env);
+            const rhs_v = try self.eval(i.rhs.*, env);
             break :result Value{ .integer = @divFloor(lhs_v.integer, rhs_v.integer) };
         },
         .punct_star => result: {
-            const lhs_v = try eval(i.lhs.*);
-            const rhs_v = try eval(i.rhs.*);
+            const lhs_v = try self.eval(i.lhs.*, env);
+            const rhs_v = try self.eval(i.rhs.*, env);
             break :result Value{ .integer = lhs_v.integer * rhs_v.integer };
         },
         else => @panic("Unknown infix operator!"),
     };
 }
 
-fn evalProgram(p: []Node) !Value {
+fn evalProgram(self: *Self, p: []Node, env: *Env) !Value {
     var value: Value = undefined;
 
     for (p) |node| {
-        value = try eval(node);
+        value = try self.eval(node, env);
     }
 
     return value;
