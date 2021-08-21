@@ -8,6 +8,7 @@ use crate::expression::{Expression, Call};
 use crate::environment::Environment;
 use crate::value::{Value, Function, NativeFunction};
 use crate::document::Document;
+use crate::token::TokenKind;
 
 #[derive(Debug)]
 pub struct Interpreter<'i> {
@@ -30,10 +31,11 @@ impl<'i> Interpreter<'i> {
 
     pub fn setup_document(&mut self) -> Result<(), InterpreterError> {
         match self.program.next() {
-            Some(Statement::FileHeader(FileHeader { name, description, author })) => {
+            Some(Statement::FileHeader(FileHeader { name, description, author, version })) => {
                 self.document.set_name(name);
                 self.document.set_description(description.clone());
                 self.document.set_author(author.clone());
+                self.document.set_version(version.clone());
             },
             _ => return Err(InterpreterError::MissingFileHeader)
         };
@@ -56,15 +58,18 @@ impl<'i> Interpreter<'i> {
                     return Err(InterpreterError::MissingDefinitionHeader);
                 }
 
-                let (name) = match self.header.as_ref().unwrap() {
-                    Statement::DefinitionHeader(DefinitionHeader { identifier }) => (identifier),
+                let (name, params) = match self.header.as_ref().unwrap() {
+                    Statement::DefinitionHeader(DefinitionHeader { identifier, params }) => (identifier, params.clone()),
                     _ => unreachable!(),
                 };
 
                 self.environment.borrow_mut().set(name, &Value::Function(Function::User {
                     name: name.into(),
+                    params,
                     body
-                }))
+                }));
+
+                self.header = None;
             },
             Statement::Expression(expression) => {
                 self.execute_expression(expression)?;
@@ -84,9 +89,13 @@ impl<'i> Interpreter<'i> {
                 let function = self.execute_expression(*function)?;
 
                 match function {
-                    Some(Value::Function(Function::User { body, .. })) => {
-                        let new_environment = Environment::new_with_parent(self.environment.clone());
+                    Some(Value::Function(Function::User { body, params, .. })) => {
+                        let mut new_environment = Environment::new_with_parent(self.environment.clone());
                         let old_environment = Rc::clone(&self.environment);
+
+                        for (i, (name, r#type)) in params.iter().enumerate() {
+                            new_environment.set(name, &args[i]);
+                        }
 
                         self.environment = Rc::new(RefCell::new(new_environment));
 
@@ -119,6 +128,24 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::String(string) => Value::String(string),
+            Expression::Infix(left, operator, right) => {
+                let left = self.execute_expression(*left)?.unwrap();
+                let right = self.execute_expression(*right)?.unwrap();
+
+                match operator {
+                    TokenKind::Plus => {
+                        match (left, right) {
+                            (Value::String(mut l), Value::String(r)) => {
+                                l.push_str(r.as_str());
+
+                                Value::String(l)
+                            },
+                            _ => todo!()
+                        }
+                    },
+                    _ => todo!()
+                }
+            },
             _ => todo!()
         }))
     }

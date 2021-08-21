@@ -24,6 +24,7 @@ impl Display for Value {
 pub enum Function {
     User {
         name: String,
+        params: Vec<(String, Option<String>)>,
         body: Vec<Statement>
     },
     Native {

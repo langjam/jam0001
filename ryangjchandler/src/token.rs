@@ -56,6 +56,7 @@ pub enum TokenKind {
     RightParen,
     Comma,
     None,
+    Plus,
 }
 
 pub type TokenList = Vec<Token>;

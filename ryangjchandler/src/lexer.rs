@@ -195,7 +195,7 @@ fn is_directive(directive: &str) -> bool {
 
 fn get_directive(directive: &str) -> Option<TokenKind> {
     Some(match directive {
-        "@name" | "@description" | "@author" => TokenKind::FileDirective((&directive[1..directive.len()]).to_string()),
+        "@name" | "@description" | "@author" | "@version" => TokenKind::FileDirective((&directive[1..directive.len()]).to_string()),
         "@param" | "@return" | "@identifier" => TokenKind::DefinitionDirective((&directive[1..directive.len()]).to_string()),
         _ => return None
     })
@@ -217,7 +217,8 @@ fn get_symbol(symbol: &str) -> Option<TokenKind> {
         "}" => TokenKind::RightBrace,
         "(" => TokenKind::LeftParen,
         ")" => TokenKind::RightParen,
-        "," => TokenKind::Comma
+        "," => TokenKind::Comma,
+        "+" => TokenKind::Plus
     }
 }
 

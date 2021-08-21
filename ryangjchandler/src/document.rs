@@ -5,6 +5,7 @@ pub struct Document {
     name: String,
     description: Option<String>,
     author: Option<String>,
+    version: Option<String>,
 }
 
 impl Document {
@@ -12,7 +13,8 @@ impl Document {
         Self {
             name: name.into(),
             description: None,
-            author: None
+            author: None,
+            version: None,
         }
     }
 
@@ -28,8 +30,16 @@ impl Document {
         self.author = author;
     }
 
+    pub fn set_version(&mut self, version: Option<String>) {
+        self.version = version;
+    }
+
     pub fn help(&self) {
-        println!("{} {}", self.name.white(), "Unknown version".green());
+        println!("{} {}", self.name.white(), if self.version.is_some() {
+            self.version.as_ref().unwrap().green()
+        } else {
+            "".green()
+        });
 
         if let Some(d) = self.description.clone() {
             println!("Description: {}", d.yellow())

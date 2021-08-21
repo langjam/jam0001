@@ -1,5 +1,8 @@
 /*
  * @name "Functions"
+ * @description "An example program to show off function calls and declarations."
+ * @author "Ryan Chandler"
+ * @version "0.0.1"
  */
 
 /*
@@ -10,3 +13,13 @@ fn {
 }
 
 hello_world()
+
+/*
+ * @identifier say_hello_to
+ * @param name
+ */
+fn {
+    println("Hello, " + name)
+}
+
+say_hello_to("Ryan")

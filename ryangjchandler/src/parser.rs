@@ -39,6 +39,7 @@ impl<'p> Parser<'p> {
 
         let mut description: Option<String> = None;
         let mut author: Option<String> = None;
+        let mut version: Option<String> = None;
 
         while self.current_is(TokenKind::Asterisk) {
             self.expect_token_and_read(TokenKind::Asterisk)?;
@@ -55,6 +56,7 @@ impl<'p> Parser<'p> {
                     match d.as_str() {
                         "author" => author = Some(value),
                         "description" => description = Some(value),
+                        "version" => version = Some(value),
                         _ => return Err(ParserError::InvalidFileHeader(d, d_token.position.line)),
                     }
                 },
@@ -64,7 +66,7 @@ impl<'p> Parser<'p> {
 
         self.expect_token_and_read(TokenKind::CommentTerminator)?;
 
-        Ok(Statement::FileHeader(FileHeader { name, description, author }))
+        Ok(Statement::FileHeader(FileHeader { name, description, author, version }))
     }
 
     pub fn parse_statement(&mut self) -> Result<Statement, ParserError> {
@@ -86,10 +88,36 @@ impl<'p> Parser<'p> {
             _ => unreachable!()
         };
 
+        let mut params = Vec::new();
+
+        while self.current_is(TokenKind::Asterisk) {
+            self.expect_token_and_read(TokenKind::Asterisk)?;
+
+            match self.current.kind.clone() {
+                TokenKind::DefinitionDirective(d) => {
+                    self.expect_token_and_read(TokenKind::DefinitionDirective("".to_owned()))?;
+
+                    match d.as_str() {
+                        "param" => {
+                            let identifier = match self.expect_token_and_read(TokenKind::Identifier("".to_string()))? {
+                                Token { kind: TokenKind::Identifier(i), .. } => i,
+                                _ => unreachable!()
+                            };
+
+                            params.push((identifier, None))
+                        },
+                        _ => todo!()
+                    }
+                },
+                _ => unreachable!()
+            }
+        }
+
         self.expect_token_and_read(TokenKind::CommentTerminator)?;
 
         Ok(Statement::DefinitionHeader(DefinitionHeader {
-            identifier
+            identifier,
+            params
         }))
     }
 
@@ -100,6 +128,30 @@ impl<'p> Parser<'p> {
         } else {
             Ok(Statement::Expression(Expression::Empty))
         }
+    }
+
+    pub fn parse_infix_expression(&mut self, left: Expression) -> Result<Option<Expression>, ParserError> {
+        let operator = self.current.kind.clone();
+
+        Ok(match operator {
+            TokenKind::Plus => {
+                self.expect_token_and_read(operator.clone())?;
+
+                let precedence = Priority::get_precedence(operator.clone());
+
+                let right = match self.parse_expression(precedence)? {
+                    Some(e) => e,
+                    None => return Err(ParserError::ExpectedExpression(self.current.position.line))
+                };
+
+                Some(Expression::Infix(
+                    Box::new(left),
+                    operator,
+                    Box::new(right),
+                ))
+            },
+            _ => None,
+        })
     }
 
     pub fn parse_postfix_expression(&mut self, left: Expression) -> Result<Option<Expression>, ParserError> {
@@ -138,7 +190,9 @@ impl<'p> Parser<'p> {
             while precedence < Priority::get_precedence(self.current.kind.clone()) {
                 let e = left.clone();
 
-                if let Some(right) = self.parse_postfix_expression(e)? {
+                if let Some(right) = self.parse_postfix_expression(e.clone())? {
+                    left = right;
+                } else if let Some(right) = self.parse_infix_expression(e.clone())? {
                     left = right;
                 } else {
                     break;
@@ -257,4 +311,7 @@ pub enum ParserError {
 
     #[error("Invalid file header {0} on line {1}.")]
     InvalidFileHeader(String, u16),
+
+    #[error("Expected expression on line {0}.")]
+    ExpectedExpression(u16),
 }

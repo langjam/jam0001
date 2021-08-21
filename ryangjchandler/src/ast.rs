@@ -17,12 +17,14 @@ pub enum Statement {
 pub struct FileHeader {
     pub name: String,
     pub description: Option<String>,
-    pub author: Option<String>
+    pub author: Option<String>,
+    pub version: Option<String>,
 }
 
 #[derive(Debug, Clone)]
 pub struct DefinitionHeader {
     pub identifier: String,
+    pub params: Vec<(String, Option<String>)>
 }
 
 #[derive(Debug, Clone)]
