@@ -1,8 +1,23 @@
+from run_code import apply_binop, apply_comparison
+
+defined_variables = {}
+
+
+class undefinedVariableError(Exception):
+    def __init__(self, varname):
+        self.varname = varname
+
+    def __str__(self):
+        return f"Undefined variable: {self.varname}"
+
+
 class Expr:
     pass
 
+
 class Operand(Expr):
     pass
+
 
 class Number(Operand):
     def __init__(self, value: int):
@@ -11,6 +26,10 @@ class Number(Operand):
     def __repr__(self):
         return f"NUMBER {self.value}"
 
+    def evaluate(self):
+        return self.value
+
+
 class Variable(Operand):
     def __init__(self, varname: str):
         self.varname = varname
@@ -18,12 +37,20 @@ class Variable(Operand):
     def __repr__(self):
         return f"VAR {self.varname}"
 
+    def evaluate(self):
+        if self.varname in defined_variables:
+            return defined_variables[self.varname]
+        else:
+            raise undefinedVariableError(self.varname)
+
+
 class Parameter(Expr):
     def __init__(self, varname: str):
         self.varname = varname
 
     def __repr__(self):
         return f"PARAM {self.varname}"
+
 
 class Binop(Expr):
     def __init__(self, operator: str, left_operand: Operand, right_operand: Operand):
@@ -34,6 +61,9 @@ class Binop(Expr):
     def __repr__(self):
         return f"({self.left_operand}) {self.operator} ({self.right_operand})"
 
+    def evaluate(self):
+        return apply_binop(self.operator, self.left_operand, self.right_operand)
+
 
 class Comparison(Expr):
     def __init__(self, operator: str, left_operand: Operand, right_operand: Operand):
@@ -43,6 +73,9 @@ class Comparison(Expr):
 
     def __repr__(self):
         return f"({self.left_operand}) {self.operator} ({self.right_operand})"
+
+    def evaluate(self):
+        return apply_comparison(self.operator, self.left_operand, self.right_operand)
 
 
 class Stmt:
@@ -57,6 +90,11 @@ class IfStmt(Stmt):
     def __repr__(self):
         return f"IF {self.condition} THEN {self.thenpt}"
 
+    def execute(self):
+        condition_result = self.condition.evaluate()
+        if condition_result:
+            self.thenpt.execute()
+
 
 class SetStmt(Stmt):
     def __init__(self, target: Variable, value: Expr):
@@ -66,6 +104,10 @@ class SetStmt(Stmt):
     def __repr__(self):
         return f"SET {self.target} TO {self.value}"
 
+    def execute(self):
+        defined_variables[self.target] = self.value
+
+
 class FuncHeader:
     def __init__(self, func_name: str, params: "list[Parameter]", return_var: Variable):
         self.func_name = func_name
@@ -73,8 +115,8 @@ class FuncHeader:
         self.return_var = return_var
 
     def __repr__(self):
-        return (
-            f"FUNC (NAME:{self.func_name}, PARAMS:{self.params}, RETURNS:{self.return_var}")
+        return f"FUNC (NAME:{self.func_name}, PARAMS:{self.params}, RETURNS:{self.return_var}"
+
 
 class Program:
     def __init__(self, funcs: "list[FuncHeader]", stmts):
@@ -82,5 +124,4 @@ class Program:
         self.stmts = stmts
 
     def __repr__(self):
-        return (
-            f"\nPROGRAM \n{self.funcs}\n{self.stmts}")
+        return f"\nPROGRAM \n{self.funcs}\n{self.stmts}"
