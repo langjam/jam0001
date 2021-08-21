@@ -15,20 +15,35 @@ def ensure_arg_count(throw_token, args, min, max = None):
     if min == max: expect = str(min)
   
   if expect != None:
-    return ErrorValue(throw_token, "Invalid number of arguments. Expected " + expect + + " but received " + str(len(args)) + ".")
+    return new_error_value(throw_token, "Invalid number of arguments. Expected " + expect + + " but received " + str(len(args)) + ".")
+
+def ensure_is_bool(throw_token, args, arg_index):
+  arg = args[arg_index]
+  if arg.type != 'BOOL':
+    return new_error_value(throw_token, "Invalid argument. Expected a boolean for argument #" + str(arg_index + 1))
 
 def ensure_is_num(throw_token, args, arg_index):
   arg = args[arg_index]
   if arg.type != 'FLOAT' and arg.type != 'INT':
-    return ErrorValue(throw_token, "Invalid argument. Expected a number for argument #" + str(arg_index + 1))
+    return new_error_value(throw_token, "Invalid argument. Expected a number for argument #" + str(arg_index + 1))
 
 def ensure_is_string(throw_token, args, arg_index):
   if args[arg_index].type != 'STRING':
-    return ErrorValue(throw_token, "Invalid argument. Expected a string for argument #" + str(arg_index + 1))
+    return new_error_value(throw_token, "Invalid argument. Expected a string for argument #" + str(arg_index + 1))
 
 def generate_builtins():
   
   gamelib = get_game_lib()
+
+  def _assert(throw_token, args):
+    err = ensure_arg_count(throw_token, args, 2)
+    if err != None: return err
+    err = ensure_is_bool(throw_token, args, 0)
+    if err != None: return err
+    
+    if not args[0].value:
+      return new_error_value(throw_token, "ASSERTION FAILED: " + args[1].to_string())
+    return NULL_VALUE
 
   def _floor(throw_token, args):
     err = ensure_arg_count(throw_token, args, 1)
@@ -140,8 +155,8 @@ def generate_builtins():
     if err != None: return err
     return gamelib['set_title'](throw_token, args)
 
-
   lookup = {
+    'assert': _assert,
     'floor': _floor,
     'game_create_window': _game_create_window,
     'game_draw_rectangle': _game_draw_rectangle,

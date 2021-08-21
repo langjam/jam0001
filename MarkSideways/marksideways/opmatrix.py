@@ -75,8 +75,6 @@ def perform_op(throw_token, left, op, right):
   if handler == None:
     if op == '==': return FALSE_VALUE
     if op == '+' and (left.type == 'STRING' or right.type == 'STRING'):
-      if left.value == '': return right
-      if right.value == '': return left
       return StringValue(left.to_string() + right.to_string())
     
     # The short-circuiting of the left side being null is already handled directly

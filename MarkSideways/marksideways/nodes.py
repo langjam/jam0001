@@ -295,7 +295,6 @@ class InlineIncrement(Expression):
       root_type = 'VAR'
       starting_value = self.root.run(scope)
     elif isinstance(self.root, BracketIndex):
-      root_type = 'INDEX'
       bracket_root = self.root.root.run(scope)
       if bracket_root.is_error: return bracket_root
       if is_null(bracket_root): return to_null_error_value(self.root.bracket_token)
@@ -303,11 +302,13 @@ class InlineIncrement(Expression):
       if bracket_index.is_error: return bracket_index
       if is_null(bracket_index): return to_null_error_value(self.root.bracket_token)
       if bracket_root.type == 'ARRAY':
+        root_type = 'ARRAY_INDEX'
         if bracket_index.type != 'INT': return new_error_value("Can only index into an array using an integer.")
         index = bracket_index.value
         if index < 0 or index >= len(bracket_root.value):
           return new_error_value(self.bracket_token, "Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(bracket_root.value)) + ".")
       elif bracket_root.type == 'DICTIONARY':
+        root_type = 'DICTIONAR_KEY'
         raise Exception("TODO: dictionaries")
       else:
         root_type = None
@@ -324,7 +325,6 @@ class InlineIncrement(Expression):
 
     if root_type == None:
       return new_error_value(self.op_token, "The " + self.op_token.value + " op is not support on this sort of expression.")
-
 
     if starting_value.is_error: return starting_value
     if is_null(starting_value): return to_null_error_value(starting_value)
