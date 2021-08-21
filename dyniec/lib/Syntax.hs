@@ -20,8 +20,7 @@ data Type
     | TyArrow Type Type
     | TyUnit
     deriving (Show, Eq)
-data Module = Module
-    { exports :: [T.Text]
-    , declarations :: [(T.Text, Expr)]
+newtype Module = Module
+    { declarations :: [(T.Text, Expr)]
     }
     deriving (Show, Eq)

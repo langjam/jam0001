@@ -5,7 +5,7 @@ module Parser where
 import Data.Functor.Identity (Identity)
 import Data.Maybe (maybeToList)
 import Data.Text as T (Text, pack, unpack)
-import Syntax (Expr(..))
+import Syntax (Expr (..), Module (..), Type (..))
 import Text.Parsec hiding (spaces)
 
 -- import Text.Parsec.Char
@@ -27,12 +27,13 @@ identifier = do
     x <- T.pack <$> many1 letter
     if x `elem` keywords
         then fail "it's a keyword, cannot be used as identifier"
-        else if x `elem ` primops
-        then fail "it's a primop, cannot be used as identifier"
-        else return x
+        else
+            if x `elem` primops
+                then fail "it's a primop, cannot be used as identifier"
+                else return x
 
 spaces :: Parser ()
-spaces = skipMany $ char ' '
+spaces = skipMany $ oneOf " \n\t"
 baseExpr :: Parser Expr
 baseExpr =
     (string "unit" >> return ExUnit) -- unit
@@ -65,11 +66,11 @@ baseExpr =
                 ExAbst var <$> exprParser
             )
         <|> do
-            p <- choice $ map (string. T.unpack) primops
+            p <- choice $ map (string . T.unpack) primops
             return $ ExPrimop $ T.pack p
         <|> ExVar <$> identifier
         <|> do
-            char ')'
+            char '('
             e <- exprParser
             char ')'
             return e
@@ -77,21 +78,54 @@ exprParser :: Parser Expr
 exprParser = do
     e <- baseExpr
     do
-        try $ do
-            spaces >> char '@'
-            spaces
-            ExAnnot e <$> exprParser
+        try
+            ( do
+                spaces
+                char '@'
+                spaces
+                ExAnnot e <$> exprParser
+            )
+        <|> try
+            ( do
+                spaces
+                string "::"
+                spaces
+                ExTyAnnot e <$> typeParser
+            )
         <|> try (spaces >> ExApp e <$> exprParser)
         <|> return e
 
--- do
---     e1 <- baseExpr
---     spaces
---     ExApp e1 <$> exprParser
---     <|> do
---         e1 <- baseExpr
---         spaces
---         char '@'
---         spaces
---         ExAnnot e1 <$> exprParser
---     <|> baseExpr
+baseTypeParser :: Parser Type
+baseTypeParser =
+    do
+        string "Int"
+        return TyNum
+        <|> do
+            string "String"
+            return TyStr
+        <|> do
+            string "Unit"
+            return TyUnit
+typeParser :: Parser Type
+typeParser = do
+    t <- baseTypeParser
+    try $
+        do
+            spaces
+            string "->"
+            spaces
+            TyArrow t <$> typeParser
+            <|> return t
+
+moduleParser :: Parser Module
+moduleParser = Module <$> declarationParser `sepBy` string ";"
+  where
+    declarationParser :: Parser (T.Text, Expr)
+    declarationParser = do
+        spaces
+        name <- identifier
+        spaces
+        string "="
+        spaces
+        e <- exprParser
+        return (name, e)
