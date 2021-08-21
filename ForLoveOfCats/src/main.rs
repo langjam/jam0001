@@ -3,11 +3,19 @@ use std::iter::Peekable;
 
 const SOURCE: &str = r#"
 (block
+	(define say_hello
+		(lambda (z)
+			(print "Hello!" z)
+		)
+	)
+
 	(define x 1)
 	(while (!= x 11)
 		(block
-			(print "Hello!" x)
-			(set x (+ x 1))))
+			(say_hello x)
+			(set x (+ x 1))
+		)
+	)
 )
 "#;
 
@@ -98,44 +106,46 @@ fn tokenize(source: &str) -> Vec<Token> {
 	output
 }
 
-#[derive(Debug)]
-enum TreeNode<'a> {
-	StringLiteral(&'a str),
+#[derive(Debug, Clone, PartialEq)]
+enum TreeNode {
+	StringLiteral(String),
 
 	IntegerLiteral(i64),
 
 	BooleanLiteral(bool),
 
-	Block(Vec<TreeNode<'a>>),
+	LambdaLiteral(Box<Lambda>),
+
+	Block(Vec<TreeNode>),
 
 	While {
-		expr: Box<TreeNode<'a>>,
-		body: Box<TreeNode<'a>>,
+		expr: Box<TreeNode>,
+		body: Box<TreeNode>,
 	},
 
 	Define {
-		name: &'a str,
-		rhs: Box<TreeNode<'a>>,
+		name: String,
+		rhs: Box<TreeNode>,
 	},
 
 	Set {
-		name: &'a str,
-		rhs: Box<TreeNode<'a>>,
+		name: String,
+		rhs: Box<TreeNode>,
 	},
 
 	Read {
-		name: &'a str,
+		name: String,
 	},
 
 	Call {
-		name: &'a str,
-		args: Vec<TreeNode<'a>>,
+		name: String,
+		args: Vec<TreeNode>,
 	},
 }
 
 type TokenIterator<'a> = Peekable<std::slice::Iter<'a, Token<'a>>>;
 
-fn parse_expression<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
+fn parse_expression(tokens: &mut TokenIterator) -> TreeNode {
 	let is_lone = !matches!(tokens.peek(), Some(Token::OpenParen));
 
 	if !is_lone {
@@ -144,22 +154,49 @@ fn parse_expression<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 		match tokens.next() {
 			Some(&Token::IntegerLiteral(num)) => TreeNode::IntegerLiteral(num),
 
-			Some(&Token::String(string)) => TreeNode::StringLiteral(string),
+			Some(&Token::String(string)) => TreeNode::StringLiteral(string.to_string()),
 
 			Some(&Token::Ident(text)) if text == "true" => TreeNode::BooleanLiteral(true),
 
 			Some(&Token::Ident(text)) if text == "false" => TreeNode::BooleanLiteral(false),
 
-			Some(Token::Ident(name)) => TreeNode::Read { name },
+			Some(&Token::Ident(name)) => TreeNode::Read {
+				name: name.to_string(),
+			},
 
 			None => panic!("No token for literal"),
 
-			_ => panic!("Lone token not handled"),
+			token => panic!("Lone token not handled: {:?}", token),
 		}
 	}
 }
 
-fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
+fn parse_parameters(tokens: &mut TokenIterator) -> Vec<String> {
+	assert!(matches!(tokens.next(), Some(Token::OpenParen)));
+
+	let mut parameters = Vec::new();
+
+	while let Some(peeked) = tokens.peek() {
+		if !matches!(peeked, Token::CloseParen) {
+			let token = tokens.next().unwrap();
+
+			let name = match token {
+				Token::Ident(name) => name.to_string(),
+				_ => panic!("All parameter tokens must be identifiers"),
+			};
+
+			parameters.push(name);
+		} else {
+			break;
+		}
+	}
+
+	assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+
+	parameters
+}
+
+fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 	assert!(matches!(tokens.next(), Some(Token::OpenParen)));
 
 	let ident = if let Some(Token::Ident(literal)) = tokens.next() {
@@ -180,7 +217,10 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 
 			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
 
-			TreeNode::Define { name, rhs }
+			TreeNode::Define {
+				name: name.to_string(),
+				rhs,
+			}
 		}
 
 		"set" => {
@@ -194,7 +234,10 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 
 			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
 
-			TreeNode::Set { name, rhs }
+			TreeNode::Set {
+				name: name.to_string(),
+				rhs,
+			}
 		}
 
 		"block" => {
@@ -220,6 +263,17 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 			TreeNode::While { expr, body }
 		}
 
+		"lambda" => {
+			let parameters = parse_parameters(tokens);
+			let body = parse_expression(tokens);
+
+			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+
+			let lambda = Lambda { parameters, body };
+
+			TreeNode::LambdaLiteral(Box::new(lambda))
+		}
+
 		ident => {
 			let args = {
 				let mut args = Vec::new();
@@ -236,8 +290,37 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 				args
 			};
 
-			TreeNode::Call { name: ident, args }
+			TreeNode::Call {
+				name: ident.to_string(),
+				args,
+			}
 		}
+	}
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct Lambda {
+	parameters: Vec<String>,
+	body: TreeNode,
+}
+
+impl Lambda {
+	fn call(&self, state: &mut ScopeState, args: &[Value]) -> Value {
+		if args.len() != self.parameters.len() {
+			panic!("Invalid number of arguments");
+		}
+
+		state.push_scope();
+
+		for (parameter, arg) in self.parameters.iter().zip(args) {
+			state.define(parameter, arg.clone());
+		}
+
+		let value = evaluate(state, &self.body);
+
+		state.pop_scope();
+
+		value
 	}
 }
 
@@ -247,6 +330,7 @@ enum Value {
 	Bool(bool),
 	I64(i64),
 	String(String),
+	Lambda(Lambda),
 }
 
 impl std::fmt::Display for Value {
@@ -256,6 +340,7 @@ impl std::fmt::Display for Value {
 			Value::Bool(lit) => write!(f, "{}", lit),
 			Value::I64(num) => write!(f, "{}", num),
 			Value::String(string) => write!(f, "{}", string),
+			Value::Lambda { .. } => write!(f, "`Lambda Object`"),
 		}
 	}
 }
@@ -313,11 +398,16 @@ impl ScopeState {
 
 fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 	match node {
-		&TreeNode::StringLiteral(string) => Value::String(string.to_string()),
+		TreeNode::StringLiteral(string) => Value::String(string.to_string()),
 
 		&TreeNode::IntegerLiteral(num) => Value::I64(num),
 
 		&TreeNode::BooleanLiteral(lit) => Value::Bool(lit),
+
+		TreeNode::LambdaLiteral(lambda) => {
+			println!("Hit lambda literal");
+			Value::Lambda(Lambda::clone(lambda))
+		}
 
 		TreeNode::Define { name, rhs } => {
 			state.push_scope();
@@ -378,7 +468,7 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 				evaluated
 			};
 
-			match *name {
+			match name.as_str() {
 				"+" => add_all(&args),
 				"-" => sub_all(&args),
 				"*" => mul_all(&args),
@@ -390,7 +480,13 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 
 				"print" => print_values(&args),
 
-				_ => unimplemented!("TODO: Symbol lookup"),
+				name => {
+					let symbol = state.read(name);
+					match symbol {
+						Value::Lambda(lambda) => lambda.call(state, &args),
+						_ => panic!("Cannot call symbol {}", name),
+					}
+				}
 			}
 		}
 	}
