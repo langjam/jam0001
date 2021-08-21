@@ -527,6 +527,8 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 				">=" => greater_equal(&args),
 
 				"mod" => mod_impl(&args),
+				"and" => logical_and(&args),
+				"or" => logical_or(&args),
 
 				"print" => print_values(&args),
 
@@ -636,6 +638,36 @@ fn invert_bool(values: &[Value]) -> Value {
 		Some(Value::Bool(value)) => Value::Bool(!value),
 		_ => Value::Bool(false),
 	}
+}
+
+fn is_truthy(value: &Value) -> bool {
+	!matches!(value, Value::Bool(false))
+}
+
+fn logical_and(values: &[Value]) -> Value {
+	for index in 1..values.len() {
+		let left = is_truthy(&values[index - 1]);
+		let right = is_truthy(&values[index]);
+
+		if !(left && right) {
+			return Value::Bool(false);
+		}
+	}
+
+	Value::Bool(true)
+}
+
+fn logical_or(values: &[Value]) -> Value {
+	for index in 1..values.len() {
+		let left = is_truthy(&values[index - 1]);
+		let right = is_truthy(&values[index]);
+
+		if !(left || right) {
+			return Value::Bool(false);
+		}
+	}
+
+	Value::Bool(true)
 }
 
 macro_rules! two_arg_int_function {

@@ -1,0 +1,17 @@
+(block
+	(# "Defining x to be one")
+	(define x 1)
+
+	(while (< x 1000000)
+		(block
+			(print x)
+			(set x (* x 3))
+
+			(# "This is a comment, current value of x is" x)
+			(if (or (< x 100) (> x 1000))
+				(pause)
+				()
+			)
+		)
+	)
+)
