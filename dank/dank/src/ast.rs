@@ -41,6 +41,7 @@ pub struct Ast<'a> {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum StmtKind<'a> {
+    LetDecl(Cow<'a, str>, Option<ExprPtr<'a>>),
     ExprStmt(ExprPtr<'a>),
     Print(Vec<Expr<'a>>),
 }
@@ -48,6 +49,7 @@ pub enum StmtKind<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExprKind<'a> {
     Literal(Value<'a>),
+    Variable(Cow<'a, str>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

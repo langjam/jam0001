@@ -1,5 +1,6 @@
 #![allow(clippy::nonstandard_macro_braces)]
 use crate::ast::*;
+use crate::data::Value;
 
 peg::parser!(pub grammar dank() for str {
     /// Parses whitespace
@@ -34,15 +35,34 @@ peg::parser!(pub grammar dank() for str {
                }
            }
 
-
+    pub rule binding() -> Stmt<'input>
+    =  start:position!() "let" ___ i:ident() ___ initializer:("=" ___ i:expr() {i})? end:position!() {
+        Stmt { kind: StmtKind::LetDecl(i.into(), initializer.map(Box::new)), span: start..end }
+    }
 
     pub rule stmt() -> Stmt<'input>
          = p:print() ";" {p}
+         / b:binding() ";" {b}
+
+    pub rule expr() -> Expr<'input>
+    = primary()
+
+    pub rule primary() -> Expr<'input>
+        = start:position!() i:ident() end:position!() { Expr { kind: ExprKind::Variable(i.into()), span: start..end } }
+        / start:position!() l:literal() end:position!() { Expr { kind: ExprKind::Literal(l), span: start..end }}
+
+    pub rule literal() -> Value<'input>
+    =  n:$(['0'..='9']+ ("." ['0'..='9']*)?) { Value::Num(n.parse().unwrap()) }
+        / "\"" s:$([^ '"' | '\n']*) "\"" { Value::Str(s.into())}
+        / "true"  { Value::Bool(true) }
+        / "false" { Value::Bool(false) }
+        / "null" { Value::Null }
+
 
     // TODO: accept expressions here
     rule print() -> Stmt<'input>
-         = start:position!() "print" _ ident() end:position!()
-         { Stmt { kind: StmtKind::Print(vec![]), span: Span { start, end } } }
+         = start:position!() "print" _ args:(expr() ** ",") end:position!()
+         { Stmt { kind: StmtKind::Print(args), span: Span { start, end } } }
 
     /// Prase a multi-line header comment (allowed only at the top of the file)
     rule header_comment() -> HeaderComment<'input>
@@ -167,10 +187,100 @@ pub mod tests {
                     statements: vec![LineComment {
                         body: CommentBody::Text(" attached comment".into()),
                         stmt: Some(Stmt {
-                            kind: StmtKind::Print(vec![]),
+                            kind: StmtKind::Print(vec![Expr {
+                                kind: ExprKind::Variable("variable".into()),
+                                span: 52..60,
+                            },]),
                             span: 46..60,
                         }),
                     }],
+                }
+            }
+        )
+    }
+
+    #[allow(clippy::approx_constant)]
+    #[test]
+    fn let_declarations() {
+        let test = r#"
+        let a = 3.141592;
+        let b = "hello";
+        let c = true;
+        let d = false;
+        let e = null;
+        "#;
+        assert_eq!(
+            dank::file(test).unwrap(),
+            FileAst {
+                header_comments: vec![],
+                code: Ast {
+                    statements: vec![
+                        LineComment {
+                            body: CommentBody::Empty,
+                            stmt: Some(Stmt {
+                                kind: StmtKind::LetDecl(
+                                    "a".into(),
+                                    Some(Box::new(Expr {
+                                        kind: ExprKind::Literal(Value::Num(3.141592)),
+                                        span: 17..25,
+                                    })),
+                                ),
+                                span: 9..25,
+                            },),
+                        },
+                        LineComment {
+                            body: CommentBody::Empty,
+                            stmt: Some(Stmt {
+                                kind: StmtKind::LetDecl(
+                                    "b".into(),
+                                    Some(Box::new(Expr {
+                                        kind: ExprKind::Literal(Value::Str("hello".into()),),
+                                        span: 43..50,
+                                    })),
+                                ),
+                                span: 35..50,
+                            },),
+                        },
+                        LineComment {
+                            body: CommentBody::Empty,
+                            stmt: Some(Stmt {
+                                kind: StmtKind::LetDecl(
+                                    "c".into(),
+                                    Some(Box::new(Expr {
+                                        kind: ExprKind::Literal(Value::Bool(true,),),
+                                        span: 68..72,
+                                    })),
+                                ),
+                                span: 60..72,
+                            },),
+                        },
+                        LineComment {
+                            body: CommentBody::Empty,
+                            stmt: Some(Stmt {
+                                kind: StmtKind::LetDecl(
+                                    "d".into(),
+                                    Some(Box::new(Expr {
+                                        kind: ExprKind::Literal(Value::Bool(false,),),
+                                        span: 90..95,
+                                    })),
+                                ),
+                                span: 82..95,
+                            },),
+                        },
+                        LineComment {
+                            body: CommentBody::Empty,
+                            stmt: Some(Stmt {
+                                kind: StmtKind::LetDecl(
+                                    "e".into(),
+                                    Some(Box::new(Expr {
+                                        kind: ExprKind::Literal(Value::Null,),
+                                        span: 113..117,
+                                    })),
+                                ),
+                                span: 105..117,
+                            },),
+                        },
+                    ]
                 }
             }
         )
