@@ -73,7 +73,7 @@ Components {
   Main = TopLevelComponent+ Component+
   TopLevelComponent = "{" Pair<"diagram"> Pair<"toplevelcomponent"> "}"
   Component = "{"
-    ArrayPair<"children">
+    ChildrenArrayPair
     ObjectArrayPair<"connections">
     Pair<"diagram">
     Pair<"id">
@@ -83,12 +83,16 @@ Components {
     Pair<"synccode">
     "}"
 
+    ChildrenArrayPair = NamesArrayPair<"children">
+
       Pair<Name> = quote Name quote colon string
       ArrayPair<Name> = quote Name quote colon "[" string* "]"
+      NamesArrayPair<Name> = quote Name quote colon "[" name* "]"
       ObjectArrayPair<Name> = quote Name quote colon "[" JSONconnection* "]"
       colon = ":"
       quote = "\""
       string = quote notQuote* quote
+      name = quote notQuote* quote
       notQuote = ~quote any
       space += ","
 
@@ -114,16 +118,18 @@ Components {
   TopLevelComponent [lb diag component rb] = [[${lb}${diag}${component}${rb}\n]]
   Component [lb children connections diagram id inputs name outputs synccode rb] =
   [[
-${namify (name)} {
-  ${stripQuotes (synccode)}
-}
-]]
+\n\n${namify (name)} {${stripQuotesAddNewlines (synccode) } ${stripQuotes (children) } }]]
+
+  ChildrenArrayPair [names] = [[${names}]]
+
       Pair [q1 name q2 colon str] = [[${str}]]
       ArrayPair [q1 name q2 colon lb @strs rb] = [[${q1}${name}${q2} ${colon} ${lb} ${strs} ${rb}]]
+      NamesArrayPair [q1 name q2 colon lb @names rb] = [[${names}]]
       ObjectArrayPair [q1 name q2 colon lb @jscs rb] = [[${q1}${name}${q2} ${colon} ${lb}${jscs}${rb}]]
       colon [c] = [[${c}]]
       quote [c] = [[${c}]]
       string [q1 @nqs q2] = [[${q1}${nqs}${q2} ]]
+      name [q1 @nqs q2] = [[${namify (nqs)}\n]]
       notQuote [c] = [[${c}]]
 
       JSONconnection [lb name source target rb] = [[${lb}${name}${source}${target}${rb}]]

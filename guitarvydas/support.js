@@ -141,3 +141,11 @@ function stripQuotes (s) {
 	.replace (/"/g,'');
 }
 
+function stripQuotesAddNewlines (s) {
+    var str = stripQuotes (s);
+    if (s === '') {
+	return s;
+    } else {
+	return '\n' + stripQuotes (s) + '\n';
+    }
+}
