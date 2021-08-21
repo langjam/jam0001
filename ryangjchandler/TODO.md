@@ -7,5 +7,5 @@
 * [*] Prevent reassigning to constants
 * [ ] Type check assignments (not going to happen in time frame :/)
 * [*] Add support for lists/arrays
-* [ ] Add support for for..in
+* [*] Add support for for..in
 * [ ] Add support for optional parameters
