@@ -1,9 +1,9 @@
 start := comment=Comment _ $
 
-Comment := LoopComment | ManipulationComment | AssignmentComment
+Comment := WhileComment | ManipulationComment | AssignmentComment
 _ := ' '*
 
-LoopComment := 'while' _ whileExpression=Expression ':'
+WhileComment := 'while' _ whileExpression=Expression ':'
 
 ManipulationComment := base=ManipulationCommentBase _ self={'including' _ 'self'}?
 ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate

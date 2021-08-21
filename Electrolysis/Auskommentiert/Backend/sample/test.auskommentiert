@@ -1,10 +1,10 @@
 
 {
-    "comment_id": 5
+    "id": 5
     "content": "while true",
     "children": [
         {
-            "comment_id: 10,
+            "id": 10,
             "content": "x is 5"
             "children": []
         }
