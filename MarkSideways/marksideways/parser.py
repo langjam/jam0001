@@ -155,6 +155,8 @@ def parse_entity(tokens):
 
   if next_type == 'WORD':
     tokens.pop()
+    if next_value == 'this':
+      return ThisConstant(next_token)
     return Variable(next_token, next_value)
   
   if next_type == 'FLOAT':

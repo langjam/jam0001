@@ -81,14 +81,14 @@ class Expression(Node):
   def __init__(self, first_token):
     super().__init__(first_token)
   
-  def run(self, globals, locals):
+  def run(self, scope):
     raise ParserException(self.first_token, ".run() not implemented for " + str(self))
 
 class Executable(Node):
   def __init__(self, first_token):
     super().__init__(first_token)
   
-  def run(self, globals, locals):
+  def run(self, scope):
     raise ParserException(self.first_token, ".run() not implemented for " + str(self))
 
 class Variable(Expression):
@@ -97,11 +97,12 @@ class Variable(Expression):
     self.name = name
     self.canonical_name = canonicalize_identifier(name)
   
-  def run(self, globals, locals):
-    if locals.get(self.canonical_name) != None:
-      value = locals[self.canonical_name]
-    elif globals.get(self.canonical_name) != None:
-      value = globals[self.canonical_name]
+  def run(self, scope):
+    print(scope)
+    if scope.locals.get(self.canonical_name) != None:
+      value = scope.locals[self.canonical_name]
+    elif scope.globals.get(self.canonical_name) != None:
+      value = scope.globals[self.canonical_name]
     else:
       return new_error_value(self.first_token, "The variable '" + self.name + "' is used but has not been defined yet.")
     
@@ -112,7 +113,7 @@ class StringConstant(Expression):
     super().__init__(first_token)
     self.value = value
     self.cached_value = None
-  def run(self, globals, locals):
+  def run(self, scope):
     if self.cached_value == None:
       self.cached_value = StringValue(self.value)
     return self.cached_value
@@ -124,12 +125,12 @@ class FunctionInvocation(Expression):
     self.open_paren = open_paren_token
     self.args = args
   
-  def run(self, globals, locals):
-    root_value = self.expression.run(globals, locals)
+  def run(self, scope):
+    root_value = self.expression.run(scope)
     if root_value.is_error: return root_value
     args = []
     for arg in self.args:
-      arg_value = arg.run(globals, locals)
+      arg_value = arg.run(scope)
       if arg_value.is_error: return arg_value
       args.append(arg_value)
     
@@ -142,7 +143,7 @@ class FunctionInvocation(Expression):
     elif root_value.type == 'CONSTRUCTOR':
       class_def = root_value.class_def
       instance = InstanceValue(root_value.class_def)
-      value = run_function(self.open_paren, class_def.code, globals, instance, class_def.arg_names, args)
+      value = run_function(self.open_paren, class_def.code, scope.globals, instance, class_def.arg_names, args)
       if value.is_error: return value
       return instance
     elif root_value.type == 'BUILTIN_FUNCTION':
@@ -154,9 +155,8 @@ class ExpressionAsExecutable(Executable):
   def __init__(self, expression):
     super().__init__(expression.first_token)
     self.expression = expression
-  
-  def run(self, globals, locals):
-    value = self.expression.run(globals, locals)
+  def run(self, scope):
+    value = self.expression.run(scope)
     if value.is_error:
       return error_status_from_value(value)
     return None
@@ -164,24 +164,24 @@ class ExpressionAsExecutable(Executable):
 class BreakStatement(Executable):
   def __init__(self, token):
     super().__init__(token)
-  def run(self, globals, locals):
+  def run(self, scope):
     return StatusWrapper('BREAK', None)
 
 class ContinueStatement(Executable):
   def __init__(self, token):
     super().__init__(token)
-  def run(self, globals, locals):
+  def run(self, scope):
     return StatusWrapper('CONTINUE', None)
 
 class ReturnStatement(Executable):
   def __init__(self, return_token, expression):
     super().__init__(return_token)
     self.expression = expression
-  def run(self, globals, locals):
+  def run(self, scope):
     if self.expression == None:
       value = NULL_VALUE
     else:
-      value = self.expression.run(globals, locals)
+      value = self.expression.run(scope)
     if value.is_error: return error_status_from_value(value)
     return StatusWrapper('RETURN', value)
 
@@ -192,8 +192,8 @@ class DotField(Expression):
     self.dot = dot
     self.field_name = field_name
 
-  def run(self, globals, locals):
-    value = self.root.run(globals, locals)
+  def run(self, scope):
+    value = self.root.run(scope)
     if value.is_error: return value
     if is_null(value): return to_null_error(value)
     field_name = self.field_name.value
@@ -223,21 +223,21 @@ class AssignStatement(Executable):
     self.assign_op = assign_op
     self.value = value_expression
 
-  def run(self, globals, locals):
-    value = self.value.run(globals, locals)
+  def run(self, scope):
+    value = self.value.run(scope)
     if value.is_error: return error_status_from_value(value)
     if isinstance(self.target, Variable):
       if self.assign_op.value == '=':
-        locals[canonicalize_identifier(self.target.name.value)] = value
+        scope.locals[canonicalize_identifier(self.target.name.value)] = value
       else:
         raise Exception("TODO: incremental assignment")
     elif isinstance(self.target, DotField):
-      root = self.target.root.run(globals, locals)
+      root = self.target.root.run(scope)
       if root.is_error: return error_status_from_value(root)
       if is_null(root): return to_null_error(self.target.bracket_token)
       raise Exception("TODO: assign to a dot field")
     elif isinstance(self.target, BracketIndex):
-      root = self.target.root.run(globals, locals)
+      root = self.target.root.run(scope)
       if root.is_error: return error_status_from_value(root)
       if is_null(root): return to_null_error(self.target.dot)
       raise Exception("TODO: assign to a bracket index")
@@ -250,12 +250,20 @@ class OpChain(Expression):
     self.expressions = expressions
     self.ops = ops
 
+class ThisConstant(Expression):
+  def __init__(self, first_token):
+    super().__init__(first_token)
+  def run(self, scope):
+    if scope.this_context == None:
+      return new_error_value(self.first_token, "The 'this' constant cannot be used in this context. It may only be used inside a class constructor or method.")
+    return scope.this_context
+
 class IntegerConstant(Expression):
   def __init__(self, first_token, value):
     super().__init__(first_token)
     self.value = value
     self.cached_value = None
-  def run(self, globals, locals):
+  def run(self, scope):
     if self.cached_value == None:
       self.cached_value = get_integer_value(self.value)
     return self.cached_value
@@ -270,11 +278,11 @@ class ForLoop(Executable):
     self.end_expr = end_expr
     self.code = code
 
-  def run(self, globals, locals):
-    start_num = self.start_expr.run(globals, locals)
+  def run(self, scope):
+    start_num = self.start_expr.run(scope)
     if start_num.is_error: return error_status_from_value(start_num)
     if start_num.type != 'INT': return new_error_status(self.start_expr.first_token, "for loop starting expression must be an integer.")
-    end_num = self.end_expr.run(globals, locals)
+    end_num = self.end_expr.run(scope)
     if end_num.is_error: return error_status_from_value(end_num)
     if end_num.type != 'INT': return new_error_status(self.end_expr.first_token, "for loop ending expression must be an integer.")
     start = start_num.value
@@ -286,9 +294,10 @@ class ForLoop(Executable):
     end_trigger = end_num
     if self.is_inclusive: end_trigger += step
     i = start
+    var_name = canonicalize_identifier(self.variable.name.value)
     while i != end_trigger:
-      locals[self.variable.name.value] = get_integer_value(i)
-      status = run_code_block(self.code, globals, locals)
+      scope.locals[var_name] = get_integer_value(i)
+      status = run_code_block(self.code, scope)
       if status != None:
         if status.type == 'BREAK':
           return None
@@ -321,8 +330,7 @@ def run_function(throw_token, code_lines, global_scope, this_context, arg_names,
   new_locals = {}
   for i in range(len(arg_names)):
     new_locals[canonicalize_identifier(arg_names[i])] = arg_values[i]
-  print("New locals", new_locals)
-  result = run_code_block(code_lines, global_scope, new_locals, this_context)
+  result = run_code_block(code_lines, Scope(global_scope, new_locals, this_context))
   if result != None:
     if result.type == 'EXCEPTION':
       stack_trace = result.arg
@@ -331,13 +339,18 @@ def run_function(throw_token, code_lines, global_scope, this_context, arg_names,
       return result.arg
   return NULL_VALUE
    
-def run_code_block(lines, global_scope, variables, this_context = None):
+def run_code_block(lines, scope):
   i = 0
   while i < len(lines):
-    print("Running code block line", i)
     line = lines[i]
-    status = line.run(global_scope, variables)
+    status = line.run(scope)
     if status != None:
       return status
     i += 1
   return None
+
+class Scope:
+  def __init__(self, globals, locals, this_context = None):
+    self.globals = globals
+    self.locals = locals
+    self.this_context = this_context

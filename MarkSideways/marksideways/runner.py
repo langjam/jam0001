@@ -23,7 +23,7 @@ class Runner:
     built_ins = generate_builtins()
     user_defined = gather_user_entities(document)
     globals = merge_dictionaries(built_ins, user_defined)
-    status = run_code_block(document.code, globals, {})
+    status = run_code_block(document.code, Scope(globals, {}))
     if status != None:
       if status.type == 'EXCEPTION':
         stack_trace = status.arg
