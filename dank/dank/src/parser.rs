@@ -60,6 +60,21 @@ peg::parser!(pub grammar dank() for str {
     pub rule stmt() -> Stmt<'input>
          = p:print() ";" {p}
          / b:binding() ";" {b}
+         / w:while_loop()  {w}
+         / b:block() {b}
+
+    pub rule block() -> Stmt<'input>
+    = start:position!() "{" ___ statements:(s:stmt() ___ {s})* ___ "}" end:position!() {
+        Stmt {
+            span: start..end,
+            kind:  StmtKind::Block(statements)
+        }
+    }
+
+    pub rule while_loop() -> Stmt<'input>
+    = start:position!() "while" _ c:expr() _ b:block() {
+        Stmt { span: start..b.span.end, kind: StmtKind::While(Box::new(c), Box::new(b)) }
+    }
 
     pub rule expr() -> Expr<'input> = operators()
 
@@ -266,6 +281,73 @@ pub mod tests {
                 }
             }
         )
+    }
+
+    #[test]
+    fn block() {
+        let test = r#"
+            {}
+            {
+                print("code inside the block");
+                let x = 5;
+            }
+        "#;
+        test_eq!(
+            test,
+            r#"
+FileAst
+  header_comments= 
+  code: Ast
+    statements= 
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::Block
+          statements= 
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::Block
+          statements= 
+            StmtKind::Print
+              args= 
+                ExprKind::Literal
+                  field0: Str("code inside the block")
+            StmtKind::LetDecl
+              name: "x"
+              initializer: ExprKind::Literal
+                field0: Num(5.0)
+"#
+        );
+    }
+
+    #[test]
+    fn while_loop() {
+        let test = r#"
+        while true { print("hello" + "world"); }
+        "#;
+        test_eq!(
+            test,
+            r#"
+FileAst
+  header_comments= 
+  code: Ast
+    statements= 
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::While
+          condition: ExprKind::Literal
+            field0: Bool(true)
+          body: StmtKind::Block
+            statements= 
+              StmtKind::Print
+                args= 
+                  ExprKind::Binary
+                    left: ExprKind::Literal
+                      field0: Str("hello")
+                    op: BinOpKind::Add
+                    right: ExprKind::Literal
+                      field0: Str("world")
+"#
+        );
     }
 
     #[test]

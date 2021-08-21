@@ -6,6 +6,7 @@ use crate::data::Value;
 
 pub type Span = std::ops::Range<usize>;
 pub type ExprPtr<'a> = Box<Expr<'a>>;
+pub type StmtPtr<'a> = Box<Stmt<'a>>;
 
 #[derive(Debug, Clone, PartialEq, AstToStr)]
 pub struct FileAst<'a> {
@@ -49,6 +50,11 @@ pub enum StmtKind<'a> {
     ),
     ExprStmt(#[rename = "expr"] ExprPtr<'a>),
     Print(#[rename = "args"] Vec<Expr<'a>>),
+    Block(#[rename = "statements"] Vec<Stmt<'a>>),
+    While(
+        #[rename = "condition"] ExprPtr<'a>,
+        #[rename = "body"] StmtPtr<'a>,
+    ),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, AstToStr)]
