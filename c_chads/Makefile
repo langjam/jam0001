@@ -18,9 +18,6 @@ test:
 	$(CPFX) $(CC) $(CFLAGS) $(CTST) -Wno-gnu-zero-variadic-macro-arguments -g -o ./bin/test
 	./bin/test
 
-run: all
-	./bin/COLAN-21 input.colan
-
 clean:
 	if [ -d "./bin" ]; then rm -r ./bin; fi
 
