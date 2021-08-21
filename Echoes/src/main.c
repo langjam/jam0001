@@ -28,6 +28,83 @@ static char *load_file(const char* const filename) {
     return allocated;
 }
 
+static void print_value(struct Value *value) {
+    switch (value->type) {
+    case ValueTypeVoid:
+        printf("(value: (type: void))");
+        break;
+    case ValueTypeNumber:
+        printf("(value: (type: number, value: %d))", value->value.number);
+        break;
+    case ValueTypeString:
+        printf("(value: (type: string, value: \"%s\"))", value->value.string);
+        break;
+    default:
+        assert(0);
+    }
+}
+
+static void print_expr(struct Expr *expr) {
+    switch (expr->type) {
+    case ExprTypeAdd:
+        printf("(op: '+', lhs: ");
+        print_expr(expr->as.binary.lhs);
+        printf(", rhs: ");
+        print_expr(expr->as.binary.rhs);
+        printf(")");
+        break;
+    case ExprTypeSub:
+        printf("(op: '-', lhs: ");
+        print_expr(expr->as.binary.lhs);
+        printf(", rhs: ");
+        print_expr(expr->as.binary.rhs);
+        printf(")");
+        break;
+    case ExprTypeMul:
+        printf("(op: '*', lhs: ");
+        print_expr(expr->as.binary.lhs);
+        printf(", rhs: ");
+        print_expr(expr->as.binary.rhs);
+        printf(")");
+        break;
+    case ExprTypeDiv:
+        printf("(op: '/', lhs: ");
+        print_expr(expr->as.binary.lhs);
+        printf(", rhs: ");
+        print_expr(expr->as.binary.rhs);
+        printf(")");
+        break;
+    case ExprTypeKey:
+        printf("(key: %s)", expr->as.key);
+        break;
+    case ExprTypeValue:
+        print_value(expr->as.value);
+        break;
+    default:
+        printf("%d", expr->type);
+        break;
+        assert(0);
+    }
+}
+
+static void print_node(struct Node *node) {
+    switch (node->type) {
+    case NodeTypeLog:
+        printf("(log: ");
+        print_expr(node->value.log_value);
+        printf(")");
+        break;
+    case NodeTypeSet:
+        printf("(set: (key: %s, value: ", node->value.set.key);
+        print_expr(node->value.set.expr);
+        printf("))");
+        break;
+    default:
+        break;
+        assert(0);
+    }
+}
+
 int main(int argc, char **argv) {
     char *stream_base;
     bool do_free = false;
@@ -54,30 +131,8 @@ int main(int argc, char **argv) {
         return 1;
     }
     for (struct Node **node = parse(stream_base); *node; ++node) {
-        switch ((*node)->type) {
-        case NodeTypeLog:
-            if ((*node)->value.log_value->raw) {
-                switch ((*node)->value.log_value->as.raw->type) {
-                case ValueTypeNumber:
-                    printf("log %d\n", (*node)->value.log_value->as.raw->value.number);
-                    break;
-                case ValueTypeString:
-                    printf("log \"%s\"\n", (*node)->value.log_value->as.raw->value.string);
-                    break;
-                default:
-                    assert(0);
-                    break;
-                }
-                break;
-            } else {
-                printf("log %s\n", (*node)->value.log_value->as.key);
-            }
-        case NodeTypeSet:
-            printf("set :%s to value\n", (*node)->value.set.key);
-            break;
-        default:
-            assert(0);
-        }
+        print_node(*node);
+        printf("\n");
     }
     if (do_free)
         free(stream_base);

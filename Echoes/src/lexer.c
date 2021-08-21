@@ -94,7 +94,7 @@ bool lexer_tokenize(struct Lexer* const lexer) {
         }
         return true;
     }
-    // tokenize string, i.e "string"
+    // tokenize string
     if (lexer->stream[0] == '"') {
         lexer->token.name = TokenNameString;
         lexer->token.string = ++lexer->stream;
@@ -111,8 +111,47 @@ bool lexer_tokenize(struct Lexer* const lexer) {
         ++lexer->column;
         return true;
     }
+    if (lexer->stream[0] == '+') {
+        lexer->token.name = TokenNameAdd;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
+    if (lexer->stream[0] == '-') {
+        lexer->token.name = TokenNameSub;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
+    if (lexer->stream[0] == '*') {
+        lexer->token.name = TokenNameMul;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
+    if (lexer->stream[0] == '/') {
+        lexer->token.name = TokenNameDiv;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
+    if (lexer->stream[0] == '(') {
+        lexer->token.name = TokenNameLeftParen;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
+    if (lexer->stream[0] == ')') {
+        lexer->token.name = TokenNameRightParen;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
     // try to tokenize `log`
     if (lexer_match_keyword(lexer, "log", 3, TokenNameLog))
+        return true;
+    // try to tokenize `routine`
+    if (lexer_match_keyword(lexer, "routine", 7, TokenNameRoutine))
         return true;
 
     lexer_error(lexer, "Unrecognized token");

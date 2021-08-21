@@ -9,7 +9,14 @@ enum TokenName {
     TokenNameNumber,
     TokenNameNewline,
     TokenNameLog,
-    TokenNameKey
+    TokenNameKey,
+    TokenNameAdd,
+    TokenNameSub,
+    TokenNameMul,
+    TokenNameDiv,
+    TokenNameLeftParen,
+    TokenNameRightParen,
+    TokenNameRoutine
 };
 
 struct Token {

@@ -1,5 +1,5 @@
-#ifndef RAEL_PARSER_H
-#define REAL_PARSER_H
+#ifndef ECHOES_PARSER_H
+#define ECHOES_PARSER_H
 
 #include "lexer.h"
 
@@ -19,10 +19,22 @@ struct Value {
     } value;
 };
 
+enum ExprType {
+    ExprTypeValue = 1,
+    ExprTypeKey,
+    ExprTypeAdd,
+    ExprTypeSub,
+    ExprTypeMul,
+    ExprTypeDiv
+};
+
 struct Expr {
-    bool raw;
+    enum ExprType type;
     union {
-        struct Value *raw;
+        struct {
+            struct Expr *lhs, *rhs;
+        } binary;
+        struct Value *value;
         char *key;
     } as;
 };
@@ -51,4 +63,4 @@ struct Parser {
 
 struct Node **parse(char* const stream);
 
-#endif // RAEL_PARSE_H
+#endif // ECHOES_PARSER_H
