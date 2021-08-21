@@ -312,8 +312,8 @@ class World:
 
         plt.show()
 
-    # def to_json(self):
-    #
+    def to_json(self):
+        pass
 
 if __name__ == '__main__':
     with open("test_places.json") as f:
