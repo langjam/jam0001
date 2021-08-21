@@ -11,6 +11,8 @@ const (
 	TTnumber      // 1, 3.5
 	TTconst       // true, false
 	TTref         // $number
+	TTwhile       // while
+	TTwcomment    // comment
 )
 
 type Token struct {

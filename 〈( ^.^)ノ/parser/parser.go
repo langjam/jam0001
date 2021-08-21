@@ -4,8 +4,6 @@ import (
 	"github.com/grossamos/jam0001/shared"
 )
 
-// some parser
-
 func GenerateAst(toks *[]shared.Token) []shared.Node {
 	out := make([]shared.Node, 0, 256)
 
@@ -38,7 +36,7 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 
 			continue
 
-		case shared.TTstring:
+		case shared.TTstring, shared.TTref:
 			if len(*toks) > 0 &&
 				(*toks)[1].Type == shared.TTlparen {
 
@@ -56,6 +54,20 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 				out = append(out, shared.Node{Val: tok})
 			}
 
+		case shared.TTwcomment:
+			if len(out) == 0 {
+				continue
+			}
+
+			index := len(out) - 1
+
+			out[index] = shared.Node{
+				IsExpression: true,
+				Children: []shared.Node{
+					{Val: tok},
+					out[index]}}
+			}
+
 		default:
 			out = append(out, shared.Node{Val: tok})
 		}
@@ -64,8 +76,4 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 	}
 
 	return out
-}
-
-func RunParser() {
-
 }
