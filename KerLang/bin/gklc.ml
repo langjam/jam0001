@@ -31,7 +31,6 @@ let input_files = ref ""
 
 let output_file = ref ""
 
-
 let anon_fun filename =
   input_files := filename
 
