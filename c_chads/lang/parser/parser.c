@@ -8,7 +8,9 @@ typedef enum Parser_Node_Kind pnode_kind_t;
 static struct Parser_State parser;
 struct {
     rune unmatched;
-} error_handling = { 
+    string expected;
+} error_handling = {
+    .expected = NULL,
     .unmatched = 0
 };
 
@@ -18,13 +20,17 @@ static rune begindelim(rune delim) {
     return prev;
 }
 
+static void setexpect(string expect) {
+    error_handling.expected = expect;
+}
+
 static void enddelim(rune prev) {
     error_handling.unmatched = prev;
 }
 
 
-static void lineinfo() {
-    eh_error(parser.current_token.line, parser.current_token.col, parser.lexer.src);
+static void lineinfo(tok_t *token) {
+    eh_error(token->line, token->col, parser.lexer.src);
 }
 
 static tok_t pull() {
@@ -32,7 +38,7 @@ static tok_t pull() {
     parser.current_token = lex_determine(&parser.lexer);
     if (tok.tt == TT_INVALID) {
         EH_MESSAGE("Invalid character: `%.*s`\n", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
-        lineinfo();
+        lineinfo(&tok);
         exit(1);
     }
     if (tok.tt == TT_EOF) {
@@ -40,7 +46,7 @@ static tok_t pull() {
         if (error_handling.unmatched != 0) {
             EH_MESSAGE(", unclosed `%c`", error_handling.unmatched);
         }
-        lineinfo();
+        lineinfo(&parser.current_token);
         if (parser.lexer.src[tok.span.from] == '\"') {
             fprintf(stderr, "(Probably due to unclosed \")\n");
             eh_at_line(tok.line, parser.lexer.src);
@@ -57,7 +63,10 @@ tok_t peek() {
 
 static void stray(tok_t *tok) {
     EH_MESSAGE("Stray `%.*s`", SPAN_PF(tok->span, parser.lexer.src));
-    lineinfo();
+    if (error_handling.expected != NULL) {
+        EH_MESSAGE(" (Expected %s)", error_handling.expected);
+    }
+    lineinfo(tok);
     exit(1);
 }
 
@@ -112,6 +121,13 @@ static pnode_t call(tok_t on) {
 
 static pnode_t declaration(tok_t on);
 
+static strview_t typedecl() {
+    setexpect("type name");
+    tok_t token = pull();
+    assert_tt(&token, TT_IDENT);
+    return strview_span(token.span, parser.lexer.src);
+}
+
 static pnode_t value() {
     tok_t token = pull();
     pnode_t value_node;
@@ -155,12 +171,18 @@ static pnode_t value() {
 
 static pnode_t declaration(tok_t on) {
     assert_tt(&on, TT_IDENT);
+    setexpect("`:` followed by type");
+    if (peek().tt == TT_ASSIGN)
+        setexpect("`:` followed by type, note that you need to specify type before assigning");
+    skip_tt(TT_DEF);
+    strview_t type = typedecl();
     skip_tt(TT_ASSIGN);
     pnode_t right = value();
     pnode_t decl_node = pnode_new(PN_DECL);
     // Attach value
     pnode_attach(&decl_node, right);
     decl_node.data.decl.name = strview_span(on.span, parser.lexer.src);
+    decl_node.data.decl.type = type;
     return decl_node;
 }
 

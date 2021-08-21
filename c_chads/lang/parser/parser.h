@@ -10,6 +10,8 @@ struct Parser_State {
 };
 
 enum Parser_Node_Kind {
+    PN_PARAMLIST,
+    PN_BODY,
     PN_TOPLEVEL,
     PN_DECL,
     PN_STRING,
@@ -24,7 +26,8 @@ struct Parser_Node {
     struct Vec OF(struct Parser_Node) children;
     union {
         struct {
-            strview_t name; 
+            strview_t type;
+            strview_t name;
         } decl;
         struct {
             strview_t name; 

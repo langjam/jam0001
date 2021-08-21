@@ -246,8 +246,8 @@ struct Token lex_determine(struct Lexer_State *self) {
     }
 end:
     // This is needed, because INVALID unwinds, while others don't
-    if (tok.tt != TT_INVALID && tok.tt != TT_EOF && tok_col > 0)
-        tok_col -= 1;
+    //if (tok.tt != TT_INVALID && tok.tt != TT_EOF && tok_col > 0)
+    //    tok_col -= 1;
 
     tok.line = tok_line;
     tok.col = tok_col;
