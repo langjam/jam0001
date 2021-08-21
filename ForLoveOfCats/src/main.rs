@@ -2,26 +2,6 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::iter::Peekable;
 
-const SOURCE: &str = r#"
-(block
-	(# "Defining x to be one")
-	(define x 1)
-
-	(while true
-		(block
-			(print x)
-			(set x (* x 9))
-
-			(# "This is a comment, current value of x is" x)
-			(if (> x 10000000)
-				(pause)
-				()
-			)
-		)
-	)
-)
-"#;
-
 // const SOURCE: &str = r#"
 // (block
 // 	(define x 0)
@@ -790,10 +770,12 @@ fn print_comments(state: &ScopeState) {
 }
 
 fn main() {
-	println!("Tokenizing and parsing source: `{}`", SOURCE);
-	let tokens = tokenize(SOURCE);
+	let source = std::fs::read_to_string("program.rat");
+	let source = source.expect("Failed to find source file to execute");
+
+	let tokens = tokenize(&source);
 	let tree = parse_matching_parens(&mut tokens.iter().peekable());
-	println!("==== Evaluating ====");
+
 	let mut state = ScopeState::new();
 	evaluate(&mut state, &tree);
 }
