@@ -9,9 +9,25 @@ const TILE_TYPE = {
     ES: {name: "track_corner_ES.png", img: null},
     SW: {name: "track_corner_SW.png", img: null},
     WN: {name: "track_corner_WN.png", img: null},
+
+    T_LEFT: {name: "T_crossing_left.png", img: null},
+    T_RIGHT: {name: "T_crossing_right.png", img: null},
 }
 
 const COLOR = {
+    LightRed: "lightred",
+    DarkBlue: "darkblue",
+    DarkRed: "darkred",
+    LightBlue: "lightblue",
+    DarkGreen: "darkgreen",
+    LightGreen: "lightgreen",
+    WaterBlue: "waterblue",
+    Brown: "brown",
+    Yellow: "yellow",
+    Orange: "orange",
+}
+
+const STATION_TYPE = {
     LightRed: "lightred",
     DarkBlue: "darkblue",
     DarkRed: "darkred",
@@ -69,8 +85,8 @@ class Grid {
         this.stations = []
     }
 
-    addTile(coordinate, tile) {
-        this.grid.set(coordinate, tile)
+    addTile(coordinate, tile, rotation=DIRECTION.North) {
+        this.grid.set(coordinate, {tile: tile, rotation: rotation})
     }
 
     addTrain(train) {
@@ -90,7 +106,25 @@ class Grid {
         for (const i of this.grid) {
             const location = i[0];
             const tile = i[1];
-            drawTile(location.x * TILE_SIZE, location.y * TILE_SIZE, TILE_SIZE, TILE_SIZE, tile)
+
+
+            push()
+            translate(location.x * TILE_SIZE, location.y * TILE_SIZE)
+
+            translate(TILE_SIZE / 2, TILE_SIZE / 2);
+
+            switch (tile.rotation) {
+                case DIRECTION.North: break;
+                case DIRECTION.East: rotate(radians(90));  break;
+                case DIRECTION.South: rotate(radians(180)); break;
+                case DIRECTION.West: rotate(radians(-90)); break;
+            }
+
+            translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
+
+
+            drawTile(0, 0, TILE_SIZE, TILE_SIZE, tile.tile)
+            pop()
         }
 
         for (const i of this.trains) {
@@ -149,15 +183,15 @@ class Station {
 
     drawBackground() {
         push()
-        translate(this.location.x, this.location.y);
-        image(stationBackground, 0, 0, TILE_SIZE, TILE_SIZE)
+        translate(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE);
+        image(stationBackground, 0, 0, TILE_SIZE * 2, TILE_SIZE * 2)
         pop()
     }
 
     drawForeground() {
         push()
-        translate(this.location.x, this.location.y);
-        image(stationBackground, 0, 0, TILE_SIZE * 2, TILE_SIZE * 2)
+        translate(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE);
+        image(stationForeground, 0, 0, TILE_SIZE * 2, TILE_SIZE * 2)
 
         for (let i = 0; i < 8; i++) {
             if (i < this.stopped.length && this.stopped[i]) {
@@ -167,39 +201,54 @@ class Station {
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break;
                     case 1:
-                        translate(0, TILE_SIZE);
+                        translate(TILE_SIZE, 0);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break;
                     case 2:
-                        translate(0, TILE_SIZE);
+                        translate(TILE_SIZE, 0);
+                        translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(90));
+                        translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break;
                     case 3:
-                        translate(TILE_SIZE, TILE_SIZE);
+                        translate(TILE_SIZE, 0);
+                        translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(90));
+                        translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
+                        translate(TILE_SIZE, 0);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break;
                     case 4:
                         translate(TILE_SIZE, TILE_SIZE);
+                        translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(180));
+                        translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break;
                     case 5:
-                        translate(TILE_SIZE, 0);
+                        translate(TILE_SIZE, TILE_SIZE);
+                        translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(180));
-                        image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
-                        break;
-                    case 6:
+                        translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
                         translate(TILE_SIZE, 0);
-                        rotate(radians(-90));
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
-                        break;
+                        break
+                    case 6:
+                        translate(0, TILE_SIZE);
+                        translate(TILE_SIZE / 2, TILE_SIZE / 2);
+                        rotate(radians(-90));
+                        translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
+                        image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
+                        break
                     case 7:
-                        translate(0, 0);
+                        translate(0, TILE_SIZE);
+                        translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(-90));
+                        translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
+                        translate(TILE_SIZE, 0);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
-                        break;
+                        break
                 }
                 pop()
             }

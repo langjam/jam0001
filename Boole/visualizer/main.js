@@ -51,11 +51,20 @@ function setup() {
     grid.addTile(createVector(4, 4), TILE_TYPE.Vertical)
     grid.addTile(createVector(4, 3), TILE_TYPE.ES)
     grid.addTile(createVector(5, 3), TILE_TYPE.Horizontal)
-    grid.addTile(createVector(6, 3), TILE_TYPE.SW)
+    grid.addTile(createVector(6, 3), TILE_TYPE.T_LEFT)
     grid.addTile(createVector(6, 4), TILE_TYPE.Vertical)
     grid.addTile(createVector(6, 5), TILE_TYPE.WN)
 
-    grid.addStation(new Station(createVector(-3, -3), [true, false, true, true, false, false, true, false]))
+    grid.addTile(createVector(6, 2), TILE_TYPE.Vertical)
+    grid.addTile(createVector(6, 1), TILE_TYPE.SW)
+    grid.addTile(createVector(5, 1), TILE_TYPE.Horizontal)
+    grid.addTile(createVector(4, 1), TILE_TYPE.Horizontal)
+    grid.addTile(createVector(3, 1), TILE_TYPE.Horizontal)
+    grid.addTile(createVector(2, 1), TILE_TYPE.Horizontal)
+    grid.addTile(createVector(2, 0), TILE_TYPE.Horizontal)
+    grid.addTile(createVector(0, -1), TILE_TYPE.Vertical)
+
+    grid.addStation(new Station(createVector(0, 0), [false, true, false, false, true, true, true, true], STATION_TYPE.Plus))
 
     // all train colors
     // let x = 0;
