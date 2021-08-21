@@ -29,6 +29,7 @@ class Parser:
         token, value = self.advance()
         if token != expected_token:
             raise UnexpectedTokenError(expected_token, token)
+        return token, value
 
     def parse(self):
         self.parse_program()
@@ -78,8 +79,7 @@ class Parser:
     def parse_if_stmt(self):
         self.parse_expr()
         self.expect(Token.THEN)
-        self.parse_stmt()
-        pass
+        self.parse_stmt_contents()
 
     def parse_expr(self):
         first_operand_token, first_operand_value = self.expect(Token.NUMBER)
@@ -110,9 +110,22 @@ if __name__ == "__main__":
         yield (Token.DOT, ".")
         yield (Token.EOF, "")
 
-    def if_stmt():
-        # TODO: put an if statement here to parse.
-        pass
+    def if_stmt_compare_constants():
+        yield (Token.BOF, "")
+        yield (Token.IF_KEYWORD, "If")
+        yield (Token.NUMBER, "6800")
+        yield (Token.COMPARISON, "is")
+        yield (Token.NUMBER, "6800")
+        yield (Token.THEN, "then")
+        yield (Token.SETVAR, "set")
+        yield (Token.IDENTIFIER_WORD, "successor")
+        yield (Token.TO, "to")
+        yield (Token.NUMBER, "68000")
+        yield (Token.DOT, ".")
+        yield (Token.EOF, "")
 
     parser = Parser(set_x().__next__)
+    parser.parse()
+
+    parser = Parser(if_stmt_compare_constants().__next__)
     parser.parse()
