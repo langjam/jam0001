@@ -36,8 +36,17 @@ class Parser:
 
     def parse_program(self):
         self.expect(Token.BOF)
-        self.parse_stmt()
+        self.parse_functions()
+        self.parse_stmts()
         self.expect(Token.EOF)
+
+    def parse_functions(self):
+        token, value = self.peek_lexeme()
+        while token == Token.FUNCTION:
+            self.parse_function()
+
+    def parse_function(self):
+        raise NotImplemented()
 
     def parse_stmts(self):
         stmts_end_tokens = [Token.LEAVE_FUNC, Token.EOF]
@@ -98,23 +107,17 @@ class Parser:
                 Token.IDENTIFIER_WORD, token
             )  # TODO: could be either.
 
+
 if __name__ == "__main__":
 
-    def empty_program():
-        yield (Token.BOF, "")
-        yield (Token.EOF, "")
-
     def set_var_to_constant():
-        yield (Token.BOF, "")
         yield (Token.SETVAR, "Set")
         yield (Token.IDENTIFIER_WORD, "x")
         yield (Token.TO, "to")
         yield (Token.NUMBER, "-39")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
     def set_var_to_var():
-        yield (Token.BOF, "")
         yield (Token.SETVAR, "Set")
         yield (Token.IDENTIFIER_WORD, "retirement")
         yield (Token.IDENTIFIER_WORD, "age")
@@ -122,10 +125,8 @@ if __name__ == "__main__":
         yield (Token.IDENTIFIER_WORD, "pension")
         yield (Token.IDENTIFIER_WORD, "age")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
     def if_stmt_compare_constants():
-        yield (Token.BOF, "")
         yield (Token.IF_KEYWORD, "If")
         yield (Token.NUMBER, "6800")
         yield (Token.COMPARISON, "is")
@@ -136,10 +137,8 @@ if __name__ == "__main__":
         yield (Token.TO, "to")
         yield (Token.NUMBER, "68000")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
     def if_stmt_compare_variable_and_constant():
-        yield (Token.BOF, "")
         yield (Token.IF_KEYWORD, "If")
         yield (Token.IDENTIFIER_WORD, "processor")
         yield (Token.IDENTIFIER_WORD, "type")
@@ -152,10 +151,8 @@ if __name__ == "__main__":
         yield (Token.TO, "to")
         yield (Token.NUMBER, "68000")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
     def if_stmt_compare_variable_and_variable():
-        yield (Token.BOF, "")
         yield (Token.IF_KEYWORD, "If")
         yield (Token.IDENTIFIER_WORD, "processor")
         yield (Token.IDENTIFIER_WORD, "type")
@@ -169,19 +166,32 @@ if __name__ == "__main__":
         yield (Token.TO, "to")
         yield (Token.NUMBER, "6502")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
-    parser = Parser(set_var_to_constant().__next__)
+    def program(*fragments):
+        def generator():
+            yield (Token.BOF, "")
+            for fragment in fragments:
+                yield from fragment()
+            yield (Token.EOF, "")
+        return generator().__next__
+
+    parser = Parser(program())
     parser.parse()
 
-    parser = Parser(set_var_to_var().__next__)
+    parser = Parser(program(set_var_to_constant))
     parser.parse()
 
-    parser = Parser(if_stmt_compare_constants().__next__)
+    parser = Parser(program(set_var_to_var))
     parser.parse()
 
-    parser = Parser(if_stmt_compare_variable_and_constant().__next__)
+    parser = Parser(program(if_stmt_compare_constants))
     parser.parse()
 
-    parser = Parser(if_stmt_compare_variable_and_variable().__next__)
+    parser = Parser(program(if_stmt_compare_variable_and_constant))
+    parser.parse()
+
+    parser = Parser(program(if_stmt_compare_variable_and_variable))
+    parser.parse()
+
+    parser = Parser(program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant))
     parser.parse()
