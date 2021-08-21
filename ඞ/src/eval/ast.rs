@@ -41,6 +41,7 @@ macro_rules! ast_obj {
 impl Evaluator {
     pub(super) fn register_ast_classes(&mut self) {
         for class in [
+            declare_builtin!("ASTBoolLiteral"; "value"),
             declare_builtin!("ASTIntLiteral"; "value"),
             declare_builtin!("ASTFloatLiteral"; "value"),
             declare_builtin!("ASTStringLiteral"; "text"),
@@ -69,7 +70,7 @@ impl Evaluator {
             v => return Err(format!("Tried to evaluate AST, but found {:?}", v)),
         };
         let result = match obj.class.as_str() {
-            "ASTIntLiteral" | "ASTFloatLiteral" => obj.get_field("value")?,
+            "ASTBoolLiteral" | "ASTIntLiteral" | "ASTFloatLiteral" => obj.get_field("value")?,
             "ASTStringLiteral" => obj.get_field("text")?,
             "ASTComment" => {
                 let text = match obj.get_field("text")? {
@@ -134,6 +135,9 @@ impl Evaluator {
                     self.enter_scope();
                     for stmt in &body {
                         self.eval_ast(stmt)?;
+                        if self.returning.is_some() {
+                            break;
+                        }
                     }
                     self.exit_scope();
                     break;
@@ -155,11 +159,14 @@ impl Evaluator {
                 };
                 self.enter_scope();
                 self.create_var(name.clone(), Value::None);
-                for elem in elems {
+                'all_its: for elem in elems {
                     let loop_var = unsafe { &mut *self.get_var(&name).unwrap() };
                     *loop_var = self.eval_ast(&elem)?;
                     for stmt in &body {
                         self.eval_ast(stmt)?;
+                        if self.returning.is_some() {
+                            break 'all_its;
+                        }
                     }
                 }
                 self.exit_scope();
@@ -201,7 +208,12 @@ impl Evaluator {
                 self.create_fn(function.name.clone(), function);
                 Value::Unit
             }
-            "ASTRetStmt" => self.eval_ast(&obj.get_field("value")?)?,
+            "ASTRetStmt" => {
+                let val = self.eval_ast(&obj.get_field("value")?)?;
+                let val = self.deref_val(val)?;
+                self.returning = Some(val.clone());
+                val
+            }
             "ASTFnCall" => {
                 let name = match obj.get_field("name")? {
                     Value::String(s) => s,
@@ -234,13 +246,10 @@ impl Evaluator {
                         }
                         let mut result = Value::Unit;
                         for stmt in &f.body {
-                            let val = self.eval_ast(stmt)?;
-                            let val = self.deref_val(val)?;
-                            if let Value::Object(o) = stmt {
-                                if o.class == "ASTRetStmt" {
-                                    result = val;
-                                    break;
-                                }
+                            self.eval_ast(stmt)?;
+                            if let Some(val) = self.returning.take() {
+                                result = val;
+                                break;
                             }
                         }
                         self.exit_scope();
@@ -410,7 +419,7 @@ impl Evaluator {
 
         // Depending on the type of op, we need to resolve variables to their values
         match op.as_str() {
-            "+" | "-" | "*" | "/" | "==" | "!=" | "<" | "<=" | ">" | ">=" => {
+            "+" | "-" | "*" | "/" | "==" | "!=" | "<" | "<=" | ">" | ">=" | "||" | "&&" => {
                 // deref and clone since arith. ops only apply to primitives
                 lhs = self.deref_val(lhs)?;
                 rhs = self.deref_val(rhs)?;
@@ -472,6 +481,14 @@ impl Evaluator {
                     _ => return Err(format!("Type error using `{}` on {:?}", op, (lhs, rhs))),
                 }
             }
+            op @ "||" | op @ "&&" => match (&lhs, &rhs) {
+                (Value::Bool(b1), Value::Bool(b2)) => Value::Bool(match op {
+                    "||" => *b1 || *b2,
+                    "&&" => *b1 && *b2,
+                    _ => unreachable!(),
+                }),
+                _ => return Err(format!("Type error using `{}` on {:?}", op, (lhs, rhs))),
+            },
             "=" => {
                 let dest = match &lhs {
                     Value::VarRef { name } => self.get_var(name)?,
@@ -911,6 +928,122 @@ fn for_loop() -> Result<(), String> {
     assert_eq!(unsafe { &*eval.get_var("x")? }, &Value::Int(5));
     let it_sum: isize = (-10..-5).into_iter().sum();
     assert_eq!(unsafe { &*eval.get_var("y")? }, &Value::Int(0 - it_sum));
+
+    Ok(())
+}
+
+#[test]
+fn return_from_if_in_loop() -> Result<(), String> {
+    let two = ast_obj! { "ASTIntLiteral";
+        "value" => Value::Int(2)
+    };
+    let range = ast_obj! { "ASTFnCall";
+        "name" => Value::String("range".into()),
+        "args" => Value::List {
+            elems: vec![
+                ast_obj!{ "ASTIntLiteral";
+                    "value" => Value::Int(5)
+                }
+            ]
+        }
+    };
+
+    let it_ident = ast_obj! { "ASTIdent";
+        "name" => Value::String("it".into())
+    };
+    let skip_ident = ast_obj! { "ASTIdent";
+        "name" => Value::String("skip".into())
+    };
+
+    // skip && it >= 2
+    let cond = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("&&".into()),
+        "lhs" => skip_ident.clone(),
+        "rhs" => { ast_obj! { "ASTBinaryExpr";
+            "op" => Value::String(">=".into()),
+            "lhs" => it_ident.clone(),
+            "rhs" => two.clone()
+        }}
+    };
+    let ret = ast_obj! { "ASTRetStmt";
+        "value" => it_ident.clone()
+    };
+    let if_stmt = ast_obj! { "ASTIfStmt";
+        "condition" => cond,
+        "body" => Value::List {
+            elems: vec![ret]
+        },
+        "elses" => Value::List {elems: vec![]}
+    };
+
+    let for_loop = ast_obj! { "ASTForLoop";
+        "var_name" => Value::String("it".into()),
+        "target" => range,
+        "body" => Value::List {
+            elems: vec![
+                if_stmt,
+            ]
+        }
+    };
+
+    let fn_def = ast_obj! { "ASTFnDef";
+        "name" => Value::String("test".into()),
+        "params" => Value::List{
+            elems: vec![
+                Value::String("skip".into())
+            ]
+        },
+        "body" => Value::List {
+            elems: vec![
+                for_loop
+            ]
+        }
+    };
+
+    let t = ast_obj! { "ASTBoolLiteral";
+        "value" => Value::Bool(true)
+    };
+    let f = ast_obj! { "ASTBoolLiteral";
+        "value" => Value::Bool(false)
+    };
+
+    let call_with_skip = ast_obj! { "ASTFnCall";
+        "name" => Value::String("test".into()),
+        "args" => Value::List{
+            elems: vec![t]
+        }
+    };
+    let call_without_skip = ast_obj! { "ASTFnCall";
+        "name" => Value::String("test".into()),
+        "args" => Value::List{
+            elems: vec![f]
+        }
+    };
+
+    let result_with_skip = ast_obj! { "ASTLetStmt";
+        "var_name" => Value::String("result_with_skip".into()),
+        "value" => call_with_skip
+    };
+    let result_without_skip = ast_obj! { "ASTLetStmt";
+        "var_name" => Value::String("result_without_skip".into()),
+        "value" => call_without_skip
+    };
+
+    let ast = ast_obj! { "ASTFile";
+        "elements" => Value::List { elems: vec![fn_def, result_with_skip, result_without_skip] }
+    };
+
+    let mut eval = Evaluator::new();
+    eval.eval_ast(&ast)?;
+
+    assert_eq!(
+        unsafe { &*eval.get_var("result_with_skip")? },
+        &Value::Int(2)
+    );
+    assert_eq!(
+        unsafe { &*eval.get_var("result_without_skip")? },
+        &Value::Unit
+    );
 
     Ok(())
 }

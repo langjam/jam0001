@@ -13,6 +13,7 @@ pub struct Evaluator {
     classes: HashMap<String, Class>,
     vars: ScopeMap<String, Value>,
     fns: ScopeMap<String, Function>,
+    pub(crate) returning: Option<Value>,
 }
 
 impl Evaluator {
@@ -21,6 +22,7 @@ impl Evaluator {
             classes: HashMap::default(),
             vars: ScopeMap::new(),
             fns: ScopeMap::new(),
+            returning: None,
         };
         this.register_ast_classes();
         this
