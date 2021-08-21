@@ -24,7 +24,7 @@ func (mbe *MissingBlockError) Error() string {
 
 type UnexpectedError struct {
 	value string
-	pos shared.Position
+	pos   shared.Position
 }
 
 func (ue *UnexpectedError) Error() string {
@@ -33,7 +33,7 @@ func (ue *UnexpectedError) Error() string {
 
 type IncorrectSignatureError struct {
 	keyword string
-	pos shared.Position
+	pos     shared.Position
 }
 
 func (ise *IncorrectSignatureError) Error() string {

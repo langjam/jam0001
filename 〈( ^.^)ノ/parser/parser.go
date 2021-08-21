@@ -11,7 +11,7 @@ type Parser struct {
 	toks          []shared.Token
 	open_paren    int
 	needed_blocks int
-	comments map[string]shared.Node
+	comments      map[string]shared.Node
 }
 
 func (p *Parser) make_ast() []shared.Node {
@@ -118,7 +118,7 @@ func GenerateAst(toks []shared.Token) []shared.Node {
 		fmt.Println((&MissingBlockError{toks[0].Pos}).Error())
 		os.Exit(1)
 	}
-	
+
 	parser.Parse(shared.Node{IsExpression: true, Children: ast})
 
 	return ast
@@ -131,10 +131,10 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 	}
 
 	if len(args[0].Children) != (map[string]int{
-		"set": 2,
-		"m": 1,
+		"set":   2,
+		"m":     1,
 		"print": 1,
-		"not": 1}[ins]) {
+		"not":   1}[ins]) {
 
 		fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
 		os.Exit(1)
@@ -191,7 +191,7 @@ func (p *Parser) Parse(tree shared.Node) {
 			p.Parse(child)
 			continue
 		}
-  
+
 		switch child.Val.Type {
 		case shared.TTinstruction:
 			p.parseInstruction(child.Val.Value, tree.Children[i+1:], child.Val.Pos)

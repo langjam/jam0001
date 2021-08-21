@@ -12,27 +12,30 @@
 
 - [ ] - parser
 	- [ ] - generate ast
-	- [ ] - instructions
-		- [ ] - check for existence of instructions
-		- [ ] - check for argument count
-	- [ ] - while loop
-	- [ ] - string literals
-	- [ ] - number literals
-	- [ ] - constants
-	- [ ] - variables
-	- [ ] - comments
+		- [ ] - proper testing
+	- [x] - instructions
+		- [x] - check for argument count
+	- [x] - while loop
+	- [x] - string literals
+	- [x] - number literals
+	- [x] - constants
+	- [x] - variables
+	- [x] - comments
 
 - [ ] - evaluator
 	- [ ] - loops
 	- [ ] - instructions
 		- [ ] - m
 			- [ ] - check correctness
-			- [ ] - generate rpn
-			- [ ] - evaluate rpn
+				- [ ] - operation exists
+				- [x] - is possible to evaluate
+			- [x] - generate rpn
+			- [x] - evaluate rpn
 			- [ ] - functions
 
 		- [ ] - set
 		- [ ] - not
+		- [x] - print
 	- [ ] - referencing variables
 	- [ ] - comments
 		- [ ] - ast generation
