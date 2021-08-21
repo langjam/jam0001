@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../vec/vec.h"
 #include "../common/prelude.h"
 #include "../strview/strview.h"
