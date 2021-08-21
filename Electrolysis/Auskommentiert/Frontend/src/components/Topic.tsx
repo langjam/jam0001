@@ -1,15 +1,11 @@
 import React, { ReactElement } from 'react';
 import { Component } from 'react';
 import '../css/App.css';
-import { CommentType, Comment } from './Comment';
+import { Comment } from './Comment';
+import { TopicType } from './types'
+import '../css/Topic.css'
+import '../css/all.css'
 
-
-type TopicType = {
-    heading: string,
-    body: string,
-    comments: CommentType[],
-    creation: number
-}
 
 class Topic extends Component<TopicType, TopicType> {
     comments: Array<ReactElement<any, any>> = [];
@@ -17,25 +13,39 @@ class Topic extends Component<TopicType, TopicType> {
     componentWillMount() {
         this.setState(this.props)
         for (let entry of this.props.comments) {
-            let component = <Comment body={entry.body} answers={entry.answers} creation={entry.creation}></Comment>
+            let component = <Comment topic={entry.topic} id={entry.id} parent={entry.parent} position={entry.position} body={entry.body} answers={entry.answers} upvotes={entry.upvotes} creation={entry.creation}></Comment>
             this.comments.push(component)
         }
     }
 
     render() {
         return (
-            <div className="App">
-                <div>
-                    <h2>{this.state.heading}</h2>
-                    <h2>{new Date(this.state.creation).toLocaleString()}</h2>
+            <div className="middle">
+                <div className="">
+                    <h2 className="heading_element">{this.state.heading}</h2>
+                    <h4 className="heading_element">{new Date(this.state.creation).toLocaleString()}</h4>
                 </div>
-
-                <h3>Kommentare</h3>
+                <div className="body">
+                    <p className="content">{this.state.body}</p>
+                </div>
+                <div>
+                    <button onClick={() => this.upvote()}>{this.state.upvotes} &#8593;</button>
+                    <button onClick={() => this.downvote()}>&#8595;</button>
+                    <button>Answer</button>
+                </div>
+                <h3>Comments:</h3>
                 <>
                     {this.comments}
                 </>
             </div>
         );
+    }
+
+    upvote() {
+        this.setState({ upvotes: this.state.upvotes + 1 })
+    }
+    downvote() {
+        this.setState({ upvotes: this.state.upvotes - 1 })
     }
 }
 
