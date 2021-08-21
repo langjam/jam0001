@@ -46,6 +46,7 @@ pub enum TokenKind {
     CommentTerminator,
     Asterisk,
     String(String),
+    Number(f64),
     ForwardSlash,
     BackSlash,
     Eof,

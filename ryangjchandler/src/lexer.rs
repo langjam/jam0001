@@ -56,6 +56,18 @@ impl<'l> Lexer<'l> {
         None
     }
 
+    pub fn match_number(&mut self) -> Token {
+        let position = self.position;
+        let mut buffer = String::new();
+
+        while is_numeric(self.current) || self.current == '.' {
+            buffer.push(self.current);
+            self.read();
+        }
+
+        Token::new(TokenKind::Number(buffer.parse().unwrap()), position)
+    }
+
     pub fn match_identifier(&mut self) -> Token {
         let position = self.position;
         let mut buffer = String::new();
@@ -166,6 +178,7 @@ impl<'l> Iterator for Lexer<'l> {
             _ if is_directive_starter(c) => self.match_directive(),
             _ if is_string_wrapper(c) => self.match_string(),
             _ if is_identifier(c) => self.match_identifier(),
+            _ if is_numeric(c) => self.match_number(),
             _ => return None,
         })
     }
@@ -225,6 +238,13 @@ fn get_symbol(symbol: &str) -> Option<TokenKind> {
 fn is_whitespace(c: char) -> bool {
     match c {
         ' ' | '\t' | '\r' | '\n' => true,
+        _ => false
+    }
+}
+
+fn is_numeric(c: char) -> bool {
+    match c {
+        '0'..='9' => true,
         _ => false
     }
 }

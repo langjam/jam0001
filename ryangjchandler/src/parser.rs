@@ -222,6 +222,11 @@ impl<'p> Parser<'p> {
 
                 Some(Expression::String(s))
             },
+            TokenKind::Number(n) => {
+                self.expect_token_and_read(TokenKind::Number(0.0))?;
+
+                Some(Expression::Number(n))
+            }
             TokenKind::Identifier(i) => {
                 self.expect_token_and_read(TokenKind::Identifier("".to_owned()))?;
 

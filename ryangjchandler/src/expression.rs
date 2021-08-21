@@ -20,6 +20,7 @@ impl Priority {
 #[derive(Debug, Clone)]
 pub enum Expression {
     String(String),
+    Number(f64),
     GetIdentifier(String),
     Call(Call),
     Infix(Box<Expression>, TokenKind, Box<Expression>),

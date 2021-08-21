@@ -136,6 +136,7 @@ impl<'i> Interpreter<'i> {
                 }
             },
             Expression::String(string) => Value::String(string),
+            Expression::Number(number) => Value::Number(number),
             Expression::Infix(left, operator, right) => {
                 let left = self.execute_expression(*left)?.unwrap();
                 let right = self.execute_expression(*right)?.unwrap();

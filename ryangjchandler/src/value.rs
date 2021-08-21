@@ -6,6 +6,7 @@ use crate::interpreter::Interpreter;
 #[derive(Debug, Clone)]
 pub enum Value {
     String(String),
+    Number(f64),
     Function(Function),
     Null,
 }
@@ -13,7 +14,8 @@ pub enum Value {
 impl Value {
     pub fn is_type(&self, r#type: impl Into<String>) -> bool {
         match (r#type.into().as_str(), self) {
-            ("string", Value::String(_)) => true,
+            ("string", Self::String(_)) => true,
+            ("number", Self::Number(_)) => true,
             _ => todo!(),
         }
     }
@@ -21,6 +23,7 @@ impl Value {
     pub fn type_string(&self) -> String {
         match self {
             Self::String(_) => "string".to_owned(),
+            Self::Number(_) => "number".to_owned(),
             _ => todo!()
         }
     }
@@ -31,6 +34,7 @@ impl Display for Value {
         write!(f, "{}", match self {
             Self::String(s) => s.clone(),
             Self::Function(_) => format!("{:?}", self),
+            Self::Number(n) => n.to_string(),
             Self::Null => "null".to_owned(),
         })
     }
