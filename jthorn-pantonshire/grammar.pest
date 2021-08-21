@@ -1,7 +1,5 @@
-//Ignore whitespace
-//WHITESPACE = _{ " " }
 
-//basic stuff
+//basic definitions
 digit = {'0'..'9'}
 alpha = {('a'..'z'|'A'..'Z')+}
 number = {digit+}
@@ -18,55 +16,41 @@ factorAnd   = {unary ~ ( "/" | "*" | "and") ~  unary | unary }
 unary       = {("not" | "-") ~ unary | primary}
 primary     = {number | alphanumeric | "true" | "false" | string | "(" ~ expr~")"}
 
-//Singular deterministic values
-//Store 1 in x
-
-//Non-determinism (possible higher-order functions)
-//Store 5 as in b
-
-//require immediate newline for comments
+//statements
 varStmt = {"stores" ~ " " ~ expr ~ " in " ~ literal}
-loopStmt = {"repeat "~ "(" ~ statement ~ ") " ~ number ~ " times"}
-printStmt = {"prints " ~ string}
+loopStmt = {"repeat "~ "(" ~ stmt ~ ") " ~ number ~ " times"}
+printStmt = {("prints " | "print ") ~ string}
 listStmt = {literal | literal ~ "," ~ listStmt}
 argsStmt = {"takes " ~ listStmt}
-statement = {argsStmt | varStmt | loopStmt | printStmt}
-fnStmt  = {statement | (statement ~ " then " ~ fnStmt)+}
-comment = {(fnStmt ~ (" ")*|literal~ (" ")* )+ }
+condStmt = {"if " ~ expr ~ " then " ~ stmt}
+stmt = {argsStmt | varStmt | loopStmt | printStmt | condStmt}
+comment = {(stmt ~ (" ")*|literal~ (" ")* )+ }
 commentStmt = {"//" ~ comment ~ "\n" ~ literal | "//" ~ comment}
 semanticBody = {commentStmt ~ ("\n" ~ semanticBody)*}
-syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (mainStmt*) ~ "}"}
-mainStmt = {mss | mss ~ mainStmt}
-mss = {("\n" | " ")* ~ literal+ ~ ("\n" | " ")*}
-program = {semanticBody ~ syntaxBody}
+syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (("\n")*~mainStmt~("\n")*)* ~ "}"}
+mainStmt = {literal ~"<-"~ mainStmt | literal ~ "(" ~ mainStmt ~ ")"|literal}
+program = {semanticBody ~ syntaxBody|semanticBody}
 
+//This is a function that stores 6 in x and then prints "hi"
+example
+//print "hello world"
+hello
+//6 + 3
+expr1
+//Store an expression using stores () in a and then print a
+b
+//On the other hand we save a statemet using stores <>
+c
 
+main {
+example
+b(expr1)
+c(a)
+}
 
-//program = {semanticBody ~ (" "|"\n")* ~ "main {\n"~ (literal ~ "\n")* ~"}"}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//run literals will run the program specified below it
+run
+example
+b(expr1)
+b(a)
+c(hello)
