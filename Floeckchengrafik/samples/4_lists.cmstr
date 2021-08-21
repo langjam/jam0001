@@ -26,4 +26,8 @@ list_sort(mylist)?
 
 out("Aaand sorted:" : mylist)?
 
+list_set(mylist : 0 : 5)?
 
+out("Set first element to 5:" : mylist)?
+
+out("Get second element:" : list_get(mylist : 1))?

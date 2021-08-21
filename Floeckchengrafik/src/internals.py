@@ -30,6 +30,11 @@ def intrange_inclusive(args):
     return list(range(args[0], args[1] + 1))
 
 
+def setlist(args):
+    print(args)
+    args[0][args[1]] = args[2]
+
+
 internals = {
     "function": lambda args: StatementNode.FunctionDefinitionNode(args[0], args[1:len(args)]),
     "out": out,
@@ -44,6 +49,8 @@ internals = {
     "list_pop": lambda args: args[0].pop() if len(args) == 1 else args[0].pop(args[1]),
     "list_reverse": lambda args: args[0].reverse(),
     "list_sort": lambda args: args[0].sort(),
+    "list_get": lambda args: args[0][args[1]],
+    "list_set": setlist,
     "intrange": intrange,
     "intrange_inclusive": intrange_inclusive,
 }
@@ -62,6 +69,8 @@ env = {
     "list_pop": StatementNode.FunctionDefinitionNode("internal", []),
     "list_reverse": StatementNode.FunctionDefinitionNode("internal", []),
     "list_sort": StatementNode.FunctionDefinitionNode("internal", []),
+    "list_get": StatementNode.FunctionDefinitionNode("internal", []),
+    "list_set": StatementNode.FunctionDefinitionNode("internal", []),
     "intrange": StatementNode.FunctionDefinitionNode("internal", []),
     "intrange_inclusive": StatementNode.FunctionDefinitionNode("internal", []),
 }
