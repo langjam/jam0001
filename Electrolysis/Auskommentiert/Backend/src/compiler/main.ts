@@ -6,17 +6,23 @@ import * as readline from "readline";
 let model = new Model();
 model.addPost({
     title: "main",
-    id: "t2_22",
+    id: "22",
     upvotes: 4,
     date: Date.now(),
     comments: [
         {
             id: "t6_1",
-            content: "while true:",
+            content: "while 3 < 5 + 2:",
             upvotes: 1,
             date: Date.now(),
             children: [
-
+                {
+                    id: "31",
+                    content: "log(5)",
+                    upvotes: -5,
+                    date: Date.now(),
+                    children: []
+                }
             ]
         }
     ]

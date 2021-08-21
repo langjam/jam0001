@@ -75,7 +75,7 @@ export class Model {
         console.log(inspect(this.mPosts, false, null, true));
     }
     addComment(postId : string, comment : ModelComment) {
-        
+
     }
     makeCommentProvider(postId : string) : CommentProvider {
         return new ModelCommentProvider(this, postId);
@@ -86,6 +86,7 @@ export class Model {
     private parseComment(jsonComment : any) : ModelComment {
         let parseResult = parse(jsonComment.content);
         if(parseResult.errs.length > 0 || parseResult.ast === null) {
+            console.log("HI");
             throw new Error(parseResult.errs[0].toString());
         }
         return new ModelComment(

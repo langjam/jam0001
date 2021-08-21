@@ -1,6 +1,6 @@
 start := comment=Comment _ $
 
-Comment := WhileComment | ManipulationComment | AssignmentComment
+Comment := WhileComment | ManipulationComment | AssignmentComment | FunctionCall
 _ := ' '*
 
 WhileComment := 'while' _ whileExpression=Expression ':'
@@ -15,7 +15,14 @@ CommentSelector := count='[0-9]+' _ 'comments' _ dir={'above' | 'below'}
 AssignmentComment := varName=VarName _ 'is' _ rhsExpr=Expression
 
 VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
-Expression := LineExpression
+Expression := ComparisionExpression
+
+ComparisionExpression := LessThanExpression | MoreThanExpression | LessEqualExpression | MoreEqualExpression | LineExpression
+LessThanExpression := lhs=ComparisionExpression _ '<' _ rhs=LineExpression
+MoreThanExpression := lhs=ComparisionExpression _ '>' _ rhs=LineExpression
+LessEqualExpression := lhs=ComparisionExpression _ '<=' _ rhs=LineExpression
+MoreEqualExpression := lhs=ComparisionExpression _ '>=' _ rhs=LineExpression
+
 LineExpression := AddExpression | SubExpression | DotExpression
 AddExpression :=  lhs=LineExpression _ '\+' _ rhs=DotExpression
 SubExpression :=  lhs=LineExpression _ '\-' _ rhs=DotExpression
@@ -24,5 +31,7 @@ DotExpression := MulExpression | DivExpression | AtomicExpression
 MulExpression := lhs=DotExpression _ '\*' _ rhs=AtomicExpression
 DivExpression := lhs=DotExpression _ '\/' _ rhs=AtomicExpression
 
+FunctionParameters := Expression next={',' FunctionParameters}?
+FunctionCall := funcName=Expression _ '\(' _ FunctionParameters? _ '\)'
 
 AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+'
