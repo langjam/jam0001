@@ -48,46 +48,6 @@ universeToString universe =
 
 
 
--- FUNC
-
-
-type alias Executioner =
-    Array Atom -> Maybe Atom
-
-
-type alias Func =
-    { args : Array Atom
-    , argi : Int
-    , func : Executioner
-    }
-
-
-func : Int -> Executioner -> Func
-func argc exec =
-    let
-        dummyAtom =
-            Int 0
-    in
-    { args = Array.repeat argc dummyAtom
-    , argi = 0
-    , func = exec
-    }
-
-
-apply : Func -> Atom -> Func
-apply f a =
-    { args = Array.set f.argi a f.args
-    , argi = f.argi + 1
-    , func = f.func
-    }
-
-
-argsLeft : Func -> Int
-argsLeft f =
-    Array.length f.args - f.argi
-
-
-
 -- ATOM
 
 
@@ -107,6 +67,26 @@ toInt atom =
     case atom of
         Int int ->
             Just int
+
+        _ ->
+            Nothing
+
+
+toStr : Atom -> Maybe String
+toStr atom =
+    case atom of
+        Str str ->
+            Just str
+
+        _ ->
+            Nothing
+
+
+toList : Atom -> Maybe (List Atom)
+toList atom =
+    case atom of
+        List list ->
+            Just list
 
         _ ->
             Nothing

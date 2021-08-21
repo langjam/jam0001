@@ -1,9 +1,9 @@
 module Language.Pancake exposing (..)
 
+import Language.Core as Core exposing (Runtime)
 import Language.Parser exposing (parse)
-import Language.Runtime as Runtime exposing (Runtime)
 
 
 compile : String -> Maybe Runtime
-compile src =
-    Maybe.map Runtime.init (parse src)
+compile =
+    parse >> Maybe.map Core.init

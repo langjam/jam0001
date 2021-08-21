@@ -2,8 +2,8 @@ port module Main exposing (..)
 
 import Exchange exposing (..)
 import Language.AST as AST exposing (Universe(..))
+import Language.Core exposing (Runtime)
 import Language.Pancake as Pancake
-import Language.Runtime exposing (Runtime)
 import Platform exposing (Program, worker)
 
 
