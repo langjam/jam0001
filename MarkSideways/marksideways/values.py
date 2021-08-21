@@ -80,11 +80,20 @@ class ArrayValue(Value):
     for arg in args:
       self.value.append(arg)
     return NULL_VALUE
+  def _builtin_pop(self, throw_token, args):
+    if len(args) != 0:
+      return new_error_value(throw_token, "Array's .pop() method takes in no arguments.")
+    if len(self.value) == 0:
+      return new_error_value(throw_token, "Cannot call .pop() on an empty array.")
+    value = self.value.pop()
+    return value
   def get_field(self, name):
     output = self.fields.get(name)
     if output == None:
       if name == 'add':
         output = BuiltInFunction('array.add', self._builtin_add)
+      if name == 'pop':
+        output = BuiltInFunction('array.pop', self._builtin_pop)
       self.fields[name] = output
     return output
   def to_string(self):
