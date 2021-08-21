@@ -20,25 +20,38 @@ use std::sync::atomic::{AtomicI64, Ordering};
 use crate::frontend::web::runner::{WebRunner, send};
 
 #[derive(Serialize)]
+#[serde(tag = "type")]
 pub enum MessageToWebpage{
     AskForInput(i64),
-    Print(Vec<i64>),
-    PrintChar(Vec<i64>),
-    MoveTrain{
+    Print {
+        message: Vec<i64>
+    },
+    PrintChar{
+        message: Vec<i64>
+    },
+    MoveTrain {
         from_station: Station,
         to_station: Station,
         train: Train,
         start_track: usize,
         end_track: usize
     },
-    VisualizerData(String),
-    Error(String),
+    VisualizerData {
+        path: String,
+    },
+    Error{
+        message: String
+    },
 }
 
 #[derive(Deserialize)]
+#[serde(tag = "type")]
 pub enum MessageFromWebpage{
     AdvanceSimulation,
-    SendInputResponse(i64, Vec<i64>)
+    SendInputResponse{
+        identifier: i64,
+        input: Vec<i64>
+    }
 }
 
 async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
@@ -62,11 +75,11 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
                             Ok(message) => match message {
                                 MessageFromWebpage::AdvanceSimulation => {
                                     match vm.do_current_step(&runner) {
-                                        Err(e) => runner.send(MessageToWebpage::Error(format!("{:?}", e))).expect("failed to send"),
+                                        Err(e) => runner.send(MessageToWebpage::Error{message: format!("{:?}", e)}).expect("failed to send"),
                                         Ok(i) => {},
                                     }
                                 }
-                                MessageFromWebpage::SendInputResponse(id, response) => {
+                                MessageFromWebpage::SendInputResponse{ identifier, input } => {
                                     // runner.input_response(id, response);
                                 }
                             }
@@ -83,7 +96,7 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
     tokio::task::spawn(async move {
         let rx = response_rx;
 
-        send(&mut ws_tx, &MessageToWebpage::VisualizerData(format!("{:?}", visualizer_path))).await;
+        send(&mut ws_tx, &MessageToWebpage::VisualizerData{path: format!("{:?}", visualizer_path)}).await;
 
         loop {
             let res = rx.recv();

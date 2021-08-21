@@ -41,30 +41,57 @@ function preload() {
     preloadTrain()
 }
 
+function loadData(path) {
+    fetch(path, {
+        method: "GET"
+    }).then((r) => {
+        r.json().then((j) => {
+            console.log(j)
+            const stations = j["stations"];
+            const lines = j["lines"];
+            const tiles = j["tiles"];
+
+            for(const station of stations) {
+                grid.addStation(new Station(
+                    createVector(station["x"], station["y"]), station["stoppers"]
+                ))
+            }
+
+            for(const tile of tiles) {
+                grid.addTile(
+                    createVector(tile["x"], tile["y"]), TILE_TYPE[tile["type"]],
+                )
+            }
+
+        })
+    })
+
+}
+
 function setup() {
     canvas = createCanvas(w, h)
 
     document.getElementById("controls").style.height = `${controlsHeight}px`;
-
-    grid.addTile(createVector(5, 5), TILE_TYPE.Horizontal)
-    grid.addTile(createVector(4, 5), TILE_TYPE.NE)
-    grid.addTile(createVector(4, 4), TILE_TYPE.Vertical)
-    grid.addTile(createVector(4, 3), TILE_TYPE.ES)
-    grid.addTile(createVector(5, 3), TILE_TYPE.Horizontal)
-    grid.addTile(createVector(6, 3), TILE_TYPE.T_LEFT)
-    grid.addTile(createVector(6, 4), TILE_TYPE.Vertical)
-    grid.addTile(createVector(6, 5), TILE_TYPE.WN)
-
-    grid.addTile(createVector(6, 2), TILE_TYPE.Vertical)
-    grid.addTile(createVector(6, 1), TILE_TYPE.SW)
-    grid.addTile(createVector(5, 1), TILE_TYPE.Horizontal)
-    grid.addTile(createVector(4, 1), TILE_TYPE.Horizontal)
-    grid.addTile(createVector(3, 1), TILE_TYPE.Horizontal)
-    grid.addTile(createVector(2, 1), TILE_TYPE.Horizontal)
-    grid.addTile(createVector(2, 0), TILE_TYPE.Horizontal)
-    grid.addTile(createVector(0, -1), TILE_TYPE.Vertical)
-
-    grid.addStation(new Station(createVector(0, 0), [false, true, false, true, true, false, false, true], STATION_TYPE.Add))
+    //
+    // grid.addTile(createVector(5, 5), TILE_TYPE.Horizontal)
+    // grid.addTile(createVector(4, 5), TILE_TYPE.NE)
+    // grid.addTile(createVector(4, 4), TILE_TYPE.Vertical)
+    // grid.addTile(createVector(4, 3), TILE_TYPE.ES)
+    // grid.addTile(createVector(5, 3), TILE_TYPE.Horizontal)
+    // grid.addTile(createVector(6, 3), TILE_TYPE.T_LEFT)
+    // grid.addTile(createVector(6, 4), TILE_TYPE.Vertical)
+    // grid.addTile(createVector(6, 5), TILE_TYPE.WN)
+    //
+    // grid.addTile(createVector(6, 2), TILE_TYPE.Vertical)
+    // grid.addTile(createVector(6, 1), TILE_TYPE.SW)
+    // grid.addTile(createVector(5, 1), TILE_TYPE.Horizontal)
+    // grid.addTile(createVector(4, 1), TILE_TYPE.Horizontal)
+    // grid.addTile(createVector(3, 1), TILE_TYPE.Horizontal)
+    // grid.addTile(createVector(2, 1), TILE_TYPE.Horizontal)
+    // grid.addTile(createVector(2, 0), TILE_TYPE.Horizontal)
+    // grid.addTile(createVector(0, -1), TILE_TYPE.Vertical)
+    //
+    // grid.addStation(new Station(createVector(0, 0), [false, true, false, true, true, false, false, true], STATION_TYPE.Add))
 
     // all train colors
     // let x = 0;

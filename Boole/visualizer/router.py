@@ -389,9 +389,9 @@ class World:
                     tiles.add(Tile(path[i][0], path[i][1], "Vertical"))
 
                 if path[i - 1][0] == path[i][0] - 1 and path[i + 1][1] == path[i][1] - 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "NW"))
+                    tiles.add(Tile(path[i][0], path[i][1], "WN"))
                 if path[i - 1][1] == path[i][1] - 1 and path[i + 1][0] == path[i][0] - 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "NW"))
+                    tiles.add(Tile(path[i][0], path[i][1], "WN"))
 
                 if path[i - 1][0] == path[i][0] + 1 and path[i + 1][1] == path[i][1] - 1:
                     tiles.add(Tile(path[i][0], path[i][1], "NE"))
@@ -404,9 +404,9 @@ class World:
                     tiles.add(Tile(path[i][0], path[i][1], "SW"))
 
                 if path[i - 1][0] == path[i][0] + 1 and path[i + 1][1] == path[i][1] + 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "SE"))
+                    tiles.add(Tile(path[i][0], path[i][1], "ES"))
                 if path[i - 1][1] == path[i][1] + 1 and path[i + 1][0] == path[i][0] + 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "SE"))
+                    tiles.add(Tile(path[i][0], path[i][1], "ES"))
 
         data = {
             "stations" : [{"x":station.x,"y":station.y,"stoppers":station_data[i],"type":station.type} for (i,station) in enumerate(self.stations)],
@@ -444,13 +444,13 @@ if __name__ == '__main__':
     stations = [Station(id, d["inputs"], d["to"], d["type"]) for id, d in enumerate(data)]
     stations = StationGroup.build(stations)
     # stations.plot()
-    stations.scale(3)
-    stations.plot()
+    stations.scale(5)
+    # stations.plot()
 
     world = World(stations.stations)
     world.build()
     print(world.roads)
-    world.plot()
+    # world.plot()
     outp = world.to_json()
 
     with open(f"{file}.result.json","w") as f:

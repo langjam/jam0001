@@ -15,7 +15,19 @@ function startSocket() {
     let s = new WebSocket(WS_URL);
 
     s.addEventListener("message", (m) => {
-        console.log(m)
+        let message = JSON.parse(m.data)
+
+
+        if (typeof message["type"] !== "undefined") {
+            switch (message["type"]) {
+                case "VisualizerData": {
+                    const path = message["path"];
+                    loadData(path.substr(1, path.length-2))
+
+                    break;
+                }
+            }
+        }
     })
 
     s.addEventListener("open", () => {
@@ -25,7 +37,7 @@ function startSocket() {
     return {
         nextTimeStep: function () {
             s.send(JSON.stringify({
-                "AdvanceSimulation": null
+                "type": "AdvanceSimulation",
             }))
         }
     }

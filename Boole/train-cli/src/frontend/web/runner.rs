@@ -15,7 +15,7 @@ use std::sync::mpsc::Sender;
 
 #[derive(Serialize)]
 struct VisualizerStation {
-    operation: Operation,
+    r#type: Operation,
     inputs: usize,
     to: Vec<Vec<usize>>,
 }
@@ -56,7 +56,7 @@ impl WebRunner {
             }
 
             res.push(VisualizerStation {
-                operation: station.operation,
+                r#type: station.operation,
                 inputs: station.operation.input_track_count(),
                 to,
             })
@@ -90,12 +90,12 @@ impl WebRunner {
         if !status.success() {
             panic!("failed to generate station layout");
         }
+        log::info!("finished generating station layout");
 
 
         let mut path = PathBuf::new();
-        path.push("visualizer");
         path.push("visualizer_setup");
-        path.push(format!("{}.result.json", connection_id));
+        path.push(format!("{}.json.result.json", connection_id));
 
         path
     }
@@ -122,11 +122,11 @@ impl Communicator for WebRunner {
     }
 
     fn print(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
-        self.send(MessageToWebpage::Print(data))
+        self.send(MessageToWebpage::Print{message: data})
     }
 
     fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
-        self.send(MessageToWebpage::PrintChar(data))
+        self.send(MessageToWebpage::PrintChar{message: data})
     }
 
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), CommunicatorError> {
