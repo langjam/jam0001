@@ -1,5 +1,12 @@
-main := proc (argc : int; argv : strings) {
+main := proc {
     x := 1;
+    if (less(x; 30)) {
+        print("Yes");
+    };
+    while (less(x; 30)) {
+        print(x);
+        x = add(x;  .1);
+    };
     x = 0;
-    print(x);
+    print(x ; 23);
 };

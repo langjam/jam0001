@@ -9,34 +9,37 @@ struct Parser_State {
     struct Token current_token;
 };
 
+enum Parser_Node_Addressing {
+    PA_BINARY,
+    PA_LISTING,
+    PA_ENDPOINT
+};
+
 enum Parser_Node_Kind {
-    PN_PARAMLIST,
-    PN_DECL,
-    PN_BODY,
-    PN_TOPLEVEL,
-    PN_ASSIGN,
-    PN_STRING,
-    PN_IDENT,
-    PN_NUMBER,
-    PN_PROC,
-    PN_CALL,
+    PN_TYPELIST, // LISTING
+    PN_IF,       // BINARY
+    PN_WHILE,    // BINARY
+    PN_PARAMS,   // LISTING
+    PN_DECL,     // ENDPOINT 
+    PN_BODY,     // LISTING
+    PN_TOPLEVEL, // LISTING
+    PN_ASSIGN,   // BINARY
+    PN_STRING,   // ENDPOINT
+    PN_IDENT,    // ENDPOINT
+    PN_NUMBER,   // ENDPOINT
+    PN_PROC,     // BINARY
+    PN_CALL,     // BINARY
 };
 
 struct Parser_Node {
+    enum Parser_Node_Addressing addressing;
     enum Parser_Node_Kind kind;
     struct Vec OF(struct Parser_Node) children;
     union {
         struct {
             strview_t type;
             strview_t name;
-        } def;
-        struct {
-            strview_t type;
-            strview_t name;
         } decl;
-        struct {
-            strview_t name; 
-        } call;
         struct {
             strview_t val; 
         } string;
@@ -52,4 +55,6 @@ struct Parser_Node {
 void parser_init(const string src);
 struct Parser_Node parser_parse_toplevel();
 struct Parser_State *parser_get_state();
+struct Parser_Node *pnode_right(struct Parser_Node *of);
+struct Parser_Node *pnode_left(struct Parser_Node *of);
 void parser_deinit();
