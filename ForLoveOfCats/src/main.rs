@@ -2,16 +2,20 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 
 const SOURCE: &str = r#"
-(block
-	(define x 0)
-	(print "Initial value: " x)
-	(set x 96)
-	(print "Returned from block"
-		(block
-			(print "Something first in block")
-			(print "Hello world from block" (+ (- (* 10 5) 10) (/ 4 2)))
-			x)))
+(print (! (== 0 5)))
 "#;
+
+// const SOURCE: &str = r#"
+// (block
+// 	(define x 0)
+// 	(print "Initial value: " x)
+// 	(set x 96)
+// 	(print "Returned from block"
+// 		(block
+// 			(print "Something first in block")
+// 			(print "Hello world from block" (+ (- (* 10 5) 10) (/ 4 2)))
+// 			x)))
+// "#;
 
 #[derive(Debug)]
 enum Token<'a> {
@@ -94,6 +98,8 @@ enum TreeNode<'a> {
 
 	IntegerLiteral(i64),
 
+	BooleanLiteral(bool),
+
 	Block(Vec<TreeNode<'a>>),
 
 	Define {
@@ -128,6 +134,10 @@ fn parse_expression<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 			Some(&Token::IntegerLiteral(num)) => TreeNode::IntegerLiteral(num),
 
 			Some(&Token::String(string)) => TreeNode::StringLiteral(string),
+
+			Some(&Token::Ident(text)) if text == "true" => TreeNode::BooleanLiteral(true),
+
+			Some(&Token::Ident(text)) if text == "false" => TreeNode::BooleanLiteral(false),
 
 			Some(Token::Ident(name)) => TreeNode::Read { name },
 
@@ -214,6 +224,7 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 #[derive(Debug, Clone, PartialEq)]
 enum Value {
 	None,
+	Bool(bool),
 	I64(i64),
 	String(String),
 }
@@ -222,6 +233,7 @@ impl std::fmt::Display for Value {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Value::None => write!(f, "None"),
+			Value::Bool(lit) => write!(f, "{}", lit),
 			Value::I64(num) => write!(f, "{}", num),
 			Value::String(string) => write!(f, "{}", string),
 		}
@@ -285,6 +297,8 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 
 		&TreeNode::IntegerLiteral(num) => Value::I64(num),
 
+		&TreeNode::BooleanLiteral(lit) => Value::Bool(lit),
+
 		TreeNode::Define { name, rhs } => {
 			state.push_scope();
 			let value = evaluate(state, rhs);
@@ -331,6 +345,10 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 				"-" => sub_all(&args),
 				"*" => mul_all(&args),
 				"/" => div_all(&args),
+
+				"==" => all_equal(&args),
+				"!=" => all_not_equal(&args),
+				"!" => invert_bool(&args),
 
 				"print" => print_values(&args),
 
@@ -406,6 +424,33 @@ fn div_all(values: &[Value]) -> Value {
 	Value::I64(result.unwrap_or(0))
 }
 
+fn all_equal(values: &[Value]) -> Value {
+	for index in 1..values.len() {
+		if values[index - 1] != values[index] {
+			return Value::Bool(false);
+		}
+	}
+
+	Value::Bool(true)
+}
+
+fn all_not_equal(values: &[Value]) -> Value {
+	for index in 1..values.len() {
+		if values[index - 1] == values[index] {
+			return Value::Bool(false);
+		}
+	}
+
+	Value::Bool(true)
+}
+
+fn invert_bool(values: &[Value]) -> Value {
+	match values.last() {
+		Some(Value::Bool(value)) => Value::Bool(!value),
+		_ => Value::Bool(false),
+	}
+}
+
 fn print_values(values: &[Value]) -> Value {
 	let count = values.len();
 	for (index, value) in values.iter().enumerate() {
@@ -420,9 +465,10 @@ fn print_values(values: &[Value]) -> Value {
 }
 
 fn main() {
-	println!("Preparing to run source: `{}`", SOURCE);
+	println!("Tokenizing and parsing source: `{}`", SOURCE);
 	let tokens = tokenize(SOURCE);
 	let tree = parse_matching_parens(&mut tokens.iter().peekable());
+	println!("==== Evaluating ====");
 	let mut state = ScopeState::new();
 	evaluate(&mut state, &tree);
 }
