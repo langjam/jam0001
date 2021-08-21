@@ -35,8 +35,8 @@ if __name__ == '__main__':
     tokens = clexer.tokenize(file)
     tree = cparser.parse(tokens)
 
-    print("Begin Execution")
+    print(" » Begin Execution")
     ComstructExecutor(tree)
 
     environment = executor.env
-    print("End Execution")
+    print(" » End Execution")

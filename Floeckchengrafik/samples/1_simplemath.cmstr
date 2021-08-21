@@ -9,7 +9,4 @@ d = 10?
 
 the_answer_to_everything = d+d+d+d+c?
 
-out(the_answer_to_everything)?
-
-g = readline()?
-out(g)?
+out("The answer to everything: " : the_answer_to_everything)?
