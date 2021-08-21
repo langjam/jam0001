@@ -15,8 +15,10 @@ class CommentBase {
     protected mUpvotes : number;
     protected mChildren : ModelComment[];
     protected mDate : number;
-    constructor(id : string, content : string, upvotes : number, date : number, children: ModelComment[]) {
+    protected mParentId : string;
+    constructor(id : string, parentId : string, content : string, upvotes : number, date : number, children: ModelComment[]) {
         this.mId = id;
+        this.mParentId = parentId;
         this.mContent = content;
         this.mUpvotes = upvotes;
         this.mChildren = children;
@@ -40,6 +42,9 @@ class CommentBase {
     get childrenSorted() {
         return this.mChildren.sort(ModelCommentSorter);
     }
+    get parentId() {
+        return this.mParentId;
+    }
     addChild(child : ModelComment):void {
         this.mChildren.push(child);
     }
@@ -48,8 +53,8 @@ class CommentBase {
 
 class ModelComment extends CommentBase {
     private mAST : Comment;
-    constructor(ast : Comment, astString : string, upvotes : number, id : string, date: number, children : ModelComment[]) {
-        super(id, astString, upvotes, date, children);
+    constructor(ast : Comment, astString : string, upvotes : number, id : string, parentId : string, date: number, children : ModelComment[]) {
+        super(id, parentId, astString, upvotes, date, children);
         this.mAST = ast;
     }
 
@@ -78,8 +83,8 @@ class ModelPost extends CommentBase {
     get upvotes() {
         return this.mUpvotes;
     }
-    constructor(title : string, content : string, id : string, upvotes : number, date : number, children : ModelComment[]) {
-        super(id, content, upvotes, date, children);
+    constructor(title : string, content : string, id : string, parentId : string, upvotes : number, date : number, children : ModelComment[]) {
+        super(id, parentId, content, upvotes, date, children);
         this.mTitle = title;
     }
     toObject() : any {
@@ -103,13 +108,29 @@ class ModelCommentProvider extends CommentProvider {
         this.mPostId = postId;
     }
     getFirstComment(): WrappedComment | undefined {
-        return this.mModel.allCommentBases.get(this.mPostId)?.childrenSorted[0].makeWrappedComment();
+        return this.getFirstChildComment(this.mPostId);
     }
     getNextComment(currentCommentId: string): WrappedComment | undefined {
-        throw new Error("Method not implemented.");
+        let parentId = this.mModel.allCommentBases.get(currentCommentId)?.parentId;
+        if(parentId === undefined) {
+            return undefined;
+        }
+        let siblings = this.mModel.allCommentBases.get(parentId)?.childrenSorted;
+        if(siblings === undefined) {
+            return undefined;
+        }
+        for(let i = 0; i < siblings.length; ++i) {
+            if(siblings[i].id === currentCommentId) {
+                if(i + 1 >= siblings.length) {
+                    return undefined;
+                }
+                return siblings[i + 1].makeWrappedComment();
+            }
+        }
+        throw new Error("Comment not a child of it's own parent?!");
     }
     getFirstChildComment(parentCommentId: string): WrappedComment | undefined {
-        throw new Error("Method not implemented.");
+        return this.mModel.allCommentBases.get(parentCommentId)?.childrenSorted[0].makeWrappedComment();
     }
     getParentComment(childCommentId: string): WrappedComment | undefined {
         throw new Error("Method not implemented.");
@@ -121,11 +142,10 @@ export class Model {
     addPost(post : any): void {
         let comments : ModelComment[] = [];
         for(let topLevelComment of post.children) {
-            let comment = this.parseComment(topLevelComment);
-            this.mCommentsMap.set(comment.id, comment);
+            let comment = this.parseComment(post.id, topLevelComment);
             comments.push(comment);
         }
-        this.mCommentsMap.set(post.id, new ModelPost(post.title, post.content, post.id, post.upvotes, post.date, comments));
+        this.mCommentsMap.set(post.id, new ModelPost(post.title, post.content, post.id, "", post.upvotes, post.date, comments));
         console.log(inspect(this.posts, false, null, true));
     }
     addComment(commentId : string, comment : ModelComment) {
@@ -140,18 +160,22 @@ export class Model {
     get allCommentBases() : Map<string, CommentBase> {
         return this.mCommentsMap;
     }
-    private parseComment(jsonComment : any) : ModelComment {
+    private parseComment(parentId : string, jsonComment : any) : ModelComment {
         let parseResult = parse(jsonComment.content);
         if(parseResult.errs.length > 0 || parseResult.ast === null) {
             console.log("HI");
             throw new Error(parseResult.errs[0].toString());
         }
-        return new ModelComment(
+        let comm = new ModelComment(
             parseResult.ast.comment,
             jsonComment.content, 
             jsonComment.upvotes, 
             jsonComment.id,
+            parentId,
             jsonComment.date,
-            jsonComment.children.map((c : any) => this.parseComment(c)));
+            jsonComment.children.map((c : any) => this.parseComment(jsonComment.id, c)));
+        
+        this.mCommentsMap.set(comm.id, comm);
+        return comm;
     }
 }

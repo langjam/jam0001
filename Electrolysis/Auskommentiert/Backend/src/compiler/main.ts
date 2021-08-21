@@ -8,19 +8,33 @@ model.addPost({
     title: "main",
     id: "22",
     upvotes: 4,
-    date: Date.now(),
+    date: 100,
     children: [
         {
-            id: "t6_1",
-            content: "while 3 < 5 + 2:",
+            id: "31",
+            content: "x is 0",
+            upvotes: -5,
+            date: 100,
+            children: []
+        },
+        {
+            id: "32",
+            content: "while x < 10:",
             upvotes: 1,
-            date: Date.now(),
+            date: 200,
             children: [
                 {
-                    id: "31",
-                    content: "log(5)",
+                    id: "33",
+                    content: "log(x, x*2, x/2, 1+x*2)",
                     upvotes: -5,
-                    date: Date.now(),
+                    date: 300,
+                    children: []
+                },
+                {
+                    id: "35",
+                    content: "x is x + 1",
+                    upvotes: -5,
+                    date: 400,
                     children: []
                 }
             ]
