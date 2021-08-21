@@ -58,14 +58,15 @@ class Tokeniser:
 
     def advance_if(self, *args, case_sensitive=False):
         # Sort args into reversed order of length for greedy matching.
+        # print(f"advance_if '{self.text[self.current:self.current+10]}' args={args}")
         sorted_args = sorted(args, key=len, reverse=True)
         for s in sorted_args:
-            peeked = self.peek(len(s))
+            peeked = self.text[self.start] + self.peek(len(s) - 1)
             if not case_sensitive:
                 peeked = peeked.lower()
                 s = s.lower()
             if peeked == s:
-                self.current += len(s)
+                self.current += len(s) - 1
                 return True
         return False
 
@@ -83,6 +84,10 @@ class Tokeniser:
 
     def ignore(self):
         while self.peek() != "\n":
+            self.advance()
+
+    def skip_spaces(self):
+        while self.peek() in " \t":
             self.advance()
 
     def identifier(self):
@@ -118,8 +123,12 @@ class Tokeniser:
                 self.advance()
                 return Token.HFILL
 
+            if ch == " ":
+                self.skip_spaces()
+
             # Is it the start of a code line?
-            if self.advance_if("//", " //"):
+            if ch == "/" and self.peek() == "/":
+                self.advance()
                 return Token.CODE
 
             # Is it an ignored line?
@@ -127,6 +136,9 @@ class Tokeniser:
                 self.ignore()
 
         elif self.last == Token.HFILL:
+            if ch == " ":
+                self.skip_spaces()
+
             if self.advance_if("@param"):
                 return Token.PARAM
 
@@ -232,6 +244,9 @@ if __name__ == "__main__":
 
     print(text)
 
+    #     text = """\
+    #  * @param n
+    # """
     tokeniser = Tokeniser(text)
     for token in tokeniser:
         print(token)
