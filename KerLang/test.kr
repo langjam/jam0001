@@ -1,8 +1,34 @@
 /*
+  Hello World
+*/
+comment "say hello";
+
+/*
+  This is an integer : $0
+*/
+comment "log the integer";
+
+/*
+  This function takes 2 args
+
+  let A be a recursive application on the first param
+  and let B be a recursive application on ...
+  
+  Then eq returns the sum of A and B if ... is 0
+  log the integer A
+  say hello
+*/
+function eq;
+
+/*
   Takes 2 arguments
-  First argument is an Int
+  The First argument should be an Int
+  First argument is Int
+  First argument is and Int
+  First argument is and Integer
   Second argument is an Int
-  Returns a sum
+  It sums the two arguments
+  and then double the result, when the first param (is even) or return 0 otherwise
 */
 function f;
 
@@ -10,5 +36,3 @@ function f;
   ...
 */
 type t;
-
-(defun <fname> (<x> ... ) (<body>))
