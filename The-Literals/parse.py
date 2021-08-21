@@ -24,7 +24,10 @@ class Parser:
         if self.current_lexeme[0] != Token.EOF:
             self.next_lexeme = self.get_token()
             # Swallow CODE at the start of a line or at the start of the file.
-            if self.next_lexeme[0] == Token.CODE and self.current_lexeme[0] in (Token.EOL, Token.BOF):
+            if self.next_lexeme[0] == Token.CODE and self.current_lexeme[0] in (
+                Token.EOL,
+                Token.BOF,
+            ):
                 self.next_lexeme = self.get_token()
         return self.current_lexeme
 
@@ -75,10 +78,17 @@ class Parser:
                 break
             token, value = self.peek_lexeme()
 
-        if token == Token.HEADER_END:
-            self.advance()
-            self.expect(Token.EOL)
-            self.advance()
+        # End of function header.
+        self.expect(Token.HEADER_END)
+        self.expect(Token.EOL)
+
+        # Parse the function body.
+        self.parse_stmts()
+
+        # End of function definition.
+        self.expect(Token.END_DEF)
+        self.expect(Token.DOT)
+        self.expect(Token.EOL)
 
     def parse_param(self):
         self.advance()
@@ -91,7 +101,7 @@ class Parser:
         self.expect(Token.EOL)
 
     def parse_stmts(self):
-        stmts_end_tokens = [Token.LEAVE_FUNC, Token.EOF]  # TODO: END_DEF here?
+        stmts_end_tokens = [Token.END_DEF, Token.EOF]
         done = False
         while not done:
             token, value = self.peek_lexeme()
@@ -99,9 +109,15 @@ class Parser:
                 done = True
             else:
                 self.parse_stmt()
+                token, value = self.peek_lexeme()
+                if token == Token.EOL:
+                    self.advance()
 
     def parse_stmt(self):
         self.parse_stmt_contents()
+        token, value = self.peek_lexeme()
+        if token == Token.LEAVE_FUNC:
+            self.advance()
         self.expect(Token.DOT)
 
     def parse_stmt_contents(self):
@@ -117,7 +133,7 @@ class Parser:
         token, value = self.advance()
         if token != Token.TO:
             raise UnexpectedTokenError(Token.TO, token)
-        self.parse_operand()
+        self.parse_expr()
 
     def parse_identifier(self):
         token, value = self.peek_lexeme()
@@ -167,6 +183,19 @@ if __name__ == "__main__":
         yield (Token.IDENTIFIER_WORD, "pension")
         yield (Token.IDENTIFIER_WORD, "age")
         yield (Token.DOT, ".")
+        yield (Token.EOL, "\n")
+
+    def set_var_to_var_binop():
+        yield (Token.SETVAR, "Set")
+        yield (Token.IDENTIFIER_WORD, "the")
+        yield (Token.IDENTIFIER_WORD, "number")
+        yield (Token.TO, "to")
+        yield (Token.IDENTIFIER_WORD, "the")
+        yield (Token.IDENTIFIER_WORD, "number")
+        yield (Token.BINOP, "*")
+        yield (Token.NUMBER, "2")
+        yield (Token.DOT, ".")
+        yield (Token.EOL, "\n")
 
     def if_stmt_compare_constants():
         yield (Token.IF_KEYWORD, "If")
@@ -209,6 +238,19 @@ if __name__ == "__main__":
         yield (Token.NUMBER, "6502")
         yield (Token.DOT, ".")
 
+    def if_stmt_compare_constants_and_leave():
+        yield (Token.IF_KEYWORD, "If")
+        yield (Token.NUMBER, "6800")
+        yield (Token.COMPARISON, "is")
+        yield (Token.NUMBER, "6800")
+        yield (Token.THEN, "then")
+        yield (Token.SETVAR, "set")
+        yield (Token.IDENTIFIER_WORD, "successor")
+        yield (Token.TO, "to")
+        yield (Token.NUMBER, "68000")
+        yield (Token.LEAVE_FUNC, "and we're done")
+        yield (Token.DOT, ".")
+
     def function_header_no_params_no_return():
         yield (Token.FUNCTION, "/**")
         yield (Token.EOL, "\n")
@@ -217,6 +259,9 @@ if __name__ == "__main__":
         yield (Token.DOT, ".")
         yield (Token.EOL, "\n")
         yield (Token.HEADER_END, "*/")
+        yield (Token.EOL, "\n")
+        yield (Token.END_DEF, "And we're done")
+        yield (Token.DOT, ".")
         yield (Token.EOL, "\n")
 
     def function_header_params_no_return():
@@ -234,6 +279,10 @@ if __name__ == "__main__":
         yield (Token.IDENTIFIER_WORD, "number")
         yield (Token.EOL, "\n")
         yield (Token.HEADER_END, "*/")
+        yield (Token.EOL, "\n")
+        yield from set_var_to_var_binop()
+        yield (Token.END_DEF, "And we're done")
+        yield (Token.DOT, ".")
         yield (Token.EOL, "\n")
 
     def function_header_params_and_return():
@@ -263,6 +312,12 @@ if __name__ == "__main__":
         yield (Token.EOL, "\n")
         yield (Token.HEADER_END, "*/")
         yield (Token.EOL, "\n")
+        yield from set_var_to_var_binop()
+        yield from set_var_to_var_binop()
+        yield from set_var_to_var_binop()
+        yield (Token.END_DEF, "And we're done")
+        yield (Token.DOT, ".")
+        yield (Token.EOL, "\n")
 
     def code():
         yield (Token.CODE, "//")
@@ -285,6 +340,9 @@ if __name__ == "__main__":
     parser = Parser(program(set_var_to_var))
     parser.parse()
 
+    parser = Parser(program(set_var_to_var_binop))
+    parser.parse()
+
     parser = Parser(program(if_stmt_compare_constants))
     parser.parse()
 
@@ -292,6 +350,9 @@ if __name__ == "__main__":
     parser.parse()
 
     parser = Parser(program(if_stmt_compare_variable_and_variable))
+    parser.parse()
+
+    parser = Parser(program(if_stmt_compare_constants_and_leave))
     parser.parse()
 
     parser = Parser(
