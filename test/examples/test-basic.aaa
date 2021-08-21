@@ -35,3 +35,11 @@ print(if(1)("yes" "no"));
 print(if(1)(<random bunch> <>))
 
 if(1)(print add)(1 2)
+
+// this is probably a string
+let some_string = add("print " "native");
+!<some_string>(123);
+
+print(<string>.length);
+
+print(<number>.negated);

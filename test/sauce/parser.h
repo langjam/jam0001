@@ -41,12 +41,12 @@ private:
     Result<NonnullRefPtr<ASTNode>, ParseError> parse_assignment();
     Result<NonnullRefPtr<ASTNode>, ParseError> parse_expression();
     Result<NonnullRefPtr<ASTNode>, ParseError> parse_literal();
-    Result<NonnullRefPtr<ASTNode>, ParseError> parse_mention();
+    Result<NonnullRefPtr<ASTNode>, ParseError> parse_mention(bool is_direct = true);
     Result<NonnullRefPtr<ASTNode>, ParseError> parse_function();
     Result<NonnullRefPtr<ASTNode>, ParseError> parse_call(NonnullRefPtr<ASTNode>);
     Result<NonnullRefPtr<Variable>, ParseError> parse_variable();
     Result<NonnullRefPtr<ASTNode>, ParseError> parse_record_decl();
-    Result<NonnullRefPtr<ASTNode>, ParseError> parse_member_access();
+    Result<NonnullRefPtr<ASTNode>, ParseError> parse_member_access(NonnullRefPtr<ASTNode>);
 
     ParseError make_error_here(String);
 

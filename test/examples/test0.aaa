@@ -25,6 +25,6 @@ print(is(vec3 <Repeat>))
 let assert_type_names = "assert type"
 
 // Indirectly point to entities via strings
-//(!<assert_type_names>)(<repeat thrice vector>(32) <threed vector>)
+!<assert_type_names>(<repeat thrice vector>(32) <threed vector>)
 
 print(<entities strings>)

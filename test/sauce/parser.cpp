@@ -59,8 +59,7 @@ Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_expression()
         case Token::Type::MentionClose:
             return make_error_here("Unexpected '>'");
         case Token::Type::IndirectMentionOpen:
-            TODO();
-            break;
+            return parse_mention(false);
         case Token::Type::OpenBrace:
             return parse_function();
         case Token::Type::CloseBrace:
@@ -119,6 +118,13 @@ Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_expression()
             continue;
         }
 
+        if (peek().type == Token::Type::Dot) {
+            primary = parse_member_access(primary->value());
+            if (primary->is_error())
+                return primary->release_error();
+            continue;
+        }
+
         return *primary;
     }
 
@@ -158,27 +164,35 @@ Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_literal()
     return static_ptr_cast<ASTNode>(create<IntegerLiteral>(*value));
 }
 
-Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_mention()
+Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_mention(bool is_direct)
 {
     (void)consume();
     Vector<String> queries;
-    while (peek().type != Token::Type::MentionClose) {
-        if (peek().type == Token::Type::Eof)
-            return make_error_here("Expected a '>', but reached eof");
+    if (is_direct) {
+        while (peek().type != Token::Type::MentionClose) {
+            if (peek().type == Token::Type::Eof)
+                return make_error_here("Expected a '>', but reached eof");
 
-        auto token = consume();
-        if (token.is_error())
-            return error(token.release_error());
+            auto token = consume();
+            if (token.is_error())
+                return error(token.release_error());
 
-        if (token.value().type != Token::Type::Identifier)
-            return make_error_here("Expected an identifier");
+            if (token.value().type != Token::Type::Identifier)
+                return make_error_here("Expected an identifier");
 
-        queries.append(token.release_value().text);
+            queries.append(token.release_value().text);
+        }
+        auto close_type = consume().release_value().type;
+        VERIFY(close_type == Token::Type::MentionClose);
+        return static_ptr_cast<ASTNode>(create<DirectMention>(move(queries)));
+    } else {
+        auto query = parse_expression();
+        if (query.is_error())
+            return query.release_error();
+        auto close_type = consume().release_value().type;
+        VERIFY(close_type == Token::Type::MentionClose);
+        return static_ptr_cast<ASTNode>(create<IndirectMention>(query.release_value()));
     }
-
-    auto close_type = consume().release_value().type;
-    VERIFY(close_type == Token::Type::MentionClose);
-    return static_ptr_cast<ASTNode>(create<DirectMention>(move(queries)));
 }
 
 Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_function()
@@ -268,9 +282,17 @@ Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_record_decl()
     return make_error_here("Unimplemented: record");
 }
 
-Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_member_access()
+Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_member_access(NonnullRefPtr<ASTNode> base)
 {
-    return make_error_here("Unimplemented: member");
+    (void)consume();
+    auto token = consume();
+    if (token.is_error())
+        return error(token.release_error());
+    
+    if (token.value().type != Token::Type::Identifier)
+        return make_error_here("Expected an identifier");
+    
+    return static_ptr_cast<ASTNode>(create<MemberAccess>(token.release_value().text, move(base)));
 }
 
 ParseError Parser::make_error_here(String text)

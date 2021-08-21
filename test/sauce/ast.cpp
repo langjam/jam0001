@@ -89,6 +89,16 @@ void IndirectMention::dump(int indent)
     m_node->dump(indent + 1);
 }
 
+Value IndirectMention::execute(Context& context)
+{
+    auto mention = m_node->run(context);
+    if (!mention.value.has<String>())
+        return { Empty {} };
+    
+    auto words = mention.value.get<String>().split(' ');
+    return create<DirectMention>(move(words))->run(context);
+}
+
 void FunctionNode::dump(int indent)
 {
     ASTNode::dump(indent);
@@ -229,6 +239,36 @@ void MemberAccess::dump(int indent)
 {
     ASTNode::dump(indent);
     // FIXME
+}
+
+Value MemberAccess::execute(Context& context)
+{
+    auto value = m_base->run(context);
+    Function<Value(Value&)> visit = [&](auto& value) {
+        return value.value.visit(
+            [](Empty) -> Value { return { Empty {} }; },
+            [&](String const& string) -> Value {
+                if (m_property == "length"sv)
+                    return { string.length() };
+                return { Empty {} };
+            },
+            [&](int value) -> Value {
+                if (m_property.is_one_of("negated"sv, "neg"sv))
+                    return { -value };
+                
+                return { Empty {} };
+            },
+            [](FunctionValue const&) -> Value { return { Empty {} }; },
+            [](NativeFunctionType const&) -> Value { return { Empty {} }; },
+            [](Type const*) -> Value { return { Empty {} }; },
+            [&](NonnullRefPtr<CommentResolutionSet> const& crs) -> Value {
+                auto res_crs = create<CommentResolutionSet>();
+                for (auto& entry : crs->values)
+                    res_crs->values.append(visit(const_cast<Value&>(entry)));
+                return { move(res_crs) };
+            });
+    };
+    return visit(value);
 }
 
 void Assignment::dump(int indent)

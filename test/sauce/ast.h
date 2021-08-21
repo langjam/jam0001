@@ -84,7 +84,7 @@ public:
     }
 
 private:
-    virtual Value execute(Context&) override { return { Empty {} }; }
+    virtual Value execute(Context&) override;
     virtual void dump(int indent) override;
 
     RefPtr<ASTNode> m_node;
@@ -188,7 +188,7 @@ public:
     }
 
 private:
-    Value execute(Context&) override { return { Empty {} }; }
+    Value execute(Context&) override;
     virtual void dump(int indent) override;
 
     String m_property;
