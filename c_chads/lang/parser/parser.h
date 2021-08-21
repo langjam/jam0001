@@ -11,12 +11,16 @@ struct Parser_State {
 
 enum Parser_Node_Addressing {
     PA_BINARY,
+    PA_UNARY,
     PA_LISTING,
     PA_ENDPOINT
 };
 
 enum Parser_Node_Kind {
+    PN_INVAL,    // ENDPOINT, USED INTERNALLY BY PARSER DONT TOUCH
     PN_TYPELIST, // LISTING
+    PN_UNARY,    // UNARY
+    PN_OPERATOR, // BINARY
     PN_IF,       // BINARY
     PN_WHILE,    // BINARY
     PN_PARAMS,   // LISTING
@@ -49,12 +53,19 @@ struct Parser_Node {
         struct {
             strview_t val; 
         } ident;
+        struct {
+            strview_t op; 
+        } op;
+        struct {
+            strview_t op; 
+        } unary;
     } data;
 };
 
 void parser_init(const string src);
 struct Parser_Node parser_parse_toplevel();
 struct Parser_State *parser_get_state();
+struct Parser_Node *pnode_uvalue(struct Parser_Node *of);
 struct Parser_Node *pnode_right(struct Parser_Node *of);
 struct Parser_Node *pnode_left(struct Parser_Node *of);
 void parser_deinit();

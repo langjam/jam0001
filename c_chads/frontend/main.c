@@ -9,6 +9,9 @@ void print_ast(struct Parser_Node *node, usize depth) {
         printf("    ");
 
     switch (node->addressing) {
+        case PA_UNARY:
+            printf("~~");
+            break;
         case PA_LISTING:
             printf("[]");
             break;
@@ -20,8 +23,13 @@ void print_ast(struct Parser_Node *node, usize depth) {
             break;
     }
     switch (node->kind) {
+        case PN_INVAL:
+            break;
         case PN_TOPLEVEL:
             printf("Toplevel\n");
+            break;
+        case PN_UNARY:
+            printf("Unary(%.*s)\n", (int)node->data.unary.op.size, node->data.unary.op.view);
             break;
         case PN_IF:
             printf("If\n");
@@ -40,6 +48,9 @@ void print_ast(struct Parser_Node *node, usize depth) {
             break;
         case PN_DECL:
             printf("Decl(type = %.*s, name = %.*s)\n", (int)node->data.decl.type.size, node->data.decl.type.view, (int)node->data.decl.name.size, node->data.decl.name.view);
+            break;
+        case PN_OPERATOR:
+            printf("Op(%.*s)\n", (int)node->data.op.op.size, node->data.op.op.view);
             break;
         case PN_ASSIGN:
             printf("Assignment\n");
@@ -60,12 +71,14 @@ void print_ast(struct Parser_Node *node, usize depth) {
             printf("Ident(%.*s)\n", (int)node->data.ident.val.size, node->data.ident.val.view);
             break;
     }
-    for (usize i = 0; i < node->children.size; i += 1) {
-        print_ast(vec_get(&node->children, i), depth + 1);
-    }
+    if (node->kind != PN_INVAL)
+        for (usize i = 0; i < node->children.size; i += 1) {
+            print_ast(vec_get(&node->children, i), depth + 1);
+        }
     // just temp
 #ifndef ENABLE_INTERPRETER
-    vec_drop(&node->children);
+    if (node->kind != PN_INVAL)
+        vec_drop(&node->children);
 #endif
 }
 

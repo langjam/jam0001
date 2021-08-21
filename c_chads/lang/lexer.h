@@ -16,7 +16,6 @@ enum Token_Type {
     TT_EOF,
     TT_INVALID,
     TT_DEF,
-    TT_ASSIGN,
     TT_STRING,
     TT_NUMBER,
     TT_IDENT,
@@ -27,8 +26,7 @@ enum Token_Type {
     TT_LBRACKET,
     TT_RBRACKET,
     TT_COMMA,
-    TT_LT,
-    TT_GT,
+    TT_OPERATOR,
     TT_SEMI,
     TT_RETURN,
     TT_PROC
