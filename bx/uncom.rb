@@ -20,8 +20,7 @@ print-hello # does nothing
 # place "instruction pointer" at the start of the string
 # decide on how functions are declared
 # declare some variables
-
-# DONE decide on how variables are declared
+# create some kind of test
 
 # expresions
 # 1 + 2 + 3 -> 6
@@ -47,59 +46,59 @@ print-hello # does nothing
 # $var= and $var are created at read time, as long as nothing else matches
 
 class UnFunc
-	def initialize
+	def initialize(name, checks, func)
+		raise "type checks must match func arity" if checks.length != func.arity
+		@name = name
+		@checks = checks
+		@func = func
 	end
-	#def is_callable? (data_stack) # -> bool
-	#	return true
-	#end
-	# def call (uncom)
+
+	def is_callable?(stack)
+		return false if stack.length < @func.arity
+		stack[-@func.arity, @func.arity].each_with_index do |item, idx|
+			check = @checks[idx]
+			return false if check == :num and not item.is_a? Integer
+			return false if check == :bool and not (item.is_a?(FalseClass) or item.is_a?(TrueClass))
+			return false if check == :str and not item.is_a? String
+			# raise "i don't kow what type #{check} is" if check != :any
+		end
+		return true
+	end
+
+	def call(uncom)
+		uncom.data.push(@func.call(*uncom.data.pop(@func.arity)))
+	end
+
+	def inspect
+		name
+	end
 end
 
 $uncom_words = {}
-$uncom_words["+"] = Class.new(UnFunc) do
-	def is_callable?(s)
-		return false if s.length < 2
-		return false if not s[-1].is_a? Integer
-		return false if not s[-2].is_a? Integer
-		return true
-	end
+[
+["uncom-v", [], lambda { "uncom ver 2108.2021" }],
 
-	def call(uncom)
-		uncom.data.push(uncom.data.pop + uncom.data.pop)
-	end
+["false", [], lambda { false }],
+["true", [], lambda { true }],
 
-	def inspect() "+" end
-end.new
+["+", [:num, :num], lambda {|a, b| a + b }],
+["-", [:num, :num], lambda {|a, b| a - b }],
+["*", [:num, :num], lambda {|a, b| a * b }],
+["/", [:num, :num], lambda {|a, b| a / b }],
+["%", [:num, :num], lambda {|a, b| a % b }],
 
-$uncom_words["-"] = Class.new(UnFunc) do
-	def is_callable?(s)
-		return false if s.length < 2
-		return false if not s[-1].is_a? Integer
-		return false if not s[-2].is_a? Integer
-		return true
-	end
+[">", [:num, :num], lambda {|a, b| a > b }],
+["<", [:num, :num], lambda {|a, b| a < b }],
 
-	def call(uncom)
-		uncom.data.push(-(uncom.data.pop) + uncom.data.pop)
-	end
+["==", [:any, :any], lambda {|a, b| a == b }],
 
-	def inspect() "-" end
-end.new
+["and", [:bool, :bool], lambda {|a, b| a and b }],
+["or", [:bool, :bool], lambda {|a, b| a or b }],
+["not", [:bool], lambda {|a| not a }],
 
-$uncom_words[">"] = Class.new(UnFunc) do
-	def is_callable?(s)
-		return false if s.length < 2
-		return false if not s[-1].is_a? Integer
-		return false if not s[-2].is_a? Integer
-		return true
-	end
-
-	def call(uncom)
-		uncom.data.push(uncom.data.pop <= uncom.data.pop)
-	end
-
-	def inspect() ">" end
-end.new
+].each {|word|
+	$uncom_words[word[0]] = UnFunc.new(*word)
+}
 
 def do_words(words)
 	uncom = Uncom.new
@@ -117,6 +116,8 @@ class Uncom
 		# first one is global, rest are used for func locals, where last is for current func
 		@dict = [$uncom_words.merge({}), {}]
 		# TODO:
+		# source code string
+		# instruction pointer
 		# return stack, saves locations in source to come back to
 	end
 
@@ -140,6 +141,23 @@ class Uncom
 	end
 
 	def do_word(word)
+		# ( -> push data + func stacks
+		if word == "(" then
+			@data_stacks.push([])
+			@func_stacks.push([])
+			return false # no funcs called
+		# ) -> pop data + func stacks, save last from data, put ontop of prev data
+		elsif word == ")" then
+			if @data_stacks.length < 2 then
+				raise "UNBALENCED ) THIS WOULDVE TRIGGERED A STACK UNDERFLOW"
+				return false # no funcs called
+			end
+			s = @data_stacks.pop()
+			data.push(s.last)
+			@func_stacks.pop()
+			return try_apply_stacks()
+		end
+
 		# number -> push
 		begin
 			num = Integer(word)
@@ -148,20 +166,27 @@ class Uncom
 		rescue ArgumentError
 			# not number
 		end
+
 		# string -> lookup word
-			# found global -> do word
-			if @dict.first.member? word then
-				func.push @dict.first[word]
-				return try_apply_stacks()
-			# matches $global= -> make global
-			elsif word[0] == "$" and word[-1] == "=" then
-				# TODO create setter / getter pairs
-				puts "That'd have made a global"
-			end
-			# found local -> do word
-				# TODO
-			# matches local= -> make local
-				# TODO
+
+		# found local -> do word
+		if @dict.last.member? word then
+			# TODO
+		elsif word[0] != "=" and word[-1] == "=" then
+		# matches local= -> make local
+			# TODO
+		end
+
+		# found global -> do word
+		if @dict.first.member? word then
+			func.push @dict.first[word]
+			return try_apply_stacks()
+		# matches $global= -> make global
+		elsif word[0] == "$" and word[-1] == "=" then
+			# TODO create setter / getter pairs
+			puts "That'd have made a global"
+		end
+
 		puts "did nothing"
 	end
 end
