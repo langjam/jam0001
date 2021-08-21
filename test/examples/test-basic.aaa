@@ -45,6 +45,7 @@ print(<string>.length);
 print(<number>.negated);
 
 let Vec3 = { |T|: res
+    // 3D vector of uniform type T
     let res = record {
         x: T y: T z: T
     };
@@ -53,3 +54,6 @@ let Vec3 = { |T|: res
 let any = record { x };
 
 print(Vec3(any)(1 "test" 3).x);
+
+print(is(Vec3 "vector uniform"));
+print(is(Vec3 "vector uniform 2D"));

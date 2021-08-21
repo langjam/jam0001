@@ -2,6 +2,7 @@
 #include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/StringView.h>
+#include <AK/TypeCasts.h>
 #include <errno.h>
 #include <string.h>
 
@@ -179,6 +180,52 @@ Value lang$cond(Context&, void* ptr, size_t count)
     return { Empty {} };
 }
 
+Value lang$is(Context&, void* ptr, size_t count)
+{
+    Span<Value> args { reinterpret_cast<Value*>(ptr), count };
+    if (args.size() < 2)
+        return { Empty {} };
+
+    auto& value = args[0];
+    if (!value.value.has<FunctionValue>())
+        return { Empty {} };
+
+    auto& query = args[1];
+    if (!query.value.has<String>())
+        return { Empty {} };
+
+    auto words = query.value.get<String>().split(' ');
+
+    auto& fn = value.value.get<FunctionValue>();
+    Vector<bool> found;
+    found.resize(words.size());
+
+    for (auto entry : fn.node->body()) {
+        auto const* ptr = entry.ptr();
+        if (is<Statement>(*entry))
+            ptr = static_cast<Statement const*>(ptr)->node().ptr();
+
+        if (!is<Comment>(*ptr))
+            continue;
+
+        auto comment = static_cast<Comment const*>(ptr);
+        for (auto it = words.begin(); it != words.end(); ++it) {
+            if (found[it.index()])
+                continue;
+            if (comment->text().contains(*it))
+                found[it.index()] = true;
+        }
+
+        if (all_of(found, [](auto x) { return x; }))
+            break;
+    }
+
+    if (all_of(found, [](auto x) { return x; }))
+        return { 1 };
+
+    return { 0 };
+}
+
 void initialize_base(Context& context)
 {
     context.scope.empend();
@@ -190,6 +237,7 @@ void initialize_base(Context& context)
     scope.set("add", { NativeFunctionType { lang$add, { "native arithmetic addition operation" } } });
     scope.set("sub", { NativeFunctionType { lang$sub, { "native arithmetic subtract operation" } } });
     scope.set("cond", { NativeFunctionType { lang$cond, { "native conditional selection operation" } } });
+    scope.set("is", { NativeFunctionType { lang$is, { "native comment query operation" } } });
 }
 
 int main(int argc, char** argv)
