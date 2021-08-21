@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../lang/parser/parser.h"
+#include "../lang/interpreter/interpreter.h"
 #include "../aid/sfio/sfio.h"
 
 void print_ast(struct Parser_Node *node, usize depth) {
@@ -31,7 +32,7 @@ void print_ast(struct Parser_Node *node, usize depth) {
         print_ast(vec_get(&node->children, i), depth + 1);
     }
     // just temp
-    vec_drop(&node->children);
+    //vec_drop(&node->children);
 }
 
 int main(int argc, char *argv[]) {
@@ -50,7 +51,17 @@ int main(int argc, char *argv[]) {
     printf("------\n%s\n------\n", parser_get_state()->lexer.src);
     struct Parser_Node result = parser_parse_toplevel();
     print_ast(&result, 0);
+    printf("------Running------\n");
+
+    intrp_init();
+
+    intrp_run(&result);
+    intrp_main();
+
+    intrp_deinit();
+
     printf("------\n");
+
     parser_deinit();
     free(src);
     eh_deinit();
