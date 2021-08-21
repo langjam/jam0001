@@ -1,14 +1,14 @@
 # todo list
 
-- [ ] - lexer
-	- [ ] - parenthesis
-	- [ ] - blocks
-	- [ ] - strings
-	- [ ] - instructions
-	- [ ] - numbers
-	- [ ] - constants
-	- [ ] - variable refs
-	- [ ] - comments
+- [x] - lexer
+	- [x] - parenthesis
+	- [x] - blocks
+	- [x] - strings
+	- [x] - instructions
+	- [x] - numbers
+	- [x] - constants
+	- [x] - variable refs
+	- [x] - comments
 
 - [ ] - parser
 	- [ ] - generate ast
