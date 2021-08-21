@@ -1,12 +1,17 @@
 {
 open Lexing
 
-type tok = INT of int | ID of string | LIST of tok list
+type tok = Int of int | Word of string
+type spec = Spec of bool * string * tok list
 
 let pp_tok fmt = function
-  | INT i -> Format.fprintf fmt "Int (%d)" i
-  | ID i -> Format.fprintf fmt "Id (%s)" i
-  | LIST _ -> Format.fprintf fmt "LS []"
+  | Int i -> Format.fprintf fmt "(Int %d)" i
+  | Word i -> Format.fprintf fmt "(Id %s)" i
+
+let pp_spec fmt (Spec (b, f, xs)) =
+  Format.fprintf fmt "Spec [strict = %B] of %s is [%s]" b f @@
+  String.concat " " @@
+  List.map (Format.asprintf "%a" pp_tok) xs
 
 exception SyntaxError of string
 exception Eof
@@ -24,17 +29,38 @@ let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
 let word = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
-rule token = parse
-  | white     { token lexbuf }
-  | newline   { next_line lexbuf; token lexbuf }
-  | int       { INT (int_of_string (Lexing.lexeme lexbuf)) }
-  | '('       { LIST (comment (ref []) lexbuf) }
+rule block = parse
+  | white     { block lexbuf }
+  | newline   { next_line lexbuf; block lexbuf }
+  | "/*"      { comment (ref []) lexbuf }
+  | _         {
+    let c = Lexing.lexeme lexbuf in
+    raise (SyntaxError (
+      "Unexcepected character '"
+      ^ c
+      ^ "', expected comment block"))
+  }
   | eof       { raise Eof }
-  | _         { raise (SyntaxError ("Invalid character: " ^ (Lexing.lexeme lexbuf))) }
 
 and comment l = parse
-  | ')'      { List.rev !l }
-  | word     { l := (ID (Lexing.lexeme lexbuf))::!l; comment l lexbuf }
   | white     { comment l lexbuf }
   | newline   { next_line lexbuf; comment l lexbuf }
-  | _         { raise (SyntaxError "comment is'nt terminated") }
+  | "*/"      { defun (List.rev !l) lexbuf }
+  | word      { l := (Word (Lexing.lexeme lexbuf))::!l; comment l lexbuf }
+  | int       { l := (Int (int_of_string (Lexing.lexeme lexbuf)))::!l; comment l lexbuf }
+  | _         {
+    let c = Lexing.lexeme lexbuf in
+    raise (SyntaxError ("invalid token '" ^ c ^ "' found while parsing a comment"))
+  }
+  | eof       { raise (SyntaxError "unexcpected enf of file while parsing a comment") }
+
+and defun l = parse
+  | white     { defun l lexbuf }
+  | newline   { next_line lexbuf; defun l lexbuf }
+  | "function " (word as fname) ";" { Spec (true, fname, l) }
+  | "yolo " (word as fname) ";" { Spec (false, fname, l) }
+  | _         {
+    let c = Lexing.lexeme lexbuf in
+    raise (SyntaxError ("invalid token '" ^ c ^ "' found while parsing a comment"))
+  }
+  | eof       { raise (SyntaxError "unexcpected enf of file while parsing a function declaration") }
