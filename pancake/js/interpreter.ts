@@ -24,20 +24,29 @@ export class Interpreter {
     nextStateCallback?: (s: StateInfo) => void;
 
     constructor() {
-        const ports: any = {};
+        this.ports = {} // TODO
 
-        ports.result.subscribe((result: Result) => {
+        // Bind results to call the next callback
+        this.ports.result.subscribe((result: Result) => {
             if (this.nextResultCallback) {
                 this.nextResultCallback(result);
             }
         });
-        ports.state.subscribe((state: StateInfo) => {
+        // Bind state to call the next callback
+        this.ports.state.subscribe((state: StateInfo) => {
             if (this.nextStateCallback) {
                 this.nextStateCallback(state);
             }
         });
     }
 
+    /**
+     * Update the code in the interpreter.
+     * @param code the new code to use, separated by newlines
+     * @returns a promise of the result of compilation
+     * 
+     * Note: this function is never called concurrently with step
+     */
     async setCode(code: string): Promise<Result> {
         const promise: Promise<Result> = new Promise((resolve, _reject) => {
             this.nextResultCallback = resolve
@@ -48,6 +57,12 @@ export class Interpreter {
         return promise;
     }
 
+    /**
+     * Run one step of the interpreter
+     * @returns the state at the end of that step
+     * 
+     * Note: this function is never called concurrently with setCode
+     */
     async step(): Promise<StateInfo> {
         const promise: Promise<StateInfo> = new Promise((resolve, _reject) => {
             this.nextStateCallback = resolve
