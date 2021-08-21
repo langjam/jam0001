@@ -768,27 +768,26 @@ Value b_stash_comment(Slice<Value> args, Env *env, SourceLoc loc) {
 
 Value b_testtable(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("testtable", 0, Value_Ident);
-    CHECK_ARG("testtable", 1, Value_Int);
-    CHECK_ARG("testtable", 2, Value_Int);
-    CHECK_ARG("testtable", 3, Value_List);
+    CHECK_ARG("testtable", 1, Value_List);
+    CHECK_ARG("testtable", 2, Value_List);
 
-    s32 lower = args[1].i, upper = args[2].i;
-    Slice<Value> vals = args[3].list;
-    if (vals.count != (upper - lower + 1)) {
-        fprintf(stderr, "%s:%d:%d: testtable: Range of integers does not match list size (%d--%d vs %ld).\n", LOCFMT(loc),
-            lower, upper, vals.count);
+    Slice<Value> ins = args[1].list, wants = args[2].list;
+
+    if (ins.count != wants.count) {
+        fprintf(stderr, "%s:%d:%d: testtable: Input and expected list must match in size; encountered %ld and %ld.\n", LOCFMT(loc),
+            ins.count, wants.count);
         exit(1);
     }
 
-    for (s32 i = lower; i <= upper; i++) {
+    for (s64 i = 0; i < ins.count; i++) {
         BucketArray<u8> buf = {};
         buf.arena = &arena;
         concat_write(&buf, lit_slice("TESTWITH "));
         concat_write(&buf, intern_pool[args[0].atom.inner]);
         concat_bytes(&buf, ' ');
-        concat_write(&buf, str_slice(tprint("%d", i)));
+        concat_write(&buf, str_slice(format_value(ins[i], true)));
         concat_bytes(&buf, ' ');
-        concat_write(&buf, str_slice(format_value(vals[i], true)));
+        concat_write(&buf, str_slice(format_value(wants[i], true)));
         concat_bytes(&buf, 0);
         Value v = {.type = Value_String, .s = bucket_array_linearize(buf, &arena)};
         ValComment c = {.loc = loc, .value = copy_to_arena(&arena, v)};
@@ -804,6 +803,17 @@ Value b_iota(Slice<Value> args, Env *env, SourceLoc loc) {
     Slice<Value> list = arena_alloc_slice<Value>(&arena, args[0].i);
     for (s64 i = 0; i < args[0].i; i++)
         list[i] = {.type = Value_Int, .i = i};
+    return {.type = Value_List, .list = list};
+}
+
+Value b_iota_plus(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("iota+", 0, Value_Int);
+    CHECK_ARG("iota+", 1, Value_Int);
+
+    Slice<Value> list = arena_alloc_slice<Value>(&arena, args[1].i - args[0].i);
+    for (s64 i = args[0].i; i < args[1].i; i++)
+        list[i - args[0].i] = {.type = Value_Int, .i = i};
     return {.type = Value_List, .list = list};
 }
 
@@ -875,16 +885,12 @@ Slice<Token> get_macro_arg(Slice<Token> *tokens) {
     if (!tokens->count) return {};
 
     if ((*tokens)[0].type == Token_Lparen || (*tokens)[0].type == Token_Lbracket) {
-        TokenType left = (*tokens)[0].type, right;
-        if (left == Token_Lparen) right = Token_Rparen;
-        if (left == Token_Lbracket) right = Token_Rbracket;
-
         slice_advance(tokens, 1);
         Slice<Token> result = {.data = tokens->data, .count = 0};
         s32 balance = 1;
         while (tokens->count) {
-            if ((*tokens)[0].type == left) balance += 1;
-            if ((*tokens)[0].type == right) balance -= 1;
+            if ((*tokens)[0].type == Token_Lparen || (*tokens)[0].type == Token_Lbracket) balance += 1;
+            if ((*tokens)[0].type == Token_Rparen || (*tokens)[0].type == Token_Rbracket) balance -= 1;
             slice_advance(tokens, 1);
             if (balance == 0) break;
             result.count += 1;
@@ -1303,8 +1309,9 @@ int main(int argc, char **argv) {
     BIND_BUILTIN(peel, 1);
     BIND_BUILTIN1("make-comment", b_make_comment, 4);
     BIND_BUILTIN1("stash-comment", b_stash_comment, 1);
-    BIND_BUILTIN(testtable, 4);
+    BIND_BUILTIN(testtable, 3);
     BIND_BUILTIN(iota, 1);
+    BIND_BUILTIN1("iota+", b_iota_plus, 2);
     BIND_BUILTIN(eval, 1);
     BIND_BUILTIN(apply, 2);
     BIND_BUILTIN(getparam, 1);

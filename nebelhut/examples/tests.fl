@@ -18,5 +18,5 @@
 stash-comment make-comment "TEST" 1 1 "TEST 13"
 + 1 * 2 6
 
-testtable 'x 0 4 (yes no yes no yes)
+testtable 'x iota 5 (yes no yes no yes)
 = mod x 2 0

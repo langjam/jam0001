@@ -36,7 +36,7 @@ bind 'n 3
 bind 'result + 1 * 2 n
 ```
 
-`bind` takes an identifier as first argument. The quote character (`'`) is needed to prevent Flamingo from looking up the value of `result` which doesn’t exist yet because we are about to bind it! We are just interested in the name `result`. We can also simply rebind the value at a later time.
+`bind` takes an identifier as first argument. The quote character (`'`) is needed to prevent Flamingo from looking up the value of `result` which doesn’t exist yet because we are about to bind it! We are just interested in the name `result`. We can also simply bind a different value to `result` at a later time.
 
 ```
 bind 'result "foo"
@@ -64,16 +64,16 @@ bind 'comment { Looking good. }
 println comment
 ```
 
-You can even create your own comments at runtime via the builtin function `make-comment`. It expects 4 arguments since a comment isn’t just a fancy string. It stores information about where in the source code it is located. The first three arguments to `make-comment` are a string representing the name of the source file, an integer representing the line, and an integer representing the column. The last argument is the contents of the comment. While you might assume that this argument must be a string it, in fact, can be a value of any type. Comments you type directly into a source file contain strings but you are not restricted like that when creating comments.
+You can even create your own comments at runtime via the builtin function `make-comment`. It expects 4 arguments since a comment isn’t just a fancy string. It stores information about where in the source code it is located. The first three arguments to `make-comment` are a string representing the name of the source file, an integer representing the line, and an integer representing the column. The last argument is the contents of the comment. While you might assume that this argument must be a string, it, in fact, can be a value of any type. Comments you type directly into a source file contain strings but you are not restricted like that when creating comments.
 
 ```
 make-comment "make-comment" 1 1 "My first comment."
 make-comment "included_file.fl" 10 13 (1 3 5)
 ```
 
-Flamingo provides a few builtin functions to operate on comment value: `getloc` to retrieve the source location in form of an assoc list (`('source "included_file.fl" 'line 10 'col 13)`) and `peel` to retrieve the stored value.
+Flamingo provides a few builtin functions to operate on comment values: `getloc` to retrieve the source location in form of an assoc list (`('source "included_file.fl" 'line 10 'col 13)`) and `peel` to retrieve the stored value.
 
-Furthermore, there is the concept of a stashed comment. If a statement (basically, a line of code) contains only a comment, Flamingo doesn’t just throw it away like it would do with integers or strings; it stores it. A stored comment doesn’t do anything but functions can access this stashed comment to do whatever they want. `bind` uses this to store comments as documentation in variables if they are preceded by comments.
+Furthermore, there is the concept of a stashed comment. If a statement (basically, a line of code) contains only a comment, Flamingo doesn’t just throw it away like it would do with integers or strings; it stores it. Functions can access this stashed comment to do whatever they want. `bind` uses this to store comments as documentation in variables if they are preceded by comments.
 
 ```
 { The anwer to life, the universe, and everything. }
@@ -81,7 +81,7 @@ bind 'answer 42
 println assoclist 'answer
 ```
 
-If you split a comment across several lines, they are automatically conacatenated.
+If you split a comment across several lines, they are automatically concatenated.
 
 ```
 { There is much to say about the variable foo. }
@@ -114,7 +114,7 @@ If a statement is executed while a string comment is stashed that begins with "T
 
 The stashed comment is cleared afterwards.
 
-Another comment test directive is `TESTWITH`. It expects an identifier and two values (separated by whitespace). It binds the first value to the given identifier and afterwards compares the second expression with the statement result. What makes `TESTWITH` special is that a comment can contain several `TESTWITH` directives and the statement is executed for every directive. Imagine, for example, you really wanted to make sure that Flamingo doesn’t mess up multiplication with 0. You test it like this:
+Another comment test directive is `TESTWITH`. It expects an identifier and two values (separated by whitespace). It binds the first value to the given identifier and afterwards compares the second expression with the statement result. What makes `TESTWITH` special is that a comment can contain several `TESTWITH` directives and the statement is executed for every directive. Imagine, for example, you really wanted to make sure that Flamingo doesn’t mess up multiplication with 0. You can test it like this:
 
 ```
 { TESTWITH x 0 0 }
@@ -134,12 +134,14 @@ stash-comment make-comment "TEST" 1 1 "TEST 13"
 
 This is equivalent to our literal comment TEST above.
 
-This is even more useful in conjunction with `TESTWITH`. There is a builtin function `testtable` that generates test cases for you. It takes a variable name, two integers representing a lower and upper bound and a list of values. For every integer in the given range it generates and stashes a `TESTWITH` comment for the given variable and the corresponding element of the list.
+This is even more useful in conjunction with `TESTWITH`. There is a builtin function `testtable` that generates test cases for you. It takes a variable name, and two lists of values that are equal in size. For each element of both lists it generates and stashes a `TESTWITH` comment for the given variable and the corresponding input and expected value.
 
 ```
-testtable 'x 0 4 (yes no yes no yes)
+testtable 'x (0 1 2 3 4) (yes no yes no yes)
 = mod x 2 0
 ```
+
+For the specific case of number ranges the first list could be more easily generated with the builtin functions `iota` and `iota+`.
 
 
 Control structures
@@ -178,7 +180,7 @@ for ch ('a 'b 'c) [
 ]
 ```
 
-It executes the block for every element of the given list which is bound to the given variable. If the variable is `_`, no value will be bound to it. There is a builtin function `iota` that takes an integer _n_ and returns a list containing the natural numbers 0 ≤ _i_ < _n_. `iota` can be used with a `for` loop if you want to repeat an action several times.
+It executes the block for every element of the given list which is bound to the given variable. If the variable is `_`, no value will be bound to it. The builtin function `iota` takes an integer _n_ and returns a list containing the natural numbers 0 ≤ _i_ < _n_. `iota` can be used with a `for` loop if you want to repeat an action several times. `iota+` is similiar but takes two arguments and returns the natural interval (excluding the right side).
 
 
 Blocks
@@ -187,11 +189,11 @@ Blocks
 In the previous section we saw the use of blocks. Blocks are code that is enclosed in `[` and `]`. They are not executed when encountered but rather stored as a block value that can be executed at a later time with the builtin `eval` function. The result of this call is the last expression that was evaluted in the block. An empty block results in `no`.
 
 ```
-bind 'block [ * 2 3]
+bind 'block [ * 2 3 ]
 println eval block
 ```
 
-You can pass arguments to blocks via the `apply` builtin. They can be accessed from within the block via the `geparam` builtin.
+You can pass arguments to blocks via the `apply` builtin. They can be accessed from within the block via the `getparam` builtin.
 
 ```
 bind 'twice [ * 2 getparam 0 ]
@@ -200,7 +202,7 @@ println apply twice (3)
 
 `apply` takes a block and a list of values, and evaluates the block with the arguments. `eval` is therefore equivalent to `apply` with an empty argument list.
 
-There is another way to evaluate a block. To be called like regular builtin functions the parser needs to know how many arguments it should parse to pass to the block but a block doesn’t any information about how many arguments it wants. This information is easy to supply but it is not associated with the block value but with a variable instead. You can set the `'arity` associative value on a variable to tell the parser how many parameter a block takes.
+There is another way to evaluate a block. To be called like regular builtin functions the parser needs to know how many arguments it should parse to pass to the block but a block doesn’t contain any information about how many arguments it wants. This information is easy to supply but it is not associated with the block value but with a variable instead. You can set the `'arity` associative value on a variable to tell the parser how many parameter a block takes.
 
 ```
 bind 'inc [ + 1 getparam 0 ]
@@ -208,13 +210,13 @@ assoc 'inc 'arity 1
 println inc 5
 ```
 
-When a variable name is evaluted, its value is lookup in the current environment. If it is a builtin function or a block and the variable has an arity associated, the parser parses a function call. There is the `&` operator that is similiar in function to `'`. It lookups variables without trying to parse function calls, you always get just the stored value.
+When a variable name is evaluted, its value is looked up in the current environment. If it is a builtin function or a block and the variable has an arity associated, the parser parses a function call. There is the `&` operator that is similiar in function to `'`. It lookups variables without trying to parse function calls, you always just get the stored value.
 
 ```
 println &inc
 ```
 
-Blocks can also be concatenated via the `+` builtin. A concatenated block just evaluates the statements of the first block and the statements of the second block, just as if you had written them one after the other.
+Blocks can also be concatenated via the `+` builtin. A concatenated block just evaluates the statements of the first block and then the statements of the second block, just as if you had written them one after the other.
 
 ```
 bind 'greeter [ println "Hello." ]
@@ -239,7 +241,7 @@ If there was a macro facility, we would be able to write a macro to handle all t
 Macros
 ------
 
-Use the `macro` keyword to define a macro. It expects a name for the macro, the nubmer of parameters and a body.
+Use the `macro` keyword to define a macro. It expects a name for the macro, the number of parameters and a body.
 
 ```
 macro answer 0 [ 42 ]
@@ -247,7 +249,7 @@ macro answer 0 [ 42 ]
 
 If a macro is encountered, the parser consumes as many macro arguments as are specified. A macro argument is either a simple token or all the tokens between (balanced) parentheses and brackets. The arguments are inserted into the body of the macro and the result is evaluated. Note that the resulting body must be a valid list of Flamingo statements. You can’t use macros to generate only parts of a construct. Neither the body of the macro nor the arguments must be valid—they are just lists of tokens—as long as the final result is valid.
 
-The simplest way to insert a macro argument is `,`_n_, a comma followed by a integer token. The integer must be greater or equal to zero and less than the number of parameters. The tokens of the given argument are spliced in-place.
+The simplest way to insert a macro argument is `,`_n_, a comma followed by an integer token. The integer must be greater or equal to zero and less than the number of parameters. The tokens of the given argument are spliced in-place.
 
 ```
 macro debug 1 [ println << ',0 ": " ,0 >> ]
@@ -258,10 +260,10 @@ This defines a simple macro that expects an identifier and results in a statemen
 Another use of arguments is `,len` _n_ (note that there must be a space between `len` and the integer). It inserts an integer token representing the number of tokens in the given argument.
 
 ```
-macro count-tokens 1 [ println << ,len0 " tokens" >> ]
+macro count-tokens 1 [ println << ,len 0 " tokens" >> ]
 ```
 
-Note that if you pass a token list (using parentheses or brackets) only the tokens between the parentheses or brackets are passed. There is also no way to find out if parentheses or brackets were used.
+Note that if you pass a token list (using parentheses or brackets) only the tokens between the outer parentheses or brackets are passed. There is also no way to find out if parentheses or brackets were used.
 
 With this information we can already write a small macro that helps defining functions.
 
@@ -276,7 +278,7 @@ func square (x) [ * x x ]
 
 This macro binds the given block to a variable and associates the arity derived from the parameter list. Note the brackets around `,2`. Since only the contents of the block is passed to the macro we need to surround it with brackets.
 
-This macro isn’t yet complete (and the execution would fail) since we don’t the numeric block arguments to the given parameter name `x`. For this we need loops.
+This macro isn’t yet complete (and the execution would fail) since we don’t bind the numeric block arguments to the given parameter name `x`. For this we need loops.
 
 `,for` expects an argument and a block. It inserts the evaluated body for every token in the given argument. In the body of the loop two new arguments are made available (that are just appended to the current list of arguments): the token of the current iteration and an integer token representing the loop index.
 
@@ -290,7 +292,7 @@ macro func 3 [
 ]
 ```
 
-We iterate over the list of the parameters and add some code to the already stored function block. The code we preprend just binds the parameter index (macro argument `4`) to the parameter name (macro argument `3`). This is in fact the definition of the built-in macro `defun`.
+We iterate over the list of the parameters and add some code to the already stored function block. The code we preprend just binds the parameter index (macro argument `4`) to the parameter name (macro argument `3`). This is in fact the definition of the builtin macro `defun`.
 
 
 Reference
