@@ -1,12 +1,4 @@
-
 open Kl_parsing
-
-type 'a statement =
-  | Takes of int
-  | Let of string * 'a
-  | Returns of 'a
-  | Uses of 'a list
-  | Nothing
 
 type value =
   | Arg of int
@@ -27,6 +19,13 @@ type operation =
 type expr =
   | Leaf of value
   | Node of operation
+
+type cconstraint =
+  | Takes of int
+  | Let of string * expr
+  | Returns of expr
+  | Uses of expr list
+  | Nothing
 
 type function_result =
   | Function of expr
@@ -102,7 +101,7 @@ let parse_operation (comment : tok list) : operation =
   )
 in search [] comment
 
-let rec parse_statement (comment : tok list) : expr statement =
+let rec parse_statement (comment : tok list) : cconstraint =
   let f x = try Node (parse_operation x) with _ -> Leaf (parse_value x) in
   match comment with
   | [] -> Nothing
@@ -118,7 +117,7 @@ let rec parse_statement (comment : tok list) : expr statement =
     | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
     | _ -> parse_statement q
 
-let parse_function (Spec (_, name, comment)) =
+let generate_function (Spec (_, name, comment)) =
   let comments = split_lines comment in
   let rec build_function (f : comment_function) = function
     | [] -> f
