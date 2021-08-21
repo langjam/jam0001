@@ -12,16 +12,14 @@ const string TT_NAMES[256] = {
     [TT_NUMBER] = "Number",
     [TT_IDENT] = "Ident",
     [TT_DEF] = "Definition",
-    [TT_ASSIGN] = "Assignment",
     [TT_LBRACE] = "LeftBrace",
     [TT_RBRACE] = "RightBrace",
     [TT_LPAREN] = "LeftParen",
     [TT_RPAREN] = "RightParen",
     [TT_LBRACKET] = "LeftBracket",
     [TT_RBRACKET] = "RightBracket",
+    [TT_OPERATOR] = "Op",
     [TT_COMMA] = ",",
-    [TT_LT] = "LessThan",
-    [TT_GT] = "GreaterThan",
     [TT_SEMI] = "Semi",
     [TT_RETURN] = "Return",
     [TT_PROC] = "Proc"
@@ -135,8 +133,6 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
             return TT_DEF;
         case ',':
             return TT_COMMA;
-        case '=':
-            return TT_ASSIGN;
         case '{':
             return TT_LBRACE;
         case '}':
@@ -145,10 +141,20 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
             return TT_LBRACKET;
         case ']':
             return TT_RBRACKET;
+        case '!':
         case '<':
-            return TT_LT;
         case '>':
-            return TT_GT;
+        case '=':
+            if (lex_peek(self) == '=')
+            {
+                lex_skip(self);
+            }
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case '%':
+            return TT_OPERATOR;
         case '(':
             return TT_LPAREN;
         case ')':
