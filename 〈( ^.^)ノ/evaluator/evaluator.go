@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/grossamos/jam0001/evaluator/m"
 	"github.com/grossamos/jam0001/lexer"
 	"github.com/grossamos/jam0001/shared"
 )
@@ -44,6 +45,7 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 			e.vars[varsIndex] = set_values[0].Val.Value
 
 		case lexer.II_print:
+			e.eval_children(&instruction_args)
 			for _, arg := range instruction_args {
 				if arg.Val.Type == shared.TTref {
 					fmt.Println(e.getRefValue(arg))
@@ -51,6 +53,15 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 					fmt.Println(arg.Val.Value)
 				}
 			}
+
+		case lexer.II_m:
+			mathInput := instruction_args[0].Val.Value
+			// TODO: add error if instruction_args is larger that 1
+			mResult, err := m.Do(mathInput, []string{}, []string{})
+			if err != nil {
+				fmt.Println("MathError: expression invalid: ", mathInput)
+			}
+			return makeNumberNode(mResult)
 		}
 		return shared.Node{}
 
@@ -83,6 +94,13 @@ func (e *Evaluator) getRefValue(expr shared.Node) string {
 	}
 	// TODO catch if vars isn't big enough
 	return e.vars[varIndex]
+}
+
+func makeNumberNode(number string) shared.Node {
+	return shared.Node{Val: shared.Token{
+		Type:  shared.TTnumber,
+		Value: number},
+		IsExpression: false, Children: []shared.Node{}}
 }
 
 func RunEvaluator(nodes []shared.Node) {
