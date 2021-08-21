@@ -1,5 +1,6 @@
 from application_stack_utils import StatementNode
 from internals import env as internal_env, internals
+import uuid
 
 env = internal_env.copy()
 
@@ -73,6 +74,8 @@ class ComstructExecutor:
             return ret
         elif isinstance(node, StatementNode.FunctionDefinitionNode):
             return node
+        elif isinstance(node, StatementNode.ClassDefinitionNode):
+            return node
         elif isinstance(node, StatementNode.FunctionCallNode):
             processed_args = []
             node_call = env[node.func_name].content
@@ -121,6 +124,26 @@ class ComstructExecutor:
 
             return ret
 
+        elif isinstance(node, StatementNode.ClassInstanciacionNode):
+            uid = uuid.uuid4().hex
+
+            classnode: StatementNode.ClassDefinitionNode = env[node.class_name]
+
+            old_env = env
+            env = {}
+
+            for stmt_node in classnode.content:
+                if type(stmt_node) != StatementNode.VarAssignNode:
+                    print("[EXEC] Tried to do something different than assigning a var inside a class.")
+                    continue
+                self.walkTree(stmt_node)
+
+            new_env = env
+            env = old_env
+            env[uid] = new_env
+
+            return StatementNode.LiterallyNode(ClassClass(uid, env))
+
         elif isinstance(node, StatementNode.ForLoopExecutorNode):
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             prev = None
@@ -140,3 +163,9 @@ class ComstructExecutor:
             return ret
         else:
             return node
+
+
+class ClassClass:
+    def __init__(self, uid, envrnmt):
+        self.uid = uid
+        self.env = envrnmt

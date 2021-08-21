@@ -28,12 +28,14 @@ class ComstructLexer(Lexer):
         "NEWSTMT",  # ?
         "SEP",  # :
         "FUNCDESC",  # Define the args of a class / method /* @param */
+        "FUNCSEP",  # .
     }
 
     ignore = " \t\n"
     ignore_comment = r"\\\\.*"
 
     FUNCDESC = r'/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/'
+    FUNCSEP = r'\.'
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
     PLUS = r'\+'
     STRING = r'"[^\"^\n]+"|""'

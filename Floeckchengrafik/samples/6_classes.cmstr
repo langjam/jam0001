@@ -3,5 +3,14 @@
  **********************/
 
 myclass = class({
+    /*
+     * This is just an example Class to explain classes in comstruct.
+     */
 
+    comment = function({
+        /*
+         * This is the Constructor of the myclass-Class
+         * - param
+         */
+    })?
 })?

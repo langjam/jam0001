@@ -119,6 +119,14 @@ class ComstructParser(Parser):
     def arglist(self, p):
         return p.arglist + [p.elem, ]
 
+    @_("NAME FUNCSEP NAME LPAREN arglist RPAREN")
+    def expr(self, p):
+        return StatementNode.ClassMethodExecuteNode(p.NAME0, p.NAME1, p.arglist)
+
+    @_("NAME FUNCSEP NAME LPAREN RPAREN")
+    def expr(self, p):
+        return StatementNode.ClassMethodExecuteNode(p.NAME0, p.NAME1, [])
+
     @_("NAME LPAREN arglist RPAREN")
     def expr(self, p):
         return StatementNode.FunctionCallNode(p.NAME, p.arglist)
