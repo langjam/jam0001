@@ -16,7 +16,7 @@ def main(args):
   text = c.read()
   c.close()
 
-  Runner(args[0], text).run()
+  Runner(args[0], text).run(args[1:])
 
 if __name__ == "__main__":
   main(sys.argv[1:])

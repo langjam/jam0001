@@ -135,7 +135,7 @@ class FunctionInvocation(Expression):
       if arg_value.is_error: return arg_value
       args.append(arg_value)
     
-    if is_null(root_value): return to_null_error(root_value)
+    if is_null(root_value): return to_null_error_value(root_value)
 
     if root_value.type == 'FUNCTION':
       method_def = root_value.method_def
@@ -189,6 +189,23 @@ class ReturnStatement(Executable):
     if value.is_error: return error_status_from_value(value)
     return StatusWrapper('RETURN', value)
 
+class IfStatement(Executable):
+  def __init__(self, if_token, condition, if_code, else_code):
+    super().__init__(if_token)
+    self.condition = condition
+    self.if_code = if_code
+    self.else_code = else_code
+  def run(self, scope):
+    condition = self.condition.run(scope)
+    if condition.is_error: return error_status_from_value(condition)
+    if is_null(condition): return to_null_error_statuus(self.condition.first_token)
+    if condition.type != 'BOOL': new_error_status(self.condition.first_token, "If statement requires a boolean value for its condition.")
+    if condition.value:
+      run_this = self.if_code
+    else:
+      run_this = self.false_code
+    return run_code_block(run_this, scope)
+
 class DotField(Expression):
   def __init__(self, expression, dot, field_name):
     super().__init__(expression.first_token)
@@ -200,7 +217,7 @@ class DotField(Expression):
   def run(self, scope):
     value = self.root.run(scope)
     if value.is_error: return value
-    if is_null(value): return to_null_error(value)
+    if is_null(value): return to_null_error_value(self.dot)
     field_name = self.field_name.value
     if value.type == 'STRING':
       if field_name == 'length':
@@ -223,11 +240,37 @@ class DotField(Expression):
 
 class BracketIndex(Expression):
   def __init__(self, root_expression, bracket_token, index_expression):
-    super().__init__(self, root_expression.first_token)
+    super().__init__(root_expression.first_token)
     self.root = root_expression
     self.bracket_token = bracket_token
     self.index = index_expression
   
+class InlineIncrement(Expression):
+  def __init__(self, first_token, op_token, expression, is_prefix, is_increment):
+    super().__init__(first_token)
+    self.op_token = op_token
+    self.root = expression
+    self.is_prefix = is_prefix
+    self.is_increment = is_increment
+  def run(self, scope):
+    starting_value = self.expression.run(scope)
+    if starting_value.is_error: return starting_value
+    if is_null(starting_value): return to_null_error_value(starting_value)
+    if starting_value.type != 'INT': return new_error_value(self.op_token, "Can only use " + self.op_token.value + " on integers. This is a " + starting_value.type + ".")
+
+    n_before = starting_value.value
+    n_after = n_before + (1 if self.is_increment else -1)
+    new_value = get_integer_value(n_after if self.is_prefix else n_before)
+
+    if instanceof(self.expression, Variable):
+      scope.locals[self.expression.canonical_name] = new_value
+    elif instanceof(self.expression, BracketIndex):
+      raise Exception("TODO: ++ and -- on fields")
+    elif instanceof(self.expression, DotField):
+      raise Exception("TODO: ++ and -- on fields")
+    else:
+      return new_error_value(self.op_token, "The " + self.op_token.value + " op is not support on this sort of expression.")
+
 class AssignStatement(Executable):
   def __init__(self, target_expression, assign_op, value_expression):
     super().__init__(target_expression.first_token)
@@ -253,7 +296,7 @@ class AssignStatement(Executable):
       root = self.target.root.run(scope)
       field_name = self.target.field_name.value
       if root.is_error: return error_status_from_value(root)
-      if is_null(root): return to_null_error(self.target.bracket_token)
+      if is_null(root): return to_null_error_status(self.target.bracket_token)
       if root.type == 'INSTANCE':
         if is_direct_assign:
           root.fields[field_name] = value
@@ -265,7 +308,7 @@ class AssignStatement(Executable):
     elif isinstance(self.target, BracketIndex):
       root = self.target.root.run(scope)
       if root.is_error: return error_status_from_value(root)
-      if is_null(root): return to_null_error(self.target.dot)
+      if is_null(root): return to_null_error_status(self.target.dot)
       raise Exception("TODO: assign to a bracket index")
     else:
       return new_error_status(self.assign_op, "Cannot assign to this type of expression.")
@@ -378,8 +421,11 @@ def _add_code_impl(code_lines, text, line_offset):
 def is_null(value):
   return value.type == 'NULL'
 
-def to_null_error(token):
+def to_null_error_value(token):
   return new_error_value(token, "Null reference error!")
+
+def to_null_error_status(token):
+  return error_status_from_value(to_null_error_value(token))
 
 def run_function(throw_token, code_lines, global_scope, this_context, arg_names, arg_values):
   if len(arg_names) != len(arg_values):

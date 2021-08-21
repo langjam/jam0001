@@ -2,7 +2,7 @@
 
 > As with all MarkSideways programs, this is *NOT* just a markdown file that refers to code. The markdown file itself *IS* the code that MarkSideways interprets. You can run this program by running `python ms.py CalculatePi.md`
 
-This program <s>calculates</s> estimates pi by running a simulation of picking random points within a square and checking to see if those points are within the bounds of a inscribed circle.
+This program <s>calculates</s> estimates &pi; by running a simulation of picking random points within a square and checking to see if those points are within the bounds of a inscribed circle.
 
 The ratio of points randomly chosen that fall within the circle (using the distance formula from the center of the square) should roughly correspond to the ratio of the area of the circle to the square.
 
@@ -14,20 +14,20 @@ You can adjust the number of points to use in the simulation by passing the numb
 
 ```
 if args.length == 1 {
-    test_count = parseInt(args[0])
+    test_count = parseInt(args[0]);
 }
 ```
 However, if you do not pass in anything, `1000` is used as a default:
 ```
 else {
-    test_count = 1000
+    test_count = 1000;
 }
 ```
 
 We then run the simulation as a series of individual tests
 
 ```
-hits = 0
+hits = 0;
 for i = 1 thru test_count {
     is_in_circle = do_test();
     if is_in_circle {
@@ -36,10 +36,11 @@ for i = 1 thru test_count {
 }
 ```
 
-With the number of hits within the circle known, we can perform the final calculation:
+With the number of hits within the circle known, we can perform the final estimation for the value of &pi;:
 
 ```
-print(4 * hits / test_count);
+pi_estimate = 4 * hits / test_count;
+print(pi_estimate);
 ```
 
 ### Do Test

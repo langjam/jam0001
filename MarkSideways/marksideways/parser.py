@@ -40,7 +40,7 @@ def parse_executable(tokens, allow_complex = True, include_semicolon = True):
     assigned_expression = parse_expression(tokens)
     output = AssignStatement(expr, op, assigned_expression)
   else:
-    if isinstance(expr, FunctionInvocation):
+    if isinstance(expr, FunctionInvocation) or isinstance(expr, InlineIncrement):
       output = ExpressionAsExecutable(expr)
     else:
       raise ParserException(expr.first_token, "This expression does nothing. Did you forget an assignment?")
@@ -57,6 +57,16 @@ def parse_code_block(tokens):
     line = parse_executable(tokens, True, True)
     output.append(line)
   return output
+
+def parse_if_statement(tokens):
+  if_token = tokens.pop_expected('if')
+  condition = parse_expression(tokens)
+  code = parse_code_block(tokens)
+  else_code = []
+  if tokens.is_next('else'):
+    tokens.pop_expected('else')
+    else_code = parse_code_block(tokens)
+  return IfStatement(if_token, condition, code, else_code)
 
 def parse_return_statement(tokens):
   return_token = tokens.pop_expected('return')
@@ -114,7 +124,7 @@ def parse_unaries(tokens):
     if next_value == '++' or next_value == '--':
       return InlineIncrement(op, op, expr, True, next_value == '++')
     return UnaryPrefix(op, expr)
-  expr = parse_entity_with_suffix_chains(tokens)
+  expr = parse_exponents(tokens)
   next_value = tokens.peek_value()
   if next_value in ('++', '--'):
     op = tokens.pop()
@@ -143,6 +153,7 @@ def parse_entity_with_suffix_chains(tokens):
       open_bracket = tokens.pop()
       index_value = parse_expression(tokens)
       expr = BracketIndex(expr, open_bracket, index_value)
+      tokens.pop_expected(']')
     else:
       check_suffixes = False
   return expr
@@ -204,6 +215,8 @@ def parse_entity(tokens):
   
   raise Exception(tokens.pop(), "Unexpected token: '" + next_value + "'.")
 
+# Note that the order here is a little weird for the first few. parse_unaries is after exponents and before multiplication
+parse_exponents = OpChainParser(['**'], parse_entity_with_suffix_chains).parse
 parse_multiplication = OpChainParser(['*', '/', '%'], parse_unaries).parse
 parse_addition = OpChainParser(['+', '-'], parse_multiplication).parse
 parse_bitwise_op = OpChainParser(['<<', '>>'], parse_addition).parse

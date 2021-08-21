@@ -5,6 +5,8 @@ class ParserException(Exception):
 
 class StackTrace:
   def __init__(self, token, error, nested = None):
+    if '.NullValue' in str(token): 
+      raise Exception("WAAAAAA")
     self.token = token
     self.error = error
     self.next = nested

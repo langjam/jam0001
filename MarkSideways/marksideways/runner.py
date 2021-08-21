@@ -10,7 +10,7 @@ class Runner:
     self.filename = filename
     self.text = text
 
-  def run(self):
+  def run(self, args):
     documentItems = markdown_tokenize(self.filename, self.text)
     if len(documentItems) == 0:
       raise ParserException(Token(self.filename, "", 1, 1), "Unexpected EOF. Document seems to be empty.")
@@ -23,7 +23,11 @@ class Runner:
     built_ins = generate_builtins()
     user_defined = gather_user_entities(document)
     globals = merge_dictionaries(built_ins, user_defined)
-    status = run_code_block(document.code, Scope(globals, {}))
+    locals = {
+      'args': NULL_VALUE,
+    }
+
+    status = run_code_block(document.code, Scope(globals, locals))
     if status != None:
       if status.type == 'EXCEPTION':
         stack_trace = status.arg
