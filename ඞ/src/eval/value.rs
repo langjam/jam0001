@@ -6,6 +6,7 @@ use super::EvalResult;
 pub enum Value {
     None,
     Unit,
+    Bool(bool),
     Int(isize),
     Float(f64),
     String(String),
@@ -76,6 +77,7 @@ impl fmt::Debug for Value {
         match self {
             Value::None => write!(f, "None"),
             Value::Unit => write!(f, "()"),
+            Value::Bool(b) => write!(f, "{}", b),
             Value::Int(i) => write!(f, "{}", i),
             Value::Float(ff) => write!(f, "{}", ff),
             Value::String(s) => write!(f, r#""{}""#, s),
@@ -99,6 +101,7 @@ impl fmt::Display for Value {
         match self {
             Value::None => write!(f, "None"),
             Value::Unit => write!(f, "()"),
+            Value::Bool(b) => write!(f, "{}", b),
             Value::Int(i) => write!(f, "{}", i),
             Value::Float(ff) => write!(f, "{}", ff),
             Value::String(s) => write!(f, "{}", s),

@@ -23,6 +23,21 @@ macro_rules! declare_builtin {
     };
 }
 
+#[allow(unused)]
+macro_rules! ast_obj {
+    ($name:literal $(; $($field:literal => $value:expr),*)?) => {
+        Value::Object(Object {
+        class: $name.into(),
+        fields: IntoIterator::into_iter([
+            $($(
+                ($field.to_string(), $value),
+            )*)?
+        ])
+        .collect(),
+    })
+    };
+}
+
 impl Evaluator {
     pub(super) fn register_ast_classes(&mut self) {
         for class in [
@@ -31,11 +46,12 @@ impl Evaluator {
             declare_builtin!("ASTStringLiteral"; "text"),
             declare_builtin!("ASTComment"; "text"),
             declare_builtin!("ASTIdent"; "name"),
+            declare_builtin!("ASTListLiteral"; "elements"),
             declare_builtin!("ASTBinaryExpr"; "op", "lhs", "rhs"),
-            declare_builtin!("ASTList"; "elements"),
             declare_builtin!("ASTObjectLiteral"; "class", "fields"),
             declare_builtin!("ASTFieldLiteral"; "name", "value"),
-            declare_builtin!("ASTForLoop"; "op", "lhs", "rhs"),
+            declare_builtin!("ASTForLoop"; "var_name", "target", "body"),
+            declare_builtin!("ASTIfStmt"; "condition", "body", "elses"),
             declare_builtin!("ASTFnCall"; "name", "args"),
             declare_builtin!("ASTLetStmt"; "var_name", "value"),
             declare_builtin!("ASTRetStmt"; "value"),
@@ -69,6 +85,10 @@ impl Evaluator {
                 };
                 Value::VarRef { name }
             }
+            "ASTListLiteral" => match obj.get_field("elements")? {
+                list @ Value::List { .. } => list,
+                _ => unreachable!(),
+            },
             "ASTBinaryExpr" => self.eval_bin_op(obj)?,
             "ASTLetStmt" => {
                 let name = match obj.get_field("var_name")? {
@@ -81,9 +101,72 @@ impl Evaluator {
                 self.create_var(name, val);
                 Value::Unit
             }
+            "ASTIfStmt" => {
+                let elses = match obj.get_field("elses")? {
+                    Value::List { elems } => elems,
+                    _ => unreachable!(),
+                };
+                let mut current_if = obj;
+                let mut i = 0;
+                loop {
+                    let condition = match self.eval_ast(&current_if.get_field("condition")?)? {
+                        Value::Bool(b) => b,
+                        _ => unreachable!(),
+                    };
+                    if !condition {
+                        // current case is not hit, check next
+                        match elses.get(i) {
+                            Some(new_if) => {
+                                current_if = match new_if {
+                                    Value::Object(o) => o,
+                                    _ => unreachable!(),
+                                }
+                            }
+                            None => break, // no more cases
+                        }
+                        i += 1;
+                        continue;
+                    } // else: current case is hit. eval.
+                    let body = match current_if.get_field("body")? {
+                        Value::List { elems } => elems,
+                        _ => unreachable!(),
+                    };
+                    self.enter_scope();
+                    for stmt in &body {
+                        self.eval_ast(stmt)?;
+                    }
+                    self.exit_scope();
+                    break;
+                }
+                Value::Unit
+            }
+            "ASTForLoop" => {
+                let name = match obj.get_field("var_name")? {
+                    Value::String(s) => s,
+                    _ => unreachable!(),
+                };
+                let elems = match self.eval_ast(&obj.get_field("target")?)? {
+                    Value::List { elems } => elems,
+                    v => return Err(format!("Cannot iterate over {}", v)),
+                };
+                let body = match obj.get_field("body")? {
+                    Value::List { elems } => elems,
+                    _ => unreachable!(),
+                };
+                self.enter_scope();
+                self.create_var(name.clone(), Value::None);
+                for elem in elems {
+                    let loop_var = unsafe { &mut *self.get_var(&name).unwrap() };
+                    *loop_var = self.eval_ast(&elem)?;
+                    for stmt in &body {
+                        self.eval_ast(stmt)?;
+                    }
+                }
+                self.exit_scope();
+                Value::Unit
+            }
             "ASTObjectLiteral" => {
-                let class = obj.get_field("class")?;
-                let class = match class {
+                let class = match obj.get_field("class")? {
                     Value::String(s) => s,
                     _ => unreachable!(),
                 };
@@ -128,22 +211,22 @@ impl Evaluator {
                     Value::List { elems } => elems,
                     _ => unreachable!(),
                 };
+                let mut eval_args = Vec::with_capacity(args.len());
+                for arg in args {
+                    let val = self.eval_ast(&arg)?;
+                    let val = self.deref_val(val)?;
+                    eval_args.push(val);
+                }
                 match self.get_fn(&name) {
                     Ok(f) => {
                         // user-defined
-                        if args.len() != f.params.len() {
+                        if eval_args.len() != f.params.len() {
                             return Err(format!(
                                 "Expected {} arguments for function {}, but got {}",
                                 f.params.len(),
                                 name,
-                                args.len()
+                                eval_args.len()
                             ));
-                        }
-                        let mut eval_args = Vec::with_capacity(args.len());
-                        for arg in args {
-                            let val = self.eval_ast(&arg)?;
-                            let val = self.deref_val(val)?;
-                            eval_args.push(val);
                         }
                         self.enter_scope();
                         for (name, val) in f.params.iter().zip(eval_args.into_iter()) {
@@ -167,12 +250,55 @@ impl Evaluator {
                         // maybe built-in
                         match name.as_str() {
                             "print" => {
-                                for arg in args {
-                                    let val = self.eval_ast(&arg)?;
-                                    print!("{}", self.deref_val(val)?);
+                                for arg in eval_args {
+                                    print!("{}", arg);
                                 }
                                 println!();
                                 Value::Unit
+                            }
+                            "range" => {
+                                let (start, stop) = match eval_args.len() {
+                                    1 => (
+                                        0,
+                                        match &eval_args[0] {
+                                            Value::Int(i) => *i,
+                                            v => {
+                                                return Err(format!(
+                                                "Argument to `range` must be integers (found {})",
+                                                v
+                                            ))
+                                            }
+                                        },
+                                    ),
+                                    2 => match (&eval_args[0], &eval_args[1]) {
+                                        (Value::Int(start), Value::Int(stop)) => (*start, *stop),
+                                        (v1, v2) => {
+                                            return Err(format!(
+                                            "Arguments to `range` must be integers (found {}, {})",
+                                            v1, v2
+                                        ))
+                                        }
+                                    },
+                                    _ => {
+                                        return Err(format!(
+                                        "Expected 1 or 2 arguments for function `range`, but got {}",
+                                        eval_args.len()
+                                    ));
+                                    }
+                                };
+                                if start > stop {
+                                    return Err(format!(
+                                        "Negative range from {} to {}",
+                                        start, stop
+                                    ));
+                                }
+                                let mut elems = Vec::with_capacity((stop - start) as usize);
+                                for i in start..stop {
+                                    elems.push(ast_obj! { "ASTIntLiteral";
+                                        "value" => Value::Int(i)
+                                    });
+                                }
+                                Value::List { elems }
                             }
                             _ => return Err(s),
                         }
@@ -284,7 +410,7 @@ impl Evaluator {
 
         // Depending on the type of op, we need to resolve variables to their values
         match op.as_str() {
-            "+" | "-" | "*" | "/" => {
+            "+" | "-" | "*" | "/" | "==" | "!=" | "<" | "<=" | ">" | ">=" => {
                 // deref and clone since arith. ops only apply to primitives
                 lhs = self.deref_val(lhs)?;
                 rhs = self.deref_val(rhs)?;
@@ -318,6 +444,34 @@ impl Evaluator {
                 }),
                 _ => return Err(format!("Type error using `{}` on {:?}", op, (lhs, rhs))),
             },
+            op @ "==" | op @ "!=" | op @ "<" | op @ "<=" | op @ ">" | op @ ">=" => {
+                match (&lhs, &rhs) {
+                    (Value::Int(i1), Value::Int(i2)) => Value::Bool(match op {
+                        "==" => i1 == i2,
+                        "!=" => i1 != i2,
+                        "<" => i1 < i2,
+                        "<=" => i1 <= i2,
+                        ">" => i1 > i2,
+                        ">=" => i1 >= i2,
+                        _ => unreachable!(),
+                    }),
+                    (Value::Float(f1), Value::Float(f2)) => Value::Bool(match op {
+                        "==" => f1 == f2,
+                        "!=" => f1 != f2,
+                        "<" => f1 < f2,
+                        "<=" => f1 <= f2,
+                        ">" => f1 > f2,
+                        ">=" => f1 >= f2,
+                        _ => unreachable!(),
+                    }),
+                    (Value::String(s1), Value::String(s2)) => Value::Bool(match op {
+                        "==" => s1 == s2,
+                        "!=" => s1 != s2,
+                        op => return Err(format!("Cannot use `{}` on strings", op)),
+                    }),
+                    _ => return Err(format!("Type error using `{}` on {:?}", op, (lhs, rhs))),
+                }
+            }
             "=" => {
                 let dest = match &lhs {
                     Value::VarRef { name } => self.get_var(name)?,
@@ -357,21 +511,6 @@ impl Evaluator {
             _ => val,
         })
     }
-}
-
-#[allow(unused)]
-macro_rules! ast_obj {
-    ($name:literal $(; $($field:literal => $value:expr),*)?) => {
-        Value::Object(Object {
-        class: $name.into(),
-        fields: IntoIterator::into_iter([
-            $($(
-                ($field.to_string(), $value),
-            )*)?
-        ])
-        .collect(),
-    })
-    };
 }
 
 #[test]
@@ -588,6 +727,190 @@ fn print_in_fn() -> Result<(), String> {
     eval.eval_ast(&ast)?;
 
     assert_eq!(unsafe { &*eval.get_var("result")? }, &Value::Int(-2));
+
+    Ok(())
+}
+
+#[test]
+fn if_else() -> Result<(), String> {
+    let zero = ast_obj! { "ASTIntLiteral";
+        "value" => Value::Int(0)
+    };
+    let one = ast_obj! { "ASTIntLiteral";
+        "value" => Value::Int(1)
+    };
+    let three = ast_obj! { "ASTIntLiteral";
+        "value" => Value::Int(3)
+    };
+    let neg_two = ast_obj! { "ASTIntLiteral";
+        "value" => Value::Int(-2)
+    };
+
+    let x = ast_obj! { "ASTLetStmt";
+        "var_name" => Value::String("x".into()),
+        "value" => zero.clone()
+    };
+    let x_ident = ast_obj! { "ASTIdent";
+        "name" => Value::String("x".into())
+    };
+
+    let x_to_three = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("=".into()),
+        "lhs" => x_ident.clone(),
+        "rhs" => three.clone()
+    };
+    let x_to_neg_two = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("=".into()),
+        "lhs" => x_ident.clone(),
+        "rhs" => neg_two.clone()
+    };
+    let x_to_one = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("=".into()),
+        "lhs" => x_ident.clone(),
+        "rhs" => one.clone()
+    };
+
+    let cond1 = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("<".into()),
+        "lhs" => three.clone(),
+        "rhs" => neg_two.clone()
+    };
+    let cond2 = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("<".into()),
+        "lhs" => neg_two.clone(),
+        "rhs" => three.clone()
+    };
+    let cond3 = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("==".into()),
+        "lhs" => one.clone(),
+        "rhs" => one.clone()
+    };
+
+    let if_stmt = ast_obj! { "ASTIfStmt";
+        "condition" => cond1,
+        "body" => Value::List {
+            elems: vec![
+                x_to_three
+            ]
+        },
+        "elses" => Value::List {
+            elems: vec![
+                ast_obj!{ "ASTIfStmt";
+                    "condition" => cond2,
+                    "body" => Value::List {
+                        elems: vec![
+                            x_to_neg_two
+                        ]
+                    },
+                    "elses" => Value::List {elems: vec![]}
+                },
+                ast_obj!{ "ASTIfStmt";
+                    "condition" => cond3,
+                    "body" => Value::List {
+                        elems: vec![
+                            x_to_one
+                        ]
+                    },
+                    "elses" => Value::List {elems: vec![]}
+                },
+            ]
+        }
+    };
+    let ast = ast_obj! { "ASTFile";
+        "elements" => Value::List { elems: vec![x, if_stmt] }
+    };
+
+    let mut eval = Evaluator::new();
+    eval.eval_ast(&ast)?;
+
+    assert_eq!(unsafe { &*eval.get_var("x")? }, &Value::Int(-2));
+
+    Ok(())
+}
+
+#[test]
+fn for_loop() -> Result<(), String> {
+    let zero = ast_obj! { "ASTIntLiteral";
+        "value" => Value::Int(0)
+    };
+    let one = ast_obj! { "ASTIntLiteral";
+        "value" => Value::Int(1)
+    };
+    let range = ast_obj! { "ASTFnCall";
+        "name" => Value::String("range".into()),
+        "args" => Value::List {
+            elems: vec![
+                ast_obj!{ "ASTIntLiteral";
+                    "value" => Value::Int(-10)
+                },
+                ast_obj!{ "ASTIntLiteral";
+                    "value" => Value::Int(-5)
+                }
+            ]
+        }
+    };
+
+    let x = ast_obj! { "ASTLetStmt";
+        "var_name" => Value::String("x".into()),
+        "value" => zero.clone()
+    };
+    let y = ast_obj! { "ASTLetStmt";
+        "var_name" => Value::String("y".into()),
+        "value" => zero.clone()
+    };
+    let x_ident = ast_obj! { "ASTIdent";
+        "name" => Value::String("x".into())
+    };
+    let y_ident = ast_obj! { "ASTIdent";
+        "name" => Value::String("y".into())
+    };
+    let it_ident = ast_obj! { "ASTIdent";
+        "name" => Value::String("it".into())
+    };
+
+    let x_plus_one = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("+".into()),
+        "lhs" => x_ident.clone(),
+        "rhs" => one.clone()
+    };
+    let x_ass = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("=".into()),
+        "lhs" => x_ident.clone(),
+        "rhs" => x_plus_one
+    };
+
+    let y_minus_it = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("-".into()),
+        "lhs" => y_ident.clone(),
+        "rhs" => it_ident.clone()
+    };
+    let y_ass = ast_obj! { "ASTBinaryExpr";
+        "op" => Value::String("=".into()),
+        "lhs" => y_ident.clone(),
+        "rhs" => y_minus_it
+    };
+
+    let for_loop = ast_obj! { "ASTForLoop";
+        "var_name" => Value::String("it".into()),
+        "target" => range,
+        "body" => Value::List {
+            elems: vec![
+                x_ass,
+                y_ass
+            ]
+        }
+    };
+
+    let ast = ast_obj! { "ASTFile";
+        "elements" => Value::List { elems: vec![x, y, for_loop] }
+    };
+
+    let mut eval = Evaluator::new();
+    eval.eval_ast(&ast)?;
+
+    assert_eq!(unsafe { &*eval.get_var("x")? }, &Value::Int(5));
+    let it_sum: isize = (-10..-5).into_iter().sum();
+    assert_eq!(unsafe { &*eval.get_var("y")? }, &Value::Int(0 - it_sum));
 
     Ok(())
 }
