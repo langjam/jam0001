@@ -1,10 +1,10 @@
 open Kl_parsing
 
 type 'a statement =
-  | TAKES of 'a
+  | TAKES of int
   | LET of string * 'a
   | RETURNS of 'a
-  | USES of 'a
+  | USES of 'a list
   | NONE
 
 type 'a operation =
@@ -27,16 +27,15 @@ type expr =
   | Leaf of value
   | Node of value operation
 
-type result =
+type function_result =
   | RETURN of expr
   | YOLO of expr list
 
 type comment_function = {
   n_args : int;
   declarations : (string * expr) list;
-  result : result;
+  result : function_result;
 }
-
 
 let split_lines (comment : tok list) : tok list list =
   let rec split (res : tok list list) (curr_expr : tok list) = function
@@ -53,7 +52,7 @@ let string_of_tok = function
 let rec string_of_comment = function
   | [] -> ""
   | [t] -> string_of_tok t
-  | t::q -> (string_of_tok t) ^ (string_of_comment q)
+  | t::q -> (string_of_tok t) ^ " " ^ (string_of_comment q)
 
 let look_for (kw : string) (comment : tok list) : tok list * tok list =
   let rec search (prev : tok list) = function
@@ -79,13 +78,13 @@ let parse_value (comment : tok list) : value =
       | "argument" -> (
         match q with
         | Int(_, n)::_ -> ARG n
-        | _ -> failwith "expected argument number"
+        | _ -> failwith "expected argument index"
       )
       | "something" -> SOMETHING
       | s -> VAR s
   )
 
-let parse_operation (comment : tok list) =
+let parse_operation (comment : tok list) : value operation =
   let f = parse_value in
   let rec search (prev : tok list) = function
   | [] -> failwith "no operation"
@@ -103,15 +102,38 @@ let parse_operation (comment : tok list) =
   )
 in search [] comment
 
-let rec parse_statement (comment : tok list) =
+let rec parse_statement (comment : tok list) : expr statement =
   let f x = try Node (parse_operation x) with _ -> Leaf (parse_value x) in
   match comment with
   | [] -> NONE
   | t::q -> (
     match string_of_tok t with
-    | "takes" -> TAKES (f q)
+    | "takes" -> (
+        match q with
+        | Int(_, n)::_ -> TAKES n
+        | _ -> failwith "expected number of arguments"
+      )
     | "let" -> let a, b = look_for "be" q in LET (string_of_comment a, f b)
     | "returns" -> RETURNS (f q)
-    | "uses" -> USES (f q)
+    | "uses" -> let l = split_kw "and" q in USES (List.map f l)
     | _ -> parse_statement q
   )
+
+let parse_function (comment : tok list) =
+  let comments = split_lines comment in
+  let rec build_function (f : comment_function) = function
+    | [] -> f
+    | c::q -> match parse_statement c with
+      | NONE -> build_function f q
+      | TAKES n -> build_function {f with n_args = n} q
+      | LET (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
+      | RETURNS e -> build_function {f with result = RETURN e} q
+      | USES l -> let r = match f.result with
+        | RETURN e -> YOLO (e::l)
+        | YOLO l' -> YOLO (l @ l')
+in build_function {f with result = r} q
+in build_function {
+    n_args = 0;
+    declarations = [];
+    result = YOLO []
+  } comments
