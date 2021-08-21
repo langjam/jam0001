@@ -10,7 +10,7 @@
 - [x] Implement length()
 - [ ] Implement Lists
 - [ ] Implement Classes
-- [ ] Implement If
+- [x] Implement If
 - [ ] Implement while
 - [ ] Submit a PR (before the end of the jam)
 
