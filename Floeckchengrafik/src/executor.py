@@ -106,8 +106,16 @@ class ComstructExecutor:
 
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             for func_node in node_call.content:
-                # TODO Check for Return Value Type, but only if defined in Desc. Only set if type matches
                 ret = self.walkTree(func_node)
+                can_return = False
+                for item in node.description:
+                    if item[0] == "returns":
+                        can_return = True
+                        break
+
+                if can_return:
+                    if func_node:
+                        ret = self.walkTree(func_node)
 
             env = old_env
 
