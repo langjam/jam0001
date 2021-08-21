@@ -1,6 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 use std::ops::Deref;
-use std::sync::{Arc, Mutex, PoisonError, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use crate::ast::{Program, Station, Train};
 use crate::interface::VMInterface;
@@ -13,7 +13,7 @@ pub enum VMError {
     PassengerMissing,
 }
 
-impl<T> From<PoisonError<MutexGuard<'_, T>>> for VMError{
+impl<T> From<PoisonError<MutexGuard<'_, T>>> for VMError {
     fn from(_: PoisonError<MutexGuard<T>>) -> Self {
         Self::UnlockError
     }
@@ -96,6 +96,15 @@ impl Data {
             st.trains[target.track].push_back(td);
         }
         Self { stations, trains }
+    }
+
+    fn train_count(&self) -> Result<usize, VMError> {
+        let mut x = 0;
+        for (_, station) in self.stations.iter() {
+            let st = station.lock()?;
+            x += st.trains.iter().map(|x| x.len()).sum::<usize>();
+        }
+        Ok(x)
     }
 
     fn do_current_step(&mut self, interface: &VMInterface) -> Result<(), VMError> {
@@ -202,10 +211,17 @@ impl Data {
                         if let Some(y) = station.trains[1].front() {
                             let mut xx = x.lock()?;
                             let yy = y.lock()?;
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).ok_or(VMError::PassengerMissing)?;
-                            let second_data =
-                                yy.train.second_class_passengers.first().ok_or(VMError::PassengerMissing)?.data;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data += second_data;
                         }
                     }
@@ -215,10 +231,17 @@ impl Data {
                         if let Some(y) = station.trains[1].front() {
                             let mut xx = x.lock()?;
                             let yy = y.lock()?;
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).ok_or(VMError::PassengerMissing)?;
-                            let second_data =
-                                yy.train.second_class_passengers.first().ok_or(VMError::PassengerMissing)?.data;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data -= second_data;
                         }
                     }
@@ -228,10 +251,17 @@ impl Data {
                         if let Some(y) = station.trains[1].front() {
                             let mut xx = x.lock()?;
                             let yy = y.lock()?;
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).ok_or(VMError::PassengerMissing)?;
-                            let second_data =
-                                yy.train.second_class_passengers.first().ok_or(VMError::PassengerMissing)?.data;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data *= second_data;
                         }
                     }
@@ -241,10 +271,17 @@ impl Data {
                         if let Some(y) = station.trains[1].front() {
                             let mut xx = x.lock()?;
                             let yy = y.lock()?;
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).ok_or(VMError::PassengerMissing)?;
-                            let second_data =
-                                yy.train.second_class_passengers.first().ok_or(VMError::PassengerMissing)?.data;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data /= second_data;
                         }
                     }
@@ -254,10 +291,17 @@ impl Data {
                         if let Some(y) = station.trains[1].front() {
                             let mut xx = x.lock()?;
                             let yy = y.lock()?;
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).ok_or(VMError::PassengerMissing)?;
-                            let second_data =
-                                yy.train.second_class_passengers.first().ok_or(VMError::PassengerMissing)?.data;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data %= second_data;
                         }
                     }
@@ -268,7 +312,10 @@ impl Data {
                 }
             }
 
-            if station.operation != Operation::Delete && station.operation != Operation::SwitchGteZero && station.operation != Operation::SwitchEqZero {
+            if station.operation != Operation::Delete
+                && station.operation != Operation::SwitchGteZero
+                && station.operation != Operation::SwitchEqZero
+            {
                 {
                     if let Some(x) = station.trains[0].pop_front() {
                         let target = station.output.clone()[0].clone();
@@ -403,6 +450,7 @@ mod tests {
         let (sender, recvr) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
+        assert_eq!(pp.train_count().unwrap(), 2);
         pp.do_current_step(&i).unwrap();
         let train = pp.trains[0].lock().unwrap();
         assert_eq!(Some(10), train.first_passenger_value());
