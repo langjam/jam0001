@@ -1119,7 +1119,13 @@ fn meta() -> Result<(), String> {
         }}
     };
 
-    // elem.value = elem.value + 1
+    // elem.value = ASTBinaryExpr {
+    //    op: "+",
+    //    lhs: elem.value,
+    //    rhs: AstIntLiteral {
+    //        value: 1
+    //    }
+    // };
     let value = ast_obj! { "ASTBinaryExpr";
         "op" => Value::String(".".into()),
         "lhs" => elem_ident.clone(),
