@@ -237,12 +237,12 @@ static pnode_t delimited(pnode_kind_t kind, const string open, const string shut
     while (!check(shut)) {
         pnode_t v = callback();
         pnode_attach(&node, v);
-        if (isinval(v))
-            setexpect("Invalid expression");
-        else
-            setexpect("Expected semicolon");
         if (check(shut) && (!mustclose)) break;
         if (!check(shut) || mustclose || isinval(v)) { 
+            if (isinval(v))
+                setexpect("Invalid expression");
+            else
+                setexpect("Expected semicolon");
             skip_tt_panic(shut);
         }
         setexpect(NULL);
@@ -394,9 +394,7 @@ static pnode_t value() {
             skip_tt(TT_RPAREN);
             return value_node;
         case TT_LBRACE:
-            skip_tt(TT_LBRACE);
             value_node = body();
-            skip_tt(TT_RBRACE);
             return value_node;
         case TT_OPERATOR:
             if (
