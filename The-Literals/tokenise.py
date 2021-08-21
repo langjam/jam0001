@@ -2,6 +2,7 @@ from enum import Enum, auto
 
 
 class Token(Enum):
+    binop = auto()
     bof = auto()
     eof = auto()
     eol = auto()
@@ -70,10 +71,10 @@ class Tokeniser:
         while self.peek().isdigit():
             self.advance()
         return Token.number
-    
+
     # TODO:
     # - function name
-    # - binary operators
+    # - Negative numbers
     # - and call it
     # - and we're done
     # - if
@@ -108,11 +109,6 @@ class Tokeniser:
             # Is it an ignored line?
             if ch.isalpha():
                 self.ignore()
-        # elif self.last == Token.hfill:
-        #     TODO!!!!!!!!!!!!!!!!!!!!!!!!
-        #     pass
-        # else:
-        #     TODO OPERATORS!!!
         else:
             if self.advance_if("@param"):
                 return Token.param
@@ -127,6 +123,10 @@ class Tokeniser:
             # Is it a number?
             if ch.isdigit():
                 return self.number()
+            
+            # Is it a binary operator?
+            if ch == '+' or ch == '-' or ch == '/' or ch == '*' or ch == '%':
+                return Token.binop
 
         return None
 
