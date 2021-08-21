@@ -349,9 +349,10 @@ for i = 0 till this.clearingLines.length {
 }
 
 if this.clearingCounter == this.clearingCounterMax {
+    this.linesCleared += this.clearingLines.length;
     this.removeAndCollapseLines(this.clearingLines);
     this.clearingCounter = null;
-    this.linesCleared += this.clearingLines.length;
+    game_set_title("Tetris / Lines: " + this.linesCleared);
     this.clearingLines = null;
 } else {
     this.clearingCounter++;

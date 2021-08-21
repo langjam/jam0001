@@ -133,6 +133,14 @@ def generate_builtins():
     if err != None: return err
     return gamelib['is_quit'](throw_token, args)
 
+  def _game_set_title(throw_token, args):
+    err = ensure_arg_count(throw_token, args, 1)
+    if err != None: return err
+    err = ensure_is_string(throw_token, args, 0)
+    if err != None: return err
+    return gamelib['set_title'](throw_token, args)
+
+
   lookup = {
     'floor': _floor,
     'game_create_window': _game_create_window,
@@ -142,6 +150,7 @@ def generate_builtins():
     'game_get_events': _game_get_events,
     'game_is_key_pressed': _game_is_key_pressed,
     'game_is_quit': _game_is_quit,
+    'game_set_title': _game_set_title,
     'parse_int': _parse_int,
     'print': _print,
     'random_float': _random_float,

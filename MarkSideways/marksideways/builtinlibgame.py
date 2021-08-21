@@ -138,6 +138,13 @@ def get_game_lib():
   def _is_quit(throw_token, args):
     return TRUE_VALUE if vars['is_quit'] else FALSE_VALUE
 
+  def _set_title(throw_token, args):
+    title = args[0].value.strip()
+    if len(title) == 0:
+      return new_error_value(throw_token, "Cannot set a blank title.")
+    pygame.display.set_caption(title)
+    return NULL_VALUE
+
   return {
     'create_window': ERR if failure else _create_window,
     'end_frame': ERR if failure else _end_frame,
@@ -146,4 +153,5 @@ def get_game_lib():
     'get_events': ERR if failure else _get_events,
     'is_key_pressed': ERR if failure else _is_key_pressed,
     'is_quit': ERR if failure else _is_quit,
+    'set_title': ERR if failure else _set_title,
   }
