@@ -14,6 +14,7 @@ pub fn parse_wishes(input: &Vec<FirstClassPassenger>) -> TrainConfig {
         for color in ColorChoice::iter() {
             if text.contains(&format!("{} train", color.name()))
                 || text.contains(&format!("{} color", color.name()))
+                || text.contains(&format!("{} colour", color.name()))
                 || text.contains(&format!("{} locomotive", color.name())){
                 primary_colors.push(color);
             }
