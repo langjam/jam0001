@@ -166,6 +166,17 @@ impl<'i> Interpreter<'i> {
                             _ => todo!()
                         }
                     },
+                    TokenKind::Asterisk => {
+                        match (left, right) {
+                            (Value::String(l), Value::String(r)) => {
+                                return Err(InterpreterError::UnsupportedOperandTypes("string".to_owned(), "*".to_owned(), "string".to_owned()));
+                            },
+                            (Value::Number(l), Value::Number(r)) => {
+                                Value::Number(l * r)
+                            }
+                            _ => todo!()
+                        }
+                    },
                     TokenKind::Minus => {
                         match (left, right) {
                             (Value::String(l), Value::String(r)) => {
@@ -173,6 +184,17 @@ impl<'i> Interpreter<'i> {
                             },
                             (Value::Number(l), Value::Number(r)) => {
                                 Value::Number(l - r)
+                            }
+                            _ => todo!()
+                        }
+                    },
+                    TokenKind::ForwardSlash => {
+                        match (left, right) {
+                            (Value::String(l), Value::String(r)) => {
+                                return Err(InterpreterError::UnsupportedOperandTypes("string".to_owned(), "/".to_owned(), "string".to_owned()));
+                            },
+                            (Value::Number(l), Value::Number(r)) => {
+                                Value::Number(l / r)
                             }
                             _ => todo!()
                         }
