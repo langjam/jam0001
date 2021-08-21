@@ -47,6 +47,7 @@ this.fallCounter = 0;
 this.clearingCounterMax = 30;
 this.clearingCounter = null;
 this.clearingLines = null;
+this.colorThemes = this.generateColorThemes();
 
 ```
 
@@ -357,6 +358,65 @@ if this.clearingCounter == this.clearingCounterMax {
 }
 ```
 
+### Generate Color Themes
+
+```
+WHITE = [240, 240, 240];
+CERULEAN = [0, 128, 255];
+GREEN = [0, 128, 50];
+ORANGE = [255, 128, 0];
+YELLOW = [255, 240, 0];
+RED = [255, 0, 30];
+PURPLE = [128, 0, 140];
+MAGENTA = [255, 40, 255];
+BLUE = [0, 0, 235];
+LIME = [50, 255, 0];
+BROWN = [128, 64, 0];
+TAN = [200, 150, 100];
+PINK = [255, 180, 225];
+CYAN = [0, 255, 255];
+
+themesByLevel = [
+    [CERULEAN, GREEN],
+    [ORANGE, YELLOW],
+    [RED, PURPLE],
+    [BLUE, MAGENTA],
+    [GREEN, LIME],
+    [BROWN, TAN],
+    [PINK, YELLOW],
+    [GREEN, PURPLE],
+    [BLUE, CYAN],
+    [ORANGE, RED],
+];
+
+themes = [];
+for i = 0 till themesByLevel.length {
+    pair = themesByLevel[i];
+    colors = [null, WHITE, pair[0], pair[1]];
+    darkColors = [null];
+    lightColors = [null];
+    for j = 1 till colors.length {
+        color = colors[j];
+        r = color[0];
+        g = color[1];
+        b = color[2];
+        darkColors.add([
+            r * 2 / 3, 
+            g * 2 / 3, 
+            b * 2 / 3]);
+        lightColors.add([
+            255 - (255 - r) * 2 / 3,
+            255 - (255 - g) * 2 / 3,
+            255 - (255 - b) * 2 / 3]);
+    }
+    themes.add([
+        colors, darkColors, lightColors
+    ]);
+}
+
+return themes;
+```
+
 ### Remove and Collapse Lines
 
 - `lines` - a list of the lines to remove
@@ -394,30 +454,38 @@ grid_height = tile_size * 20;
 grid_left = (640 - grid_width) / 2;
 grid_top = (480 - grid_height) / 2;
 
+level = this.linesCleared / 10;
+colors = this.colorThemes[level % this.colorThemes.length];
+
+fullColors = colors[0];
+darkColors = colors[1];
+lightColors = colors[2];
+
 game_draw_rectangle(grid_left, grid_top, grid_width, grid_height, 0, 0, 0);
 
-color1 = [255, 255, 255];
-color2 = [0, 128, 255];
-color3 = [0, 128, 40];
-colors = [null, color1, color2, color3];
 
 px = grid_left;
 for x = 0 till 10 {
     py = grid_top;
     for y = 0 till 20 {
-        color = this.grid[x][y];
-        if color == 0 && this.overlay != null {
+        colorId = this.grid[x][y];
+        if colorId == 0 && this.overlay != null {
             if 
                 x >= this.overlayX && 
                 y >= this.overlayY && 
                 x < this.overlayX + 4 && 
                 y < this.overlayY + 4 {
-                color = this.overlay[x - this.overlayX][y - this.overlayY];
+                colorId = this.overlay[x - this.overlayX][y - this.overlayY];
             }
         }
-        if color > 0 {
-            rgb = colors[color];
-            game_draw_rectangle(px, py, tile_size, tile_size, rgb[0], rgb[1], rgb[2]);
+        if colorId > 0 {
+            rgb = fullColors[colorId];
+            darkRgb = darkColors[colorId];
+            lightRgb = lightColors[colorId];
+            
+            game_draw_rectangle(px, py, tile_size, tile_size, darkRgb[0], darkRgb[1], darkRgb[2]);
+            game_draw_rectangle(px, py, tile_size - 2, tile_size - 2, lightRgb[0], lightRgb[1], lightRgb[2]);
+            game_draw_rectangle(px + 2, py + 2, tile_size - 4, tile_size - 4, rgb[0], rgb[1], rgb[2]);
         }
         py += tile_size;
     }
