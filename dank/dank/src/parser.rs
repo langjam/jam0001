@@ -63,7 +63,6 @@ peg::parser!(pub grammar dank() for str {
 
     pub rule expr() -> Expr<'input> = operators()
 
-
     pub rule operators() -> Expr<'input>
     = precedence! {
         x:(@) _ "&&" _ y:@ { op_node!(x, y, BinOpKind::And) }
@@ -79,12 +78,23 @@ peg::parser!(pub grammar dank() for str {
         "!" x:(@) { op_node!(x, UnOpKind::Not) }
         --
         p:primary() { p }
-        "(" _ e:expr() _ ")" { e }
     }
 
     pub rule primary() -> Expr<'input>
         = start:position!() i:ident() end:position!() { Expr { kind: ExprKind::Variable(i.into()), span: start..end } }
         / start:position!() l:literal() end:position!() { Expr { kind: ExprKind::Literal(l), span: start..end }}
+        / "(" _ e:expr() _ ")" { e }
+        / object()
+
+    pub rule object() -> Expr<'input>
+        = start:position!()
+         "{" ___ entries:(k:ident() _ ":" _ v:expr() {(k, v)})  ** ("," _) ___ "}"
+          end:position!() {
+            Expr {
+                span: start..end,
+                kind: ExprKind::ObjectLiteral(entries.into_iter().map(|(k, v)| {(k.into(), v)}).collect())
+            }
+        }
 
     pub rule literal() -> Value<'input>
     =  n:$(['0'..='9']+ ("." ['0'..='9']*)?) { Value::Num(n.parse().unwrap()) }
@@ -92,7 +102,6 @@ peg::parser!(pub grammar dank() for str {
         / "true"  { Value::Bool(true) }
         / "false" { Value::Bool(false) }
         / "null" { Value::Null }
-
 
     // TODO: accept expressions here
     rule print() -> Stmt<'input>
@@ -322,6 +331,8 @@ pub mod tests {
         let c = true;
         let d = false;
         let e = null;
+        let f = { object: "value", second: 2 };
+        let g;
         "#;
         test_eq!(
             test,
@@ -358,7 +369,26 @@ pub mod tests {
         stmt: StmtKind::LetDecl
           name: "e"
           initializer: ExprKind::Literal
-            field0: Null"#
+            field0: Null
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "f"
+          initializer: ExprKind::ObjectLiteral
+            field0= 
+              tuple
+                field0: "object"
+                field1: ExprKind::Literal
+                  field0: Str("value")
+              tuple
+                field0: "second"
+                field1: ExprKind::Literal
+                  field0: Num(2.0)
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "g"
+          initializer: None"#
         );
     }
 

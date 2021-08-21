@@ -69,6 +69,7 @@ pub enum UnOpKind {
 
 #[derive(Debug, Clone, PartialEq, AstToStr)]
 pub enum ExprKind<'a> {
+    ObjectLiteral(Vec<(Cow<'a, str>, Expr<'a>)>),
     Literal(#[debug] Value<'a>),
     Variable(#[rename = "name"] Cow<'a, str>),
     Binary(
