@@ -7,6 +7,7 @@ mod token;
 mod parser;
 mod ast;
 mod expression;
+mod interpreter;
 
 fn has_flag(flag: &str) -> bool {
     args().find(|i| i == flag).is_some()
@@ -54,4 +55,12 @@ fn main() {
     if has_flag("--dump-ast") {
         dbg!(program.clone());
     }
+
+    match interpreter::interpret(program) {
+        Ok(_) => (),
+        Err(e) => {
+            error(&format!("{}", e));
+            std::process::exit(1);
+        }
+    };
 }
