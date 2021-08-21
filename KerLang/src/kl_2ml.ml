@@ -22,6 +22,7 @@ let op_count_params ?(self_param_count : int = 0) (op : op) : int =
   | OUT -> 2
   | ADD -> 2
   | MUL -> 2
+  | DIV -> 2
   | SUB -> 2
   | FUN (_, func) -> ast_count_params func
   | SELF -> self_param_count
@@ -97,6 +98,8 @@ and emit_op oc ?(self_name : string option = None) ?(indent_lvl : int = 0) (op: 
     Printf.fprintf oc "%s" "(-)"
   | MUL ->
     Printf.fprintf oc "%s" "( * )"
+  | DIV ->
+      Printf.fprintf oc "%s" "(/)"
   | FUN (Some name, _) ->
     Printf.fprintf oc "%s" name
   | FUN (None, func) ->

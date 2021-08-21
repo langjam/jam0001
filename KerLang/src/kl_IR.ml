@@ -4,7 +4,7 @@
 
 (** {2 Syntax} *)
 
-type op = OUT | ADD | MUL | SUB | FUN of string option * ast | SELF
+type op = OUT | ADD | MUL | DIV | SUB | FUN of string option * ast | SELF
 
 and ast =
   | App of op * ast list
@@ -17,6 +17,7 @@ type ftable = string * ast list
 let[@inline] add x y = App (ADD, [x; y])
 let[@inline] sub x y = App (SUB, [x; y])
 let[@inline] mul x y = App (MUL, [x; y])
+let[@inline] div x y = App (DIV, [x; y])
 let[@inline] app f args = App (f, args)
 let[@inline] func ?name:(name=None) bdy = FUN (name, bdy)
 let[@inline] nfunc name ftable = FUN (Some name, List.assoc name ftable)
@@ -41,6 +42,7 @@ and eval_op (self : ast option) = function
   | ADD -> (function [x; y] -> x + y | _ -> failwith "ADD : wrong number of args")
   | SUB -> (function [x; y] -> x - y | _ -> failwith "SUB : wrong number of args")
   | MUL -> (function [x; y] -> x * y | _ -> failwith "MUL : wrong number of args")
+  | DIV -> (function [x; y] -> x / y | _ -> failwith "DIV : wrong number of args")
   | FUN (_, body) -> (fun args -> eval ~self:(Some body) args body)
   | SELF ->
     match self with
@@ -62,6 +64,7 @@ and pp_op fmt = function
   | ADD -> Format.pp_print_string fmt "+"
   | SUB -> Format.pp_print_string fmt "-"
   | MUL -> Format.pp_print_string fmt "×"
+  | DIV -> Format.pp_print_string fmt "/"
   | FUN (fn, a) ->
     begin match fn with
       | None -> Format.fprintf fmt "%a" pp_ast a
