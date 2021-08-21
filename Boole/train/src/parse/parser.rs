@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use std::cell::Cell;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Span {
@@ -46,4 +47,5 @@ pub type ParseResult<T> = Result<T, ParserError>;
 pub struct Parser<'a> {
     pub input: &'a str,
     pub current: usize,
+    pub current_identifier: Cell<i64>,
 }

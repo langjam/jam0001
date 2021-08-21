@@ -28,16 +28,23 @@ const COLOR = {
 }
 
 const STATION_TYPE = {
-    LightRed: "lightred",
-    DarkBlue: "darkblue",
-    DarkRed: "darkred",
-    LightBlue: "lightblue",
-    DarkGreen: "darkgreen",
-    LightGreen: "lightgreen",
-    WaterBlue: "waterblue",
-    Brown: "brown",
-    Yellow: "yellow",
-    Orange: "orange",
+    Delete: "op_delete.png",
+    Duplicate: "op_duplicate.png",
+    Nothing: "op_nothing.png",
+    Rotate: "op_rotate.png",
+    Transfer: "op_transfer.png",
+
+    Input: "op_input.png",
+    Print: "op_print.png",
+
+    Add: "op_add.png",
+    Sub: "op_sub.png",
+    Mul: "op_mul.png",
+    Mod: "op_mod.png",
+    Div: "op_div.png",
+
+    SwitchEQ: "op_switch%20eq.png",
+    SwitchGTE: "op_switch%20gte.png",
 }
 
 const DIRECTION = {
@@ -194,7 +201,7 @@ class Station {
         image(stationForeground, 0, 0, TILE_SIZE * 2, TILE_SIZE * 2)
 
         for (let i = 0; i < 8; i++) {
-            if (i < this.stopped.length && this.stopped[i]) {
+            if (i < this.stopped.length && !this.stopped[i]) {
                 push()
                 switch (i) {
                     case 0:

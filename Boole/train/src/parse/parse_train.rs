@@ -1,6 +1,7 @@
 use crate::parse::parser::*;
 use crate::ast::*;
 use crate::wishes::parse_wishes::parse_wishes;
+use std::cell::Cell;
 
 impl<'a> Parser<'a> {
     pub fn parse_target(&mut self) -> ParseResult<Target> {
@@ -65,7 +66,10 @@ impl<'a> Parser<'a> {
 
         let config = parse_wishes(&first_class_passengers);
 
-        Ok(Train { start, first_class_passengers, second_class_passengers, config })
+        let identifier = self.current_identifier.get();
+        self.current_identifier.set(identifier + 1);
+
+        Ok(Train { identifier, start, first_class_passengers, second_class_passengers, config })
     }
 }
 

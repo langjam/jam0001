@@ -1,8 +1,9 @@
 use crate::parse::parser::*;
+use std::cell::Cell;
 
 impl<'a> Parser<'a> {
     pub fn new(input: &'a str) -> Self {
-        Parser{input, current: 0}
+        Parser{input, current: 0, current_identifier: Cell::new(0)}
     }
 
     pub fn rest(&self) -> &'a str {

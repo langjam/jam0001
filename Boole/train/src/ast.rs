@@ -10,6 +10,7 @@ pub struct Program {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Train {
+    pub identifier: i64,
     pub start: Target,
     pub first_class_passengers: Vec<FirstClassPassenger>,
     pub second_class_passengers: Vec<SecondClassPassenger>,

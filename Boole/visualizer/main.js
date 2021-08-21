@@ -64,7 +64,7 @@ function setup() {
     grid.addTile(createVector(2, 0), TILE_TYPE.Horizontal)
     grid.addTile(createVector(0, -1), TILE_TYPE.Vertical)
 
-    grid.addStation(new Station(createVector(0, 0), [false, true, false, false, true, true, true, true], STATION_TYPE.Plus))
+    grid.addStation(new Station(createVector(0, 0), [false, true, false, true, true, false, false, true], STATION_TYPE.Add))
 
     // all train colors
     // let x = 0;

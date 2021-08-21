@@ -3,7 +3,7 @@ use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
 use crate::ast::{Program, Station, Train};
-use crate::interface::VMInterface;
+use crate::interface::Communicator;
 use crate::operations::Operation;
 
 #[derive(Clone)]
@@ -53,13 +53,13 @@ impl Deref for StationData {
     }
 }
 
-struct Data {
+pub struct Data {
     stations: HashMap<String, Arc<Mutex<StationData>>>,
     trains: Vec<Arc<Mutex<TrainData>>>,
 }
 
 impl Data {
-    fn new(program: Program, interface: &VMInterface) -> Data {
+    pub fn new(program: Program, interface: &dyn Communicator) -> Data {
         let mut stations = HashMap::new();
         for station in program.stations {
             stations.insert(
@@ -83,7 +83,7 @@ impl Data {
         Self { stations, trains }
     }
 
-    fn do_current_step(&mut self, interface: &VMInterface) {
+    pub fn do_current_step(&mut self, interface: &dyn Communicator) {
         let mut targets = vec![];
         for (_, station_arc) in self.stations.iter() {
             let mut station = station_arc.lock().unwrap();

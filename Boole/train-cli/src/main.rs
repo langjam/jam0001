@@ -2,12 +2,14 @@ mod frontend;
 
 use clap::{App, Arg};
 use clap::crate_authors;
-use crate::frontend::Communicator;
+use crate::frontend::{Communicator, cli};
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 use crate::frontend::web;
 use train::parse_and_check;
+use serde_json::error::Category::Data;
+use train::vm::Data;
 
 #[tokio::main]
 async fn main() {
@@ -48,9 +50,10 @@ async fn main() {
 
     let (comm, vmi) = Communicator::new();
 
+    let vm = Data::new(ast, &vmi);
 
     if matches.is_present("cli") {
-
+        cli::run(comm, vm)
     } else {
         web::run(comm, ).await;
     }
