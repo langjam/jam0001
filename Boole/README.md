@@ -11,7 +11,7 @@ For some examples, please refer to the [shunting yard](shunting_yard)
 
 # Compilation instructions
 ```bash
-cargo run -- shunting_yard/truth_machine.train
+cargo run -- --cli shunting_yard/truth_machine.train
 ```
 
 This program uses python. By default, it calls the "python" executable, and expects at least
@@ -25,3 +25,5 @@ This programming language was written as a submission to the first LangJam
 in the weekend of saturday the 21st of august by Noah Jadoenathmisier, 
 Julius de Jeu, Jonathan Brouwer and Jonathan Dönszelmann.
 
+# Additional Documentation
+We are Dutch students, so obviously we travel a lot by train. As you know, you can do a lot of things at train stations. 
