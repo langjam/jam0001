@@ -51,7 +51,8 @@ pub struct FileHeader {
 #[derive(Debug, Clone)]
 pub struct DefinitionHeader {
     pub identifier: String,
-    pub params: Vec<(String, Option<String>)>
+    pub params: Vec<(String, Option<String>)>,
+    pub r#type: Option<String>,
 }
 
 #[derive(Debug, Clone)]

@@ -148,6 +148,7 @@ impl<'p> Parser<'p> {
         };
 
         let mut params = Vec::new();
+        let mut r#type: Option<String> = None;
 
         while self.current_is(TokenKind::Asterisk) {
             self.expect_token_and_read(TokenKind::Asterisk)?;
@@ -163,7 +164,7 @@ impl<'p> Parser<'p> {
                                 _ => unreachable!()
                             };
 
-                            let mut r#type = match self.current_is(TokenKind::Identifier("".to_string())) {
+                            let param_type = match self.current_is(TokenKind::Identifier("".to_string())) {
                                 true => {
                                     Some(match self.expect_token_and_read(TokenKind::Identifier("".to_string()))? {
                                         Token { kind: TokenKind::Identifier(i), .. } => i,
@@ -173,7 +174,15 @@ impl<'p> Parser<'p> {
                                 false => None
                             };
 
-                            params.push((identifier, r#type))
+                            params.push((identifier, param_type))
+                        },
+                        "type" => {
+                            let identifier = match self.expect_token_and_read(TokenKind::Identifier("".to_string()))? {
+                                Token { kind: TokenKind::Identifier(i), .. } => i,
+                                _ => unreachable!()
+                            };
+
+                            r#type = Some(identifier)
                         },
                         _ => todo!()
                     }
@@ -186,7 +195,8 @@ impl<'p> Parser<'p> {
 
         Ok(Statement::DefinitionHeader(DefinitionHeader {
             identifier,
-            params
+            params,
+            r#type,
         }))
     }
 

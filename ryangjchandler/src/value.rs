@@ -15,11 +15,14 @@ pub enum Value {
 
 impl Value {
     pub fn is_type(&self, r#type: impl Into<String>) -> bool {
-        match (r#type.into().as_str(), self) {
+        let t = r#type.into();
+
+        match (t.as_str(), self) {
             ("string", Self::String(_)) => true,
             ("number", Self::Number(_)) => true,
             ("bool", Self::Bool(_)) => true,
-            _ => todo!(),
+            (_, Self::Const(constant)) => constant.is_type(t),
+            _ => false,
         }
     }
 

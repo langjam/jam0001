@@ -2,8 +2,11 @@
  * @name "Variables and Constants"
  */
 
-/** @identifier name */
-var "Ryan Chandler"
+/*
+ * @identifier name
+ * @type string
+ */
+var "Ryan"
 
 println(name)
 

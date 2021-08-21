@@ -58,8 +58,8 @@ impl<'i> Interpreter<'i> {
                     return Err(InterpreterError::MissingDefinitionHeader);
                 }
 
-                let (name) = match self.header.as_ref().unwrap() {
-                    Statement::DefinitionHeader(DefinitionHeader { identifier, .. }) => (identifier.clone()),
+                let (name, r#type) = match self.header.as_ref().unwrap() {
+                    Statement::DefinitionHeader(DefinitionHeader { identifier, r#type, .. }) => (identifier.clone(), r#type.clone()),
                     _ => unreachable!()
                 };
 
@@ -67,6 +67,12 @@ impl<'i> Interpreter<'i> {
                     Some(v) => v,
                     None => unreachable!()
                 };
+
+                if let Some(t) = r#type {
+                    if ! value.is_type(t.clone()) {
+                        return Err(InterpreterError::VariableOrConstantTypeError(name.clone(), t, value.type_string()));
+                    }
+                }
 
                 self.environment.borrow_mut().set(name, &value);
 
@@ -78,7 +84,7 @@ impl<'i> Interpreter<'i> {
                 }
 
                 let (name) = match self.header.as_ref().unwrap() {
-                    Statement::DefinitionHeader(DefinitionHeader { identifier, .. }) => (identifier.clone()),
+                    Statement::DefinitionHeader(DefinitionHeader { identifier, r#type, .. }) => (identifier.clone()),
                     _ => unreachable!()
                 };
 
@@ -97,7 +103,7 @@ impl<'i> Interpreter<'i> {
                 }
 
                 let (name, params) = match self.header.as_ref().unwrap() {
-                    Statement::DefinitionHeader(DefinitionHeader { identifier, params }) => (identifier, params.clone()),
+                    Statement::DefinitionHeader(DefinitionHeader { identifier, params, .. }) => (identifier, params.clone()),
                     _ => unreachable!(),
                 };
 
@@ -179,7 +185,7 @@ impl<'i> Interpreter<'i> {
 
                             if let Some(t) = param_type {
                                 if ! arg.is_type(t) {
-                                    return Err(InterpreterError::TypeError(name.clone(), function_name, t.to_string(), arg.type_string()));
+                                    return Err(InterpreterError::ParameterTypeError(name.clone(), function_name, t.to_string(), arg.type_string()));
                                 }
                             }
 
@@ -313,14 +319,17 @@ pub enum InterpreterError {
     #[error("All definitions (fn, var, const) must be preceded with a valid definition header.")]
     MissingDefinitionHeader,
 
-    #[error("Trying to access undefined identifier {0}.")]
+    #[error("Trying to access undefined identifier `{0}`.")]
     UndefinedIdentifier(String),
 
-    #[error("Value of type {0:?} is not callable.")]
+    #[error("Value of type `{0:?}` is not callable.")]
     ValueIsNotCallable(Value),
 
-    #[error("Parameter {0} for function {1} must be of type {2}, received {3:?}.)")]
-    TypeError(String, String, String, String),
+    #[error("Parameter `{0}` for function `{1}` must be of type `{2}`, received `{3}`.)")]
+    ParameterTypeError(String, String, String, String),
+
+    #[error("Variable or constant `{0}` must be of type `{1}`, received `{2}`.")]
+    VariableOrConstantTypeError(String, String, String),
 
     #[error("Unsupported operand types: {0} {1} {2}")]
     UnsupportedOperandTypes(String, String, String),
