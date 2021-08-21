@@ -38,6 +38,7 @@ class ComstructExecutor:
             return self.walkTree(node.var1) <= self.walkTree(node.var2)
         elif isinstance(node, StatementNode.VarAssignNode):
             env[node.var_name] = self.walkTree(node.var_value)
+            print(f"{node.var_name}: {env[node.var_name].content}")
             return env[node.var_name]
         elif isinstance(node, StatementNode.VarNode):
             return env[node.var_name]
@@ -52,7 +53,7 @@ class ComstructExecutor:
             if env[node.func_name].content == "internal":
                 return internals[node.func_name](processed_args)
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
-            print(env[node.func_name])
-            for func_node in env[node.func_name].content:
+            print(env[node.func_name].content)
+            for func_node in env[node.func_name].content.content:
                 ret = self.walkTree(func_node)
             return ret
