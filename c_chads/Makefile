@@ -14,6 +14,11 @@ all:
 	if [ ! -d "./bin" ]; then mkdir bin; fi
 	$(CPFX) $(CC) $(CFLAGS) $(CSRC) -g -o ./bin/COLAN-21
 
+interp:
+	if [ ! -d "./bin" ]; then mkdir bin; fi
+	$(CPFX) $(CC) $(CFLAGS) -DENABLE_INTERPRETER $(CSRC) -g -o ./bin/COLAN-21
+	./bin/COLAN-21 input.cln
+
 test:
 	$(CPFX) $(CC) $(CFLAGS) $(CTST) -Wno-gnu-zero-variadic-macro-arguments -g -o ./bin/test
 	./bin/test

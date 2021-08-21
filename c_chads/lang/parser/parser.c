@@ -7,18 +7,18 @@ typedef enum Parser_Node_Kind pnode_kind_t;
 
 static struct Parser_State parser;
 struct {
-    char unmatched;
+    rune unmatched;
 } error_handling = { 
     .unmatched = 0
 };
 
-static char begindelim(char delim) {
-    char prev = error_handling.unmatched;
+static rune begindelim(rune delim) {
+    rune prev = error_handling.unmatched;
     error_handling.unmatched = delim;
     return prev;
 }
 
-static void enddelim(char prev) {
+static void enddelim(rune prev) {
     error_handling.unmatched = prev;
 }
 
@@ -31,7 +31,7 @@ static tok_t pull() {
     tok_t tok = parser.current_token;
     parser.current_token = lex_determine(&parser.lexer);
     if (tok.tt == TT_INVALID) {
-        EH_MESSAGE("Invalid character: `%.*s`\n", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
+        EH_MESSAGE("Invalid runeacter: `%.*s`\n", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
         lineinfo();
         exit(1);
     }
@@ -97,7 +97,7 @@ static pnode_t value();
 static pnode_t call(tok_t on) {
     assert_tt(&on, TT_IDENT);
     skip_tt(TT_LPAREN);
-    char delim = begindelim('(');
+    rune delim = begindelim('(');
     pnode_t call_node = pnode_new(PN_CALL);
     call_node.data.call.name = strview_span(on.span, parser.lexer.src);
     while (peek().tt != TT_RPAREN) {
@@ -115,7 +115,7 @@ static pnode_t declaration(tok_t on);
 static pnode_t value() {
     tok_t token = pull();
     pnode_t value_node;
-    char delim;
+    rune delim;
     switch (token.tt) {
         case TT_STRING:
             value_node = pnode_new(PN_STRING);
@@ -180,5 +180,8 @@ void parser_deinit() {
 }
 
 pnode_t parser_parse_toplevel() {
-    return declaration(pull());
+    pnode_t node = pnode_new(PN_TOPLEVEL);
+    while (peek().tt != TT_EOF)
+        pnode_attach(&node, declaration(pull()));
+    return node;
 }

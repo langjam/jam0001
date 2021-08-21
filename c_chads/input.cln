@@ -8,4 +8,3 @@ main = proc {
     print(x; y);
     test;
 }
-# test

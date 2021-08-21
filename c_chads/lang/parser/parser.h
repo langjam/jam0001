@@ -10,6 +10,7 @@ struct Parser_State {
 };
 
 enum Parser_Node_Kind {
+    PN_TOPLEVEL,
     PN_DECL,
     PN_STRING,
     PN_IDENT,

@@ -8,6 +8,9 @@ void print_ast(struct Parser_Node *node, usize depth) {
     for (usize i = 0; i < depth; i += 1) 
         printf("    ");
     switch (node->kind) {
+        case PN_TOPLEVEL:
+            printf("Toplevel\n");
+            break;
         case PN_DECL:
             printf("Decl(name = %.*s)\n", (int)node->data.decl.name.size, node->data.decl.name.view);
             break;
@@ -31,7 +34,9 @@ void print_ast(struct Parser_Node *node, usize depth) {
         print_ast(vec_get(&node->children, i), depth + 1);
     }
     // just temp
-    //vec_drop(&node->children);
+#ifndef ENABLE_INTERPRETER
+    vec_drop(&node->children);
+#endif
 }
 
 int main(int argc, char *argv[]) {
@@ -52,12 +57,14 @@ int main(int argc, char *argv[]) {
     print_ast(&result, 0);
     printf("------Running------\n");
 
+#ifdef ENABLE_INTERPRETER
     intrp_init();
 
     intrp_run(&result);
     intrp_main();
 
     intrp_deinit();
+#endif
 
     printf("------\n");
 
