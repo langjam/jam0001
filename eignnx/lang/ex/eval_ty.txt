@@ -5,6 +5,6 @@ def double = fn f: [Text -> Text] -> fn x: Text ->
 
 {
     def _ = [[double fn x: Text -> my_text] "asdf"];
-    def _ = "poiu";
-    my_text
+    def _ = "poiu" ++ "gagasdg" ++ "asdgafasdg";
+    my_text +++ "blargle"
 };;

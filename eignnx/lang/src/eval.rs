@@ -1,7 +1,7 @@
 use core::panic;
 use std::fmt::Display;
 
-use crate::ast::Tm;
+use crate::ast::{Op, Tm};
 
 pub type Env = Vec<ValBinding>;
 
@@ -18,6 +18,15 @@ impl Display for Val {
             Val::Void => write!(f, "void"),
             Val::Text(txt) => write!(f, "{:?}", txt),
             Val::Closure(_env, param, body) => write!(f, "[fn {} -> {}]", param, body),
+        }
+    }
+}
+
+impl Val {
+    fn unwrap_text(&self) -> &str {
+        match self {
+            Self::Text(txt) => txt,
+            _ => unreachable!(),
         }
     }
 }
@@ -99,6 +108,25 @@ impl Eval {
                 let body = self.eval(body);
                 self.bind(name.clone(), body);
                 Val::Void
+            }
+
+            Tm::Op(_loc, x, op, y) => {
+                let x = self.eval(x);
+                let y = self.eval(y);
+                match op {
+                    Op::Concat => Val::Text(x.unwrap_text().to_owned() + y.unwrap_text()),
+                    Op::SpaceConcat => {
+                        let x = x.unwrap_text().to_owned();
+                        let y = y.unwrap_text();
+                        if x.ends_with(|ch| [' ', '\n', 't'].contains(&ch))
+                            || y.starts_with(|ch| ['.', ',', ';'].contains(&ch))
+                        {
+                            Val::Text(x + y)
+                        } else {
+                            Val::Text(x + " " + y)
+                        }
+                    }
+                }
             }
         }
     }

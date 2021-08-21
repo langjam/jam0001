@@ -1,4 +1,4 @@
-use std::fmt::{write, Display};
+use std::fmt::Display;
 
 use crate::tcx::Tcx;
 
@@ -14,6 +14,7 @@ impl Display for Loc {
 #[derive(Debug, Clone)]
 pub enum Tm {
     Text(Loc, String),
+    Op(Loc, Box<Tm>, Op, Box<Tm>),
     // Doc(Loc, Box<Tm>, Doc),
     Var(Loc, String),
     Lam(Loc, String, Ty, Box<Tm>),
@@ -26,6 +27,7 @@ impl Display for Tm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Tm::Text(_, txt) => write!(f, "{:?}", txt),
+            Tm::Op(_, x, op, y) => write!(f, "{} {} {}", x, op, y),
             Tm::Var(_, name) => write!(f, "{}", name),
             Tm::Lam(_, param, ty, body) => write!(f, "[fn {}: {} -> {}]", param, ty, body),
             Tm::App(_, func, arg) => write!(f, "[{} {}]", func, arg),
@@ -46,6 +48,7 @@ impl Tm {
     pub fn loc(&self) -> &Loc {
         match self {
             Tm::Text(loc, _) => loc,
+            Tm::Op(loc, _, _, _) => loc,
             Tm::Var(loc, _) => loc,
             Tm::Lam(loc, _, _, _) => loc,
             Tm::App(loc, _, _) => loc,
@@ -55,20 +58,20 @@ impl Tm {
     }
 }
 
-// #[derive(Debug, Clone, PartialEq)]
-// pub enum Kind {
-//     Star,
-//     Arr(Box<Kind>, Box<Kind>),
-// }
+#[derive(Debug, Clone)]
+pub enum Op {
+    Concat,
+    SpaceConcat,
+}
 
-// impl Display for Kind {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             Kind::Star => write!(f, "{}", "*"),
-//             Kind::Arr(k1, k2) => write!(f, "({} => {})", k1, k2),
-//         }
-//     }
-// }
+impl Display for Op {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Op::Concat => write!(f, "++"),
+            Op::SpaceConcat => write!(f, "+++"),
+        }
+    }
+}
 
 // #[derive(Debug)]
 // pub enum Doc {}

@@ -1,7 +1,7 @@
 use displaydoc::Display;
 
 use crate::{
-    ast::{Loc, Tm, Ty},
+    ast::{Loc, Op, Tm, Ty},
     tcx::{Binding, Tcx},
 };
 
@@ -96,8 +96,7 @@ impl Check {
 
             Tm::Block(_loc, tms) => {
                 if let Some((last, init)) = tms.split_last() {
-                    let tm_tys = init
-                        .iter()
+                    init.iter()
                         .map(|tm| self.check(tm, &Ty::void()))
                         .collect::<Result<Vec<_>, TyCheckErr>>()?;
                     self.infer(last)
@@ -110,6 +109,12 @@ impl Check {
                 let tm_ty = self.infer(tm)?;
                 self.bind_tm_var(name, &tm_ty);
                 Ok(Ty::void())
+            }
+
+            Tm::Op(_loc, x, Op::Concat | Op::SpaceConcat, y) => {
+                self.check(x, &Ty::text())?;
+                self.check(y, &Ty::text())?;
+                Ok(Ty::text())
             }
         }
     }

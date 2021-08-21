@@ -6,13 +6,13 @@ use nom::{
     character::complete::{alpha1, alphanumeric1, multispace0},
     combinator::{recognize, verify},
     error::ParseError,
-    multi::{many0, many1, separated_list0},
+    multi::{fold_many1, many0, many1, separated_list0},
     sequence::{delimited, pair, tuple},
     IResult, Parser,
 };
 use nom_supreme::{final_parser::final_parser, ParserExt};
 
-use crate::ast::{Loc, Tm, Ty};
+use crate::ast::{Loc, Op, Tm, Ty};
 
 const KEYWORDS: &'static [&'static str] = &["fn", "any", "def"];
 
@@ -37,6 +37,38 @@ fn top_lvl_block_tm<'i>(i: &'i str) -> IResult<&'i str, Tm> {
 }
 
 fn tm(i: &str) -> IResult<&str, Tm> {
+    alt((nested_ops, tm_first))(i)
+}
+
+fn nested_ops(i: &str) -> IResult<&str, Tm> {
+    let (i, first) = tm_first(i)?;
+    fold_many1(
+        tuple((ws::allowed::before(op), ws::allowed::before(tm))),
+        first,
+        |left, (op, right)| Tm::Op(Loc, Box::new(left), op, Box::new(right)),
+    )(i)
+}
+
+fn op(i: &str) -> IResult<&str, Op> {
+    alt((
+        tag("+++").value(Op::SpaceConcat),
+        tag("++").value(Op::Concat),
+    ))(i)
+}
+
+#[test]
+fn test_op() {
+    let (_, op) = tm("this ++ that ++ the_other").unwrap();
+    match &op {
+        &Tm::Op(Loc, _, Op::Concat, ref tail) => match tail.as_ref() {
+            &Tm::Op(Loc, _, Op::Concat, _) => {}
+            _ => panic!("Unexpected value: {}", op),
+        },
+        _ => panic!("Unexpected value: {}", op),
+    }
+}
+
+fn tm_first(i: &str) -> IResult<&str, Tm> {
     alt((var_tm, text_tm, lam_tm, app_tm, block_tm, def_tm))(i)
 }
 
