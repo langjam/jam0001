@@ -42,7 +42,6 @@ void print_ast(struct Parser_Node *node, usize depth) {
     for (usize i = 0; i < node->children.size; i += 1) {
         print_ast(vec_get(&node->children, i), depth + 1);
     }
-    // just temp
 }
 
 int main(int argc, char *argv[]) {
@@ -72,7 +71,7 @@ int main(int argc, char *argv[]) {
 
     printf("------\n");
 
-    vec_drop(&result->children);
+    vec_drop(&result.children);
     parser_deinit();
     free(src);
     eh_deinit();
