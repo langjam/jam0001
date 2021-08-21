@@ -35,9 +35,9 @@ factcomponentcode(id2,"").
 factcomponentcode(id3,"").
 factcomponentcode(id4,"").
 factcomponentcode(id5,"").
-factcomponentcode(id6,"swipl -q    -g 'consult(fb).'    -g 'consult(rects).'    -g 'printRects.'    -g 'halt.'   | ./augment__fb").
+factcomponentcode(id6,"swipl -q  -g 'consult(fb).'  -g 'consult(rects).'  -g 'printRects.'  __g 'halt.'| ./augment__fb").
 factcomponentcode(id7,"").
-factcomponentcode(id8,"swipl -q    -g 'consult(fb).'    -g 'consult(boundingBoxes).'    -g 'printBB.'    -g 'halt.'   | ./augment__fb").
+factcomponentcode(id8,"swipl -q  -g 'consult(fb).'  -g 'consult(boundingBoxes).'  -g 'printBB.'  -g 'halt.'  | ./augment__fb").
 factcomponentname(id4,"top level").
 factcomponentname(id5,"rects").
 factcomponentname(id6,"c3").
@@ -77,9 +77,9 @@ unknowncomponentname(id2,"c1").
 unknowncomponentname(id3,"c2").
 value(id4, "top level").
 value(id5, "rects").
-value(id6, "swipl -q    -g 'consult(fb).'    -g 'consult(rects).'    -g 'printRects.'    -g 'halt.'   | ./augment__fb").
+value(id6, "swipl -q  -g 'consult(fb).'  -g 'consult(rects).'  -g 'printRects.'  __g 'halt.'| ./augment__fb").
 value(id7, "bounding boxes").
-value(id8, "swipl -q    -g 'consult(fb).'    -g 'consult(boundingBoxes).'    -g 'printBB.'    -g 'halt.'   | ./augment__fb").
+value(id8, "swipl -q  -g 'consult(fb).'  -g 'consult(boundingBoxes).'  -g 'printBB.'  -g 'halt.'  | ./augment__fb").
 vertex(id4, "").
 vertex(id5, "").
 vertex(id6, "").

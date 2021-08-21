@@ -25,7 +25,7 @@ swipl -q \
 # augment the factbase (fb.pl) after every inferencing step
 cat sequence.pl temp.pl | sort >fb.pl
 
-./seq-run-aux.bash >sequence.json
+./run-aux.bash >sequence.json
 
 # debug
 mv fb.pl seqfb.pl
@@ -42,7 +42,7 @@ swipl -q \
 # augment the factbase (fb.pl) after every inferencing step
 cat details.pl temp.pl | sort >fb.pl
 
-./run-aux.bash | ./fixup.bash >details.json
+./run-aux.bash >details.json
 
 # debug
 mv fb.pl detfb.pl

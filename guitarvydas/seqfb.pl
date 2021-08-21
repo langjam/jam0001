@@ -1,4 +1,10 @@
 
+b(id4,390).
+b(id5,340).
+b(id6,340).
+b(id7,325).
+b(id8,310).
+b(id9,325).
 cell(id10,"").
 cell(id11,"").
 cell(id2,"").
@@ -9,6 +15,14 @@ cell(id6,"").
 cell(id7,"").
 cell(id8,"").
 cell(id9,"").
+contains(id4,id5).
+contains(id4,id6).
+contains(id4,id8).
+contains(id5,id9).
+contains(id6,id7).
+contains1(id4,id5).
+contains1(id4,id6).
+contains1(id4,id8).
 diagram(id1, "").
 diagramContains(id1, id10).
 diagramContains(id1, id11).
@@ -32,8 +46,33 @@ height(id5, 60).
 height(id6, 60).
 height(id7, 30).
 height(id9, 30).
+l(id4,200).
+l(id5,280).
+l(id6,520).
+l(id7,510).
+l(id8,395).
+l(id9,380).
 name(id1, "sequence").
+portdirection(id7,input).
+portdirection(id9,output).
+r(id4,720).
+r(id5,400).
+r(id6,640).
+r(id7,540).
+r(id8,525).
+r(id9,410).
+rect(id2,"").
+rect(id3,"").
+rect(id4,"").
+rect(id5,"").
+rect(id6,"").
 source(id8, id9).
+t(id4,240).
+t(id5,280).
+t(id6,280).
+t(id7,295).
+t(id8,310).
+t(id9,295).
 target(id10, "mx_kBMiYbfJri47WsX8j__12").
 target(id11, "mx_kBMiYbfJri47WsX8j__4").
 target(id8, id7).

@@ -1,0 +1,53 @@
+{"diagram":"id1", "toplevelcomponent":"id4"}
+
+{
+  "children": ["rects", "bounding boxes" ],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id4",
+  "inputs": [],
+  "name":"top level",
+  "outputs": [],
+  "synccode":""
+}
+{
+  "children": ["c3" ],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id5",
+  "inputs": [],
+  "name":"rects",
+  "outputs": [],
+  "synccode":""
+}
+{
+  "children": [],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id6",
+  "inputs": [],
+  "name":"c3",
+  "outputs": [],
+  "synccode":"swipl -q  -g 'consult(fb).'  -g 'consult(rects).'  -g 'printRects.'  __g 'halt.'| ./augment__fb"
+}
+{
+  "children": ["c4" ],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id7",
+  "inputs": [],
+  "name":"bounding boxes",
+  "outputs": [],
+  "synccode":""
+}
+{
+  "children": [],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id8",
+  "inputs": [],
+  "name":"c4",
+  "outputs": [],
+  "synccode":"swipl -q  -g 'consult(fb).'  -g 'consult(boundingBoxes).'  -g 'printBB.'  -g 'halt.'  | ./augment__fb"
+}
+
