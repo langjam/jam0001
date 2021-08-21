@@ -3,6 +3,8 @@
 
 from enum import Enum, auto
 
+from comparator_constants import *
+
 
 class Token(Enum):
     AND = auto()
@@ -181,7 +183,7 @@ class Tokeniser:
 
             if self.advance_if("as"):
                 return Token.AS
-                
+
             if ch == ".":
                 return Token.DOT
 
@@ -201,11 +203,11 @@ class Tokeniser:
 
             # Is it a boolean comparison?
             if self.advance_if(
-                "is",
-                "is less than",
-                "is greater than",
-                "is less than or equal to",
-                "is greater than or equal to",
+                EQUAL,
+                LESS_THAN,
+                GREATER_THAN,
+                LT_OR_EQ,
+                GT_OR_EQ,
             ):
                 return Token.COMPARISON
 
