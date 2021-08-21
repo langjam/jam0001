@@ -38,9 +38,45 @@ class Parser:
 
     def parse_program(self):
         self.expect(Token.BOF)
+        functions = self.parse_functions()
         stmts = self.parse_stmts()
         self.expect(Token.EOF)
         return stmts
+
+    def parse_functions(self):
+        token, value = self.peek_lexeme()
+        while token == Token.FUNCTION:
+            self.parse_function()
+            token, value = self.peek_lexeme()
+
+    def parse_function(self):
+        token, value = self.advance()
+        self.expect(Token.EOL)
+        self.expect(Token.HFILL)
+        token, value = self.expect(token.FUNCTION_NAME)
+        self.expect(Token.DOT)
+        self.expect(Token.EOL)
+
+        token, value = self.peek_lexeme()
+        while token == Token.HFILL:
+            self.advance()
+            token, value = self.peek_lexeme()
+            if token == Token.PARAM:
+                self.parse_param()
+            elif token == Token.EOL:
+                self.advance()
+            token, value = self.peek_lexeme()
+
+        if token == Token.END_DEF:
+            self.advance()
+            self.expect(Token.EOL)
+            self.advance()
+            return
+
+    def parse_param(self):
+        self.advance()
+        self.parse_identifier()
+        self.expect(Token.EOL)
 
     def parse_stmts(self):
         stmts_end_tokens = [Token.LEAVE_FUNC, Token.EOF]
@@ -119,20 +155,15 @@ class Parser:
                 Token.IDENTIFIER_WORD, token
             )  # TODO: could be either.
 
+
 if __name__ == "__main__":
 
-    def empty_program():
-        yield (Token.BOF, "")
-        yield (Token.EOF, "")
-
     def set_var_to_constant():
-        yield (Token.BOF, "")
         yield (Token.SETVAR, "Set")
         yield (Token.IDENTIFIER_WORD, "x")
         yield (Token.TO, "to")
         yield (Token.NUMBER, "-39")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
     def expr():
         yield (Token.NUMBER, "-98")
@@ -141,7 +172,6 @@ if __name__ == "__main__":
         yield (Token.EOF, "")
 
     def set_var_to_var():
-        yield (Token.BOF, "")
         yield (Token.SETVAR, "Set")
         yield (Token.IDENTIFIER_WORD, "retirement")
         yield (Token.IDENTIFIER_WORD, "age")
@@ -149,10 +179,8 @@ if __name__ == "__main__":
         yield (Token.IDENTIFIER_WORD, "pension")
         yield (Token.IDENTIFIER_WORD, "age")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
     def if_stmt_compare_constants():
-        yield (Token.BOF, "")
         yield (Token.IF_KEYWORD, "If")
         yield (Token.NUMBER, "6800")
         yield (Token.COMPARISON, "is")
@@ -163,10 +191,8 @@ if __name__ == "__main__":
         yield (Token.TO, "to")
         yield (Token.NUMBER, "68000")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
     def if_stmt_compare_variable_and_constant():
-        yield (Token.BOF, "")
         yield (Token.IF_KEYWORD, "If")
         yield (Token.IDENTIFIER_WORD, "processor")
         yield (Token.IDENTIFIER_WORD, "type")
@@ -179,10 +205,8 @@ if __name__ == "__main__":
         yield (Token.TO, "to")
         yield (Token.NUMBER, "68000")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
     def if_stmt_compare_variable_and_variable():
-        yield (Token.BOF, "")
         yield (Token.IF_KEYWORD, "If")
         yield (Token.IDENTIFIER_WORD, "processor")
         yield (Token.IDENTIFIER_WORD, "type")
@@ -196,22 +220,95 @@ if __name__ == "__main__":
         yield (Token.TO, "to")
         yield (Token.NUMBER, "6502")
         yield (Token.DOT, ".")
-        yield (Token.EOF, "")
 
-    parser = Parser(set_var_to_constant().__next__)
+    def function_definition_no_params_no_return():
+        yield (Token.FUNCTION, "/**")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.FUNCTION_NAME, "Opens the pod bay doors")
+        yield (Token.DOT, ".")
+        yield (Token.EOL, "\n")
+        yield (Token.END_DEF, "*/")
+        yield (Token.EOL, "\n")
+
+    def function_definition_params_no_return():
+        yield (Token.FUNCTION, "/**")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.FUNCTION_NAME, "Multiplies by two")
+        yield (Token.DOT, ".")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.PARAM, "@param")
+        yield (Token.IDENTIFIER_WORD, "the")
+        yield (Token.IDENTIFIER_WORD, "number")
+        yield (Token.EOL, "\n")
+        yield (Token.END_DEF, "*/")
+        yield (Token.EOL, "\n")
+
+    def function_definition_params_and_return():
+        yield (Token.FUNCTION, "/**")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.FUNCTION_NAME, "Multiplies by two")
+        yield (Token.DOT, ".")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.PARAM, "@param")
+        yield (Token.IDENTIFIER_WORD, "the")
+        yield (Token.IDENTIFIER_WORD, "number")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.EOL, "\n")
+        yield (Token.HFILL, " *")
+        yield (Token.RETURNVAR, "@return")
+        yield (Token.IDENTIFIER_WORD, "the")
+        yield (Token.IDENTIFIER_WORD, "result")
+        yield (Token.EOL, "\n")
+        yield (Token.END_DEF, "*/")
+        yield (Token.EOL, "\n")
+
+    def program(*fragments):
+        def generator():
+            yield (Token.BOF, "")
+            for fragment in fragments:
+                yield from fragment()
+            yield (Token.EOF, "")
+
+        return generator().__next__
+
+    parser = Parser(program())
     parser.parse()
 
-    parser = Parser(set_var_to_var().__next__)
+    parser = Parser(program(set_var_to_constant))
     parser.parse()
 
-    parser = Parser(if_stmt_compare_constants().__next__)
+    parser = Parser(program(set_var_to_var))
     parser.parse()
 
-    parser = Parser(if_stmt_compare_variable_and_constant().__next__)
+    parser = Parser(program(if_stmt_compare_constants))
     parser.parse()
 
-    parser = Parser(if_stmt_compare_variable_and_variable().__next__)
+    parser = Parser(program(if_stmt_compare_variable_and_constant))
     parser.parse()
 
-    parser = Parser(expr().__next__)
-    print(parser.parse_expr())
+    parser = Parser(program(if_stmt_compare_variable_and_variable))
+    parser.parse()
+
+    parser = Parser(
+        program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
+    )
+    parser.parse()
+
+    parser = Parser(program(function_definition_no_params_no_return))
+    parser.parse()
+
+    parser = Parser(program(function_definition_params_no_return))
+    parser.parse()
+
+    # parser = Parser(program(function_definition_params_and_return))
+    # parser.parse()
