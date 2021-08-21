@@ -1,3 +1,4 @@
+from abstract_syntax_trees import Binop, Comparison, Number, Variable
 from run_code import apply_binop, apply_comparison
 from tokenise import Token, Tokeniser
 
@@ -81,42 +82,33 @@ class Parser:
         condition = self.parse_expr()
         self.expect(Token.THEN)
         stmt = self.parse_stmt_contents()
-        if condition:
-            stmt.run()
 
     def parse_expr(self):
+        print("Is this getting called?")
         first_operand = self.parse_operand()
         operator_token, operator_value = self.peek_lexeme()
         if operator_token == Token.BINOP or operator_token == Token.COMPARISON:
-            return self.parse_operation(
-                first_operand, operator_token, operator_value
-            )
+            self.advance()  # we already have these values!
+            second_operand = self.parse_operand()
+            if operator_token == Token.BINOP:
+                return Binop(
+                    operator_value, first_operand, second_operand
+                )
+            if operator_token == Token.COMPARISON:
+                return Comparison(
+                    operator_value, first_operand, second_operand
+                )
         else:
             return first_operand
-
-
-
-    def parse_operation(self, first_operand_value, operator_token, operator_value):
-        self.advance()  # we already have these values!
-        second_operand_token, second_operand_value = self.advance()
-        if second_operand_token != Token.NUMBER:
-            raise UnexpectedTokenError(Token.NUMBER, second_operand_token)
-        if operator_token == Token.BINOP:
-            result = Binop(
-                operator_value, first_operand_value, second_operand_value
-            )
-        if operator_token == Token.COMPARISON:
-            result = apply_comparison(
-                operator_value, first_operand_value, second_operand_value
-            )
-        return result
 
     def parse_operand(self):
         token, value = self.peek_lexeme()
         if token == Token.NUMBER:
             operand_token, operand_value = self.expect(Token.NUMBER)
+            return Number(operand_value)
         elif token == Token.IDENTIFIER_WORD:
-            self.parse_identifier()
+            varname = self.parse_identifier()
+            return Variable(varname)
         else:
             raise UnexpectedTokenError(
                 Token.IDENTIFIER_WORD, token
@@ -201,17 +193,20 @@ if __name__ == "__main__":
         yield (Token.DOT, ".")
         yield (Token.EOF, "")
 
-    parser = Parser(set_var_to_constant().__next__)
-    parser.parse()
+    # parser = Parser(set_var_to_constant().__next__)
+    # parser.parse()
 
-    parser = Parser(set_var_to_var().__next__)
-    parser.parse()
+    # parser = Parser(set_var_to_var().__next__)
+    # parser.parse()
 
-    parser = Parser(if_stmt_compare_constants().__next__)
-    parser.parse()
+    # parser = Parser(if_stmt_compare_constants().__next__)
+    # parser.parse()
 
-    parser = Parser(if_stmt_compare_variable_and_constant().__next__)
-    parser.parse()
+    # parser = Parser(if_stmt_compare_variable_and_constant().__next__)
+    # parser.parse()
 
-    parser = Parser(if_stmt_compare_variable_and_variable().__next__)
-    parser.parse()
+    # parser = Parser(if_stmt_compare_variable_and_variable().__next__)
+    # parser.parse()
+
+    parser = Parser(expr().__next__)
+    print(parser.parse_expr())
