@@ -151,7 +151,8 @@ return true;
 
 TODO: make this increase in terms of the lines cleared/level
 ```
-return 1.0;
+level = this.linesCleared / 10;
+return 2.0 + level * 0.5;
 ```
 
 ### Flatten Overlay
