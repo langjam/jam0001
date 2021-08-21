@@ -1,0 +1,40 @@
+# Doigt's classical "temperature converter counter thing", this one is actually not really a classic but whatever..
+main := proc () {
+
+    celsius := 10;
+
+    while (celsius < 250) {
+
+        print("celsius:");
+        print(celsius);
+
+        print("farenheit:");
+        print(celsius * 1.8 + 32);
+
+        print("kelvin:");
+        print(celsius + 273.15);
+
+        print("rankine:");
+        print((celsius + 273.15) * 1.8);
+
+        print("delisle:");
+        print((100 - celsius) * 1.5);
+
+        print("newton:");
+        print(celsius * .33);
+
+        print("reaumur:");
+        print(celsius * .8);
+
+        print("romer:");
+        print(celsius * .525 + 7.5);
+
+        print("gas mark:");
+        print((celsius - 121) / 14);
+
+        print("doigt's dwindling sanity degrees:");
+        print((((celsius - 1) * .2 + celsius) + ((celsius - 300) * .04) / 5);
+
+        celsius = celsius + 10;
+    }
+}
