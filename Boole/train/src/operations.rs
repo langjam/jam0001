@@ -1,4 +1,4 @@
-
+#[derive(EnumIter, Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Operation {
     Nothing,
     Print,
@@ -20,6 +20,25 @@ pub enum Operation {
 }
 
 impl Operation {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Operation::Nothing => "nothing",
+            Operation::Print => "print",
+            Operation::Input => "input",
+            Operation::Switch => "switch",
+            Operation::Duplicate => "duplicate",
+            Operation::Rotate => "rotate",
+            Operation::DeleteTop => "delete top",
+            Operation::Transfer => "transfer",
+            Operation::Add => "add",
+            Operation::Sub => "sub",
+            Operation::Mul => "mul",
+            Operation::Div => "div",
+            Operation::Mod => "mod",
+            Operation::Delete => "delete",
+        }
+    }
+
     pub fn input_track_count(&self) -> usize {
         match self {
             Operation::Nothing => 1,
