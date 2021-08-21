@@ -1,15 +1,15 @@
-2? comment: just is an expression
+2?
 a = 3?
 
-comment: This is a comment and not ඞ || AMOGUS ||
-
-b = 3 + a? \\ Should generate a tree like that: (VarAssignNode, b, (MathNode, +, 3, (VarNode, a))) \\
+b = 3 + a?
 
 c = 2?
 
 d = 10?
 
-the_answer_to_everything = d+d+d+d+c? \\ 42 \\
+the_answer_to_everything = d+d+d+d+c?
 
-\\ In the State we are currently working, you can only view everything via debugger.
-   There might be an Update for this Test to print the final stuff to the terminal. \\
+out(the_answer_to_everything)?
+
+g = readin()?
+out(g)?

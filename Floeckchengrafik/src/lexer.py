@@ -28,6 +28,7 @@ class ComstructLexer(Lexer):
     }
 
     ignore = " \t\n"
+    ignore_comment = "comment:"
 
     MLCOMMENT = r"\\\\[\s\S]*\\\\"
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
@@ -66,3 +67,21 @@ class ComstructLexer(Lexer):
     def error(self, t):
         print('[LexerError] Line %d: Bad character %r' % (self.lineno, t.value[0]))
         self.index += 1
+
+# 2? comment: just is an expression
+# a = 3?
+#
+# comment: \\ This is a comment and not ඞ || AMOGUS || \\
+#
+# b = 3 + a? comment: \\ Should generate a tree like that: (VarAssignNode, b, (MathNode, +, 3, (VarNode, a))) \\
+#
+# c = 2?
+#
+# d = 10?
+#
+# the_answer_to_everything = d+d+d+d+c? comment: \\ 42 \\
+#
+# comment: \\ In the State we are currently working, you can only view everything via debugger.
+# comment:    There might be an Update for this Test to print the final stuff to the terminal. \\
+#
+# out(the_answer_to_everything)?
