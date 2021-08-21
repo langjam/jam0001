@@ -11,5 +11,5 @@ the_answer_to_everything = d+d+d+d+c?
 
 out(the_answer_to_everything)?
 
-g = readin()?
+g = readline()?
 out(g)?

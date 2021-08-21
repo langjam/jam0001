@@ -38,7 +38,7 @@ class ComstructExecutor:
             return self.walkTree(node.var1) <= self.walkTree(node.var2)
         elif isinstance(node, StatementNode.VarAssignNode):
             env[node.var_name] = self.walkTree(node.var_value)
-            return self.walkTree(node.var_value)
+            return env[node.var_name]
         elif isinstance(node, StatementNode.VarNode):
             return env[node.var_name]
         elif isinstance(node, StatementNode.LiterallyNode):

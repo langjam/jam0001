@@ -12,18 +12,18 @@ def out(args):
     print()
 
 
-def readin(args):
-    input(args[0] if len(args) == 1 else "")
+def readline(args):
+    return input(args[0] if len(args) == 1 else "")
 
 
 internals = {
     "function": function,
     "out": out,
-    "readin": readin
+    "readline": readline
 }
 
 env = {
     "function": StatementNode.FunctionDefinitionNode("internal", []),
     "out": StatementNode.FunctionDefinitionNode("internal", []),
-    "readin": StatementNode.FunctionDefinitionNode("internal", [])
+    "readline": StatementNode.FunctionDefinitionNode("internal", [])
 }
