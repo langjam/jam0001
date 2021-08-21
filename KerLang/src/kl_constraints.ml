@@ -134,7 +134,12 @@ let generate_function (Spec (_, name, comment)) =
     name; n_args = 0; declarations = []; result = Yolo []
   } comments
 
-let rec compile_expr env = function
+let rec compile_function env { result; _ } =
+  match result with
+  | Function e -> compile_expr env e
+  | _ -> assert false
+
+and compile_expr env = function
   | Leaf v -> compile_value env v
   | Node v -> compile_operation env v
 
