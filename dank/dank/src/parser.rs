@@ -103,7 +103,6 @@ peg::parser!(pub grammar dank() for str {
         / "false" { Value::Bool(false) }
         / "null" { Value::Null }
 
-    // TODO: accept expressions here
     rule print() -> Stmt<'input>
          = start:position!() "print" _ args:(expr() ** ",") end:position!()
          { Stmt { kind: StmtKind::Print(args), span: Span { start, end } } }
@@ -111,11 +110,11 @@ peg::parser!(pub grammar dank() for str {
     /// Prase a multi-line header comment (allowed only at the top of the file)
     rule header_comment() -> HeaderComment<'input>
         = "/*" name:ident_with_whitespace() ['\n' | '\r']?
-
+            ___ lines:(s:stmt() ___ {s})*
         "*/" ___ {
             HeaderComment {
                 name: name.into_iter().filter(|x| !x.is_empty()).collect(),
-                body: vec![]
+                body: lines
             }
         }
 
@@ -175,8 +174,9 @@ pub mod tests {
                     .unwrap()
                     .ast_to_str()
                     .replace(|c| ['├', '─', '│', '╰', '✕', '↓'].contains(&c), " ")
+                    .trim()
                     .as_display(),
-                $expected.as_display()
+                $expected.trim().as_display()
             )
         };
     }
@@ -186,25 +186,36 @@ pub mod tests {
         let test = r#"
 
         /* this is another header comment */ 
-        /* this_is_a_header_comment */
+        /* this_is_a_header_comment 
+
+        print("code inside the comment");
+
+        */
 
         "#;
 
-        assert_eq!(
-            dank::file(test).unwrap(),
-            FileAst {
-                header_comments: vec![
-                    HeaderComment {
-                        name: vec!["this", "is", "another", "header", "comment"],
-                        body: vec![],
-                    },
-                    HeaderComment {
-                        name: vec!["this_is_a_header_comment"],
-                        body: vec![],
-                    },
-                ],
-                code: Ast { statements: vec![] }
-            }
+        test_eq!(
+            test,
+            r#"FileAst
+  header_comments= 
+    HeaderComment
+      name= 
+        "this"
+        "is"
+        "another"
+        "header"
+        "comment"
+      body= 
+    HeaderComment
+      name= 
+        "this_is_a_header_comment"
+      body= 
+        StmtKind::Print
+          args= 
+            ExprKind::Literal
+              field0: Str("code inside the comment")
+  code: Ast
+    statements="#
         )
     }
 
