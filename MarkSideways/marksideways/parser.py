@@ -20,9 +20,6 @@ for ao in [
 def parse_executable(tokens, allow_complex = True, include_semicolon = True):
   next = tokens.peek()
 
-  if next.line == 96:
-    print(next)
-
   if next.token_type == 'KEYWORD':
     next_value = next.value
     
@@ -53,8 +50,26 @@ def parse_executable(tokens, allow_complex = True, include_semicolon = True):
 
   return output
 
+def parse_code_block(tokens):
+  tokens.pop_expected('{')
+  output = []
+  while not tokens.pop_if_present('}'):
+    line = parse_executable(tokens, True, True)
+    output.append(line)
+  return output
+
 def parse_for_loop(tokens):
-  raise Exception("You left off here!")
+  for_token = tokens.pop_expected('for')
+  variable = tokens.pop()
+  if variable.token_type != 'WORD': raise ParserException(variable, "Expected a valid variable name but found '" + variable.value + "'.")
+  tokens.pop_expected('=')
+  start = parse_expression(tokens)
+  loop_op = tokens.peek()
+  if loop_op.value not in ('thru', 'till'): tokens.pop_expected('till') # intentionally throw
+  tokens.pop()
+  end = parse_expression(tokens)
+  code = parse_code_block(tokens)
+  return ForLoop(for_token, variable, loop_op, start, end, code)
 
 class OpChainParser:
   def __init__(self, ops, next_parser_func):

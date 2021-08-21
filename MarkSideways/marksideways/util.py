@@ -1,15 +1,12 @@
+ALPHA_NUM = {}
+for c in '0123456789_abcdefghijklmnopqrstuvwxyz':
+  ALPHA_NUM[c.lower()] = c.lower()
+  ALPHA_NUM[c.upper()] = c.lower()
+
 def canonicalize_identifier(value):
   sb = []
-  a = ord('a')
-  z = ord('z')
-  n0 = ord('0')
-  n9 = ord('9')
-  for c in value.lower():
-    ord_c = ord(c)
-    if a <= ord_c <= z:
-      sb.append(c)
-    elif n0 <= ord_c <= n9:
-      sb.append(c)
+  for c in value:
+    sb.append(ALPHA_NUM.get(c, ''))
   return ''.join(sb)
 
 def list_to_lookup(items):
@@ -46,5 +43,10 @@ def string_literal_to_value(throw_token, value):
     i += 1
 
   return ''.join(sb)
-    
-      
+
+def merge_dictionaries(a, b):
+  output = {}
+  for d in [a, b]:
+    for k in d.keys():
+      output[k] = d[k]
+  return output

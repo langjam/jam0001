@@ -1,0 +1,131 @@
+from .exceptions import *
+
+class Value:
+  def __init__(self, _type):
+    self.type = _type
+    self.is_error = False
+
+class ErrorValue(Value):
+  def __init__(self, stackTrace):
+    super().__init__('ERROR')
+    self.stackTrace = stackTrace
+    self.is_error = True
+  def to_string(self):
+    raise Exception(".to_string() was called on ErrorValue.")
+
+def new_error_value(token, msg):
+  return ErrorValue(StackTrace(token, msg))
+
+class NullValue(Value):
+  def __init__(self):
+    super().__init__('NULL')
+  def to_string(self):
+    return 'null'
+NULL_VALUE = NullValue()
+
+class BoolValue(Value):
+  def __init__(self, value):
+    super().__init__('BOOL')
+    self.value = value
+  def to_string(self):
+    return 'true' if self.value else 'false'
+TRUE_VALUE = BoolValue(True)
+FALSE_VALUE = BoolValue(False)
+
+class IntegerValue(Value):
+  def __init__(self, value):
+    super().__init__('INT')
+    self.value = value
+  def to_string(self):
+    return str(self.value)
+INTEGER_VALUES = {}
+for i in (-1, 0, 1):
+  INTEGER_VALUES[i] = IntegerValue(i)
+
+def get_integer_value(n):
+  if n < 2000 and n > -2000:
+    value = INTEGER_VALUES.get(n)
+    if value == None:
+      value = IntegerValue(n)
+      INTEGER_VALUES[n] = value
+  else:
+    value = IntegerValue(n)
+  return value
+
+class FloatValue(Value):
+  def __init__(self, value):
+    super().__init__('FLOAT')
+    self.value = value
+  def to_string(self):
+    return str(self.value)
+
+class StringValue(Value):
+  def __init__(self, value):
+    super().__init__('STRING')
+    self.value = value
+  def to_string(self):
+    return self.value
+
+class BuiltInFunction(Value):
+  def __init__(self, id, handler):
+    super().__init__('BUILTIN_FUNCTION')
+    self.handler = handler
+  def to_string(self):
+    return "<Built-in function: " + self.id + ">"
+
+class FunctionValue(Value):
+  def __init__(self, method_def):
+    super().__init__('FUNCTION')
+    self.method_def = method_def
+  def to_string(self):
+    return "<function: " + self.method_def.name.value + ">"
+
+class ClassValue(Value):
+  def __init__(self, class_def):
+    super().__init__('CLASS')
+    self.class_def = class_def
+  def to_string(self):
+    return "<class: " + self.class_def.name.value + ">"
+
+instance_counter = [1]
+class InstanceValue(Value):
+  def __init__(self, class_def):
+    super().__init__('INSTANCE')
+    self.class_def = class_def
+    self.fields = {}
+    self.id = instance_counter[0]
+    instance_counter[0] += 1
+
+  def to_string(self):
+    return "<instance@" + str(self.id) + ": " + self.class_def.name.value + ">"
+
+class MethodValue(Value):
+  def __init__(self, instance, method_def):
+    super().__init_('METHOD')
+    self.method_def = method_def
+    self.instance = instance
+
+  def to_string(self):
+    # TODO: better information here
+    return "<method: " + self.method_def.name.value + ">"
+
+class ConstructorValue(Value):
+  def __init__(self, class_def):
+    super().__init__('CONSTRUCTOR')
+    self.class_def = class_def
+  def to_string(self):
+    return "<constructor: " + self.class_def.name.value + ">"
+    
+# Like a value except for executables
+
+class StatusWrapper:
+  def __init__(self, type, arg):
+    self.type = type # RETURN, CONTINUE, BREAK, EXCEPTION
+    self.arg = arg # a Value for RETURN, or a StackTrace for EXCEPTION
+
+def new_error_status(token, error):
+  return StatusWrapper('EXCEPTION', StackTrace(token, error))
+
+def error_status_from_value(value):
+  if not value.is_error: raise Exception("Incorrectly wrapped error value in error status")
+  return StatusWrapper('EXCEPTION', value.stackTrace)

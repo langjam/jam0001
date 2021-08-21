@@ -2,6 +2,8 @@ from .exceptions import ParserException
 from .tokenizer import markdown_tokenize, code_tokenize, Token
 from .nodes import *
 from .parser import parse_code
+from .util import *
+from .values import *
 
 class Runner:
   def __init__(self, filename, text):
@@ -17,6 +19,24 @@ class Runner:
     document = _parse_markdown_structure(documentItems)
 
     parse_document(document)
+    
+    built_ins = generate_builtins()
+    user_defined = gather_user_entities(document)
+    globals = merge_dictionaries(built_ins, user_defined)
+    status = run_code_block(document.code, globals, {})
+    if status != None:
+      if status.type == 'EXCEPTION':
+        stack_trace = status.arg
+        stack_trace_walker = stack_trace
+        while stack_trace_walker != None:
+          token = stack_trace_walker.token
+          error = stack_trace_walker.error
+          prefix = token.filename + " Line " + str(token.line) + " Column " + str(token.col) + ":"
+          print(prefix)
+          if error != None:
+            print("  > " + error)
+          stack_trace_walker = stack_trace_walker.next
+
     
 def _parse_markdown_structure(items):
   root = None
@@ -72,10 +92,10 @@ def parse_document(document):
     parse_class(class_def)
 
 def parse_method(method_def):
-  method_def.code = parse_code_lines(method_def, method_def.code_lines)
+  parse_code_lines(method_def, method_def.code_lines)
 
 def parse_class(class_def):
-  class_def.code = parse_code_lines(class_def, class_def.code_lines)
+  parse_code_lines(class_def, class_def.code_lines)
   for method_def in class_def.method_order:
     parse_method(method_def)
 
@@ -83,5 +103,25 @@ def parse_code_lines(parent, lines):
   filename = parent.first_token.filename
   code = '\n'.join(parent.code_lines) + '\n'
   tokens = code_tokenize(filename, code)
-
   parent.code = parse_code(tokens)
+
+def generate_builtins():
+  
+  def builtin_print(args):
+    print(' '.join(map(lambda arg: arg.to_string(), args)))
+    return NULL_VALUE
+  
+  PRINT = BuiltInFunction('print', builtin_print)
+
+  return {
+    'print': PRINT,
+  }
+
+def gather_user_entities(root):
+  output = {}
+  for class_def in root.class_order:
+    output[canonicalize_identifier(class_def.name)] = ClassValue(class_def)
+  for method_def in root.method_order:
+    output[canonicalize_identifier(method_def.name.value)] = FunctionValue(method_def)
+    
+  return output

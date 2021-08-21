@@ -94,10 +94,10 @@ counting, so we use `thru`.
 
 ```
 for i = this.begin thru this.end {
-  print(i + " Mississippi")
+  print(i + " Mississippi");
 }
 
-this.ClosingMessage()
+this.ClosingMessage();
 ```
 
 The last line of code is a method call to another method that we haven't 
@@ -108,5 +108,5 @@ defined yet called `ClosingMessage` which will be defined in the next section.
 This method displays a brief message to show after the counting has completed.
 
 ```
-print("Ready or not, here I come!")
+print("Ready or not, here I come!");
 ```
