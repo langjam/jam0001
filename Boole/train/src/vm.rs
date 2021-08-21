@@ -357,14 +357,17 @@ impl Data {
                 }
                 Operation::Delete => {
                     let st = &mut station.trains[0];
-                    st.pop_front();
+                    while !st.is_empty() {
+                        st.pop_front();
+                    }
                     did_work = true;
                 }
             }
 
             if station.operation != Operation::Delete
                 && station.operation != Operation::SwitchGteZero
-                && station.operation != Operation::SwitchEqZero && did_work
+                && station.operation != Operation::SwitchEqZero
+                && did_work
             {
                 {
                     if let Some(x) = station.trains[0].pop_front() {
@@ -412,12 +415,12 @@ mod tests {
     use std::sync::mpsc::channel;
 
     use crate::ast::{Program, SecondClassPassenger, Station, Target, Train};
+    use crate::interface::{Communicator, CommunicatorError};
     use crate::operations::Operation;
     use crate::parse::parser::Span;
     use crate::vm::Data;
     use crate::wishes::{ColorChoice, TrainConfig};
     use std::time::Duration;
-    use crate::interface::{Communicator, CommunicatorError};
 
     struct VMInterface;
     impl VMInterface {
@@ -426,7 +429,7 @@ mod tests {
         }
     }
 
-    impl Communicator for VMInterface{
+    impl Communicator for VMInterface {
         fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError> {
             Ok(vec![0])
         }
@@ -439,11 +442,14 @@ mod tests {
             Ok(())
         }
 
-        fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), CommunicatorError> {
-            Ok(())
-        }
-
-        fn train_to_start(&self, start_station: Station, train: Train) -> Result<(), CommunicatorError> {
+        fn move_train(
+            &self,
+            from_station: Station,
+            to_station: Station,
+            train: Train,
+            start_track: usize,
+            end_track: usize,
+        ) -> Result<(), CommunicatorError> {
             Ok(())
         }
     }
@@ -515,7 +521,7 @@ mod tests {
             fn $func() {
                 let program = create_program!($x);
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
                 pp.do_current_step(&i).unwrap();
                 let train = pp.trains[0].lock().unwrap();
                 assert_eq!(Some(10 $op 20), train.first_passenger_value());
@@ -527,7 +533,7 @@ mod tests {
     fn nothing_does_nothing() {
         let program = create_program!(Operation::Nothing);
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         assert_eq!(pp.train_count().unwrap(), 2);
         pp.do_current_step(&i).unwrap();
         let train = pp.trains[0].lock().unwrap();
@@ -591,7 +597,7 @@ mod tests {
             ],
         };
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         pp.do_current_step(&i).unwrap();
         {
             let station = pp.stations.get("Test2").unwrap().lock().unwrap();
@@ -621,7 +627,7 @@ mod tests {
     fn print_prints() {
         let program = create_program!(Operation::PrintString);
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         pp.do_current_step(&i).unwrap();
         // receiver.recv().unwrap();
         // receiver.recv().unwrap();
@@ -747,7 +753,7 @@ mod tests {
             ],
         };
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         pp.do_current_step(&i).unwrap();
         let other = pp.stations.get("Other").unwrap().lock().unwrap();
         assert_eq!(other.trains[1].len(), 0);
@@ -811,7 +817,7 @@ mod tests {
             ],
         };
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         pp.do_current_step(&i).unwrap();
         let other = pp.stations.get("Other").unwrap().lock().unwrap();
         assert_eq!(other.trains[1].len(), 0);
@@ -860,7 +866,7 @@ mod tests {
             }],
         };
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         assert_eq!(1, pp.train_count().unwrap());
         pp.do_current_step(&i).unwrap();
         {
@@ -886,10 +892,16 @@ mod tests {
                     station: "Test".to_string(),
                 },
                 first_class_passengers: vec![],
-                second_class_passengers: vec![SecondClassPassenger {
-                    data: 10,
-                    name: "Kees".to_string(),
-                }],
+                second_class_passengers: vec![
+                    SecondClassPassenger {
+                        data: 10,
+                        name: "Kees".to_string(),
+                    },
+                    SecondClassPassenger {
+                        data: 20,
+                        name: "Kees".to_string(),
+                    },
+                ],
             }],
             stations: vec![Station {
                 name: "Test".to_string(),
@@ -909,10 +921,11 @@ mod tests {
             }],
         };
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         pp.do_current_step(&i).unwrap();
         let train = pp.trains.first().unwrap().lock().unwrap();
-        assert_eq!(0, train.train.second_class_passengers.len());
+        assert_eq!(1, train.train.second_class_passengers.len());
+        assert_eq!(20, train.train.second_class_passengers.first().unwrap().data);
     }
 
     #[test]
@@ -954,7 +967,7 @@ mod tests {
             }],
         };
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         pp.do_current_step(&i).unwrap();
         let station = pp.stations.get("Test").unwrap().lock().unwrap();
         assert_eq!(station.trains[0].len(), station.trains[1].len());
@@ -1023,7 +1036,7 @@ mod tests {
             }],
         };
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         pp.do_current_step(&i).unwrap();
         let train = pp.trains.first().unwrap().lock().unwrap();
         assert_eq!(20, train.train.second_class_passengers[0].data);
@@ -1102,7 +1115,7 @@ mod tests {
             }],
         };
         let i = VMInterface::new();
-        let mut pp = Data::new(program, &i);
+        let mut pp = Data::new(program);
         pp.do_current_step(&i).unwrap();
         let train = pp.trains.first().unwrap().lock().unwrap();
         assert_eq!(20, train.train.second_class_passengers[0].data);
