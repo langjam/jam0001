@@ -1,65 +1,51 @@
+# KerLang
 
-```text
+KerLang is an innovative programming language built with love <3 for the [Langjam0001](https://github.com/langjam/jam0001). It features a state of the art compiler named "The Glorious KerLang Compiler" (also known as *the Glorious Ker-Lann Compiler* but who cares ?) and a first-class support for comment-oriented programming
+
+## What on Earth is *comment-oriented programming* ?
+
+Writing good comments is CS 101. But we all know how hard it is to stay focus on writing comments and documentation. Comment-oriented programming propose a game changing approach to software development : instead of writing the code and then writing comments, KerLang enforce you to over-comment your code and the compiler generate the code for you !
+
+Here is an example program :
+
+```c
 /*
-takes 2 arguments
-has a minus
-does not has a 3
+	This function takes 1 argument,
+	and multiply it by 2
 */
-f;
+function twice;
+```
 
+When executing a program written in KerLang, you first ask the compiler to generate code :
 
+```ocaml
+gklc file.kl
+```
 
-f(x, y)
-{
-	returu x - y;
-}
+outputs : 
 
+```ocaml
+let twice x = 2 * x
+```
 
+## Build instructions
 
-type = int/float/thing
+KerLang is crafted in pure OCaml (version **4.11.1**) with no dependencies other than [dune](https://dune.build) as its build system.
 
-ast_nodes = 
-	const, input
-	+, -, *, /, %,
-	==, <,
-	?:,
+### Installing OCaml and dune
 
-
-
-
-map id -> functions
-
-
-function
-	string name
-	int parameter_count
-	Node ast
-
-
-f(x1, x2):
-	return (+ 1 2 3 x1 x2)
-
-Nodes
-
-
-	Arg:
-		int index
-
-	Const:
-		int value
-	
-	FunctionCall:
-		int function_id
-		vec<Node>
-
-	LazyIfElse:
-		Node cond
-		Node if_node
-		Node else_node
-
-
-
-
-
+To install a suitable version of OCaml from scratch, the following commands should do the job on any OS
 
 ```
+bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
+opam init
+eval $(opam env)
+opam switch create 4.11.1
+opam install dune
+```
+
+### Compiling the project
+
+Compiling the Glorious KerLang Compiler is as simple as typing `dune build` at the project's root !
+
+
