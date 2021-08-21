@@ -23,17 +23,19 @@ type value =
   | VAR of string
   | SOMETHING
 
-type comment_function = {
-  n_args : int;
-  declarations : (string * comment_expr) list;
-  result : comment_result;
-}
-and comment_expr =
+type expr =
   | Leaf of value
   | Node of value operation
-and comment_result =
-  | RETURN of comment_expr
-  | YOLO of comment_expr list
+
+type result =
+  | RETURN of expr
+  | YOLO of expr list
+
+type comment_function = {
+  n_args : int;
+  declarations : (string * expr) list;
+  result : result;
+}
 
 
 let split_lines (comment : tok list) : tok list list =
@@ -67,35 +69,6 @@ let split_kw (kw : string) (comment : tok list) : tok list list =
   else split res (t::curr_expr) q
 in split [] [] comment
 
-let rec parse_statement (comment : tok list) : (tok list) statement =
-  match comment with
-  | [] -> NONE
-  | t::q -> (
-    match string_of_tok t with
-    | "takes" -> TAKES q
-    | "let" -> let a, b = look_for "be" q in LET (string_of_comment a, b)
-    | "returns" -> RETURNS q
-    | "uses" -> USES q
-    | _ -> parse_statement q
-  )
-
-let parse_operation (comment : tok list) : (tok list) operation =
-  let rec search (prev : tok list) = function
-  | [] -> failwith "no operation"
-  | t::q -> (
-    match string_of_tok t with
-    | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in IF (List.rev prev, a, b)
-    | "addition" -> let _, b = look_for "of" q in let a, b = look_for "and" b in SUM (a, b)
-    | "difference" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIFF (a, b)
-    | "product" -> let _, b = look_for "of" q in let a, b = look_for "and" b in PROD (a, b)
-    | "division" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIV (a, b)
-    | "application" -> let _, b = look_for "of" q in let a, b = look_for "on" b in
-      let s = string_of_comment a and l = split_kw "and" b in
-      if s = "self" then SELF(l) else APPLY (s, l)
-    | _ -> search (t::prev) q
-  )
-in search [] comment
-
 let parse_value (comment : tok list) : value =
   match comment with
   | [] -> SOMETHING
@@ -110,4 +83,35 @@ let parse_value (comment : tok list) : value =
       )
       | "something" -> SOMETHING
       | s -> VAR s
+  )
+
+let parse_operation (comment : tok list) =
+  let f = parse_value in
+  let rec search (prev : tok list) = function
+  | [] -> failwith "no operation"
+  | t::q -> (
+    match string_of_tok t with
+    | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in IF (f (List.rev prev), f a, f b)
+    | "addition" -> let _, b = look_for "of" q in let a, b = look_for "and" b in SUM (f a, f b)
+    | "difference" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIFF (f a, f b)
+    | "product" -> let _, b = look_for "of" q in let a, b = look_for "and" b in PROD (f a, f b)
+    | "division" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIV (f a, f b)
+    | "application" -> let _, b = look_for "of" q in let a, b = look_for "on" b in
+      let s = string_of_comment a and l = split_kw "and" b in
+      if s = "self" then SELF(List.map f l) else APPLY (s, List.map f l)
+    | _ -> search (t::prev) q
+  )
+in search [] comment
+
+let rec parse_statement (comment : tok list) =
+  let f x = try Node (parse_operation x) with _ -> Leaf (parse_value x) in
+  match comment with
+  | [] -> NONE
+  | t::q -> (
+    match string_of_tok t with
+    | "takes" -> TAKES (f q)
+    | "let" -> let a, b = look_for "be" q in LET (string_of_comment a, f b)
+    | "returns" -> RETURNS (f q)
+    | "uses" -> USES (f q)
+    | _ -> parse_statement q
   )
