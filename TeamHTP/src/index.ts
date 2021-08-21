@@ -2,10 +2,12 @@ import {unified} from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 import {startRepl} from './Repl'
+import {wrap, Tag} from './Types'
+import Runtime from './Runtime'
 
 const src = `
 # Things I'm here to do
-[$TodoList]::
+[TodoList]::
 - [ ] kick ass
 - [ ] chew bubble gum
 
@@ -19,16 +21,12 @@ def check(n) {
 }
 \`\`\`
 
-[$]: ayy (
-    [self Print:"lmao"]
-)
-
-[$TodoList]: kickass (
+[TodoList]: kickass (
   [self CheckItem:"kick ass"]
-  if false or |true and true| or true {
+  if false or \${true and true} or true {
     a
     !@#$%^&*
-    {}:"<>?|\`~\\,./
+    {}:"<>?|\`~\\\\,./
   }
 )
 `
@@ -36,12 +34,23 @@ def check(n) {
 // [TodoList kickass]
 // [self ayy]
 
+const runtime = new Runtime()
+
 const docTree = unified()
     .use(remarkParse)
     .use(remarkGfm)
     .parse(src)
 
-console.log(docTree)
+let lastTag: Tag | undefined = undefined
+for (const child of docTree.children) {
+    const wrappedObject = wrap(runtime, child, lastTag)
+    if (wrappedObject instanceof Tag) {
+        lastTag = wrappedObject
+    }
+    else {
+        lastTag = undefined
+    }
+}
 
 startRepl((input) => {
     console.log(input)
