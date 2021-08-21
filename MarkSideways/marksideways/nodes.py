@@ -249,6 +249,8 @@ class DotField(Expression):
       if field_name == 'length':
         return get_integer_value(len(value.value))
       else:
+        field = value.get_field(field_name)
+        if field != None: return field
         return new_error_value(self.dot, "Arrays do not have a field called '" + field_name + "'.")
     elif value.type == 'CLASS':
       if field_name == 'init':
@@ -274,12 +276,12 @@ class BracketIndex(Expression):
       if index_value.type != 'INT': return new_error_value("Can only index into an array using an integer.")
       index = index_value.value
       if index < 0 or index >= len(root_value.value):
-        return new_error_value("Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(root_value.valueu)) + ".")
+        return new_error_value(self.bracket_token, "Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(root_value.value)) + ".")
       return root_value.value[index]
     elif root_value.type == 'DICTIONARY':
       raise Exception("TODO: bracket on dictionary")
     else:
-      return new_error_value(self.bracket_token, "Using square brackets to index into this a " + root_value.type + " type is not allowed.")
+      return new_error_value(self.bracket_token, "Using square brackets to index into a " + root_value.type + " type is not allowed.")
 class InlineIncrement(Expression):
   def __init__(self, first_token, op_token, expression, is_prefix, is_increment):
     super().__init__(first_token)
@@ -333,7 +335,7 @@ class AssignStatement(Executable):
       root = self.target.root.run(scope)
       field_name = self.target.field_name.value
       if root.is_error: return error_status_from_value(root)
-      if is_null(root): return to_null_error_status(self.target.bracket_token)
+      if is_null(root): return to_null_error_status(self.target.dot)
       if root.type == 'INSTANCE':
         if is_direct_assign:
           root.fields[field_name] = value
@@ -345,8 +347,20 @@ class AssignStatement(Executable):
     elif isinstance(self.target, BracketIndex):
       root = self.target.root.run(scope)
       if root.is_error: return error_status_from_value(root)
-      if is_null(root): return to_null_error_status(self.target.dot)
-      raise Exception("TODO: assign to a bracket index")
+      if is_null(root): return to_null_error_status(self.target.bracket_token)
+
+      index = self.target.index.run(scope)
+      if index.is_error: return error_status_from_value(index)
+      if is_null(index): return to_null_error_status(self.target.bracket_token)
+      if root.type == 'ARRAY':
+        if index.type != 'INT': return new_error_status(self.target.index.first_token, "Array index must be an integer but found a " + index.type + " instead.")
+        arr = root.value
+        i = index.value
+        if i < 0 or i >= len(arr): return new_error_status(self.target.bracket_token, "Array index out of bounds. Index was " + str(i) + " but array length is " + str(len(arr)) + ".")
+        arr[i] = value
+        return None
+      else:
+        return new_error_status(self.target.bracket_token, "Cannot assign an index on a " + root.type + " type.")
     else:
       return new_error_status(self.assign_op, "Cannot assign to this type of expression.")
 
@@ -376,6 +390,12 @@ class ThisConstant(Expression):
     if scope.this_context == None:
       return new_error_value(self.first_token, "The 'this' constant cannot be used in this context. It may only be used inside a class constructor or method.")
     return scope.this_context
+
+class NullConstant(Expression):
+  def __init__(self, first_token):
+    super().__init__(first_token)
+  def run(self, scope):
+    return NULL_VALUE
 
 class BooleanConstant(Expression):
   def __init__(self, first_token, value):

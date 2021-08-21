@@ -175,6 +175,7 @@ def parse_entity(tokens):
       tokens.pop()
       return BooleanConstant(next_token, next_value == 'true')
     if next_value == 'null':
+      tokens.pop()
       return NullConstant(next_token)
     raise Exception(next_token, "Unexpected usage of '" + next_value + "'.")
 

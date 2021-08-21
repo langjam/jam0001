@@ -30,6 +30,17 @@ def generate_builtins():
   
   gamelib = get_game_lib()
 
+  def _floor(throw_token, args):
+    err = ensure_arg_count(throw_token, args, 1)
+    if err != None: return err
+    err = ensure_is_num(throw_token, args, 0)
+    if err != None: return err
+    n = args[0]
+    if n.type == 'INT': return n
+    if n.type == 'FLOAT': 
+      return get_integer_value(int(n.value))
+    return new_error_value(throw_token, "floor() can only accept number values.")
+
   def _parse_int(throw_token, args):
     err = ensure_arg_count(throw_token, args, 1)
     if err != None: return err
@@ -111,6 +122,7 @@ def generate_builtins():
     return gamelib['is_quit'](throw_token, args)
 
   lookup = {
+    'floor': _floor,
     'game_create_window': _game_create_window,
     'game_draw_rectangle': _game_draw_rectangle,
     'game_end_frame': _game_end_frame,

@@ -75,6 +75,18 @@ class ArrayValue(Value):
   def __init__(self, value):
     super().__init__('ARRAY')
     self.value = value
+    self.fields = {}
+  def _builtin_add(self, throw_token, args):
+    for arg in args:
+      self.value.append(arg)
+    return NULL_VALUE
+  def get_field(self, name):
+    output = self.fields.get(name)
+    if output == None:
+      if name == 'add':
+        output = BuiltInFunction('array.add', self._builtin_add)
+      self.fields[name] = output
+    return output
   def to_string(self):
     sb = ['[']
     for i in range(len(self.value)):
