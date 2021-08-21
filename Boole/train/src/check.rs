@@ -1,9 +1,16 @@
 use crate::ast::{Program, Target};
-use crate::parse::parser::{ParseResult, ParserError};
+use crate::parse::parser::{ParseResult, ParserError, Span};
 use std::collections::{HashMap};
 
 pub fn check<'a>(program: &Program, input: &str) -> ParseResult<()> {
     let stations = program.stations.iter().map(|s| (s.name.to_lowercase(), s)).collect::<HashMap<_, _>>();
+    if program.stations.len() != stations.len() {
+        return Err(ParserError {
+            span: Span{start: 0, end: 0},
+            error: format!("There is some station with a duplicate name."),
+            input: input.to_string(),
+        })
+    }
 
     let check_target = |target: &Target| -> ParseResult<()> {
         if let Some(&station) = stations.get(&target.station.to_lowercase()) {

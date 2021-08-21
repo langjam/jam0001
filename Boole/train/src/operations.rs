@@ -5,8 +5,10 @@ use serde::Serialize;
 pub enum Operation {
     #[serde(rename="nothing")]
     Nothing,
-    #[serde(rename="print")]
-    Print,
+    #[serde(rename="print_string")]
+    PrintString,
+    #[serde(rename="print_number")]
+    PrintNumber,
     #[serde(rename="input")]
     Input,
     #[serde(rename="switch_eqz")]
@@ -44,7 +46,8 @@ impl Operation {
     pub fn name(&self) -> &'static str {
         match self {
             Operation::Nothing => "nothing",
-            Operation::Print => "print",
+            Operation::PrintString => "print string",
+            Operation::PrintNumber => "print number",
             Operation::Input => "input",
             Operation::SwitchEqZero => "switch eq",
             Operation::SwitchGteZero => "switch gte",
@@ -65,7 +68,8 @@ impl Operation {
     pub fn input_track_count(&self) -> usize {
         match self {
             Operation::Nothing => 1,
-            Operation::Print => 1,
+            Operation::PrintString => 1,
+            Operation::PrintNumber => 1,
             Operation::Input => 0,
             Operation::SwitchEqZero => 1,
             Operation::SwitchGteZero => 1,

@@ -75,9 +75,7 @@ impl<'a> Parser<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use color::Rgb;
-    use crate::wishes::TrainConfig;
-    use color::color_space::Srgb;
+    use crate::wishes::{TrainConfig, ColorChoice};
 
     #[test]
     fn test_train() {
@@ -87,9 +85,10 @@ mod tests {
             Ok(train) => {
                 println!("{:?}", train);
                 let expected = Train {
+                    identifier: 0,
                     start: Target { station: String::from("Groningen"), track: 0, span: Span{ start: 22, end: 39 } },
                     first_class_passengers: vec![
-                        FirstClassPassenger { name: String::from("robert"), data: String::from("The train has a nice red locomotive and is big") },
+                        FirstClassPassenger { name: String::from("robert"), data: String::from("The train has a nice dark red locomotive and is big") },
                         FirstClassPassenger { name: String::from("jan"), data: String::from("NO! It is a orange red color!") },
                         FirstClassPassenger { name: String::from("yeet"), data: String::from("It has a brown stripe which is ugly") },
                         FirstClassPassenger { name: String::from("peter"), data: String::from("Big train is big") },
@@ -98,7 +97,7 @@ mod tests {
                         SecondClassPassenger { name: String::from("jonathan"), data: 1 },
                         SecondClassPassenger { name: String::from("pietje"), data: -1 }
                     ],
-                    config: TrainConfig { primary_color: Rgb::new(204, 111, 78), secondary_color: Rgb::new(102, 82, 74), length: 3 }
+                    config: TrainConfig { primary_color: ColorChoice::DarkRed, secondary_color: ColorChoice::Brown, length: 3 }
                 };
                 assert_eq!(train, expected)
             }

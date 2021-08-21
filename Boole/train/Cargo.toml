@@ -12,7 +12,6 @@ log = "0.4"
 lazy_static = "1.4.0"
 strum = "0.21"
 strum_macros = "0.21"
-color-rs = "0.6.1"
 rand = "0.8.4"
 
 [dependencies.serde]

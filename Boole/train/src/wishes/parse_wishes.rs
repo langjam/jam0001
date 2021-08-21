@@ -1,7 +1,6 @@
 use crate::ast::FirstClassPassenger;
 use crate::wishes::*;
 use strum::*;
-use color::*;
 use rand::Rng;
 
 pub fn parse_wishes(input: &Vec<FirstClassPassenger>) -> TrainConfig {
@@ -14,6 +13,7 @@ pub fn parse_wishes(input: &Vec<FirstClassPassenger>) -> TrainConfig {
         for color in ColorChoice::iter() {
             if text.contains(&format!("{} train", color.name()))
                 || text.contains(&format!("{} color", color.name()))
+                || text.contains(&format!("{} colour", color.name()))
                 || text.contains(&format!("{} locomotive", color.name())){
                 primary_colors.push(color);
             }
@@ -43,16 +43,12 @@ pub fn parse_wishes(input: &Vec<FirstClassPassenger>) -> TrainConfig {
     TrainConfig{ primary_color, secondary_color, length }
 }
 
-fn combine_colors(input: Vec<ColorChoice>) -> Rgb {
+fn combine_colors(input: Vec<ColorChoice>) -> ColorChoice {
+    let mut rng = rand::thread_rng();
     if input.len() == 0 {
         let colors: Vec<ColorChoice> = ColorChoice::iter().collect();
-        let mut rng = rand::thread_rng();
-        return colors[rng.gen_range(0..colors.len())].color()
+        return colors[rng.gen_range(0..colors.len())]
     }
 
-    let colors: Vec<Hsv> = input.into_iter().map(|c| c.color().to_hsv()).collect();
-    let h_avg: f32 = colors.iter().map(|c| c.h.0).sum::<f32>() / colors.len() as f32;
-    let s_avg: f32 = colors.iter().map(|c| c.s).sum::<f32>() / colors.len() as f32;
-    let v_avg: f32 = colors.iter().map(|c| c.v).sum::<f32>() / colors.len() as f32;
-    Hsv::new(Deg(h_avg), s_avg, v_avg).to_rgb()
+    return input[rng.gen_range(0..input.len())]
 }
