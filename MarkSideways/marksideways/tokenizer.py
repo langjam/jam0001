@@ -93,9 +93,7 @@ def _get_line_type(line):
 def markdown_tokenize(filename, text):
   text = text.replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
 
-  nest_level = 0
   lines = text.split('\n')
-  in_code = False
   chunks = []
   i = 0
   while i < len(lines):
@@ -126,6 +124,7 @@ def markdown_tokenize(filename, text):
       })
     elif line_type == "CODE":
       cleanly_closed = False
+      start_token = Token(filename, lines[i], i + 1, 1)
       i += 1
       start_line = i
       while i < len(lines):

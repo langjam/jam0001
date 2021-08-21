@@ -1,3 +1,5 @@
+from .exceptions import *
+
 ALPHA_NUM = {}
 for c in '0123456789_abcdefghijklmnopqrstuvwxyz':
   ALPHA_NUM[c.lower()] = c.lower()
