@@ -123,7 +123,7 @@ add =
 -- HELPERS
 
 
-sum : Array Atom -> Maybe Atom
+sum : Executioner
 sum =
     MaybeX.traverseArray AST.toInt
         >> Maybe.map (Array.toList >> List.sum >> Int)
