@@ -1,5 +1,6 @@
 mod ast;
 mod env;
+mod parse;
 mod types;
 mod values;
 
