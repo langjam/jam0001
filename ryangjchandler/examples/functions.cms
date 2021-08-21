@@ -8,3 +8,5 @@
 fn {
     println("Hello, world!")
 }
+
+hello_world()

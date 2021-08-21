@@ -8,8 +8,11 @@ mod parser;
 mod ast;
 mod expression;
 mod interpreter;
+mod environment;
+mod value;
+mod document;
 
-fn has_flag(flag: &str) -> bool {
+pub fn has_flag(flag: &str) -> bool {
     args().find(|i| i == flag).is_some()
 }
 
