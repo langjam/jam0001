@@ -31,7 +31,7 @@ static tok_t pull() {
     tok_t tok = parser.current_token;
     parser.current_token = lex_determine(&parser.lexer);
     if (tok.tt == TT_INVALID) {
-        fprintf(stderr, "Invalid token: `%.*s`\n", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
+        EH_MESSAGE("Invalid character: `%.*s`\n", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
         lineinfo();
         exit(1);
     }
@@ -99,7 +99,7 @@ static pnode_t call(tok_t on) {
     skip_tt(TT_LPAREN);
     char delim = begindelim('(');
     pnode_t call_node = pnode_new(PN_CALL);
-    call_node.data.call.name = on.span;
+    call_node.data.call.name = strview_span(on.span, parser.lexer.src);
     while (peek().tt != TT_RPAREN) {
         pnode_attach(&call_node, value());  
         if (peek().tt != TT_RPAREN)
@@ -119,11 +119,11 @@ static pnode_t value() {
     switch (token.tt) {
         case TT_STRING:
             value_node = pnode_new(PN_STRING);
-            value_node.data.string.val = token.span;
+            value_node.data.string.val = strview_span(token.span, parser.lexer.src);
             return value_node;
         case TT_NUMBER:
             value_node = pnode_new(PN_NUMBER);
-            value_node.data.number.val = token.span;
+            value_node.data.number.val = strview_span(token.span, parser.lexer.src);
             return value_node;
         case TT_IDENT:
             if (peek().tt == TT_ASSIGN)
@@ -132,7 +132,7 @@ static pnode_t value() {
                 return call(token);
             else {
                 value_node = pnode_new(PN_IDENT);
-                value_node.data.ident.val = token.span;
+                value_node.data.ident.val = strview_span(token.span, parser.lexer.src);
                 return value_node;
             }
         case TT_PROC:
@@ -148,7 +148,7 @@ static pnode_t value() {
             enddelim(delim);
             return value_node;
         default:
-            fprintf(stderr, "This is a sign that we should improve error handling, please\n");
+            stray(&token);
             exit(1);
     }
 }
@@ -160,7 +160,7 @@ static pnode_t declaration(tok_t on) {
     pnode_t decl_node = pnode_new(PN_DECL);
     // Attach value
     pnode_attach(&decl_node, right);
-    decl_node.data.decl.name = on.span;
+    decl_node.data.decl.name = strview_span(on.span, parser.lexer.src);
     return decl_node;
 }
 

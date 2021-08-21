@@ -1,7 +1,6 @@
 #include "interpreter.h"
 
 static struct Interpreter_State intrp;
-
 static struct Interpreter_Value void_val() {
     return (struct Interpreter_Value){ IT_VOID, {0} };
 }

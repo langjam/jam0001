@@ -33,7 +33,7 @@ void eh_at_line(usize line, const string src) {
 }
 
 void eh_point(usize col) {
-    for (usize i = 0; i < col+9; i += 1)
+    for (usize i = 0; i < col+10; i += 1)
         fprintf(stderr, " ");
     fprintf(stderr, "%s^%s\n", ansi("\x1b[1;31m"), ansi("\x1b[0m"));
 }

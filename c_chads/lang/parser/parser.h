@@ -2,6 +2,7 @@
 #include "../lexer.h"
 #include "../eh.h"
 #include "../../aid/vec/vec.h"
+#include "../../aid/strview/strview.h"
 
 struct Parser_State {
     struct Lexer_State lexer;
@@ -22,19 +23,19 @@ struct Parser_Node {
     struct Vec OF(struct Parser_Node) children;
     union {
         struct {
-            struct Span name; 
+            strview_t name; 
         } decl;
         struct {
-            struct Span name; 
+            strview_t name; 
         } call;
         struct {
-            struct Span val; 
+            strview_t val; 
         } string;
         struct {
-            struct Span val; 
+            strview_t val; 
         } number;
         struct {
-            struct Span val; 
+            strview_t val; 
         } ident;
     } data;
 };

@@ -5,27 +5,26 @@
 #include "../aid/sfio/sfio.h"
 
 void print_ast(struct Parser_Node *node, usize depth) {
-    const string source = parser_get_state()->lexer.src;
     for (usize i = 0; i < depth; i += 1) 
         printf("    ");
     switch (node->kind) {
         case PN_DECL:
-            printf("Decl(name = %.*s)\n", (int)node->data.decl.name.size, source+node->data.decl.name.from);
+            printf("Decl(name = %.*s)\n", (int)node->data.decl.name.size, node->data.decl.name.view);
             break;
         case PN_PROC:
             printf("Proc\n");
             break;
         case PN_CALL:
-            printf("Call(name = %.*s)\n", (int)node->data.call.name.size, source+node->data.call.name.from);
+            printf("Call(name = %.*s)\n", (int)node->data.call.name.size, node->data.call.name.view);
             break;
         case PN_STRING:
-            printf("String(%.*s)\n", (int)node->data.string.val.size, source+node->data.string.val.from);
+            printf("String(%.*s)\n", (int)node->data.string.val.size, node->data.string.val.view);
             break;
         case PN_NUMBER:
-            printf("Number(%.*s)\n", (int)node->data.number.val.size, source+node->data.number.val.from);
+            printf("Number(%.*s)\n", (int)node->data.number.val.size, node->data.number.val.view);
             break;
         case PN_IDENT:
-            printf("Ident(%.*s)\n", (int)node->data.ident.val.size, source+node->data.ident.val.from);
+            printf("Ident(%.*s)\n", (int)node->data.ident.val.size, node->data.ident.val.view);
             break;
     }
     for (usize i = 0; i < node->children.size; i += 1) {
