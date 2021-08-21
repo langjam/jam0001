@@ -1,48 +1,4 @@
-
-=begin
-
-def print-hello
-	#$com-a puts "hello world" # anonymouse comment
-end
-
-uncomment $com-a
-
-print-hello # prints hello
-
-comment $com-a
-
-print-hello # does nothing
-
-=end
-
-# TODO:
-# read in file as string
-# place "instruction pointer" at the start of the string
-# decide on how functions are declared
-# create some kind of test
-
-# expresions
-# 1 + 2 + 3 -> 6
-# + 1 2 + 3
-# [ 1 0 ] vecdot [ 0.5 0.5 ]
-# average-of-3 + + + 1 1 2 2 3 3
-
-# reverse rpn + prn
-# function stack (), data stack []
-# + 1 2 3 + -> 6
-# + + 1 2 3 -> 6
-# 1 2 3 + + -> 6
-# 1 + 2 + 3 -> 6
-# 1 + . -> () {} # `.` clears both stacks, acting as a statement separtator
-# when either function or data is pushed:
-#	check if there are enough things on the top of data stack to match the arity of top function
-#	if so pop and call top function with top elements of stack and push the result to stack
-
-# global variables
-# begin with $ can be assigned to with $var=
-# $var is a function that pushes the current value
-# $var= is a function that sets the value, calling $undefined= creates the variable
-# $var= and $var are created at read time, as long as nothing else matches
+#!/usr/bin/env ruby
 
 class UnFunc
 	def initialize(name, checks, func)
@@ -65,7 +21,7 @@ class UnFunc
 	end
 
 	def call(uncom)
-		#uncom.data.push(@func.call(*uncom.data.pop(@func.arity)))
+		# uncom.data.push(@func.call(*uncom.data.pop(@func.arity)))
 		val = (@func.call(*uncom.data.pop(@func.arity)))
 		uncom.data.push val if val != nil
 	end
@@ -107,12 +63,19 @@ def do_words(words)
 	words.split(" ").each do |word|
 		uncom.do_word word
 	end
-	puts "-> " + uncom.data.inspect
+	puts "-> " + unc[Aom.data.inspect
 	uncom
 end
 
 class Uncom
-	def initialize()
+	def initialize(file_path = "")
+		@source = ""
+		if file_path != "" then
+			f = File.new file_path
+			@source = f.read
+			f.close
+		end
+
 		@func_stacks = [[]]
 		@data_stacks = [[]]
 		# first one is global, rest are used for func locals, where last is for current func
@@ -120,7 +83,8 @@ class Uncom
 		# storage for locals, mirrors dict, should get pushed / popped when dict does
 		@vars = [{}, {}]
 		# TODO:
-		# source code string
+		# place "instruction pointer" at the start of the string
+		# decide on how functions are declared
 		# instruction pointer
 		# return stack, saves locations in source to come back to
 	end
@@ -209,7 +173,31 @@ class Uncom
 end
 
 
+# TODO:
+# create some kind of test
 
+# expresions
+# 1 + 2 + 3 -> 6
+# + 1 2 + 3
+# [ 1 0 ] vecdot [ 0.5 0.5 ]
+# average-of-3 + + + 1 1 2 2 3 3
+
+# reverse rpn + prn
+# function stack (), data stack []
+# + 1 2 3 + -> 6
+# + + 1 2 3 -> 6
+# 1 2 3 + + -> 6
+# 1 + 2 + 3 -> 6
+# 1 + . -> () {} # `.` clears both stacks, acting as a statement separtator
+# when either function or data is pushed:
+#	check if there are enough things on the top of data stack to match the arity of top function
+#	if so pop and call top function with top elements of stack and push the result to stack
+
+# global variables
+# begin with $ can be assigned to with $var=
+# $var is a function that pushes the current value
+# $var= is a function that sets the value, calling $undefined= creates the variable
+# $var= and $var are created at read time, as long as nothing else matches
 
 
 
