@@ -101,7 +101,7 @@ class InstanceValue(Value):
 
 class MethodValue(Value):
   def __init__(self, instance, method_def):
-    super().__init_('METHOD')
+    super().__init__('METHOD')
     self.method_def = method_def
     self.instance = instance
 

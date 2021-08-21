@@ -1,6 +1,7 @@
 from .exceptions import *
 from .util import canonicalize_identifier
 from .values import *
+from .opmatrix import perform_op
 
 class Node:
   def __init__(self, first_token):
@@ -62,9 +63,10 @@ class ClassDefinition(Node):
     _add_code_impl(self.code_lines, text, line_offset)
 
 class MethodDefinition(Node):
-  def __init__(self, first_token, name):
+  def __init__(self, first_token, name, class_def):
     super().__init__(first_token)
     self.name = name
+    self.class_def= class_def
     self.code_lines = []
     self.code = []
     self.arg_tokens = []
@@ -98,7 +100,6 @@ class Variable(Expression):
     self.canonical_name = canonicalize_identifier(name)
   
   def run(self, scope):
-    print(scope)
     if scope.locals.get(self.canonical_name) != None:
       value = scope.locals[self.canonical_name]
     elif scope.globals.get(self.canonical_name) != None:
@@ -139,7 +140,9 @@ class FunctionInvocation(Expression):
     if root_value.type == 'FUNCTION':
       raise Exception("TODO: Invoking a function definition")
     elif root_value.type == 'METHOD':
-      raise Exception("TODO: Invoking an instance method")
+      method_def = root_value.method_def
+      class_def = method_def.class_def
+      return run_function(self.open_paren, method_def.code, scope.globals, root_value.instance, method_def.arg_names, args)
     elif root_value.type == 'CONSTRUCTOR':
       class_def = root_value.class_def
       instance = InstanceValue(root_value.class_def)
@@ -191,6 +194,7 @@ class DotField(Expression):
     self.root = expression
     self.dot = dot
     self.field_name = field_name
+    self.canonical_field_name = canonicalize_identifier(field_name.value)
 
   def run(self, scope):
     value = self.root.run(scope)
@@ -202,6 +206,13 @@ class DotField(Expression):
         return get_integer_value(len(value.value))
       else:
         return new_error_value(self.dot, "Strings dot not have a field called '" + field_name + "'.")
+    elif value.type == 'INSTANCE':
+      output = value.fields.get(self.field_name.value)
+      if output != None: return output
+      output = value.class_def.methods.get(self.canonical_field_name)
+      if output != None:
+        return MethodValue(value, output)
+      return new_error_value(self.dot, "This instance of " + value.class_def.name + " does not have a field called + '" + field_name + "'.")
     elif value.type == 'CLASS':
       if field_name == 'init':
         return ConstructorValue(value.class_def)
@@ -225,17 +236,26 @@ class AssignStatement(Executable):
 
   def run(self, scope):
     value = self.value.run(scope)
+    is_direct_assign = self.assign_op.value == '='
     if value.is_error: return error_status_from_value(value)
     if isinstance(self.target, Variable):
-      if self.assign_op.value == '=':
-        scope.locals[canonicalize_identifier(self.target.name.value)] = value
+      if is_direct_assign:
+        scope.locals[canonicalize_identifier(self.target.name)] = value
       else:
         raise Exception("TODO: incremental assignment")
     elif isinstance(self.target, DotField):
       root = self.target.root.run(scope)
+      field_name = self.target.field_name.value
       if root.is_error: return error_status_from_value(root)
       if is_null(root): return to_null_error(self.target.bracket_token)
-      raise Exception("TODO: assign to a dot field")
+      if root.type == 'INSTANCE':
+        if is_direct_assign:
+          root.fields[field_name] = value
+          return None
+        else:
+          raise Exception("TODO: incremental assignment on instance fields")
+      else:
+        return new_error_status(self.assign_op, "Assigning a field to this type of value is not supported.")
     elif isinstance(self.target, BracketIndex):
       root = self.target.root.run(scope)
       if root.is_error: return error_status_from_value(root)
@@ -249,6 +269,19 @@ class OpChain(Expression):
     super().__init__(expressions[0].first_token)
     self.expressions = expressions
     self.ops = ops
+  def run(self, scope):
+    expression = self.expressions[0].run(scope)
+    if expression.is_error: return expression
+    left = expression
+    for i in range(1, len(self.expressions)):
+      right = self.expressions[i].run(scope)
+      if right.is_error: return right
+      op = self.ops[i - 1]
+      combined = perform_op(op, left, op.value, right)
+      if combined.is_error: return combined
+      left = combined
+    return left
+    
 
 class ThisConstant(Expression):
   def __init__(self, first_token):
@@ -272,6 +305,7 @@ class ForLoop(Executable):
   def __init__(self, for_token, variable_token, loop_op_token, start_expr, end_expr, code):
     super().__init__(for_token)
     self.variable = variable_token
+    self.variable_id = canonicalize_identifier(variable_token.value)
     self.loop_op = loop_op_token
     self.is_inclusive = self.loop_op.value == 'thru'
     self.start_expr = start_expr
@@ -291,12 +325,11 @@ class ForLoop(Executable):
       step = 1
     else:
       step = -1
-    end_trigger = end_num
+    end_trigger = end
     if self.is_inclusive: end_trigger += step
     i = start
-    var_name = canonicalize_identifier(self.variable.name.value)
     while i != end_trigger:
-      scope.locals[var_name] = get_integer_value(i)
+      scope.locals[self.variable_id] = get_integer_value(i)
       status = run_code_block(self.code, scope)
       if status != None:
         if status.type == 'BREAK':

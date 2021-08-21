@@ -55,8 +55,8 @@ def _parse_markdown_structure(items):
       active_method = None
     
     elif item['type'] == "method":
-      method_def = MethodDefinition(item['token'], item['value'])
-      if class_def == None:
+      method_def = MethodDefinition(item['token'], item['value'], active_class)
+      if active_class == None:
         root.methods.append(method_def)
       else:
         class_def.add_method(method_def)
