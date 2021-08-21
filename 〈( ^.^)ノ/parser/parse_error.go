@@ -21,3 +21,21 @@ type MissingBlockError struct {
 func (mbe *MissingBlockError) Error() string {
 	return fmt.Sprintf("MissingBlockError (at line %d)", mbe.pos.Line)
 }
+
+type UnexpectedError struct {
+	value string
+	pos shared.Position
+}
+
+func (ue *UnexpectedError) Error() string {
+	return fmt.Sprintf("Unexpected %s (at line %d)", ue.value, ue.pos)
+}
+
+type IncorrectSignatureError struct {
+	keyword string
+	pos shared.Position
+}
+
+func (ise *IncorrectSignatureError) Error() string {
+	return fmt.Sprintf("Incorrect %s signature (at line %d)", ise.keyword, ise.pos)
+}

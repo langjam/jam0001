@@ -11,6 +11,7 @@ type Parser struct {
 	toks          []shared.Token
 	open_paren    int
 	needed_blocks int
+	comments map[string]shared.Node
 }
 
 func (p *Parser) make_ast() []shared.Node {
@@ -20,10 +21,13 @@ func (p *Parser) make_ast() []shared.Node {
 		tok := p.toks[0]
 
 		switch tok.Type {
-		case shared.TTopenBlock:
-			p.needed_blocks -= 1
-		case shared.TTlparen:
-			p.open_paren += 1
+		case shared.TTlparen, shared.TTopenBlock:
+			if tok.Type == shared.TTlparen {
+				p.open_paren += 1
+			} else {
+				p.needed_blocks -= 1
+			}
+
 			p.toks = p.toks[1:]
 
 			out[len(out)-1].Children = append(
@@ -108,11 +112,96 @@ func (p *Parser) make_ast() []shared.Node {
 }
 
 func GenerateAst(toks []shared.Token) []shared.Node {
-	parser := Parser{toks, 0, 0}
+	parser := Parser{toks, 0, 0, map[string]shared.Node{}}
 	ast := parser.make_ast()
 	if parser.needed_blocks != 0 {
 		fmt.Println((&MissingBlockError{toks[0].Pos}).Error())
 		os.Exit(1)
 	}
+	
+	parser.Parse(shared.Node{IsExpression: true, Children: ast})
+
 	return ast
+}
+
+func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Position) {
+	if !args[0].IsExpression {
+		fmt.Println((&UnexpectedError{args[0].Val.Value, args[0].Val.Pos}).Error())
+		os.Exit(1)
+	}
+
+	if len(args[0].Children) != (map[string]int{
+		"set": 2,
+		"m": 1,
+		"print": 1,
+		"not": 1}[ins]) {
+
+		fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
+		os.Exit(1)
+	}
+
+	for _, arg := range args[0].Children {
+		p.Parse(arg)
+	}
+}
+
+func (p *Parser) parseCall(args []shared.Node) {
+	if !args[0].IsExpression {
+		fmt.Println((&UnexpectedError{args[0].Val.Value, args[0].Val.Pos}).Error())
+		os.Exit(1)
+	}
+
+	for _, arg := range args[0].Children {
+		p.Parse(arg)
+	}
+}
+
+func (p *Parser) parseComment(content string, value []shared.Node) {
+	p.Parse(value[0])
+
+	p.comments[content] = value[0]
+}
+
+func (p *Parser) parseWhile(args []shared.Node) {
+	if len(args) != 2 {
+		fmt.Println((&IncorrectSignatureError{"while", args[0].Val.Pos}).Error())
+		os.Exit(1)
+	}
+
+	if !(args[0].IsExpression && args[1].IsExpression) {
+		fmt.Println((&IncorrectSignatureError{"while", args[0].Val.Pos}).Error())
+		os.Exit(1)
+	}
+
+	p.Parse(args[0])
+	p.Parse(args[1])
+}
+
+func (p *Parser) Parse(tree shared.Node) {
+	if !tree.IsExpression {
+		return
+	}
+
+	if len(tree.Children) == 0 {
+		return
+	}
+
+	for i, child := range tree.Children {
+		if child.IsExpression {
+			p.Parse(child)
+			continue
+		}
+  
+		switch child.Val.Type {
+		case shared.TTinstruction:
+			p.parseInstruction(child.Val.Value, tree.Children[i+1:], child.Val.Pos)
+		case shared.TTstring, shared.TTref:
+			p.parseCall(tree.Children[i+1:])
+		case shared.TTwcomment:
+			p.parseComment(child.Val.Value, tree.Children[1:])
+		case shared.TTwhile:
+			p.parseWhile(tree.Children[1:])
+		}
+		return
+	}
 }
