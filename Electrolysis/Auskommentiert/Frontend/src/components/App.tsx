@@ -11,40 +11,28 @@ import AnswerCreateTopic from './AnswerCreateTopic';
 let data: AppType = {
     topics: [
         {
-            id: 1,
+            id: "1",
             heading: "Hi",
             body: "Test Body",
             upvotes: 0,
             comments: [
                 {
-                    topic: 1,
-                    id: 1,
-                    parent: 0,
-                    position: 0,
+                    id: "1",
                     body: "Ich bin ein Kommentar",
                     answers: [
                         {
-                            topic: 1,
-                            id: 2,
-                            parent: 1,
-                            position: 0,
+                            id: "2",
                             body: "Unterkommentar",
                             answers: [],
                             upvotes: 0,
                             creation: Date.now()
                         },
                         {
-                            topic: 1,
-                            id: 3,
-                            parent: 1,
-                            position: 1,
+                            id: "3",
                             body: "Zweiter Unterkommentar",
                             answers: [
                                 {
-                                    topic: 1,
-                                    id: 4,
-                                    parent: 3,
-                                    position: 0,
+                                    id: "4",
                                     body: "Antwort",
                                     answers: [],
                                     upvotes: 0,
@@ -62,23 +50,17 @@ let data: AppType = {
             creation: Date.now()
         },
         {
-            id: 2,
+            id: "2",
             heading: "Programming",
             body: "Body",
             upvotes: 0,
             comments: [
                 {
-                    topic: 2,
-                    id: 1,
-                    parent: 0,
-                    position: 0,
+                    id: "1",
                     body: "Ich bin ein Kommentar",
                     answers: [
                         {
-                            topic: 2,
-                            id: 2,
-                            parent: 1,
-                            position: 0,
+                            id: "2",
                             body: "Unterkommentar",
                             answers: [],
                             upvotes: 0,

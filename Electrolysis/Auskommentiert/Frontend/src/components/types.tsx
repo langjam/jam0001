@@ -5,7 +5,7 @@ type AppType = {
 }
 
 type TopicType = {
-    id: number
+    id: string
     heading: string,
     body: string,
     comments: CommentType[],
@@ -14,10 +14,7 @@ type TopicType = {
 }
 
 type CommentType = {
-    topic: number,
-    id: number,
-    parent: number,
-    position: number,
+    id: string,
     body: string,
     answers: CommentType[],
     upvotes: number,

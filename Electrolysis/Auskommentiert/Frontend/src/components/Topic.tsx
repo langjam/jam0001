@@ -15,7 +15,7 @@ class Topic extends Component<TopicType, TopicType> {
     UNSAFE_componentWillMount() {
         this.setState(this.props)
         for (let entry of this.props.comments) {
-            let component = <Comment topic={entry.topic} id={entry.id} parent={entry.parent} position={entry.position} body={entry.body} answers={entry.answers} upvotes={entry.upvotes} creation={entry.creation}></Comment>
+            let component = <Comment id={entry.id} body={entry.body} answers={entry.answers} upvotes={entry.upvotes} creation={entry.creation}></Comment>
             this.comments.push(component)
         }
     }

@@ -15,7 +15,7 @@ class Comment extends Component<CommentType, CommentType> {
     UNSAFE_componentWillMount() {
         this.setState(this.props)
         for (let entry of this.props.answers) {
-            let component = <Comment topic={entry.topic} id={entry.id} parent={entry.parent} position={entry.position} body={entry.body} answers={entry.answers} upvotes={entry.upvotes} creation={entry.creation}></Comment>
+            let component = <Comment id={entry.id} body={entry.body} answers={entry.answers} upvotes={entry.upvotes} creation={entry.creation}></Comment>
             this.answers.push(component)
         }
     }
