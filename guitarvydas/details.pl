@@ -20,9 +20,9 @@ height(id6, 180).
 height(id7, 125).
 name(id1, "Details").
 value(id4, "rects").
-value(id5, "&lt;div&gt;swipl __q \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; __g 'consult(fb).' \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; __g 'consult(rects).' \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; __g 'printRects.' \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; __g 'halt.' \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; | ./augment__fb&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;").
+value(id5, "&lt;div&gt;swipl -q \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(fb).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(rects).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'printRects.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'halt.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; | ./augment__fb&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;").
 value(id6, "bounding boxes").
-value(id7, "&lt;div&gt;&lt;div&gt;swipl __q \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; __g 'consult(fb).' \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; __g 'consult(boundingBoxes).' \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; __g 'printBB.' \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; __g 'halt.' \&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; | ./augment__fb&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;/div&gt;").
+value(id7, "&lt;div&gt;&lt;div&gt;swipl -q \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(fb).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(boundingBoxes).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'printBB.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'halt.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; | ./augment__fb&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;/div&gt;").
 vertex(id4, "").
 vertex(id5, "").
 vertex(id6, "").

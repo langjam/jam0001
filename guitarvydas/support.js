@@ -16,7 +16,10 @@ function expandStyle (s) {
 }
 function nameMangle (s) {
     return s
-	.replace (/-/g, '__');
+	.replace (/-/g, '__')
+	.replace (/__g/g, '-g')
+	.replace (/__q/g, '-q')
+	.replace (/\\/g, '\\\\')
 }
 
 
