@@ -6,7 +6,9 @@ let y = 5;
 let stuff = add(<number>);
 
 print(<number>);
-print(<arithmetic>(<number>));
+
+// some random bunch of results
+<arithmetic>(<number>);
 
 let fn = { |x y|: z
     // arg0
@@ -16,4 +18,20 @@ let fn = { |x y|: z
     let z = add(<arg>);
 };
 
+let if = { |c|: res
+    let res = { |true false|: res
+        let res = cond(c true false);
+    };
+};
+
 print(fn(1 2));
+print(cond(
+    0 1
+    "" "test"
+    1 fn(1 2)));
+
+print(if(1)("yes" "no"));
+
+print(if(1)(<random bunch> <>))
+
+if(1)(print add)(1 2)

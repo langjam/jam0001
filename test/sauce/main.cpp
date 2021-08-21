@@ -23,8 +23,8 @@ Value lang$print(Context&, void* ptr, size_t count)
     Function<void(Value const&)> print_value = [&](Value const& value) {
         value.value.visit(
             [](Empty) { out("<empty>"); },
-            [](NonnullRefPtr<FunctionNode> const&) { out("<fn ref>"); },    // FIXME
-            [](Type*) { out("<type ref>"); }, // FIXME
+            [](FunctionValue const&) { out("<fn ref>"); }, // FIXME
+            [](Type*) { out("<type ref>"); },                            // FIXME
             [&print_value](NonnullRefPtr<CommentResolutionSet> const& rs) {
                 out("<Comment resolution set: {{");
                 auto first = true;
@@ -73,7 +73,7 @@ Value lang$sub(Context&, void* ptr, size_t count)
     for (auto& arg : args) {
         arg.value.visit(
             [&](Empty) { append(Empty {}); },
-            [&](NonnullRefPtr<FunctionNode> const&) { append(String("<function>"sv)); },
+            [&](FunctionValue const&) { append(String("<function>"sv)); },
             [&](Type*) { append(String("<type>"sv)); },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) {
                 for (auto& entry : crs->values)
@@ -82,7 +82,7 @@ Value lang$sub(Context&, void* ptr, size_t count)
             [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
             [&](auto const& value) { append(value); });
     }
-    return { move(accumulator).downcast<Empty, int, String, Type*, NonnullRefPtr<FunctionNode>, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
+    return { move(accumulator).downcast<Empty, int, String, Type*, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
 }
 
 Value lang$add(Context&, void* ptr, size_t count)
@@ -121,7 +121,7 @@ Value lang$add(Context&, void* ptr, size_t count)
     for (auto& arg : args) {
         arg.value.visit(
             [&](Empty) { append(String("<empty>"sv)); },
-            [&](NonnullRefPtr<FunctionNode> const&) { append(String("<function>"sv)); },
+            [&](FunctionValue const&) { append(String("<function>"sv)); },
             [&](Type*) { append(String("<type>"sv)); },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) {
                 for (auto& entry : crs->values)
@@ -130,7 +130,37 @@ Value lang$add(Context&, void* ptr, size_t count)
             [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
             [&](auto const& value) { append(value); });
     }
-    return { move(accumulator).downcast<Empty, int, String, Type*, NonnullRefPtr<FunctionNode>, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
+    return { move(accumulator).downcast<Empty, int, String, Type*, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType>() };
+}
+
+Value lang$cond(Context&, void* ptr, size_t count)
+{
+    Span<Value> args { reinterpret_cast<Value*>(ptr), count };
+    size_t i = 0;
+    for (; i + 1 < count; i += 2) {
+        auto& condition = args[i];
+        auto& value = args[i + 1];
+        if (condition.value.visit(
+                [&](Empty) -> bool { return false; },
+                [&](FunctionValue const&) -> bool { return true; },
+                [&](Type*) -> bool { return true; },
+                [&](NonnullRefPtr<CommentResolutionSet> const& crs) -> bool {
+                    // TODO.
+                    return true;
+                },
+                [&](NativeFunctionType const&) -> bool { return true; },
+                [&](auto const& value) -> bool {
+                    if constexpr (requires { (bool)value; })
+                        return (bool)value;
+                    else
+                        return !value.is_empty();
+                }))
+            return value;
+    }
+    if (i < count)
+        return args[count - 1];
+
+    return { Empty {} };
 }
 
 void initialize_base(Context& context)
@@ -143,6 +173,7 @@ void initialize_base(Context& context)
     scope.set("print", { NativeFunctionType { lang$print, { "print", "native" } } });
     scope.set("add", { NativeFunctionType { lang$add, { "native arithmetic addition operation" } } });
     scope.set("sub", { NativeFunctionType { lang$sub, { "native arithmetic subtract operation" } } });
+    scope.set("cond", { NativeFunctionType { lang$cond, { "native conditional selection operation" } } });
 }
 
 int main(int argc, char** argv)
@@ -184,12 +215,12 @@ int main(int argc, char** argv)
 #    if 0
     for (auto& node : nodes.value())
         node->dump(0);
-#    endif
-
+#    else
     Context context;
     initialize_base(context);
     for (auto& node : nodes.value())
         node->run(context);
+#    endif
 #endif
 
     return 0;

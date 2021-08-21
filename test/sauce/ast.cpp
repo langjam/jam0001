@@ -39,6 +39,9 @@ void DirectMention::dump(int indent)
 Value DirectMention::execute(Context& context)
 {
     auto crs = create<CommentResolutionSet>();
+    if (m_keywords.is_empty())
+        return Value { move(crs) };
+
     for (size_t i = context.scope.size(); i > 0; --i) {
         auto& scope = context.scope[i - 1];
         for (auto& entry : scope) {
@@ -92,9 +95,19 @@ void FunctionNode::dump(int indent)
     // FIXME
 }
 
-Value FunctionNode::execute(Context&)
+Value FunctionNode::execute(Context& context)
 {
-    return { NonnullRefPtr<FunctionNode>(*this) };
+    auto scope = context.scope;
+    scope.take_first();
+    auto cscope = context.comment_scope;
+    cscope.take_first();
+    return {
+        FunctionValue {
+            NonnullRefPtr<FunctionNode>(*this),
+            move(scope),
+            move(cscope),
+        },
+    };
 }
 
 void Call::dump(int indent)
@@ -123,13 +136,19 @@ Value Call::execute(Context& context)
                 crs->values.append(execute(entry));
             return Value { move(crs) };
         }
-        if (auto ptr = callee.value.template get_pointer<NonnullRefPtr<FunctionNode>>()) {
-            FunctionNode* node_ptr = ptr->ptr();
+        if (auto ptr = callee.value.template get_pointer<FunctionValue>()) {
+            auto last_scope = context.scope.size();
+            auto last_cscope = context.comment_scope.size();
+
+            context.scope.extend(ptr->scope);
+            context.comment_scope.extend(ptr->comment_scope);
+
             context.scope.template empend();
             context.comment_scope.template empend();
             auto& scope = context.scope.last();
+
             size_t i = 0;
-            for (auto& param : node_ptr->parameters()) {
+            for (auto& param : ptr->node->parameters()) {
                 if (arguments.size() > i)
                     scope.set(param->name(), arguments[i]);
                 else
@@ -137,19 +156,21 @@ Value Call::execute(Context& context)
                 ++i;
             }
 
-            if (node_ptr->return_())
-                scope.set(node_ptr->return_()->name(), { Empty {} });
+            if (ptr->node->return_())
+                scope.set(ptr->node->return_()->name(), { Empty {} });
 
             auto old_comments = move(context.unassigned_comments);
-            for (auto& node : node_ptr->body())
+            for (auto& node : ptr->node->body())
                 node->run(context);
 
-            Value result { Empty{} };
-            if (node_ptr->return_())
-                result = scope.get(node_ptr->return_()->name()).value();
+            Value result { Empty {} };
+            if (ptr->node->return_())
+                result = scope.get(ptr->node->return_()->name()).value();
 
-            context.scope.take_last();
-            context.comment_scope.take_last();
+            while (context.scope.size() > last_scope)
+                context.scope.take_last();
+            while (context.comment_scope.size() > last_cscope)
+                context.comment_scope.take_last();
             context.unassigned_comments = move(old_comments);
 
             return result;
