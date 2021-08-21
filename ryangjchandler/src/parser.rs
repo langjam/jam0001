@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::token::{Token, TokenKind};
 use crate::ast::{Program, Statement, FileHeader, FunctionDefinition, DefinitionHeader, If, While, Var, Const};
-use crate::expression::{Expression, Priority, Call};
+use crate::expression::{Expression, Priority, Call, Assign};
 
 #[derive(Debug, Clone)]
 pub struct Parser<'p> {
@@ -228,6 +228,19 @@ impl<'p> Parser<'p> {
                     operator,
                     Box::new(right),
                 ))
+            },
+            TokenKind::Assign => {
+                self.expect_token_and_read(TokenKind::Assign)?;
+
+                let right = match self.parse_expression(Priority::Assign)? {
+                    Some(e) => e,
+                    None => return Err(ParserError::ExpectedExpression(self.current.position.line)),
+                };
+
+                Some(Expression::Assign(Assign {
+                    target: Box::new(left),
+                    value: Box::new(right),
+                }))
             },
             _ => None,
         })

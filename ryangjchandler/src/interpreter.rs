@@ -4,7 +4,7 @@ use std::rc::Rc;
 use thiserror::Error;
 
 use crate::ast::{Program, Statement, FileHeader, DefinitionHeader, FunctionDefinition, If, While, Var, Const};
-use crate::expression::{Expression, Call};
+use crate::expression::{Expression, Call, Assign};
 use crate::environment::Environment;
 use crate::value::{Value, Function, NativeFunction};
 use crate::document::Document;
@@ -286,6 +286,25 @@ impl<'i> Interpreter<'i> {
                     _ => todo!()
                 }
             },
+            Expression::Assign(Assign { target, value }) => {
+                let target = match *target {
+                    Expression::GetIdentifier(i) => i,
+                    _ => unreachable!(),
+                };
+
+                if ! self.environment.borrow().has(target.clone()) {
+                    return Err(InterpreterError::AssigningToUndefinedValue(target));
+                }
+
+                let value = match self.execute_expression(*value)? {
+                    Some(e) => e,
+                    None => unreachable!()
+                };
+
+                self.environment.borrow_mut().set(target, &value);
+
+                value
+            },
             _ => todo!()
         }))
     }
@@ -339,6 +358,9 @@ pub enum InterpreterError {
 
     #[error("Unsupported operand types: {0} {1} {2}")]
     UnsupportedOperandTypes(String, String, String),
+
+    #[error("Trying to assign value to undefined variable {0}.")]
+    AssigningToUndefinedValue(String),
 }
 
 pub fn interpret<'i>(program: Program) -> Result<(), InterpreterError> {

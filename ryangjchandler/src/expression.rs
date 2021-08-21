@@ -15,6 +15,7 @@ impl Priority {
             TokenKind::LeftParen => Self::Call,
             TokenKind::Plus | TokenKind::Minus => Self::Sum,
             TokenKind::Asterisk | TokenKind::ForwardSlash => Self::Product,
+            TokenKind::Assign => Self::Assign,
             _ => Self::Lowest,
         }
     }
@@ -29,9 +30,16 @@ pub enum Expression {
     GetIdentifier(String),
     Call(Call),
     Infix(Box<Expression>, TokenKind, Box<Expression>),
+    Assign(Assign),
 
     // TODO: Remove this nasty ass hack.
     Empty,
+}
+
+#[derive(Debug, Clone)]
+pub struct Assign {
+    pub target: Box<Expression>,
+    pub value: Box<Expression>,
 }
 
 #[derive(Debug, Clone)]

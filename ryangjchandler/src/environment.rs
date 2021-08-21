@@ -25,6 +25,10 @@ impl Environment {
         }
     }
 
+    pub fn has(&self, name: impl Into<String>) -> bool {
+        self.store.contains_key(&name.into())
+    }
+
     pub fn set(&mut self, name: impl Into<String>, value: &Value) {
         self.store.insert(name.into(), value.clone());
     }
