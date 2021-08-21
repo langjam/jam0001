@@ -27,6 +27,23 @@ let op_count_params ?(self_param_count : int = 0) (op : op) : int =
   | FUN (_, func) -> ast_count_params func
   | SELF -> self_param_count
 
+let rec ast_is_recursive (func : ast): bool =
+  let op_is_self (op: op): bool = 
+    match op with
+    | SELF -> true
+    | _ -> false
+  in
+  match func with
+  | Cst _ -> false
+  | Var _ -> false
+  | App (op, args) ->
+    if (op_is_self op) then
+      true
+    else
+      List.fold_right (fun ast acc -> (||) (ast_is_recursive ast) acc) args false
+  | If (cond, ifcase, elsecase) ->
+    (ast_is_recursive cond) || (ast_is_recursive ifcase) || (ast_is_recursive elsecase)
+
 let emit_indent oc (indent_lvl : int) = 
   for _ = 0 to indent_lvl - 1 do
     Printf.fprintf oc "%s" "  "
@@ -99,7 +116,7 @@ and emit_op oc ?(self_name : string option = None) ?(indent_lvl : int = 0) (op: 
   | MUL ->
     Printf.fprintf oc "%s" "( * )"
   | DIV ->
-      Printf.fprintf oc "%s" "(/)"
+    Printf.fprintf oc "%s" "(/)"
   | FUN (Some name, _) ->
     Printf.fprintf oc "%s" name
   | FUN (None, func) ->
@@ -115,7 +132,9 @@ and emit_op oc ?(self_name : string option = None) ?(indent_lvl : int = 0) (op: 
 
 let emit_ast_as_function oc ?(indent_lvl : int = 0) (name : string) (func : ast) = 
   emit_indent oc indent_lvl;
-  Printf.fprintf oc "%s" "let rec ";
+  Printf.fprintf oc "%s" "let ";
+  if (ast_is_recursive func) then
+    Printf.fprintf oc "%s" "rec ";
   Printf.fprintf oc "%s" name;
   Printf.fprintf oc "%s" " = ";
   emit_ast oc ~self_name:(Some name) ~indent_lvl:(indent_lvl + 1) func;
@@ -127,7 +146,9 @@ let emit_op_as_function oc ?(indent_lvl : int = 0) (op : op) =
       match name_opt with
       | Some name -> begin
           emit_indent oc indent_lvl;
-          Printf.fprintf oc "%s" "let rec ";
+          Printf.fprintf oc "%s" "let ";
+          if (ast_is_recursive func) then
+            Printf.fprintf oc "%s" "rec ";
           Printf.fprintf oc "%s" name;
           Printf.fprintf oc "%s" " = ";
           emit_op oc ~self_name:(Some name) ~indent_lvl:(indent_lvl + 1) (FUN (None, func));
