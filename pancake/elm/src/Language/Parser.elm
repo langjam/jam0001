@@ -3,14 +3,15 @@ module Language.Parser exposing (..)
 import Char exposing (isAlphaNum)
 import Language.AST exposing (AST, Atom(..), Instruction, Universe(..))
 import Parser exposing (..)
-import Tuple exposing (..)
+import Tuple exposing (pair)
 
 
+parse : String -> List (Result (List DeadEnd) Instruction)
 parse =
-    preprocess >> run parser
+    preprocess >> List.map (run instruction)
 
 
-preprocess : String -> String
+preprocess : String -> List String
 preprocess =
     String.lines
         >> List.map
@@ -21,47 +22,27 @@ preprocess =
                 else
                     line
             )
-        >> String.join "\n"
 
 
 parser : Parser AST
-parser =  
-
-
-
-
--- Parser.sequence
---     { start = ""
---     , separator = "\n"
---     , end = ""
---     , spaces = spaces
---     , item = lazy (\_ -> instruction)
---     , trailing = Optional
---     }
-
-
--- helper revInst =
---     oneOf
---         [ succeed (\inst -> Loop (inst :: revInst))
---             |. spaces
---             |= instruction
---             |. spaces
---             |. symbol "\n"
---         , succeed () |> map (\_ -> Done (List.reverse revInst))
---         ]
+parser =
+    Debug.todo "aleksimart"
 
 
 instruction : Parser Instruction
 instruction =
     oneOf
-        [ succeed (pair Alpha)
-            |. spaces
-            |= atom
-        , succeed (pair Omega)
-            |. spaces
+        [ succeed (pair Omega)
             |. symbol "#"
             |. spaces
             |= atom
+            |. spaces
+            |. end
+        , succeed (pair Alpha)
+            |. spaces
+            |= atom
+            |. spaces
+            |. end
         ]
 
 
