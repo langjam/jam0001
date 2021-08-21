@@ -1,3 +1,4 @@
+from .exceptions import ParserException
 from .tokenizer import markdown_tokenize, code_tokenize, Token
 from .nodes import *
 
@@ -81,4 +82,8 @@ def parse_code_lines(parent, lines):
   filename = parent.first_token.filename
   code = '\n'.join(parent.code_lines) + '\n'
   tokens = code_tokenize(filename, code)
-  parent.code = parse_code(tokens)
+
+  print('\n'.join(map(lambda token: token.value, tokens.tokens)))
+
+  raise Exception("Not implemented: You left off here!")
+  #parent.code = parse_code(tokens)

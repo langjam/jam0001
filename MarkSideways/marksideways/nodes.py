@@ -1,3 +1,4 @@
+from .exceptions import ParserException
 from .util import canonicalize_identifier
 
 class Node:

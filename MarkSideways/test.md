@@ -17,7 +17,7 @@ code snippets included under the main header is where execution of the program
 begins. For example, this is a simple line of code that displays "Hello, World!":
 
 ```
-print("Hello, World!")
+print("Hello, World!");
 ```
 
 If there are additional code blocks directly under the main header, these
