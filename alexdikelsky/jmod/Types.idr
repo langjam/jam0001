@@ -5,7 +5,7 @@ data Expr =
   Natural Nat
 | Finite Nat Nat
 | Array (List Expr)
-| Function (Maybe Nat) (List Expr -> Either Expr String)
+| Function (Either Expr String -> Either Expr String)
 | Symbol String
 | Quoted Expr
 
@@ -19,6 +19,6 @@ Show Expr where
   show (Natural n) = show n
   show (Finite n k) = (show n) ++ "_" ++ (show k)
   show (Array k) = "[" ++ (foldr (\x => \y => x ++ " " ++ y) "" (map show k)) ++ "]"
-  show (Function _ _) = "Function"
+  show (Function _) = "Function"
   show (Symbol k) = show k
   show (Quoted n) = "'" ++ show n

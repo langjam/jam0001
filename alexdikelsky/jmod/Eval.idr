@@ -29,17 +29,13 @@ mutual
   
   exprValue (Array Nil) ctx = Right "Called ()"
   exprValue (Array (x::xs)) ctx =
-    case exprValue x ctx of
-         Right s => Right s
-         Left (Function n f) => case exprListValue xs ctx of
-                                     Left k => f k
-                                     Right s => Right s
-  
+    case (exprValue x ctx, exprListValue xs ctx) of
+         (Left (Function f), Left args) => f $ Left $ Array $ args
          _ => Right "Tried to call a non-function"
 
-  exprValue (Function n f) ctx = Left $ Function n f
+  exprValue (Function f) ctx = Left $ Function f
 
 public export
 jValue : Expr -> Either Expr String
 jValue k =
-  exprValue k Nil
+  exprValue k [("+", Function add)]
