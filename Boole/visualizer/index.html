@@ -1,0 +1,57 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Train</title>
+
+    <script src="p5.min.js"></script>
+    <script src="main.js"></script>
+    <script src="socket.js"></script>
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+        }
+
+        #controls {
+            height: 40px;
+
+            display: flex;
+            flex-direction: row;
+            font-family: Cantarell,serif;
+        }
+
+        #controls #title {
+            font-size: 30px;
+            padding: 0;
+            margin: 0 10px;
+        }
+
+        #controls #spacer {
+            margin-left: auto;
+        }
+
+        #controls button {
+            height: 100%;
+            font-size: 20px;
+            margin: 0;
+            padding: 0 2em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body id="body">
+
+    <div id="controls">
+        <h1 id="title">Trains</h1>
+        <div id="spacer"></div>
+        <button onclick="socket.nextTimeStep()">step simulation</button>
+        <button onclick="centerZero()">center</button>
+    </div>
+</body>
+
+
+</html>

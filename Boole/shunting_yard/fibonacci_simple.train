@@ -1,0 +1,22 @@
+[LOCOMOTIVE]
+start at printmachine track 1
+[FIRST CLASS]
+x: light red train
+[SECOND CLASS]
+pieter: 1
+
+[LOCOMOTIVE]
+start at summachine track 2
+[FIRST CLASS]
+x: lime green train
+[SECOND CLASS]
+pieter: 1
+
+{summachine}
+operation: add
+track 1: go to summachine track 2
+track 2: go to printmachine track 1
+
+{printmachine}
+operation: print
+track 1: go to summachine track 1

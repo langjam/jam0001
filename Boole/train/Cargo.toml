@@ -8,11 +8,12 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pest = "2.1"
 log = "0.4"
 lazy_static = "1.4.0"
 strum = "0.21"
 strum_macros = "0.21"
+color-rs = "0.6.1"
+rand = "0.8.4"
 
 [dependencies.serde]
 version = "1.0"
