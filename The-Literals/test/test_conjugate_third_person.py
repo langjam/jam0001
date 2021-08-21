@@ -105,6 +105,11 @@ class TestGetFuncdefName(unittest.TestCase):
         expected_result = "Meows"
         self.assertEqual(actual_result, expected_result)
 
+    def test_on_irregular_verb(self):
+        actual_result = get_funcdef_name("have a picnic")
+        expected_result = "Has a picnic"
+        self.assertEqual(actual_result, expected_result)
+
 
 if __name__ == "__main__":
     unittest.main()
