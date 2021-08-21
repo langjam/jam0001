@@ -12,6 +12,8 @@ To print something to `stdout` you can use the builtin function `println`:
 println "Hello, world."
 ```
 
+An overview over the syntax and all functions is given at the end.
+
 
 Values
 ------
@@ -138,3 +140,49 @@ This is even more useful in conjunction with `TESTWITH`. There is a builtin func
 testtable 'x 0 4 (yes no yes no yes)
 = mod x 2 0
 ```
+
+
+Control structures
+------------------
+
+Flamingo of course provides basic control structures. `if` comes in two versions: with `else` and without. The `if` condition must be of type bool (the bool literals are written `yes` and `no`):
+
+```
+if yes
+    println "Hello, world."
+end
+
+if no
+    println "Bye."
+end
+
+if yes
+    println "Print this."
+    if no
+        println "But not this."
+    end
+end
+
+if no
+    println "This shouldn’t occur."
+else
+    println "But this should."
+end
+```
+
+There is also a `for` loop that can iterate over lists.
+
+```
+for ch in ('a 'b 'c)
+    println ch
+end
+```
+
+It executes the block for every element of the given list which is bound to the given variable. If the variable is `_`, no value will be bound to it. There is a builtin function `iota` that takes an integer **n** and returns a list containing the natural numbers 0 ≤ i < n. `iota` can be used with a `for` loop if you want to repeat an action several times.
+
+
+Reference
+---------
+
+String list: `<<` val... `>>`
+Values enclosed by `<<` and `>>` and evaluated, converting to string and concatenated resulting in a string value.

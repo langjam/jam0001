@@ -8,7 +8,8 @@ ArenaAllocator arena;
 
 enum TokenType {
     Token_EOF = 1, Token_Int, Token_Ident, Token_Comment, Token_String, Token_Lparen, Token_Rparen,
-    Token_Lbracket, Token_Rbracket, Token_Quote, Token_Line,
+    Token_Lbracket, Token_Rbracket, Token_Quote, Token_Line, Token_Lstrlist, Token_Rstrlist,
+    Token_KwIf, Token_KwElse, Token_KwEnd, Token_KwFor,
 };
 
 const char *format_token_type(TokenType type) {
@@ -24,6 +25,12 @@ const char *format_token_type(TokenType type) {
         case Token_Rbracket: return "]";
         case Token_Quote: return "'";
         case Token_Line: return "<line>";
+        case Token_Lstrlist: return "<<";
+        case Token_Rstrlist: return ">>";
+        case Token_KwIf: return "if";
+        case Token_KwElse: return "else";
+        case Token_KwEnd: return "end";
+        case Token_KwFor: return "for";
     }
     assert(!"Unreachable");
     return "<invalid>";
@@ -90,6 +97,9 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
     }
     if (!src->count) return {.loc = *loc, .type = Token_EOF, {}};
 
+    if (src->count >= 2 && (*src)[0] == '<' && (*src)[0] == '<') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Lstrlist, {}}; }
+    if (src->count >= 2 && (*src)[0] == '>' && (*src)[0] == '>') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Rstrlist, {}}; }
+
     if (((*src)[0] >= '0' && (*src)[0] <= '9') || ((*src)[0] == '-' && src->count > 1 && (*src)[1] >= '0' && (*src)[1] <= '9')) {
         s64 sign = 1;
         if ((*src)[0] == '-') {
@@ -114,6 +124,10 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
             tok.s.count += 1;
             source_advance(src, loc, 1);
         }
+        if (tok.s == lit_slice("if")) tok.type = Token_KwIf;
+        if (tok.s == lit_slice("else")) tok.type = Token_KwElse;
+        if (tok.s == lit_slice("end")) tok.type = Token_KwEnd;
+        if (tok.s == lit_slice("for")) tok.type = Token_KwFor;
         return tok;
     } else if ((*src)[0] == '"') {
         Token tok = {};
@@ -446,6 +460,38 @@ Value b_ne(Slice<Value> args, Env *env, SourceLoc loc) {
     return {.type = Value_Bool, .b = args[0] != args[1]};
 }
 
+Value b_lt(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env; (void)loc;
+    CHECK_ARG("<", 0, Value_Int);
+    CHECK_ARG("<", 1, Value_Int);
+
+    return {.type = Value_Bool, .b = args[0].i < args[1].i};
+}
+
+Value b_le(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env; (void)loc;
+    CHECK_ARG("<=", 0, Value_Int);
+    CHECK_ARG("<=", 1, Value_Int);
+
+    return {.type = Value_Bool, .b = args[0].i <= args[1].i};
+}
+
+Value b_ge(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env; (void)loc;
+    CHECK_ARG(">=", 0, Value_Int);
+    CHECK_ARG(">=", 1, Value_Int);
+
+    return {.type = Value_Bool, .b = args[0].i >= args[1].i};
+}
+
+Value b_gt(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env; (void)loc;
+    CHECK_ARG(">", 0, Value_Int);
+    CHECK_ARG(">", 1, Value_Int);
+
+    return {.type = Value_Bool, .b = args[0].i > args[1].i};
+}
+
 Value b_tostring(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env; (void)loc;
 
@@ -523,6 +569,16 @@ Value b_testtable(Slice<Value> args, Env *env, SourceLoc loc) {
     return {.type = Value_Bool, .b = true};
 }
 
+Value b_iota(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("iota", 0, Value_Int);
+
+    Slice<Value> list = arena_alloc_slice<Value>(&arena, args[0].i);
+    for (s64 i = 0; i < args[0].i; i++)
+        list[i] = {.type = Value_Int, .i = i};
+    return {.type = Value_List, .list = list};
+}
+
 Value eval(Slice<Token> *tokens, Env *env) {
     if (!tokens->count) {
         fprintf(stderr, "Unexpected end-of-file when trying to evaluate expression.");
@@ -574,10 +630,24 @@ Value eval(Slice<Token> *tokens, Env *env) {
             array_push(&elems, eval(tokens, env));
         if (tokens->count && (*tokens)[0].type == Token_Rparen) slice_advance(tokens, 1);
         return {.type = Value_List, .list = array_slice(&elems)};
+    } else if (tok.type == Token_Lstrlist) {
+        slice_advance(tokens, 1);
+        BucketArray<u8> buf = {};
+        buf.arena = &arena;
+        while (tokens->count && (*tokens)[0].type != Token_Rstrlist) {
+            Value v = eval(tokens, env);
+            concat_write(&buf, str_slice(format_value(v, false)));
+        }
+        if (tokens->count && (*tokens)[0].type == Token_Rstrlist) slice_advance(tokens, 1);
+        return {.type = Value_String, .s = bucket_array_linearize(buf, &arena)};
     } else {
         fprintf(stderr, "%s:%d:%d: Unexpected start of expression: %s.\n", LOCFMT(tok.loc), format_token(tok));
         exit(1);
     }
+}
+
+bool has_block(TokenType type) {
+    return type == Token_KwIf || type == Token_KwFor;
 }
 
 Value exec_stmt(Slice<Token> *tokens, Env *env) {
@@ -587,6 +657,81 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
         slice_advance(tokens, 1);
         env->stashed_comment = {};
         return {};
+    } else if ((*tokens)[0].type == Token_KwIf) {
+        SourceLoc loc = (*tokens)[0].loc;
+        slice_advance(tokens, 1);
+        Value cond = eval(tokens, env);
+        if (cond.type != Value_Bool) {
+            fprintf(stderr, "%s:%d:%d: if condition must be of type bool, not %s.\n", LOCFMT(loc), format_value_type(cond.type));
+            exit(1);
+        }
+        Value result = {.type = Value_Bool, .b = false};
+        if (cond.b) {
+            while (tokens->count && (*tokens)[0].type != Token_KwEnd)
+                result = exec_stmt(tokens, env);
+            if (tokens->count && (*tokens)[0].type == Token_KwEnd)
+                slice_advance(tokens, 1);
+        } else {
+            s32 balance = 1;
+            while (tokens->count && balance > 0) {
+                if (has_block((*tokens)[0].type))
+                    balance += 1;
+                if ((*tokens)[0].type == Token_KwEnd)
+                    balance -= 1;
+                if ((*tokens)[0].type == Token_KwElse) {
+                    slice_advance(tokens, 1);
+                    while (tokens->count && (*tokens)[0].type != Token_KwEnd)
+                        result = exec_stmt(tokens, env);
+                    if (tokens->count && (*tokens)[0].type == Token_KwEnd)
+                        slice_advance(tokens, 1);
+                    break;
+                }
+                slice_advance(tokens, 1);
+            }
+        }
+        return result;
+    } else if ((*tokens)[0].type == Token_KwFor) {
+        SourceLoc loc = (*tokens)[0].loc;
+        slice_advance(tokens, 1);
+        if (!tokens->count || (*tokens)[0].type != Token_Ident) {
+            if (tokens->count)
+                fprintf(stderr, "%s:%d:%d: ", LOCFMT((*tokens)[0].loc));
+            fprintf(stderr, "Expected identifier in for header, got: %s.\n", tokens->count ? format_token((*tokens)[0]) : "EOF");
+            exit(1);
+        }
+        Slice<u8> var = (*tokens)[0].s;
+        slice_advance(tokens, 1);
+        Value list = eval(tokens, env);
+        if (list.type != Value_List) {
+            fprintf(stderr, "%s:%d:%d: for can only iterate over lists, not %s.\n", LOCFMT(loc), format_value(list, true));
+            exit(1);
+        }
+        Slice<Token> block = *tokens;
+        if (list.list.count) {
+            for (s64 i = 0; i < list.list.count; i++) {
+                block = *tokens;
+                Env newenv = {};
+                newenv.super = env;
+                if (var != lit_slice("_")) {
+                    newenv.symtab.arena = &arena;
+                    bind(&newenv, var)->value = list.list.data[i];
+                }
+                while (block.count && block[0].type != Token_KwEnd)
+                    exec_stmt(&block, &newenv);
+            }
+            *tokens = block;
+        } else {
+            s32 balance = 1;
+            while (tokens->count && balance > 0) {
+                if (has_block((*tokens)[0].type))
+                    balance += 1;
+                if ((*tokens)[0].type == Token_KwEnd)
+                    balance -= 1;
+                slice_advance(tokens, 1);
+            }
+        }
+        if (tokens->count && (*tokens)[0].type == Token_KwEnd) slice_advance(tokens, 1);
+        return {.type = Value_Bool, .b = true};
     } else {
         SourceLoc loc = (*tokens)[0].loc;
         if (env->stashed_comment.type == Value_Comment &&
@@ -674,12 +819,17 @@ int main(int argc, char **argv) {
     BIND_BUILTIN(mod, 2);
     BIND_BUILTIN1("=", b_eq, 2);
     BIND_BUILTIN1("<>", b_ne, 2);
+    BIND_BUILTIN1("<", b_lt, 2);
+    BIND_BUILTIN1("<=", b_le, 2);
+    BIND_BUILTIN1(">=", b_ge, 2);
+    BIND_BUILTIN1(">", b_gt, 2);
     BIND_BUILTIN1("->string", b_tostring, 1);
     BIND_BUILTIN(getloc, 1);
     BIND_BUILTIN(peel, 1);
     BIND_BUILTIN1("make-comment", b_make_comment, 4);
     BIND_BUILTIN1("stash-comment", b_stash_comment, 1);
     BIND_BUILTIN(testtable, 4);
+    BIND_BUILTIN(iota, 1);
 #undef BIND_BUILTIN
 #undef BIND_BUILTIN1
     bind(&env, lit_slice("yes"))->value = {.type = Value_Bool, .b = true};
