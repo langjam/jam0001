@@ -10,6 +10,17 @@ testDoWhileLoop();
 sumTest = sumNumbers1To100();
 print("Sum of the numbers from 1 to 100:", sumTest);
 
+print(ternaryTest('apple', 4));
+print(ternaryTest('apple', 1));
+print(ternaryTest('apple', 0));
+```
+
+### ternary test
+
+- `word` - word to make plural conditionally
+- `num` - number of items
+```
+return num == 1 ? '1 ' + word : num + ' ' + word + 's';
 ```
 
 ### test while loop

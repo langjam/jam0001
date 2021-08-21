@@ -578,8 +578,21 @@ class ForLoop(Executable):
           return status
 
       i += step
+class TernaryExpression(Expression):
+  def __init__(self, condition, question_mark, true_value, false_value):
+    super().__init__(condition.first_token)
+    self.condition = condition
+    self.question_mark = question_mark
+    self.true_value = true_value
+    self.false_value = false_value
+  def run(self, scope):
+    value = self.condition.run(scope)
+    if value.is_error: return value
+    if is_null(value): return to_null_error_value(self.condition.first_token)
+    if value.type != 'BOOL': return new_error_value(self.question_mark, "Ternary conditions can only use boolean values as their condition.")
+    output = self.true_value if value.value else self.false_value
+    return output.run(scope)
     
-
 def _add_code_impl(code_lines, text, line_offset):
     # This is a little hacky, but basically, empty lines are added to code_lines
     # until it corresponds to the real document. Makes the tokenizer simpler.
