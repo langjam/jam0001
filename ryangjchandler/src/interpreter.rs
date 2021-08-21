@@ -89,11 +89,19 @@ impl<'i> Interpreter<'i> {
                 let function = self.execute_expression(*function)?;
 
                 match function {
-                    Some(Value::Function(Function::User { body, params, .. })) => {
+                    Some(Value::Function(Function::User { name: function_name, body, params, .. })) => {
                         let mut new_environment = Environment::new_with_parent(self.environment.clone());
                         let old_environment = Rc::clone(&self.environment);
 
-                        for (i, (name, r#type)) in params.iter().enumerate() {
+                        for (i, (name, param_type)) in params.iter().enumerate() {
+                            let arg = &args[i];
+
+                            if let Some(t) = param_type {
+                                if ! arg.is_type(t) {
+                                    return Err(InterpreterError::TypeError(name.clone(), function_name, t.to_string(), arg.type_string()));
+                                }
+                            }
+
                             new_environment.set(name, &args[i]);
                         }
 
@@ -190,6 +198,9 @@ pub enum InterpreterError {
 
     #[error("Value of type {0:?} is not callable.")]
     ValueIsNotCallable(Value),
+
+    #[error("Parameter {0} for function {1} must be of type {2}, received {3:?}.)")]
+    TypeError(String, String, String, String),
 }
 
 pub fn interpret<'i>(program: Program) -> Result<(), InterpreterError> {

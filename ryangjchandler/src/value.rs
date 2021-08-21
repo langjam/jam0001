@@ -10,6 +10,22 @@ pub enum Value {
     Null,
 }
 
+impl Value {
+    pub fn is_type(&self, r#type: impl Into<String>) -> bool {
+        match (r#type.into().as_str(), self) {
+            ("string", Value::String(_)) => true,
+            _ => todo!(),
+        }
+    }
+
+    pub fn type_string(&self) -> String {
+        match self {
+            Self::String(_) => "string".to_owned(),
+            _ => todo!()
+        }
+    }
+}
+
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}", match self {

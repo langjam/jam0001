@@ -16,7 +16,7 @@ hello_world()
 
 /*
  * @identifier say_hello_to
- * @param name
+ * @param name string
  */
 fn {
     println("Hello, " + name)

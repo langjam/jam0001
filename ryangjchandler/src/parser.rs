@@ -104,7 +104,17 @@ impl<'p> Parser<'p> {
                                 _ => unreachable!()
                             };
 
-                            params.push((identifier, None))
+                            let mut r#type = match self.current_is(TokenKind::Identifier("".to_string())) {
+                                true => {
+                                    Some(match self.expect_token_and_read(TokenKind::Identifier("".to_string()))? {
+                                        Token { kind: TokenKind::Identifier(i), .. } => i,
+                                        _ => unreachable!()
+                                    })
+                                },
+                                false => None
+                            };
+
+                            params.push((identifier, r#type))
                         },
                         _ => todo!()
                     }
