@@ -1,0 +1,203 @@
+import /[build_a_language.unseemly]/
+# `build_a_language.unseemly`
+extend_syntax
+    #### Get rid of comments! We need them to be a part of expressions for what we're doing.
+    DefaultSeparator ::= /((?s:\s)*)/ ;
+
+    DefaultAtom ::= common ( ,{DefaultWord}, reserving 'fn' 'Int' 'String' 'capture_language');
+
+    # A variable name starts with a letter, and has letters, numbers, '_', and '?'.
+    # Whitespace may come before it.
+    #DefaultWord ::= common ( pick word in
+    #    [,{DefaultSeparator},
+    #     word := (/(\p{Letter}(?:\p{Letter}|\p{Number}|[_?])*)/) ]) ;
+
+
+    Expr ::= alt[
+        #### lambda ####
+        forall I0 O . '{[
+            lit ,{DefaultToken}, = '|'
+            arg_name0 := ( ,{Pat<I0>}, )  lit ,{DefaultToken}, = ':'  arg_type0 := ( ,{Type<I0>}, )
+            lit ,{DefaultToken}, = '|'
+            fn_body := ( ,{Expr<O>}, <-- arg_name0 = arg_type0 )
+        ]}' lambda1 -> .{
+            '[Expr| .[ a0: ,[arg_type0],  .
+                let ,[arg_name0], = a0; in ,[fn_body], ]. ]'
+        }.
+        forall I0 I1 O . '{[
+            lit ,{DefaultToken}, = '|'
+            arg_name0 := ( ,{Pat<I0>}, )  lit ,{DefaultToken}, = ':'  arg_type0 := ( ,{Type<I0>}, )
+            lit ,{DefaultToken}, = ','
+            arg_name1 := ( ,{Pat<I1>}, )  lit ,{DefaultToken}, = ':'  arg_type1 := ( ,{Type<I1>}, )
+            lit ,{DefaultToken}, = '|'
+            fn_body := ( ,{Expr<O>}, <-- [arg_name0 = arg_type0 o> arg_name1 = arg_type1] )
+        ]}' lambda2 -> .{
+            '[Expr| .[ a0: ,[arg_type0], a1: ,[arg_type1], .
+                let ,[arg_name0], = a0; ,[arg_name1], = a1; in ,[fn_body], ]. ]'
+        }.
+
+        #### function definition ####
+        forall I0 O T . '{[
+            lit ,{DefaultToken}, = 'fn'
+            fn_name := ( ,{Pat< [I0 -> O] >}, )
+            lit ,{DefaultToken}, = '('
+            arg_name0 := ( ,{Pat<I0>}, )  lit ,{DefaultToken}, = ':'  arg_type0 := ( ,{Type<I0>}, )
+            lit ,{DefaultToken}, = ')'
+            lit ,{DefaultToken}, = '->'
+            ret_type := ( ,{Type<O>}, )
+            lit ,{DefaultToken}, = '{'
+            fn_body := ( ,{Expr<O>}, <-- arg_name0 = arg_type0 )
+            lit ,{DefaultToken}, = '}'
+
+            body := ( ,{ Expr<T> }, <-- fn_name = [ arg_type0 -> ret_type ]  )
+        ]}'  let_fn1 -> .{
+            # In case the function is recursive, wrap it in `fix`:
+            '[Expr | let ,[fn_name], = (fix
+                .[ again: [ -> [ ,[arg_type0], -> ,[ret_type], ] ] .
+                    .[ a0: ,[arg_type0],  .
+                        let ,[arg_name0], = a0; in ,[fn_body], ].
+                ].) ; in
+                ,[body],
+            ]'
+        }.
+        forall I0 I1 O T . '{[
+            lit ,{DefaultToken}, = 'fn'
+            fn_name := ( ,{Pat< [I0 I1 -> O] >}, )
+            lit ,{DefaultToken}, = '('
+            arg_name0 := ( ,{Pat<I0>}, )  lit ,{DefaultToken}, = ':'  arg_type0 := ( ,{Type<I0>}, )
+            lit ,{DefaultToken}, = ','
+            arg_name1 := ( ,{Pat<I1>}, )  lit ,{DefaultToken}, = ':'  arg_type1 := ( ,{Type<I1>}, )
+            lit ,{DefaultToken}, = ')'
+            lit ,{DefaultToken}, = '->'
+            ret_type := ( ,{Type<O>}, )
+            lit ,{DefaultToken}, = '{'
+            fn_body := ( ,{Expr<O>}, <-- [arg_name0 = arg_type0 o> arg_name1 = arg_type1] )
+            lit ,{DefaultToken}, = '}'
+
+            body := ( ,{ Expr<T> }, <-- fn_name = [ arg_type0 arg_type1 -> ret_type ]  )
+        ]}' let_fn2 -> .{
+            # In case the function is recursive, wrap it in `fix`:
+            '[Expr | let ,[fn_name], = (fix
+                .[ again: [ -> [ ,[arg_type0], ,[arg_type1], -> ,[ret_type], ] ] .
+                    .[ a0: ,[arg_type0], a1: ,[arg_type1], .
+                        let ,[arg_name0], = a0; ,[arg_name1], = a1; in ,[fn_body], ].
+                ].) ; in
+                ,[body],
+            ]'
+        }.
+
+        #### let ####
+        forall T S . '{ [
+            lit ,{ DefaultToken }, = 'let'
+            [
+                pat := ( ,{ Pat<S> }, )
+                lit ,{ DefaultToken }, = ':'
+                type := ( ,{ Type<S> }, )
+                lit ,{ DefaultToken }, = '='
+                val := ( ,{ Expr<S> }, )
+                lit ,{ DefaultToken }, = ';'
+            ] *
+            body := ( ,{ Expr<T> }, <-- ...[pat = val]... )
+        ] }' let_macro -> .{
+            '[Expr |
+                match **[...[,val, >> ,[val], ]... ]**
+                    { **[...[,pat, >> ,[pat],]... ]** => ,[body], } ]'
+        }.
+
+        #### comment ####
+        forall T C . '{ [
+            ,{DefaultSeparator},
+            /(\/\*)/
+            pre_text := (/([^`*]*)/)
+            [
+                /(`)/
+                comment_expr := ( ,{Expr<C>}, )
+                ,{DefaultSeparator}, #foo
+                /(`)/
+                /([^`*]*)/
+            ] *
+            post_text := ( /([^`*]*)/ )
+            /(\*\/)/
+            ,{DefaultSeparator},
+            body := ( ,{Expr<T>}, )
+        ] }' comment_annotate -> .{
+            '[Expr|
+                -{
+                    (write_file "/dev/stdout"
+                        (join s[
+                            "/*"
+                            ,[(prefab (ident_to_string pre_text))],
+                            (join s[ ...[,comment_expr, >>
+                                (anything_to_string ,[comment_expr],)]... ]s "")
+                            ,[(prefab (ident_to_string post_text))],
+                            "*/
+"
+                        ]s "")) ;
+                    ,[body],
+                }-
+            ]'
+        }.
+
+    ]alt or{
+        # Resolve the ambiguity between
+        #   fn f(...) {...} f    (1, 1)
+        #   fn f(...) {...}     f(1, 1)
+        # in favor of the latter by making prefix operations higher-priority with `or{ }or`.
+
+        alt[
+            #### variable reference ####
+            vr (,{DefaultAtom},)
+
+            #### parentheses for grouping ####
+            forall T . '{[
+                lit ,{DefaultToken}, = '('
+                body := ( ,{Expr<T>}, )
+                lit ,{DefaultToken}, = ')'
+            ]}' paren -> .{
+                body
+            }.
+
+            #### numeric literals ####
+            forall . '{
+                # Awkward `pick` stuff just to have and then throw away `DefaultSeparator`:
+                digit_string := (pick tok in [,{DefaultSeparator}, tok := (/([0-9]+)/) ])
+            }' base_ten_literal -> .{
+                let number = (new_cell zero) ; in
+                -{
+                    for digit in (string_to_sequence (ident_to_string digit_string))
+                        (assign number (plus (times (value number) ten)
+                                            # The character for digit 0 is codepoint 48:
+                                            (minus digit (plus (times ten four) eight)))) ;
+                    (prefab (value number))
+                }-
+            }.
+
+            #### function application ####
+            forall I0 O . '{[
+                rator := ( ,{Expr< [I0 -> O] >}, )
+                lit ,{DefaultToken}, = '('
+                rand0 := ( ,{Expr< I0 >}, )
+                lit ,{DefaultToken}, = ')'
+            ]}' apply_1ary -> .{
+                '[Expr| (,[rator], ,[rand0],)]'
+            }.
+            forall I0 I1 O . '{[
+                rator := ( ,{Expr< [I0 I1 -> O] >},)
+                lit ,{DefaultToken}, = '('
+                rand0 := ( ,{Expr< I0 >}, )
+                lit ,{DefaultToken}, = ','
+                rand1 := ( ,{Expr< I1 >}, )
+                lit ,{DefaultToken}, = ')'
+            ]}' apply_2ary -> .{
+                '[Expr| (,[rator], ,[rand0], ,[rand1],)]'
+            }.
+
+            #### language export ####
+            capture_language_form
+        ]alt }or
+    ;
+
+in
+
+capture_language
+

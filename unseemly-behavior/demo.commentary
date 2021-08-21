@@ -1,0 +1,5 @@
+fn super_plus (a: Int, b: Int) -> Int {
+    plus ( plus ( a , b ) , 1)
+}
+
+(| a : Int | super_plus ( /*a is `a`*/ a , 1 ) ) ( 18 )
