@@ -1,6 +1,7 @@
 from .exceptions import ParserException
 from .tokenizer import markdown_tokenize, code_tokenize, Token
 from .nodes import *
+from .parser import parse_code
 
 class Runner:
   def __init__(self, filename, text):
@@ -67,14 +68,14 @@ def parse_document(document):
   parse_code_lines(document, document.code_lines)
   for method_def in document.method_order:
     parse_method(method_def)
-  for class_def in document.classes:
+  for class_def in document.class_order:
     parse_class(class_def)
 
 def parse_method(method_def):
-  method_def.code = parse_code_lines(method_def.code_lines)
+  method_def.code = parse_code_lines(method_def, method_def.code_lines)
 
 def parse_class(class_def):
-  class_def.code = parse_code_lines(class_def.code_lines)
+  class_def.code = parse_code_lines(class_def, class_def.code_lines)
   for method_def in class_def.method_order:
     parse_method(method_def)
 
@@ -83,7 +84,4 @@ def parse_code_lines(parent, lines):
   code = '\n'.join(parent.code_lines) + '\n'
   tokens = code_tokenize(filename, code)
 
-  print('\n'.join(map(lambda token: token.value, tokens.tokens)))
-
-  raise Exception("Not implemented: You left off here!")
-  #parent.code = parse_code(tokens)
+  parent.code = parse_code(tokens)

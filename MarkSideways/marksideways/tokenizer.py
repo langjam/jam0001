@@ -35,6 +35,45 @@ class TokenStream:
     self.index = 0
     self.length = len(tokens)
 
+  def eof(self):
+    if self.length == 0:
+      raise ParserException(Token(self.filename, '', 1, 1), "Unexpected EOF")
+    raise ParserException(self.tokens[-1], "Unexpected EOF")
+
+  def has_more(self):
+    return self.index < self.length
+
+  def peek(self):
+    if self.index < self.length: return self.tokens[self.index]
+    return None
+  
+  def peek_value(self):
+    token = self.peek()
+    if token != None: return token.value
+    return None
+  
+  def pop(self):
+    if self.index < self.length:
+      token = self.tokens[self.index]
+      self.index += 1
+      return token
+    self.eof()
+
+  def pop_if_present(self, value):
+    if self.peek_value() == value:
+      self.index += 1
+      return True
+    return False
+  
+  def pop_expected(self, value):
+    token = self.pop()
+    if token.value != value:
+      raise ParserException(token, "Expected '" + value + "' but found '" +  token.value + "' instead.")
+    return token
+
+  def is_next(self, value):
+    return self.peek_value() == value
+
 
 def _get_line_type(line):
   if line.startswith("#"): 
@@ -172,7 +211,7 @@ def code_tokenize(filename, code):
       if alphanums.get(c) == None:
         value = code[token_start:i]
         token_type = 'KEYWORD' if keywords.get(value) != None else ('NUMBER' if numbers.get(value[0]) != None else 'WORD')
-        tokens.append(Token(filename, value, lines[token_start], cols[token_start], 'WORD'))
+        tokens.append(Token(filename, value, lines[token_start], cols[token_start], token_type))
         state = 'NORMAL'
         i -= 1
     i += 1

@@ -75,7 +75,62 @@ class MethodDefinition(Node):
 
   def add_code(self, text, line_offset):
     _add_code_impl(self.code_lines, text, line_offset)
-    
+
+class Expression(Node):
+  def __init__(self, first_token):
+    super().__init__(first_token)
+
+class Executable(Node):
+  def __init__(self, first_token):
+    super().__init__(first_token)
+
+class Variable(Expression):
+  def __init__(self, first_token, name):
+    super().__init__(first_token)
+    self.name = name
+
+class StringConstant(Expression):
+  def __init__(self, first_token, value):
+    super().__init__(first_token)
+    self.value = value
+
+class FunctionInvocation(Expression):
+  def __init__(self, root_expression, open_paren_token, args):
+    super().__init__(root_expression.first_token)
+    self.expression = root_expression
+    self.open_paren = open_paren_token
+    self.args = args
+
+class ExpressionAsExecutable(Executable):
+  def __init__(self, expression):
+    super().__init__(expression.first_token)
+    self.expression = expression
+
+class DotField(Expression):
+  def __init__(self, expression, dot, field_name):
+    super().__init__(expression.first_token)
+    self.root = expression
+    self.dot = dot
+    self.field_name = field_name
+
+class AssignStatement(Executable):
+  def __init__(self, target_expression, assign_op, value_expression):
+    super().__init__(target_expression.first_token)
+    self.target = target_expression
+    self.assign_op = assign_op
+    self.value = value_expression
+
+class OpChain(Expression):
+  def __init__(self, expressions, ops):
+    super().__init__(expressions[0].first_token)
+    self.expressions = expressions
+    self.ops = ops
+
+class IntegerConstant(Expression):
+  def __init__(self, first_token, value):
+    super().__init__(first_token)
+    self.value = value
+
 def _add_code_impl(code_lines, text, line_offset):
     # This is a little hacky, but basically, empty lines are added to code_lines
     # until it corresponds to the real document. Makes the tokenizer simpler.
