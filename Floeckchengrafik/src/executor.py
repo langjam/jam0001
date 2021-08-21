@@ -1,7 +1,7 @@
 from application_stack_utils import StatementNode
 from internals import env as internal_env, internals
 
-env = internal_env
+env = internal_env.copy()
 
 
 class ComstructExecutor:
@@ -58,8 +58,16 @@ class ComstructExecutor:
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
 
             for stmt_node in node.exec.content:
-                # TODO Check for Return Value Type, but only if defined in Desc. Only set if type matches
-                ret = self.walkTree(stmt_node)
+                can_return = False
+                for item in node.description:
+                    if item[0] == "returns":
+                        can_return = True
+                        break
+
+                if can_return:
+                    if stmt_node:
+                        ret = self.walkTree(stmt_node)
+
             return ret
         elif isinstance(node, StatementNode.FunctionDefinitionNode):
             return node
@@ -82,14 +90,26 @@ class ComstructExecutor:
 
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
 
-            # TODO Save old env, build new one with the arguments specified in the desc.
+            old_env = env
+            new_env = env.copy()
+            i = 0
+            for elem in node_call.description:
+                if elem[0] != "param":
+                    continue
+                try:
+                    new_env[elem[1]] = processed_args[i]
+                except IndexError:
+                    new_env[elem[1]] = None
+                i += 1
+
+            env = new_env
 
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             for func_node in node_call.content:
                 # TODO Check for Return Value Type, but only if defined in Desc. Only set if type matches
                 ret = self.walkTree(func_node)
 
-            # TODO Restore old env
+            env = old_env
 
             return ret
 
