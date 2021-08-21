@@ -18,7 +18,10 @@ void print_ast(struct Parser_Node *node, usize depth) {
             printf("Body\n");
             break;
         case PN_DECL:
-            printf("Decl(name = %.*s)\n", (int)node->data.decl.name.size, node->data.decl.name.view);
+            printf("Decl(type = %.*s, name = %.*s)\n", (int)node->data.decl.type.size, node->data.decl.type.view, (int)node->data.decl.name.size, node->data.decl.name.view);
+            break;
+        case PN_ASSIGN:
+            printf("Assignment(name = %.*s)\n", (int)node->data.assign.name.size, node->data.assign.name.view);
             break;
         case PN_PROC:
             printf("Proc\n");

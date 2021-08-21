@@ -124,8 +124,21 @@ static pnode_t declaration(tok_t on);
 static strview_t typedecl() {
     setexpect("type name");
     tok_t token = pull();
+    fprintf(stderr, "%s\n", TT_NAMES[token.tt]);
     assert_tt(&token, TT_IDENT);
+    setexpect(NULL);
     return strview_span(token.span, parser.lexer.src);
+}
+
+static pnode_t assignment(tok_t on) {
+    assert_tt(&on, TT_IDENT);
+    skip_tt(TT_ASSIGN);
+    pnode_t right = value();
+    pnode_t decl_node = pnode_new(PN_ASSIGN);
+    // Attach value
+    pnode_attach(&decl_node, right);
+    decl_node.data.assign.name = strview_span(on.span, parser.lexer.src);
+    return decl_node;
 }
 
 static pnode_t value() {
@@ -142,8 +155,10 @@ static pnode_t value() {
             value_node.data.number.val = strview_span(token.span, parser.lexer.src);
             return value_node;
         case TT_IDENT:
-            if (peek().tt == TT_ASSIGN)
+            if (peek().tt == TT_DEF)
                 return declaration(token);
+            if (peek().tt == TT_ASSIGN)
+                return assignment(token);
             if (peek().tt == TT_LPAREN)
                 return call(token);
             else {
@@ -172,10 +187,11 @@ static pnode_t value() {
 static pnode_t declaration(tok_t on) {
     assert_tt(&on, TT_IDENT);
     setexpect("`:` followed by type");
-    if (peek().tt == TT_ASSIGN)
-        setexpect("`:` followed by type, note that you need to specify type before assigning");
     skip_tt(TT_DEF);
-    strview_t type = typedecl();
+    setexpect(NULL);
+    strview_t type = strview_from("_");
+    if (peek().tt != TT_ASSIGN)
+        type = typedecl();
     skip_tt(TT_ASSIGN);
     pnode_t right = value();
     pnode_t decl_node = pnode_new(PN_DECL);

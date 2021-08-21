@@ -108,7 +108,7 @@ static bool is_idu(rune ch) {
 }
  
 static bool is_num(rune ch) {
-    return ch > '0' && ch < '9';
+    return ch >= '0' && ch <= '9';
 }
  
 static enum Token_Type lex_ident(struct Lexer_State *self) {

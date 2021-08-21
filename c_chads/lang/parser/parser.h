@@ -14,6 +14,7 @@ enum Parser_Node_Kind {
     PN_BODY,
     PN_TOPLEVEL,
     PN_DECL,
+    PN_ASSIGN,
     PN_STRING,
     PN_IDENT,
     PN_NUMBER,
@@ -29,6 +30,9 @@ struct Parser_Node {
             strview_t type;
             strview_t name;
         } decl;
+        struct {
+            strview_t name;
+        } assign;
         struct {
             strview_t name; 
         } call;
