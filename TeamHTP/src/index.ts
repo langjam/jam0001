@@ -52,6 +52,8 @@ for (const child of docTree.children) {
     }
 }
 
+console.log(runtime)
+
 startRepl((input) => {
     console.log(input)
 }).catch(console.log)

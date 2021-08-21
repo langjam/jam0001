@@ -27,7 +27,7 @@ const TYPE_MAP: Record<string, typeof Base> = {
     'thematicBreak': ThematicBreak,
 }
 
-function wrap(runtime: Runtime, mdastContent: MdastContent, parent?: Tag): Base {
+function wrap(runtime: Runtime, mdastContent: MdastContent, tag?: Tag): Base {
     if (mdastContent.type === 'definition' && (mdastContent.url === ':' || !mdastContent.url.includes(':'))) {
         // Infer type of link definition in context of bubblegum
         if (mdastContent.label === null || mdastContent.label === undefined) {
@@ -39,14 +39,22 @@ function wrap(runtime: Runtime, mdastContent: MdastContent, parent?: Tag): Base 
             if (runtime.isTagDefined(tagName)) {
                 throw new Error(`Tag with this name is already defined '${tagName}'`)
             }
-            const tag = new (type as typeof Tag)(mdastContent, parent)
-            runtime.defineTag(tagName, tag)
-            return tag
+            const wrappedTag = new (type as typeof Tag)(mdastContent, tag)
+            runtime.defineTag(tagName, wrappedTag)
+            return wrappedTag
         }
         else {
             // Associate function definition with parent tag
             if (runtime.isTagDefined(tagName)) {
-                return new type(mdastContent, runtime.getTag(tagName))
+                const tag = runtime.getTag(tagName)
+                const func = new (type as typeof Function)(mdastContent, tag)
+                if (tag.isMemberDefined(func.getName())) {
+                    throw new Error(`Function with name '${func.getName()}' is already defined in tag '${tagName}'`)
+                }
+                else {
+                    tag.addMember(func.getName(), func)
+                    return func
+                }
             }
             else {
                 throw new Error(`Reference to undefined tag '${tagName}'`)
@@ -59,7 +67,9 @@ function wrap(runtime: Runtime, mdastContent: MdastContent, parent?: Tag): Base 
         if (type === undefined) {
             throw new Error(`mdast type not mapped '${mdastContent.type}'`)
         }
-        return new type(mdastContent, parent)
+        const wrappedContent = new type(mdastContent, tag)
+        tag?.setChild(wrappedContent)
+        return wrappedContent
     }
 }
 
