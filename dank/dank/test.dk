@@ -1,0 +1,8 @@
+// this is a test comment
+// abc
+// dddddddddddd
+
+// // Nested comment
+// print("test test");
+
+print { name: "value", nested: { object: "here" } };

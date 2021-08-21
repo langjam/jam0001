@@ -19,6 +19,27 @@ macro_rules! op_node {
     };
 }
 
+fn parse_comment(comment: Vec<&str>) -> CommentBody<'_> {
+    let comment_text = comment
+        .into_iter()
+        .map(|c| c.trim())
+        .collect::<Vec<_>>()
+        .join("\n")
+        .into();
+
+    // TODO: do not leak the string here to get around lifetimes
+    let text_on_heap = Box::leak(Box::new(format!("{{\n{}\n}}", comment_text)));
+
+    match dank::block(text_on_heap) {
+        Ok(block) => CommentBody::Stmt(block),
+        Err(e) => {
+            // TODO: optionally log the error
+            eprintln!("Failed to evaluate a comment: {}", e);
+            CommentBody::Text(comment_text)
+        }
+    }
+}
+
 peg::parser!(pub grammar dank() for str {
     /// Parses whitespace
     rule _() = [' ' | '\t']*
@@ -27,30 +48,28 @@ peg::parser!(pub grammar dank() for str {
     /// Parses whitespace or newlines
     rule ___() = [' ' | '\t' | '\n' | '\r']*
 
-    // TODO: parse code inside comments
     rule line_comment_group() -> Vec<&'input str>
-        = (_ "//" t:$([^'\n']*) ___ {t})+
+        = (_ "//" t:$([^'\n']*) "\n"? {t})+
 
-    // TODO: make this properly attach comments
-    /// Parses a single-line comment
+    /// Parses a group of single-line comments, optionally followed by a statement.
     rule line_comment() -> LineComment<'input>
-        = g:line_comment_group() s:stmt() {
-              LineComment {
-                  body: CommentBody::Text(g.join("\n").into()),
-                  stmt: Some(s),
-              }
+        = g:line_comment_group() "\n"? _ s:stmt() {
+                LineComment {
+                    body: parse_comment(g),
+                    stmt: Some(s),
+                }
            }
            / s:stmt() {
-               LineComment {
-                   body: CommentBody::Empty,
-                   stmt: Some(s),
-               }
+                LineComment {
+                    body: CommentBody::Empty,
+                    stmt: Some(s),
+                }
            }
            / g:line_comment_group() {
-               LineComment {
-                   body: CommentBody::Text(g.join("\n").into()),
-                   stmt: None,
-               }
+                LineComment {
+                    body: parse_comment(g),
+                    stmt: None,
+                }
            }
 
     pub rule binding() -> Stmt<'input>
@@ -65,7 +84,7 @@ peg::parser!(pub grammar dank() for str {
          / b:block() {b}
 
     pub rule block() -> Stmt<'input>
-    = start:position!() "{" ___ statements:(s:stmt() ___ {s})* ___ "}" end:position!() {
+    = start:position!() "{" ___ statements:(s:line_comment() ___ {s})* ___ "}" end:position!() {
         Stmt {
             span: start..end,
             kind:  StmtKind::Block(statements)
@@ -151,8 +170,6 @@ peg::parser!(pub grammar dank() for str {
 
     rule line() -> LineComment<'input>
         = _ l:line_comment() __ { l }
-        // / _ e:(export()) __ { Some(e) }
-        // / _ s:(decl()) __ { Some(s) }
 
     /// Parses a file.
     pub rule file() -> Ast<'input>
@@ -196,7 +213,7 @@ pub mod tests {
             dank::file(test).unwrap(),
             Ast {
                 statements: vec![LineComment {
-                    body: CommentBody::Text(" test comment".into()),
+                    body: CommentBody::Text("test comment".into()),
                     stmt: None,
                 }],
             }
@@ -216,6 +233,16 @@ pub mod tests {
 
         print some_statement_way_down_below;
 
+
+        // This is a comment group
+        // where each line belongs to the same comment,
+        // as long as there is no gaps between the lines.
+
+
+        // These two lines do not form a comment group
+
+        // since there are gaps between them.
+
         "#;
         test_eq!(
             test,
@@ -224,14 +251,14 @@ Ast
   statements= 
     LineComment
       body: CommentBody::Text
-        text: " attached comment"
+        text: "attached comment"
       stmt: StmtKind::Print
         args= 
           ExprKind::Variable
             name: "variable"
     LineComment
       body: CommentBody::Text
-        text: " detached comment"
+        text: "detached comment"
       stmt: None
     LineComment
       body: CommentBody::Empty
@@ -239,6 +266,18 @@ Ast
         args= 
           ExprKind::Variable
             name: "some_statement_way_down_below"
+    LineComment
+      body: CommentBody::Text
+        text: "This is a comment group\nwhere each line belongs to the same comment,\nas long as there is no gaps between the lines."
+      stmt: None
+    LineComment
+      body: CommentBody::Text
+        text: "These two lines do not form a comment group"
+      stmt: None
+    LineComment
+      body: CommentBody::Text
+        text: "since there are gaps between them."
+      stmt: None
 "#
         );
     }
@@ -265,14 +304,18 @@ Ast
       body: CommentBody::Empty
       stmt: StmtKind::Block
         statements= 
-          StmtKind::Print
-            args= 
-              ExprKind::Literal
-                field0: Str("code inside the block")
-          StmtKind::LetDecl
-            name: "x"
-            initializer: ExprKind::Literal
-              field0: Num(5.0)
+          LineComment
+            body: CommentBody::Empty
+            stmt: StmtKind::Print
+              args= 
+                ExprKind::Literal
+                  field0: Str("code inside the block")
+          LineComment
+            body: CommentBody::Empty
+            stmt: StmtKind::LetDecl
+              name: "x"
+              initializer: ExprKind::Literal
+                field0: Num(5.0)
 "#
         );
     }
@@ -294,14 +337,16 @@ Ast
           field0: Bool(true)
         body: StmtKind::Block
           statements= 
-            StmtKind::Print
-              args= 
-                ExprKind::Binary
-                  left: ExprKind::Literal
-                    field0: Str("hello")
-                  op: BinOpKind::Add
-                  right: ExprKind::Literal
-                    field0: Str("world")
+            LineComment
+              body: CommentBody::Empty
+              stmt: StmtKind::Print
+                args= 
+                  ExprKind::Binary
+                    left: ExprKind::Literal
+                      field0: Str("hello")
+                    op: BinOpKind::Add
+                    right: ExprKind::Literal
+                      field0: Str("world")
 "#
         );
     }
