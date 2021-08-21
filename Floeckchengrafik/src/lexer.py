@@ -28,7 +28,7 @@ class ComstructLexer(Lexer):
     }
 
     ignore = " \t\n"
-    ignore_mlcomment = r"//[\s\S]*\\\\"
+    ignore_comment = r"\\\\.*"
 
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
     PLUS = r'\+'

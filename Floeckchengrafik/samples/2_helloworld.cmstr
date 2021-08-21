@@ -1,8 +1,9 @@
-helloworld = function({
-    h="Hello"?
-    space=" "?
-    w="World"?
-    out(h + space + w)?
-})?
+helloworld = function({ \\ Declare a Function
+    h="Hello"? \\ Declare a variable
+    space=" "? \\ Declare the space
+    w="World"? \\ Declare the second word
+    out(h + space + w)? \\ Print it to the screen
+    out(h : w)? \\ The better way to print it to the screen
+})? \\ There are no args for this method
 
-helloworld()?
+helloworld()? \\ Call the previously declared method
