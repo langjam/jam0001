@@ -16,7 +16,7 @@ struct Interpreter_Value {
     enum Interpreter_Type type;
     union {
         struct {
-            struct Vec OF(struct Parser_Node*) *body;
+            struct Parser_Node* ast;
         } func;
         struct {
             Interpreter_Cfunc func;
