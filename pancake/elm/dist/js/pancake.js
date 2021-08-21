@@ -2851,6 +2851,7 @@ var $elm$json$Json$Decode$succeed = _Json_succeed;
 var $author$project$Main$Compiled = function (a) {
 	return {$: 'Compiled', a: a};
 };
+var $author$project$Language$AST$Alpha = {$: 'Alpha'};
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -2892,7 +2893,8 @@ var $author$project$Language$Runtime$init = function (ast) {
 		ast: $author$project$Language$AST$toCode(ast),
 		ip: 0,
 		ok: true,
-		stack: _List_Nil
+		stack: _List_Nil,
+		universe: $author$project$Language$AST$Alpha
 	};
 };
 var $elm$core$Maybe$map = F2(
@@ -2905,19 +2907,106 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $author$project$Language$AST$Add = {$: 'Add'};
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
 var $author$project$Language$AST$Int = function (a) {
 	return {$: 'Int', a: a};
 };
-var $author$project$Language$Parser$parse = function (_v0) {
+var $author$project$Language$Parser$instruction = function (_v0) {
 	return $elm$core$Maybe$Just(
-		_List_fromArray(
-			[
-				$author$project$Language$AST$Int(1),
-				$author$project$Language$AST$Int(41),
-				$author$project$Language$AST$Add
-			]));
+		_Utils_Tuple2(
+			$author$project$Language$AST$Alpha,
+			$author$project$Language$AST$Int(42)));
 };
+var $elm$core$String$lines = _String_lines;
+var $elm$core$List$foldrHelper = F4(
+	function (fn, acc, ctr, ls) {
+		if (!ls.b) {
+			return acc;
+		} else {
+			var a = ls.a;
+			var r1 = ls.b;
+			if (!r1.b) {
+				return A2(fn, a, acc);
+			} else {
+				var b = r1.a;
+				var r2 = r1.b;
+				if (!r2.b) {
+					return A2(
+						fn,
+						a,
+						A2(fn, b, acc));
+				} else {
+					var c = r2.a;
+					var r3 = r2.b;
+					if (!r3.b) {
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(fn, c, acc)));
+					} else {
+						var d = r3.a;
+						var r4 = r3.b;
+						var res = (ctr > 500) ? A3(
+							$elm$core$List$foldl,
+							fn,
+							acc,
+							$elm$core$List$reverse(r4)) : A4($elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(
+									fn,
+									c,
+									A2(fn, d, res))));
+					}
+				}
+			}
+		}
+	});
+var $elm$core$List$foldr = F3(
+	function (fn, acc, ls) {
+		return A4($elm$core$List$foldrHelper, fn, acc, 0, ls);
+	});
+var $elm$core$Maybe$map2 = F3(
+	function (func, ma, mb) {
+		if (ma.$ === 'Nothing') {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var a = ma.a;
+			if (mb.$ === 'Nothing') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var b = mb.a;
+				return $elm$core$Maybe$Just(
+					A2(func, a, b));
+			}
+		}
+	});
+var $elm_community$maybe_extra$Maybe$Extra$traverse = function (f) {
+	return A2(
+		$elm$core$List$foldr,
+		function (x) {
+			return A2(
+				$elm$core$Maybe$map2,
+				$elm$core$List$cons,
+				f(x));
+		},
+		$elm$core$Maybe$Just(_List_Nil));
+};
+var $author$project$Language$Parser$parse = A2(
+	$elm$core$Basics$composeR,
+	$elm$core$String$lines,
+	$elm_community$maybe_extra$Maybe$Extra$traverse($author$project$Language$Parser$instruction));
 var $author$project$Language$Pancake$compile = function (src) {
 	return A2(
 		$elm$core$Maybe$map,
