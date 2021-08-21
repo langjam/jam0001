@@ -39,7 +39,6 @@ mod tests {
                 println!("{:?}", program);
             }
             Err(err) => {
-                err.print(test);
                 assert!(false);
             }
         }

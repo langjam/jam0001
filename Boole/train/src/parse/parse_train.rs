@@ -91,7 +91,6 @@ mod tests {
                 assert_eq!(train, expected)
             }
             Err(err) => {
-                err.print(test);
                 assert!(false);
             }
         }

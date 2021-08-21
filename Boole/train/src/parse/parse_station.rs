@@ -77,7 +77,6 @@ mod tests {
                 assert_eq!(station, expected)
             }
             Err(err) => {
-                err.print(test);
                 assert!(false);
             }
         }
