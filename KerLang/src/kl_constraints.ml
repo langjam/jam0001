@@ -134,31 +134,34 @@ let generate_function (Spec (_, name, comment)) =
     name; n_args = 0; declarations = []; result = Yolo []
   } comments
 
-let rec compile_function env { result; _ } =
+let rec compile_function ftable { result; declarations; _ } =
   match result with
-  | Function e -> compile_expr env e
-  | _ -> assert false
+  | Function e -> compile_expr ftable declarations e
+  | _ -> Kl_IR.Cst 0
 
-and compile_expr env = function
-  | Leaf v -> compile_value env v
-  | Node v -> compile_operation env v
+and compile_expr ftable env = function
+  | Leaf v -> compile_value ftable env v
+  | Node v -> compile_operation ftable env v
 
-and compile_operation env = function
+and compile_operation ftable env =
+  let compile_val = compile_value ftable env in
+  function
   | If (cond, br1, br2) ->
-    Kl_IR.If (compile_value env cond, compile_value env br1, compile_value env br2)
+    Kl_IR.If (compile_val cond, compile_val br1, compile_val br2)
   | Sum (e1, e2) ->
-    Kl_IR.add (compile_value env e1) (compile_value env e2)
+    Kl_IR.add (compile_val e1) (compile_val e2)
   | Diff (e1, e2) ->
-    Kl_IR.sub (compile_value env e1) (compile_value env e2)
+    Kl_IR.sub (compile_val e1) (compile_val e2)
   | Prod (e1, e2) ->
-    Kl_IR.mul (compile_value env e1) (compile_value env e2)
+    Kl_IR.mul (compile_val e1) (compile_val e2)
   | Div (e1, e2) ->
-    Kl_IR.div (compile_value env e1) (compile_value env e2)
-  | App (_, _) -> assert false
-  | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map (compile_value env) vs)
+    Kl_IR.div (compile_val e1) (compile_val e2)
+  | App (fname, vals) ->
+    Kl_IR.(app (func ~name:(Some fname) (List.assoc fname ftable)) (List.map compile_val vals))
+  | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map compile_val vs)
 
-and compile_value env = function
+and compile_value ftable env = function
   | Arg x -> Kl_IR.Var x
   | Cst n -> Kl_IR.Cst n
-  | Var x -> List.assoc x env
+  | Var x -> List.assoc x env |> compile_expr ftable env
   | Hole -> failwith "remaning hole in expression, can't compile it down to Kl_IR"
