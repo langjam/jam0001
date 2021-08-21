@@ -1,0 +1,8 @@
+helloworld = function({
+    h="Hello"?
+    space=" "?
+    w="World"?
+    out(h + space + w)?
+})?
+
+helloworld()?

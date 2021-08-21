@@ -28,6 +28,10 @@ class ComstructParser(Parser):
     def expr(self, p):
         return StatementNode.LiterallyNode(p.NUMBER)
 
+    @_("STRING")
+    def expr(self, p):
+        return StatementNode.LiterallyNode(p.STRING)
+
     @_("NAME")
     def expr(self, p):
         return StatementNode.VarNode(p.NAME)
@@ -38,7 +42,7 @@ class ComstructParser(Parser):
 
     @_("expr MINUS expr")
     def expr(self, p):
-        return StatementNode.MathNode("-", p.expr0, p.exp1)
+        return StatementNode.MathNode("-", p.expr0, p.expr1)
 
     @_("expr MULTIPLY expr")
     def expr(self, p):

@@ -6,6 +6,7 @@ class ComstructLexer(Lexer):
     tokens = {
         "NAME",  # Any name like a var
         "NUMBER",  # A number like an int or a float
+        "STRING",  # One or multible Lines of words
         "PLUS",  # +
         "MINUS",  # -
         "MULTIPLY",  # *
@@ -31,6 +32,7 @@ class ComstructLexer(Lexer):
 
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
     PLUS = r'\+'
+    STRING = r'"[^\"^\n]+"|""'
     MINUS = r'-'
     MULTIPLY = r'\*'
     DIVIDE = r'/'
@@ -56,6 +58,10 @@ class ComstructLexer(Lexer):
 
     def NEWSTMT(self, t):
         self.lineno += len(t.value)
+        return t
+
+    def STRING(self, t):
+        t.value = t.value[1:-1]
         return t
 
     def error(self, t):

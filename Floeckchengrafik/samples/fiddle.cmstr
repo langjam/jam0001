@@ -1,6 +1,0 @@
-x = function({
-    y=1?
-    out(y)?
-})?
-
-x()?
