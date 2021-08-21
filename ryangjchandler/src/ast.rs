@@ -8,9 +8,17 @@ pub enum Statement {
     DefinitionHeader(DefinitionHeader),
     FunctionDefinition(FunctionDefinition),
     Expression(Expression),
+    If(If),
 
     // TODO: Remove this nasty ass placeholder.
     Empty
+}
+
+#[derive(Debug, Clone)]
+pub struct If {
+    pub condition: Expression,
+    pub then: Vec<Statement>,
+    pub otherwise: Vec<Statement>
 }
 
 #[derive(Debug, Clone)]

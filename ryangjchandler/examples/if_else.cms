@@ -1,0 +1,25 @@
+/*
+ * @name "If/Else Example"
+ */
+
+if true {
+    println("cool")
+} else {
+    println("not cool")
+}
+
+if 1 {
+    println("1 is truthy")
+}
+
+if "non empty string" {
+    println("non empty string is truthy")
+}
+
+if "" {
+    println("empty string is falsy")
+}
+
+if null {
+    println("null is falsy")
+}

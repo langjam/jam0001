@@ -31,6 +31,16 @@ impl Value {
             _ => todo!()
         }
     }
+
+    pub fn to_bool(&self) -> bool {
+        match self {
+            Self::String(s) => ! s.is_empty(),
+            Self::Number(n) => *n > 0.0,
+            Self::Bool(b) => *b,
+            Self::Null => false,
+            Self::Function(_) => true,
+        }
+    }
 }
 
 impl Display for Value {

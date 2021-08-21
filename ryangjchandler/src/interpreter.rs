@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use thiserror::Error;
 
-use crate::ast::{Program, Statement, FileHeader, DefinitionHeader, FunctionDefinition};
+use crate::ast::{Program, Statement, FileHeader, DefinitionHeader, FunctionDefinition, If};
 use crate::expression::{Expression, Call};
 use crate::environment::Environment;
 use crate::value::{Value, Function, NativeFunction};
@@ -73,6 +73,22 @@ impl<'i> Interpreter<'i> {
             },
             Statement::Expression(expression) => {
                 self.execute_expression(expression)?;
+            },
+            Statement::If(If { condition, then, otherwise }) => {
+                match self.execute_expression(condition)? {
+                    Some(value) => {
+                        if value.to_bool() {
+                            for statement in then {
+                                self.execute_statement(statement)?;
+                            }
+                        } else {
+                            for statement in otherwise {
+                                self.execute_statement(statement)?;
+                            }
+                        }
+                    },
+                    None => unreachable!()
+                }
             },
             _ => todo!()
         };

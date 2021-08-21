@@ -3,7 +3,7 @@ use std::mem::discriminant;
 use thiserror::Error;
 
 use crate::token::{Token, TokenKind};
-use crate::ast::{Program, Statement, FileHeader, FunctionDefinition, DefinitionHeader};
+use crate::ast::{Program, Statement, FileHeader, FunctionDefinition, DefinitionHeader, If};
 use crate::expression::{Expression, Priority, Call};
 
 #[derive(Debug, Clone)]
@@ -73,8 +73,36 @@ impl<'p> Parser<'p> {
         match self.current.kind {
             TokenKind::Fn => self.parse_fn(),
             TokenKind::CommentStarter => self.parse_definition_header(),
+            TokenKind::If => self.parse_if(),
             _ => self.parse_expression_statement(),
         }
+    }
+
+    pub fn expect_expression(&mut self, priority: Priority) -> Result<Expression, ParserError> {
+        Ok(match self.parse_expression(priority)? {
+            None => return Err(ParserError::ExpectedExpression(self.current.position.line)),
+            Some(e) => e,
+        })
+    }
+
+    pub fn parse_if(&mut self) -> Result<Statement, ParserError> {
+        self.expect_token_and_read(TokenKind::If)?;
+
+        let condition = self.expect_expression(Priority::Lowest)?;
+        let then = self.parse_block()?;
+        let mut otherwise = Vec::new();
+
+        if self.current_is(TokenKind::Else) {
+            self.expect_token_and_read(TokenKind::Else)?;
+
+            otherwise = self.parse_block()?;
+        }
+
+        Ok(Statement::If(If {
+            condition,
+            then,
+            otherwise
+        }))
     }
 
     pub fn parse_definition_header(&mut self) -> Result<Statement, ParserError>
