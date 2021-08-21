@@ -58,6 +58,14 @@ def parse_code_block(tokens):
     output.append(line)
   return output
 
+def parse_return_statement(tokens):
+  return_token = tokens.pop_expected('return')
+  if tokens.pop_if_present(';'):
+    return ReturnStatement(return_token, None)
+  expression = parse_expression(tokens)
+  tokens.pop_expected(';')
+  return ReturnStatement(return_token, expression)
+
 def parse_for_loop(tokens):
   for_token = tokens.pop_expected('for')
   variable = tokens.pop()
