@@ -102,7 +102,7 @@ JSON has problems, but, JSON is ubiquitous.
 
 # Simplicity
 
-The goal is to make this project _so simple_ that it evokes _this is not hard enough_ and _this is not powerful enough_ gag reflexes.
+The goal is to make this project _so simple_ that it evokes _this is not hard enough_ and _this is not powerful enough_ and _this is cheating_ gag reflexes.
 
 We should not be wasting brain power on the fine details required by most GPLs. 
 
@@ -112,9 +112,11 @@ We should devote that brain power to more interesting concepts.
 
 I use GPLs (general purpose languages), in this case JavaScript and JSON and PROLOG, as _assembly_ languages.
 
-The less syntax and the less type checking (!) the better.
+The less syntax and the less type checking (!) the better (see, also, Readability section below).
 
 Lisp (Common Lisp, Racket) would be my choice, but Ohm-JS has not yet been ported to lisp.
+
+80x86 is Old Assembler.
 
 # Introduction
 
@@ -316,6 +318,29 @@ Let's start by making separate diagrams for each of the view.
 - plan: (1) collect up all components (2) emit BASH functions for all components that have non-empty "synccode" fields
 - use Ohm-JS to grok details.json
 - use Glue (tool) to emit code
+
+# Readability
+
+There are 2 kinds of languages:
+1. human readable, and,
+2. machine readable.
+
+The result needs to be machine-readable.
+
+## Dead Code
+
+Dead code ...
+- only takes up space
+- does not cost execution time
+- is a problem for human readability, but is not a problem for machine readability (machines don't care).
+
+# Future
+
+- make this thing emit Python instead of BASH (I suspect that this is easy, hacking on emit*.html should be enough)
+
+- make this thing emit WASM (WAT)
+
+- make this thing emit code for JVM and BEAM
 
 # Appendix
 

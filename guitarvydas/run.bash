@@ -29,7 +29,6 @@ cat sequence.pl temp.pl | sort >fb.pl
 
 # debug
 mv fb.pl seqfb.pl
-cat sequence.json
 
 ## now do details.drawio
 swipl -q \
@@ -46,3 +45,9 @@ cat details.pl temp.pl | sort >fb.pl
 
 # debug
 mv fb.pl detfb.pl
+
+tsort topo.txt >sorted.txt
+
+cat header.txt functions.txt sorted.txt trailer.txt >final.bash
+cat final.bash
+
