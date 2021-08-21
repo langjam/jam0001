@@ -46,8 +46,12 @@ class ComstructExecutor:
         elif isinstance(node, StatementNode.FunctionDefinitionNode):
             return self.walkTree(node.content)  # TODO
         elif isinstance(node, StatementNode.FunctionCallNode):
+            processed_args = []
+            print(node.func_name)
+            for arg in node.args:
+                processed_args.append(self.walkTree(arg))
             if env[node.func_name].content == "internal":
-                return internals[node.func_name](node.args)
+                return internals[node.func_name](processed_args)
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             for func_node in env[node.func_name].content.content:
                 ret = self.walkTree(func_node)

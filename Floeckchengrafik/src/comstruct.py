@@ -39,4 +39,4 @@ if __name__ == '__main__':
     ComstructExecutor(tree)
 
     environment = executor.env
-    print("End Executions")
+    print("End Execution")
