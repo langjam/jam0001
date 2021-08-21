@@ -37,6 +37,14 @@ pub struct LineComment<'a> {
     pub stmt: Option<Stmt<'a>>,
 }
 
+// TODO: closure captures
+#[derive(Debug, Clone, PartialEq, AstToStr)]
+pub struct Function<'a> {
+    pub name: Cow<'a, str>,
+    pub args: Vec<Cow<'a, str>>,
+    pub body: Vec<Stmt<'a>>,
+}
+
 #[derive(Debug, Clone, PartialEq, AstToStr)]
 pub struct Ast<'a> {
     pub statements: Vec<LineComment<'a>>,

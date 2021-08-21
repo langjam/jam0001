@@ -29,7 +29,7 @@ peg::parser!(pub grammar dank() for str {
 
     // TODO: parse code inside comments
     rule line_comment_group() -> Vec<&'input str>
-        = ("//" t:$([ch if ch != '\n']*) "\n" "\r"? {t})+
+        = (_ "//" t:$([^'\n']*) ___ {t})+
 
     // TODO: make this properly attach comments
     /// Parses a single-line comment
@@ -178,7 +178,6 @@ peg::parser!(pub grammar dank() for str {
 #[cfg(test)]
 pub mod tests {
     use ast2str::AstToStr;
-    use peg::str::LineCol;
     use pretty_assertions::assert_eq;
 
     use super::*;
@@ -208,6 +207,10 @@ pub mod tests {
 
         */
 
+
+        /* 
+            print("no name in this one");
+        */
         "#;
 
         test_eq!(
@@ -230,6 +233,13 @@ pub mod tests {
           args= 
             ExprKind::Literal
               field0: Str("code inside the comment")
+    HeaderComment
+      name= 
+      body= 
+        StmtKind::Print
+          args= 
+            ExprKind::Literal
+              field0: Str("no name in this one")
   code: Ast
     statements="#
         )
@@ -263,25 +273,39 @@ pub mod tests {
         // attached comment
         print variable;
 
+
+        // detached comment
+
+
+        print some_statement_way_down_below;
+
         "#;
-        assert_eq!(
-            dank::file(test).unwrap(),
-            FileAst {
-                header_comments: vec![],
-                code: Ast {
-                    statements: vec![LineComment {
-                        body: CommentBody::Text(" attached comment".into()),
-                        stmt: Some(Stmt {
-                            kind: StmtKind::Print(vec![Expr {
-                                kind: ExprKind::Variable("variable".into()),
-                                span: 52..60,
-                            },]),
-                            span: 46..60,
-                        }),
-                    }],
-                }
-            }
-        )
+        test_eq!(
+            test,
+            r#"
+FileAst
+  header_comments= 
+  code: Ast
+    statements= 
+      LineComment
+        body: CommentBody::Text
+          text: " attached comment"
+        stmt: StmtKind::Print
+          args= 
+            ExprKind::Variable
+              name: "variable"
+      LineComment
+        body: CommentBody::Text
+          text: " detached comment"
+        stmt: None
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::Print
+          args= 
+            ExprKind::Variable
+              name: "some_statement_way_down_below"
+"#
+        );
     }
 
     #[test]
