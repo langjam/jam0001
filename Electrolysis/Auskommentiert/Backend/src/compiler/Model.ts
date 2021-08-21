@@ -5,41 +5,72 @@ import { inspect } from "util";
 import {parse} from "./grammar";
 import { urlToHttpOptions } from "url";
 
-class ModelComment extends WrappedComment {
-    private children : ModelComment[];
-    private astString : string;
-    constructor(ast : Comment, astString : string, upvotes : number, id : string, date: Date, children : ModelComment[]) {
-        super(ast, upvotes, id, date);
-        this.children = children;
-        this.astString = astString;
+function ModelCommentSorter(a : ModelComment, b : ModelComment) : number {
+    return a.date - b.date;
+} 
+
+class CommentBase {
+    protected mId : string;
+    protected mContent : string;
+    protected mUpvotes : number;
+    protected mChildren : ModelComment[];
+    protected mDate : number;
+    constructor(id : string, content : string, upvotes : number, date : number, children: ModelComment[]) {
+        this.mId = id;
+        this.mContent = content;
+        this.mUpvotes = upvotes;
+        this.mChildren = children;
+        this.mDate = date;
+    }
+    get id() {
+        return this.mId;
+    }
+    get content() {
+        return this.mContent;
+    }
+    get upvotes() {
+        return this.mUpvotes;
+    }
+    get children() {
+        return this.mChildren;
+    }
+    get date() {
+        return this.mDate;
+    }
+    get childrenSorted() {
+        return this.mChildren.sort(ModelCommentSorter);
+    }
+    addChild(child : ModelComment):void {
+        this.mChildren.push(child);
+    }
+}
+
+
+class ModelComment extends CommentBase {
+    private mAST : Comment;
+    constructor(ast : Comment, astString : string, upvotes : number, id : string, date: number, children : ModelComment[]) {
+        super(id, astString, upvotes, date, children);
+        this.mAST = ast;
     }
 
     toObject() : any {
         return {
-            id: this.id,
-            content: this.astString,
-            children: this.children.map(v => v.toObject()),
-            upvotes: this.upvotes,
-            date: this.date
+            id: this.mId,
+            content: this.mContent,
+            children: this.mChildren.map(v => v.toObject()),
+            upvotes: this.mUpvotes,
+            date: this.mDate
         };
+    }
+    makeWrappedComment() {
+        return new WrappedComment(this.mAST, this.mUpvotes, this.mId, this.mDate);
     }
 }
 
-class ModelPost {
+class ModelPost extends CommentBase {
     private mTitle : string;
-    private mId : string;
-    private mContent : string;
-    private mUpvotes : number;
-    private mTopLevelComments : ModelComment[];
-    private mDate : number;
     get title() {
         return this.mTitle;
-    }
-    get topLevelComments() {
-        return this.mTopLevelComments;
-    }
-    get topLevelCommentsSorted() {
-        return this.mTopLevelComments.sort(WrappedCommentSorter);
     }
     get id() {
         return this.mId;
@@ -47,20 +78,16 @@ class ModelPost {
     get upvotes() {
         return this.mUpvotes;
     }
-    constructor(title : string, content : string, id : string, upvotes : number, topLevelComments : ModelComment[], date : number) {
+    constructor(title : string, content : string, id : string, upvotes : number, date : number, children : ModelComment[]) {
+        super(id, content, upvotes, date, children);
         this.mTitle = title;
-        this.mId = id;
-        this.mContent = content;
-        this.mUpvotes = upvotes;
-        this.mTopLevelComments = topLevelComments;
-        this.mDate = date;
     }
     toObject() : any {
         return {
             id: this.mId,
             title: this.mTitle,
             content: this.mContent,
-            comments: this.topLevelCommentsSorted.map(v => v.toObject()),
+            comments: this.childrenSorted.map(v => v.toObject()),
             upvotes: this.mUpvotes,
             date: this.mDate
         };
@@ -76,7 +103,7 @@ class ModelCommentProvider extends CommentProvider {
         this.mPostId = postId;
     }
     getFirstComment(): WrappedComment | undefined {
-        return this.mModel.posts.get(this.mPostId)?.topLevelCommentsSorted[0];
+        return this.mModel.allCommentBases.get(this.mPostId)?.childrenSorted[0].makeWrappedComment();
     }
     getNextComment(currentCommentId: string): WrappedComment | undefined {
         throw new Error("Method not implemented.");
@@ -90,23 +117,28 @@ class ModelCommentProvider extends CommentProvider {
 }
 
 export class Model {
-    private mPosts : Map<string, ModelPost> = new Map();
+    private mCommentsMap : Map<string, CommentBase> = new Map();
     addPost(post : any): void {
         let comments : ModelComment[] = [];
-        for(let topLevelComment of post.comments) {
-            comments.push(this.parseComment(topLevelComment));
+        for(let topLevelComment of post.children) {
+            let comment = this.parseComment(topLevelComment);
+            this.mCommentsMap.set(comment.id, comment);
+            comments.push(comment);
         }
-        this.mPosts.set(post.id, new ModelPost(post.title, post.content, post.id, post.upvotes, comments, post.date));
-        console.log(inspect(this.mPosts, false, null, true));
+        this.mCommentsMap.set(post.id, new ModelPost(post.title, post.content, post.id, post.upvotes, post.date, comments));
+        console.log(inspect(this.posts, false, null, true));
     }
-    addComment(postId : string, comment : ModelComment) {
-
+    addComment(commentId : string, comment : ModelComment) {
+        this.mCommentsMap.get(commentId)?.addChild(comment);
     }
     makeCommentProvider(postId : string) : CommentProvider {
         return new ModelCommentProvider(this, postId);
     }
-    get posts() {
-        return this.mPosts;
+    get posts() : ModelPost[] {
+        return Array.from(this.mCommentsMap.values()).filter(c => c instanceof ModelPost) as ModelPost[];
+    }
+    get allCommentBases() : Map<string, CommentBase> {
+        return this.mCommentsMap;
     }
     private parseComment(jsonComment : any) : ModelComment {
         let parseResult = parse(jsonComment.content);

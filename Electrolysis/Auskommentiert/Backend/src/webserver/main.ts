@@ -4,6 +4,6 @@ const port = 6789;
 
 
 
-app.get("/api/data", (req, res) => {
+app.get("/api/data", (req : express.Request, res : express.Response) => {
     res.send("Hello World");
 });

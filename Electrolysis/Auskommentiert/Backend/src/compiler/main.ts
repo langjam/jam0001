@@ -9,7 +9,7 @@ model.addPost({
     id: "22",
     upvotes: 4,
     date: Date.now(),
-    comments: [
+    children: [
         {
             id: "t6_1",
             content: "while 3 < 5 + 2:",

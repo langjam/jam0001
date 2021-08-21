@@ -4,8 +4,8 @@ export class WrappedComment {
     private mAST : Comment;
     private mUpvotes : number;
     private mId : string;
-    private mDate : Date;
-    constructor(ast : Comment, upvotes : number, id : string, date : Date) {
+    private mDate : number;
+    constructor(ast : Comment, upvotes : number, id : string, date : number) {
         this.mAST = ast;
         this.mUpvotes = upvotes;
         this.mId = id;
@@ -26,5 +26,5 @@ export class WrappedComment {
 }
 
 export function WrappedCommentSorter(a : WrappedComment, b : WrappedComment) : number {
-    return a.date.getUTCMilliseconds() - b.date.getUTCMilliseconds();
+    return a.date - b.date;
 } 
