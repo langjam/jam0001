@@ -17,6 +17,7 @@ and comment_op =
     | PROD of comment_value * comment_value
     | DIV of comment_value * comment_value
     | APPLY of string * comment_value list
+    (* IDEA : apply to a hole (SOMETHING) !!! *)
     | SELF of comment_value list
 and comment_expr =
     | Leaf of comment_value
@@ -26,13 +27,13 @@ and comment_result =
     | YOLO of comment_expr list
 
 let split_comment (comment : tok list) : tok list list =
-  let rec split (res : tok list list) (curr_expr tok list) = function
+  let rec split (res : tok list list) (curr_expr : tok list) = function
   | Sep::q -> split ((List.rev curr_expr)::res) [] q
   | token::q -> split res (token::curr_expr) q
   | [] -> List.rev res
 in split [] [] comment
 
-let rec parse_function (n_args : int) (decl : (string * comment_expr) list) (res : comment_expr) (comment : tok list list) : comment_expr =
+(* let rec parse_function (n_args : int) (decl : (string * comment_expr) list) (res : comment_expr) (comment : tok list list) : comment_expr =
   match comment with
   | [] -> {
     n_args = n_args;
@@ -52,4 +53,4 @@ let rec parse_function (n_args : int) (decl : (string * comment_expr) list) (res
     | _ -> failwith "expected a function name"
   )
   | (Word (_, "if"))::c -> let e = parse_function n_args decl res c in SOMETHING
-  | _ -> failwith "empty expression"
+  | _ -> failwith "empty expression" *)
