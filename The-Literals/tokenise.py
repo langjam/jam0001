@@ -244,9 +244,6 @@ if __name__ == "__main__":
 
     print(text)
 
-    #     text = """\
-    #  * @param n
-    # """
     tokeniser = Tokeniser(text)
     for token in tokeniser:
         print(token)

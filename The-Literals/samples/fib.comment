@@ -8,7 +8,10 @@ This is a sample .comment program. This line, ironically, is ignored because it 
  */
  // If n is 0 then set fib to 1 and we're done.
  // If n is 1 then set fib to 1 and we're done.
- // Calculate the nth fibonacci number with n as n - 1 and call it x.
- // Ditto with n as n - 2 and call it y.
- // Set fib to x + y.
- // And we're done.
+ 
+ >> The next two lines have yet to be implemented so I've uncommented them.
+ Calculate the nth fibonacci number with n as n - 1 and call it x.
+ Ditto with n as n - 2 and call it y.
+
+// Set fib to x + y.
+// And we're done.

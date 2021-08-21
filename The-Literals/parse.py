@@ -48,9 +48,14 @@ class Parser:
 
     def parse_functions(self):
         token, value = self.peek_lexeme()
-        while token == Token.FUNCTION:
-            self.parse_function()
-            token, value = self.peek_lexeme()
+        while token in (Token.EOL, Token.FUNCTION):
+            while token == Token.EOL:
+                self.advance()
+                token, value = self.peek_lexeme()
+
+            while token == Token.FUNCTION:
+                self.parse_function()
+                token, value = self.peek_lexeme()
 
     def parse_function(self):
         token, value = self.advance()
@@ -110,8 +115,9 @@ class Parser:
             else:
                 self.parse_stmt()
                 token, value = self.peek_lexeme()
-                if token == Token.EOL:
+                while token == Token.EOL:
                     self.advance()
+                    token, value = self.peek_lexeme()
 
     def parse_stmt(self):
         self.parse_stmt_contents()
@@ -370,4 +376,12 @@ if __name__ == "__main__":
     parser.parse()
 
     parser = Parser(program(code, set_var_to_constant))
+    parser.parse()
+
+    input_file = "samples/fib.comment"
+    with open(input_file, "r") as f:
+        text = f.read()
+
+    tokeniser = Tokeniser(text)
+    parser = Parser(tokeniser.tokenise().__next__)
     parser.parse()
