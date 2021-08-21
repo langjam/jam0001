@@ -86,20 +86,20 @@ let parse_value (comment : tok list) : value =
 let parse_operation (comment : tok list) : operation =
   let f = parse_value in
   let rec search (prev : tok list) = function
-  | [] -> failwith "no operation"
-  | t::q -> (
-    match string_of_tok t with
-    | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in If (f a, f (List.rev prev), f b)
-    | "sum" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Sum (f a, f b)
-    | "difference" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Diff (f a, f b)
-    | "product" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Prod (f a, f b)
-    | "division" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Div (f a, f b)
-    | "application" -> let _, b = look_for "of" q in let a, b = look_for "on" b in
-      let s = string_of_comment a and l = split_kw "and" b in
-      if s = "self" then Rec (List.map f l) else App (s, List.map f l)
-    | _ -> search (t::prev) q
-  )
-in search [] comment
+    | [] -> failwith "no operation"
+    | t::q -> (
+        match string_of_tok t with
+        | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in If (f a, f (List.rev prev), f b)
+        | "sum" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Sum (f a, f b)
+        | "difference" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Diff (f a, f b)
+        | "product" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Prod (f a, f b)
+        | "division" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Div (f a, f b)
+        | "application" -> let _, b = look_for "of" q in let a, b = look_for "on" b in
+          let s = string_of_comment a and l = split_kw "and" b in
+          if s = "self" then Rec (List.map f l) else App (s, List.map f l)
+        | _ -> search (t::prev) q
+      )
+  in search [] comment
 
 let rec parse_statement (comment : tok list) : cconstraint =
   let f x = try Node (parse_operation x) with _ -> Leaf (parse_value x) in
@@ -109,8 +109,8 @@ let rec parse_statement (comment : tok list) : cconstraint =
     match string_of_tok t with
     | "takes" ->
       begin match q with
-      | Int (_, n)::_ -> Takes n
-      | _ -> failwith "expected number of arguments"
+        | Int (_, n)::_ -> Takes n
+        | _ -> failwith "expected number of arguments"
       end
     | "let" -> let a, b = look_for "be" q in Let (string_of_comment a, f b)
     | "returns" -> Returns (f q)
