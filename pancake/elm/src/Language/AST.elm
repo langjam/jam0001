@@ -98,8 +98,8 @@ type Atom
     = Int Int
     | Str String
     | List (List Atom)
-    | Quoted Func
-    | Actual Func
+    | Quoted String
+    | Actual String
 
 
 toInt : Atom -> Maybe Int
