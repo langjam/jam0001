@@ -203,7 +203,9 @@ impl Data {
                 }
                 Operation::Duplicate => {
                     if let Some(x) = station.trains[0].front().cloned() {
-                        station.trains[1].push_back(x);
+                        let train = x.lock()?;
+                        let t2 = train.clone();
+                        station.trains[1].push_back(Arc::new(Mutex::new(t2)));
                         did_work = true;
                     }
                 }
