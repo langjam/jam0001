@@ -38,12 +38,14 @@ class ComstructExecutor:
             return self.walkTree(node.var1) <= self.walkTree(node.var2)
         elif isinstance(node, StatementNode.VarAssignNode):
             env[node.var_name] = self.walkTree(node.var_value)
-            print(f"{node.var_name}: {env[node.var_name].content}")
+            print(f"{node.var_name}: {env[node.var_name]}")
             return env[node.var_name]
         elif isinstance(node, StatementNode.VarNode):
             return env[node.var_name]
         elif isinstance(node, StatementNode.LiterallyNode):
             return node.var
+        elif isinstance(node, StatementNode.StoredProcedureNode):
+            return node
         elif isinstance(node, StatementNode.FunctionDefinitionNode):
             return node
         elif isinstance(node, StatementNode.FunctionCallNode):

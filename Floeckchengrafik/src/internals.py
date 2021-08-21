@@ -2,7 +2,6 @@ from application_stack_utils import StatementNode
 
 
 def function(args):
-    print(args[0])
     return StatementNode.FunctionDefinitionNode(args[0], args[1:len(args)])
 
 
