@@ -31,27 +31,29 @@ def is_color(r, g, b):
     if color < 0 or color > 255: return False
   return True
 
-_PY_KEY_LOOKUP = {
-  pygame.K_UP: 'up',
-  pygame.K_DOWN: 'down',
-  pygame.K_LEFT: 'left',
-  pygame.K_RIGHT: 'right',
-  pygame.K_SPACE: 'space',
-  pygame.K_RETURN: 'enter',
-  pygame.K_ESCAPE: 'escape',
-  pygame.K_LCTRL: 'ctrl',
-  pygame.K_RCTRL: 'ctrl',
-  pygame.K_LSHIFT: 'shift',
-  pygame.K_RSHIFT: 'shift',
-  pygame.K_LALT: 'alt',
-  pygame.K_RALT: 'alt',
-}
-for i in range(26):
-  _PY_KEY_LOOKUP[pygame.K_a + i] = chr(ord('a') + i)
-for i in range(10):
-  _PY_KEY_LOOKUP[pygame.K_0 + i] = 'num' + str(i)
-for i in range(12):
-  _PY_KEY_LOOKUP[pygame.K_F1 + i] = 'f' + str(i + 1)
+_PY_KEY_LOOKUP = {}
+if not failure:
+  _PY_KEY_LOOKUP = {
+    pygame.K_UP: 'up',
+    pygame.K_DOWN: 'down',
+    pygame.K_LEFT: 'left',
+    pygame.K_RIGHT: 'right',
+    pygame.K_SPACE: 'space',
+    pygame.K_RETURN: 'enter',
+    pygame.K_ESCAPE: 'escape',
+    pygame.K_LCTRL: 'ctrl',
+    pygame.K_RCTRL: 'ctrl',
+    pygame.K_LSHIFT: 'shift',
+    pygame.K_RSHIFT: 'shift',
+    pygame.K_LALT: 'alt',
+    pygame.K_RALT: 'alt',
+  }
+  for i in range(26):
+    _PY_KEY_LOOKUP[pygame.K_a + i] = chr(ord('a') + i)
+  for i in range(10):
+    _PY_KEY_LOOKUP[pygame.K_0 + i] = 'num' + str(i)
+  for i in range(12):
+    _PY_KEY_LOOKUP[pygame.K_F1 + i] = 'f' + str(i + 1)
 
 _PY_VALID_KEYS = {}
 for k in _PY_KEY_LOOKUP.values():
