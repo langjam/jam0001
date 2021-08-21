@@ -13,7 +13,8 @@ if(1 != x : {
 
 out("after if")?
 
-for (i = 100 : {
+for ("y" : intrange(0:100) : {
+	out(y)?
 	out("This is just a test")?
 })?
 

@@ -65,6 +65,20 @@ class ComstructExecutor:
             return ret
         elif isinstance(node, StatementNode.ForLoopExecutorNode):
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
-            for i in range(0, node.loop_limit):
-                ret = self.walkTree(StatementNode.ExecuteStoredProcedureNode(node.proc_node))
+            prev = None
+            try:
+                prev = env[node.varname]
+            except LookupError:
+                pass
+            for i in node.tgetfrm:
+                env[node.varname] = i
+                ret = self.walkTree(StatementNode.ExecuteStoredProcedureNode(node.execute))
+
+            if prev is not None:
+                env[node.varname] = prev
+            else:
+                del env[node.varname]
+
             return ret
+        else:
+            return node

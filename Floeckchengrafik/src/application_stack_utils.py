@@ -86,6 +86,10 @@ class StatementNode:
 
     class ForLoopExecutorNode(GenericNode):
 
-        def __init__(self, proc_node, limit):
-            self.proc_node = proc_node
-            self.loop_limit = limit
+        def __init__(self, varname, tgetfrm, execute):
+            self.varname = varname
+            self.tgetfrm = tgetfrm
+            self.execute = execute
+
+            print(varname, tgetfrm, execute)
+
