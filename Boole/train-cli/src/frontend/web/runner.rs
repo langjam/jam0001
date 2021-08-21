@@ -9,6 +9,8 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::io::Write;
 use std::process::{Command, ExitStatus};
+use crate::frontend::web::MessageToWebpage;
+use futures_util::SinkExt;
 
 #[derive(Serialize)]
 struct VisualizerStation {
@@ -19,18 +21,16 @@ struct VisualizerStation {
 
 pub struct WebRunner {
     program: Program,
-    sender: SplitSink<WebSocket, Message>,
 }
 
 impl WebRunner {
-    pub fn new(program: Program, sender: SplitSink<WebSocket, Message>) -> Self {
+    pub fn new(program: Program) -> Self {
         Self {
             program,
-            sender
         }
     }
 
-    pub fn generate_visualizer_file(&self, connection_id: i64) -> Result<PathBuf, ()> {
+    pub fn generate_visualizer_file(&self, connection_id: i64) -> PathBuf {
         let mut res = Vec::new();
 
         let mut indices = HashMap::new();
@@ -74,12 +74,12 @@ impl WebRunner {
         let mut command = Command::new(python_executor);
         command.arg("visualizer/router.py")
             .arg(format!("{:?}", &path));
+        command.current_dir(".");
 
         let mut child = command.spawn().expect("spawn python program");
         let status = child.wait().expect("wasn't running");
         if !status.success() {
-            log::error!("failed to generate station layout");
-            return Err(())
+            panic!("failed to generate station layout");
         }
 
 
@@ -87,10 +87,25 @@ impl WebRunner {
         path.push("visualizer");
         path.push("visualizer_setup");
         path.push(format!("{}.result.json", connection_id));
-        return Ok(path);
+
+        path
     }
 }
 
+
+pub async fn send(sender: &mut SplitSink<WebSocket, Message>, m: &MessageToWebpage) {
+    let message = match serde_json::to_string(&m) {
+        Ok(i) => Message::text(i),
+        Err(e) => {
+            log::error!("{}", e);
+            return;
+        }
+    };
+
+    if let Err(e) = sender.send(message).await {
+        log::error!("{}", e);
+    }
+}
 
 impl Communicator for WebRunner {
     fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError> {

@@ -17,73 +17,56 @@ use train::vm::Data;
 use train::ast::{Station, Train, Program};
 use crate::frontend::cli::CliRunner;
 use std::sync::atomic::{AtomicI64, Ordering};
-use crate::frontend::web::runner::WebRunner;
+use crate::frontend::web::runner::{WebRunner, send};
 
 #[derive(Serialize)]
-enum MessageToWebpage{
+pub enum MessageToWebpage{
     AskForInput(i64),
     Print(Vec<i64>),
     MoveTrain(),
-    EndSimulationStep,
+    VisualizerData(String)
 }
 
 #[derive(Deserialize)]
-enum MessageFromWebpage{
+pub enum MessageFromWebpage{
     AdvanceSimulation,
     SendInputResponse(i64, Vec<i64>)
-}
-
-macro_rules! serialize_silent {
-    ($($m: tt)*) => {
-        match serde_json::to_string($($m)*) {
-            Ok(i) => Message::text(i),
-            Err(e) => {
-                log::error!("{}", e);
-                continue;
-            }
-        }
-    };
 }
 
 async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
     let (mut ws_tx, mut ws_rx) = ws.split();
 
-    let runner = WebRunner::new(program.clone(), ws_tx);
+    let runner = WebRunner::new(program.clone());
     let vm = Data::new(program);
 
 
-    runner.generate_visualizer_file(connection_id);
+    let visualizer_path = runner.generate_visualizer_file(connection_id);
 
     tokio::task::spawn(async move {
         while let Some(r) = ws_rx.next().await {
-            // match r {
-            //     Ok(i) => match i.to_str() {
-            //         Ok(i) => {
-            //             log::info!("{}", i);
-            //             match serde_json::from_str::<MessageFromWebpage>(i) {
-            //                 Ok(message) => match message {
-            //                     MessageFromWebpage::AdvanceSimulation => {}
-            //                     MessageFromWebpage::SendInputResponse(_, _) => {}
-            //                 }
-            //                 Err(e) => log::error!("{}", e)
-            //             }
-            //         }
-            //         Err(_) => log::error!("couldn't convert message to string (binary?)")
-            //     }
-            //     Err(e) => log::error!("{}", e),
-            // }
+            match r {
+                Ok(i) => match i.to_str() {
+                    Ok(i) => {
+                        log::info!("{}", i);
+                        match serde_json::from_str::<MessageFromWebpage>(i) {
+                            Ok(message) => match message {
+                                MessageFromWebpage::AdvanceSimulation => {}
+                                MessageFromWebpage::SendInputResponse(_, _) => {}
+                            }
+                            Err(e) => log::error!("{}", e)
+                        }
+                    }
+                    Err(_) => log::error!("couldn't convert message to string (binary?)")
+                }
+                Err(e) => log::error!("{}", e),
+            }
         }
     });
 
     tokio::task::spawn(async move {
-        loop {
-            // let message = match local_vm.lock().await.rx.recv() {
-            //     Ok(i) => i,
-            //     Err(_) => {
-            //         break;
-            //     }
-            // };
+        send(&mut ws_tx, &MessageToWebpage::VisualizerData(format!("{:?}", visualizer_path))).await;
 
+        loop {
             // let res = match message {
             //     VmInterfaceMessage::AskForInput(id) => {
             //         serialize_silent!(&MessageToWebpage::AskForInput(id))
@@ -99,9 +82,6 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
             //     }
             // };
 
-            // if let Err(e) = ws_tx.send(res).await {
-            //     log::error!("{}", e);
-            // }
         }
     });
 }

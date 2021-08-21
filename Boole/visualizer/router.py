@@ -4,6 +4,8 @@ from math import sqrt, inf
 from pprint import pprint
 from random import random, shuffle
 from queue import PriorityQueue
+from sys import argv
+import os
 
 from matplotlib import pyplot as plt, patches
 import matplotlib
@@ -316,7 +318,14 @@ class World:
         pass
 
 if __name__ == '__main__':
-    with open("test_places.json") as f:
+    if len(argv) == 2:
+        file = argv[1].strip().strip("\"")
+    else:
+        file = "test_places.json"
+
+    print(os.getcwd())
+
+    with open(file) as f:
         data = json.load(f)
     pprint(data)
 
