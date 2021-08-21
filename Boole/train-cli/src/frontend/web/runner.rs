@@ -129,10 +129,6 @@ impl Communicator for WebRunner {
         self.send(MessageToWebpage::PrintChar(data))
     }
 
-    fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
-        todo!()
-    }
-
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), CommunicatorError> {
         self.send(MessageToWebpage::MoveTrain {
             from_station,
