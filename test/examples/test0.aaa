@@ -3,24 +3,22 @@ print(<native integer type>(10))
 let X = <native integer type>
 
 // threed vector type
-// let Vec3 = record {
-//     x: X,
-//     y: X,
-//     z: X,
-// }
+let Vec3 = record {
+    x: X
+    y: X
+    z: X
+}
 
 print(<threed vector type>(10 20 30))
 
 // Point to functions via their type
 
 // Repeat the input thrice to construct a vector
-// let vec3 = { |x: X|: xs: Vec3
-//     xs.x = x;
-//     xs.y = x;
-//     xs.z = x;
-// }
+let vec3 = { |x: X|: xs: Vec3
+    let xs = Vec3(x x x);
+}
 
-print(is(vec3 <Repeat>))
+print(is(vec3 "Repeat"))
 
 let assert_type_names = "assert type"
 
