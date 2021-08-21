@@ -1,6 +1,7 @@
 module Eval
 
 import Types
+import Functions
 
 import Data.Nat
 import Data.List
