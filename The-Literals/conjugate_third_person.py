@@ -1,15 +1,15 @@
 es_endings = ("ch", "s", "sh", "x", "o", "z")
 vowel_o_endings = ("ao", "eo", "io", "oo", "uo")
 vowel_z_endings = ("az", "ez", "iz", "oz", "uz")
-
+vowel_y_endings = ("ay", "ey", "iy", "oy", "uy")
 
 def conjugate_third_person(verb: str):
     if verb == "be":
         return "is"
     elif verb == "have":
         return "has"
-    elif verb.endswith(vowel_o_endings):
-        # An exception to the fact that "o" is in es_endings
+    elif verb.endswith(vowel_o_endings) or verb.endswith(vowel_y_endings):
+        # An exception to the other rules containing "o" or "y".
         return verb + "s"
     elif verb.endswith(vowel_z_endings):
         return verb + "zes"

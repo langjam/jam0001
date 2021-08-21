@@ -83,6 +83,10 @@ class TestConjugateThirdPerson(unittest.TestCase):
         expected_result = "buries"
         self.assertEqual(actual_result, expected_result)
 
+    def test_on_destroy(self):
+        actual_result = conjugate_third_person("destroy")
+        expected_result = "destroys"
+        self.assertEqual(actual_result, expected_result)
 
 class TestGetFuncdefName(unittest.TestCase):
     def test_when_lowercase(self):
