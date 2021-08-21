@@ -16,20 +16,7 @@ window.addEventListener("load", () => {
 let w = window.innerWidth;
 let h = window.innerHeight - controlsHeight;
 let canvas;
-
-class Station {
-    id
-    x
-    y
-
-    constructor(id, x, y) {
-        this.id = id;
-        this.x = x;
-        this.y = y;
-    }
-}
-
-const stations = [];
+let grid = new Grid();
 
 const world = {
     x: 0,
@@ -46,14 +33,42 @@ function centerZero() {
     world.zoom = 1;
 }
 
+function preload() {
+    for (const tiletypeKey in TILE_TYPE) {
+        TILE_TYPE[tiletypeKey].img = loadImage("tiles/" + TILE_TYPE[tiletypeKey].name)
+    }
+
+    preloadTrain()
+}
+
 function setup() {
     canvas = createCanvas(w, h)
 
-    stations.push(new Station(1, 10, 10));
-    stations.push(new Station(1, 20, 10));
-    stations.push(new Station(1, 10, 20));
-
     document.getElementById("controls").style.height = `${controlsHeight}px`;
+
+    grid.addTile(createVector(5, 5), TILE_TYPE.Horizontal)
+    grid.addTile(createVector(4, 5), TILE_TYPE.NE)
+    grid.addTile(createVector(4, 4), TILE_TYPE.Vertical)
+    grid.addTile(createVector(4, 3), TILE_TYPE.ES)
+    grid.addTile(createVector(5, 3), TILE_TYPE.Horizontal)
+    grid.addTile(createVector(6, 3), TILE_TYPE.SW)
+    grid.addTile(createVector(6, 4), TILE_TYPE.Vertical)
+    grid.addTile(createVector(6, 5), TILE_TYPE.WN)
+
+    grid.addStation(new Station(createVector(-3, -3), [true, false, true, true, false, false, true, false]))
+
+    // all train colors
+    // let x = 0;
+    // let y = 0;
+    // for (const i in COLOR) {
+    //     x = 0;
+    //     y += 1;
+    //     for (const j in COLOR) {
+    //         x += 1;
+    //         grid.addTrain(new Train(createVector(x, y), COLOR[i], COLOR[j], DIRECTION.East))
+    //     }
+    // }
+
     centerZero();
 }
 
@@ -65,9 +80,7 @@ function draw() {
     translate(world.x, world.y);
     scale(world.zoom)
 
-    for (const station of stations) {
-        circle(station.x, station.y, 10);
-    }
+    grid.draw()
 
     pop()
 }
@@ -92,6 +105,8 @@ function mouseWheel(event) {
     if (world.zoom < minimumZoom) {
         world.zoom = minimumZoom;
     }
+
+    event.preventDefault();
 }
 
 function mousePressed() {
