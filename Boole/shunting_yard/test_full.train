@@ -28,7 +28,7 @@ operation: print
 track 1: go to Groningen track 2
 
 {Amsterdam}
-operation: switch
+operation: switch gte
 track 1: go to Utrecht track 1
 track 2: go to Groningen track 2
 
