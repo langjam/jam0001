@@ -21,7 +21,7 @@ class Token(Enum):
     FUNCTION_NAME = auto()
     HEADER_END = auto()
     HFILL = auto()
-    IDENTIFIER = auto()
+    IDENTIFIER_WORD = auto()
     IF_KEYWORD = auto()
     LEAVE_FUNC = auto()
     NUMBER = auto()
@@ -95,7 +95,7 @@ class Tokeniser:
         while p.isalnum() or p == "'":
             self.advance()
             p = self.peek()
-        return Token.IDENTIFIER
+        return Token.IDENTIFIER_WORD
 
     def number(self):
         while self.peek().isdigit():
