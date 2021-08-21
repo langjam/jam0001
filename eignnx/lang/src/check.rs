@@ -1,7 +1,7 @@
 use displaydoc::Display;
 
 use crate::{
-    ast::{BuiltinTy, Loc, Tm, Ty},
+    ast::{Loc, Tm, Ty},
     tcx::{Binding, Tcx},
 };
 
@@ -27,7 +27,7 @@ pub struct Check {
     tcx: Tcx,
 }
 
-const BUILTIN_TYPES: &[(&'static str, Ty)] = &[("Text", Ty::Builtin(BuiltinTy::Text))];
+const BUILTIN_TYPES: &[(&'static str, Ty)] = &[("Text", Ty::text())];
 
 impl Check {
     pub fn new() -> Self {
@@ -64,7 +64,7 @@ impl Check {
     pub fn infer(&mut self, tm: &Tm) -> Result<Ty, TyCheckErr> {
         println!("infer {}\n\t-| {:?}", tm, self.tcx);
         match tm {
-            Tm::Text(_, _) => Ok(Ty::Builtin(BuiltinTy::Text)),
+            Tm::Text(_, _) => Ok(Ty::text()),
 
             Tm::Var(loc, name) => self.lookup_var(loc, name),
 
@@ -98,18 +98,18 @@ impl Check {
                 if let Some((last, init)) = tms.split_last() {
                     let tm_tys = init
                         .iter()
-                        .map(|tm| self.infer(tm))
+                        .map(|tm| self.check(tm, &Ty::void()))
                         .collect::<Result<Vec<_>, TyCheckErr>>()?;
                     self.infer(last)
                 } else {
-                    Ok(Ty::Builtin(BuiltinTy::Void))
+                    Ok(Ty::void())
                 }
             }
 
             Tm::Def(_loc, name, tm) => {
                 let tm_ty = self.infer(tm)?;
                 self.bind_tm_var(name, &tm_ty);
-                Ok(Ty::Builtin(BuiltinTy::Void))
+                Ok(Ty::void())
             }
         }
     }
@@ -117,7 +117,7 @@ impl Check {
     pub fn check(&mut self, tm: &Tm, ty: &Ty) -> Result<(), TyCheckErr> {
         println!("check {} {}\n\t-| {:?}", tm, ty, self.tcx);
         match tm {
-            Tm::Text(loc, _) => self.subtype(loc, ty, &Ty::Builtin(BuiltinTy::Text)),
+            Tm::Text(loc, _) => self.subtype(loc, ty, &Ty::text()),
 
             Tm::Var(loc, name) => {
                 let var_ty = self.lookup_var(loc, name)?;

@@ -4,7 +4,7 @@ def double = fn f: [Text -> Text] -> fn x: Text ->
     [f [f x]];;
 
 {
-    [[double fn x: Text -> my_text] "asdf"];
-    "poiu";
+    def _ = [[double fn x: Text -> my_text] "asdf"];
+    def _ = "poiu";
     my_text
 };;

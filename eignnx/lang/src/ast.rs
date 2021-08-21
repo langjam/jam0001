@@ -81,6 +81,16 @@ pub enum Ty {
     Builtin(BuiltinTy),
 }
 
+impl Ty {
+    pub const fn void() -> Self {
+        Ty::Builtin(BuiltinTy::Void)
+    }
+
+    pub const fn text() -> Self {
+        Ty::Builtin(BuiltinTy::Text)
+    }
+}
+
 impl PartialEq for Ty {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
