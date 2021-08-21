@@ -31,7 +31,7 @@ pub fn parse(i: &str) -> Result<Tm, String> {
 }
 
 fn tm(i: &str) -> IResult<&str, Tm> {
-    alt((var_tm, text_tm, lam_tm, app_tm, ty_lam_tm, ty_app_tm))(i)
+    alt((var_tm, text_tm, lam_tm, app_tm))(i)
 }
 
 #[test]
@@ -70,29 +70,6 @@ fn lam_tm(i: &str) -> IResult<&str, Tm> {
 fn app_tm(i: &str) -> IResult<&str, Tm> {
     bracketed(tuple((tm, ws::allowed::before(tm))))
         .map(|(func, arg)| Tm::App(Loc, Box::new(func), Box::new(arg)))
-        .parse(i)
-}
-
-fn ty_lam_tm(i: &str) -> IResult<&str, Tm> {
-    tuple((
-        tag("tyfn"),
-        ws::required::before(identifier),
-        ws::allowed::before(tag("->")),
-        ws::allowed::before(tm),
-    ))
-    .map(|(_, ty_var, _, body)| Tm::TyLam(Loc, ty_var.to_string(), Box::new(body)))
-    .parse(i)
-}
-
-#[test]
-fn test_ty_lam_tm() {
-    let (i, tm) = ty_lam_tm("tyfn X -> \"adsf\"").unwrap();
-    assert_eq!(i, "");
-}
-
-fn ty_app_tm(i: &str) -> IResult<&str, Tm> {
-    braced(tuple((tm, ws::required::before(ty))))
-        .map(|(ty_func, ty_arg)| Tm::TyApp(Loc, Box::new(ty_func), ty_arg))
         .parse(i)
 }
 
@@ -137,22 +114,6 @@ where
         let (i, o) = p(i)?;
         let (i, _) = multispace0(i)?;
         let (i, _) = tag("]")(i)?;
-        Ok((i, o))
-    }
-}
-
-fn braced<'i, O, E>(
-    mut p: impl FnMut(&'i str) -> IResult<&'i str, O, E>,
-) -> impl FnMut(&'i str) -> IResult<&'i str, O, E>
-where
-    E: ParseError<&'i str>,
-{
-    move |i: &str| {
-        let (i, _) = tag("{")(i)?;
-        let (i, _) = multispace0(i)?;
-        let (i, o) = p(i)?;
-        let (i, _) = multispace0(i)?;
-        let (i, _) = tag("}")(i)?;
         Ok((i, o))
     }
 }

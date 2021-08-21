@@ -18,8 +18,6 @@ pub enum Tm {
     Var(Loc, String),
     Lam(Loc, String, Ty, Box<Tm>),
     App(Loc, Box<Tm>, Box<Tm>),
-    TyLam(Loc, String, Box<Tm>),
-    TyApp(Loc, Box<Tm>, Ty),
 }
 
 impl Display for Tm {
@@ -29,10 +27,6 @@ impl Display for Tm {
             Tm::Var(_, name) => write!(f, "{}", name),
             Tm::Lam(_, param, ty, body) => write!(f, "[fn {}: {} -> {}]", param, ty, body),
             Tm::App(_, func, arg) => write!(f, "[{} {}]", func, arg),
-            Tm::TyLam(_, ty_var, body) => {
-                write!(f, "tyfn {} -> {}", ty_var, body)
-            }
-            Tm::TyApp(_, ty_func, ty_arg) => write!(f, "{{{} {}}}", ty_func, ty_arg),
         }
     }
 }
@@ -44,8 +38,6 @@ impl Tm {
             Tm::Var(loc, _) => loc,
             Tm::Lam(loc, _, _, _) => loc,
             Tm::App(loc, _, _) => loc,
-            Tm::TyLam(loc, _, _) => loc,
-            Tm::TyApp(loc, _, _) => loc,
         }
     }
 }

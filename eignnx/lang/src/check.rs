@@ -21,9 +21,6 @@ pub enum TyCheckErr {
 
     /// {0}: I don't know what type `{1}` refers to!
     UnboundTyVariable(Loc, String),
-
-    /// {loc}: I can't apply the type `{non_forall}` to the type argument `{arg}` because it's not a forall!
-    NonAppliableTyApp { loc: Loc, arg: Ty, non_forall: Tm },
 }
 
 pub struct Check {
@@ -96,35 +93,6 @@ impl Check {
                     ))
                 }
             }
-
-            Tm::TyLam(_loc, ty_var, body) => {
-                let body_ty = self.infer(body)?;
-                let creation_tcx = self.tcx.clone();
-                Ok(Ty::ForAll(
-                    creation_tcx,
-                    ty_var.clone(),
-                    Box::new(body_ty.clone()),
-                ))
-            }
-
-            Tm::TyApp(loc, ty_func, ty_arg) => {
-                if let Ty::ForAll(ref creation_tcx, ty_var, body_ty) = self.infer(ty_func)? {
-                    let x = self.in_new_scope(|this| {
-                        this.tcx.extend(creation_tcx.clone());
-                        this.tcx
-                            .push(Binding::TyVarBind(ty_var.to_string(), ty_arg.clone()));
-                        let body_ty = this.resolve_ty_vars(loc, body_ty.as_ref())?;
-                        Ok(body_ty)
-                    })?;
-                    Ok(x)
-                } else {
-                    Err(TyCheckErr::NonAppliableTyApp {
-                        loc: loc.clone(),
-                        arg: ty_arg.clone(),
-                        non_forall: ty_func.as_ref().clone(),
-                    })
-                }
-            }
         }
     }
 
@@ -169,12 +137,6 @@ impl Check {
                         func.as_ref().clone(),
                     ))
                 }
-            }
-
-            // Default case.
-            tm => {
-                let actual_ty = self.infer(tm)?;
-                self.subtype(tm.loc(), &actual_ty, ty)
             }
         }
     }
