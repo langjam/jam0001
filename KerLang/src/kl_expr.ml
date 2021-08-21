@@ -89,20 +89,20 @@ let parse_value (comment : tok list) : value =
 let parse_operation (comment : tok list) : value operation =
   let f = parse_value in
   let rec search (prev : tok list) = function
-    | [] -> failwith "no operation"
-    | t::q -> (
-        match string_of_tok t with
-        | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in IF (f (List.rev prev), f a, f b)
-        | "addition" -> let _, b = look_for "of" q in let a, b = look_for "and" b in SUM (f a, f b)
-        | "difference" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIFF (f a, f b)
-        | "product" -> let _, b = look_for "of" q in let a, b = look_for "and" b in PROD (f a, f b)
-        | "division" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIV (f a, f b)
-        | "application" -> let _, b = look_for "of" q in let a, b = look_for "on" b in
-          let s = string_of_comment a and l = split_kw "and" b in
-          if s = "self" then SELF(List.map f l) else APPLY (s, List.map f l)
-        | _ -> search (t::prev) q
-      )
-  in search [] comment
+  | [] -> failwith "no operation"
+  | t::q -> (
+    match string_of_tok t with
+    | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in IF (f a, f (List.rev prev), f b)
+    | "sum" -> let _, b = look_for "of" q in let a, b = look_for "and" b in SUM (f a, f b)
+    | "difference" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIFF (f a, f b)
+    | "product" -> let _, b = look_for "of" q in let a, b = look_for "and" b in PROD (f a, f b)
+    | "division" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIV (f a, f b)
+    | "application" -> let _, b = look_for "of" q in let a, b = look_for "on" b in
+      let s = string_of_comment a and l = split_kw "and" b in
+      if s = "self" then SELF(List.map f l) else APPLY (s, List.map f l)
+    | _ -> search (t::prev) q
+  )
+in search [] comment
 
 let rec parse_statement (comment : tok list) : expr statement =
   let f x = try Node (parse_operation x) with _ -> Leaf (parse_value x) in
@@ -131,10 +131,10 @@ let parse_function (Spec(_, name, comment)) =
       | LET (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
       | RETURNS e -> build_function {f with result = RETURN e} q
       | USES l -> let r = match f.result with
-          | RETURN e -> YOLO (e::l)
-          | YOLO l' -> YOLO (l @ l')
-        in build_function {f with result = r} q
-  in build_function {
+        | RETURN e -> YOLO (e::l)
+        | YOLO l' -> YOLO (l' @ l)
+in build_function {f with result = r} q
+in build_function {
     name = name;
     n_args = 0;
     declarations = [];
@@ -146,9 +146,9 @@ let parse_file f =
   let blocks = ref [] in
   Lexing.set_filename lexbuf f;
   try while true do
-      blocks := Kl_parser.block lexbuf::!blocks
-    done;
-    failwith "osef"
+    blocks := Kl_parser.block lexbuf::!blocks
+  done;
+  failwith "should not happen"
   with
   | Kl_parser.Eof ->
     List.map (parse_function) (List.rev !blocks)
