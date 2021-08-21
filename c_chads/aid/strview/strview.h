@@ -1,4 +1,6 @@
 // String view
+#pragma once
+
 #include "../common/prelude.h"
 #include "../span/span.h"
 

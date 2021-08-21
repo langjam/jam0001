@@ -74,12 +74,13 @@ void print_ast(struct Parser_Node *node, usize depth) {
             printf("Ident(%.*s)\n", (int)node->data.ident.val.size, node->data.ident.val.view);
             break;
     }
+
     if (node->kind != PN_INVAL)
         for (usize i = 0; i < node->children.size; i += 1) {
             print_ast(vec_get(&node->children, i), depth + 1);
         }
-    // just temp
-#ifndef ENABLE_INTERPRETER
+
+#if 0
     if (node->kind != PN_INVAL)
         vec_drop(&node->children);
 #endif
@@ -103,17 +104,16 @@ int main(int argc, char *argv[]) {
     print_ast(&result, 0);
     printf("------Running------\n");
 
-#ifdef ENABLE_INTERPRETER
     intrp_init();
 
     intrp_run(&result);
     intrp_main();
 
     intrp_deinit();
-#endif
 
     printf("------\n");
 
+    vec_drop(&result.children);
     parser_deinit();
     free(src);
     eh_deinit();

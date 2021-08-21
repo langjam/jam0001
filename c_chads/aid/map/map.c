@@ -9,7 +9,7 @@ struct Map map_new(usize el_size) {
     };
 }
 
-void map_insert(struct Map *self, strview_t key, void *value) {
+void map_add(struct Map *self, strview_t key, void *value) {
     vec_push(&self->keys, &key);
     vec_push(&self->values, value);
 }
