@@ -85,7 +85,20 @@ impl<'i> Interpreter<'i> {
     pub fn execute_expression(&mut self, expression: Expression) -> Result<Option<Value>, InterpreterError> {
         Ok(Some(match expression {
             Expression::Call(Call { function, args }) => {
-                let args: Vec<Value> = args.iter().map(|a| self.execute_expression(a.clone()).unwrap().unwrap()).collect();
+                let args: Vec<Value> = args.iter()
+                    .map(|a| {
+                        let value = self.execute_expression(a.clone());
+
+                        if value.is_err() {
+                            crate::error(&format!("{}", value.err().unwrap()));
+                            std::process::exit(1);
+                        } else {
+                            value.unwrap()
+                        }
+                    })
+                    .map(|a| a.unwrap())
+                    .collect();
+
                 let function = self.execute_expression(*function)?;
 
                 match function {
@@ -149,6 +162,20 @@ impl<'i> Interpreter<'i> {
 
                                 Value::String(l)
                             },
+                            (Value::Number(l), Value::Number(r)) => {
+                                Value::Number(l + r)
+                            }
+                            _ => todo!()
+                        }
+                    },
+                    TokenKind::Minus => {
+                        match (left, right) {
+                            (Value::String(l), Value::String(r)) => {
+                                return Err(InterpreterError::UnsupportedOperandTypes("string".to_owned(), "-".to_owned(), "string".to_owned()));
+                            },
+                            (Value::Number(l), Value::Number(r)) => {
+                                Value::Number(l - r)
+                            }
                             _ => todo!()
                         }
                     },
@@ -202,6 +229,9 @@ pub enum InterpreterError {
 
     #[error("Parameter {0} for function {1} must be of type {2}, received {3:?}.)")]
     TypeError(String, String, String, String),
+
+    #[error("Unsupported operand types: {0} {1} {2}")]
+    UnsupportedOperandTypes(String, String, String),
 }
 
 pub fn interpret<'i>(program: Program) -> Result<(), InterpreterError> {

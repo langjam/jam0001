@@ -144,7 +144,7 @@ impl<'p> Parser<'p> {
         let operator = self.current.kind.clone();
 
         Ok(match operator {
-            TokenKind::Plus => {
+            TokenKind::Plus | TokenKind::Minus => {
                 self.expect_token_and_read(operator.clone())?;
 
                 let precedence = Priority::get_precedence(operator.clone());

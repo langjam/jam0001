@@ -11,7 +11,7 @@ impl Priority {
     pub fn get_precedence(kind: TokenKind) -> Self {
         match kind {
             TokenKind::LeftParen => Self::Call,
-            TokenKind::Plus => Self::Sum,
+            TokenKind::Plus | TokenKind::Minus => Self::Sum,
             _ => Self::Lowest,
         }
     }

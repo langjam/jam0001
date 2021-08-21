@@ -17,7 +17,7 @@ pub fn has_flag(flag: &str) -> bool {
     args().find(|i| i == flag).is_some()
 }
 
-fn error(message: &str) {
+pub fn error(message: &str) {
     eprintln!("{}", message.red().bold());
 }
 
