@@ -16,4 +16,5 @@ const (
 type Token struct {
 	Type  int
 	Value string
+	Pos   Position
 }
