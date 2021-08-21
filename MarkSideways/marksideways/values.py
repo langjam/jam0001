@@ -1,3 +1,5 @@
+# TODO: all the to_string methods for complex types need to have a cycle check
+
 from .exceptions import *
 
 class Value:
@@ -68,6 +70,18 @@ class StringValue(Value):
     self.value = value
   def to_string(self):
     return self.value
+
+class ArrayValue(Value):
+  def __init__(self, value):
+    super().__init__('ARRAY')
+    self.value = value
+  def to_string(self):
+    sb = ['[']
+    for i in range(len(self.value)):
+      if i > 0: sb.append(', ')
+      sb.append(self.value[i].to_string())
+    sb.append(']')
+    return ''.join(sb)
 
 class BuiltInFunction(Value):
   def __init__(self, id, handler):

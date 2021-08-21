@@ -213,6 +213,17 @@ def parse_entity(tokens):
     str_value = string_literal_to_value(next_token, next_value[1:-1])
     return StringConstant(next_token, str_value)
   
+  if next_value == '[':
+    array_items = []
+    tokens.pop()
+    next_item_allowed = True
+    while not tokens.pop_if_present(']'):
+      if not next_item_allowed:
+        tokens.pop_expected(']') # intentionally throw
+      array_items.append(parse_expression(tokens))
+      next_item_allowed = tokens.pop_if_present(',')
+    return ArrayDefinition(next_token, array_items)
+
   raise Exception(tokens.pop(), "Unexpected token: '" + next_value + "'.")
 
 # Note that the order here is a little weird for the first few. parse_unaries is after exponents and before multiplication

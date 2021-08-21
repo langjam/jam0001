@@ -29,7 +29,7 @@ We then run the simulation as a series of individual tests
 ```
 hits = 0;
 for i = 1 thru test_count {
-    is_in_circle = do_test();
+    is_in_circle = doTest();
     if is_in_circle {
         hits++;
     }

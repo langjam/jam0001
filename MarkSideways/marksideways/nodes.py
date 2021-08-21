@@ -198,13 +198,25 @@ class IfStatement(Executable):
   def run(self, scope):
     condition = self.condition.run(scope)
     if condition.is_error: return error_status_from_value(condition)
-    if is_null(condition): return to_null_error_statuus(self.condition.first_token)
+    if is_null(condition): return to_null_error_status(self.condition.first_token)
     if condition.type != 'BOOL': new_error_status(self.condition.first_token, "If statement requires a boolean value for its condition.")
     if condition.value:
       run_this = self.if_code
     else:
-      run_this = self.false_code
+      run_this = self.else_code
     return run_code_block(run_this, scope)
+
+class ArrayDefinition(Expression):
+  def __init__(self, first_token, expressions):
+    super().__init__(first_token)
+    self.expressions = expressions
+  def run(self, scope):
+    items = []
+    for item in self.expressions:
+      value = item.run(scope)
+      if value.is_error: return value
+      items.append(value)
+    return ArrayValue(items)
 
 class DotField(Expression):
   def __init__(self, expression, dot, field_name):
@@ -223,7 +235,7 @@ class DotField(Expression):
       if field_name == 'length':
         return get_integer_value(len(value.value))
       else:
-        return new_error_value(self.dot, "Strings dot not have a field called '" + field_name + "'.")
+        return new_error_value(self.dot, "Strings do not have a field called '" + field_name + "'.")
     elif value.type == 'INSTANCE':
       output = value.fields.get(self.field_name.value)
       if output != None: return output
@@ -231,6 +243,11 @@ class DotField(Expression):
       if output != None:
         return MethodValue(value, output)
       return new_error_value(self.dot, "This instance of " + value.class_def.name + " does not have a field called + '" + field_name + "'.")
+    elif value.type == 'ARRAY':
+      if field_name == 'length':
+        return get_integer_value(len(value.value))
+      else:
+        return new_error_value(self.dot, "Arrays do not have a field called '" + field_name + "'.")
     elif value.type == 'CLASS':
       if field_name == 'init':
         return ConstructorValue(value.class_def)

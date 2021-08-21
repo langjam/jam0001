@@ -24,7 +24,7 @@ class Runner:
     user_defined = gather_user_entities(document)
     globals = merge_dictionaries(built_ins, user_defined)
     locals = {
-      'args': NULL_VALUE,
+      'args': ArrayValue(list(map(lambda arg: StringValue(arg), args))),
     }
 
     status = run_code_block(document.code, Scope(globals, locals))
