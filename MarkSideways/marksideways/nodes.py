@@ -138,7 +138,8 @@ class FunctionInvocation(Expression):
     if is_null(root_value): return to_null_error(root_value)
 
     if root_value.type == 'FUNCTION':
-      raise Exception("TODO: Invoking a function definition")
+      method_def = root_value.method_def
+      return run_function(self.open_paren, method_def.code, scope.globals, None, method_def.arg_names, args)
     elif root_value.type == 'METHOD':
       method_def = root_value.method_def
       class_def = method_def.class_def
@@ -233,6 +234,7 @@ class AssignStatement(Executable):
     self.target = target_expression
     self.assign_op = assign_op
     self.value = value_expression
+    self.incremental_effective_op = assign_op.value[:-1] # pop off the = at the end so things like += become the string + for opmatrix lookups
 
   def run(self, scope):
     value = self.value.run(scope)
@@ -240,9 +242,13 @@ class AssignStatement(Executable):
     if value.is_error: return error_status_from_value(value)
     if isinstance(self.target, Variable):
       if is_direct_assign:
-        scope.locals[canonicalize_identifier(self.target.name)] = value
+        scope.locals[self.target.canonical_name] = value
       else:
-        raise Exception("TODO: incremental assignment")
+        original_value = self.target.run(scope)
+        if original_value.is_error: return error_status_from_value(original_value)
+        new_value = perform_op(self.assign_op, original_value, self.incremental_effective_op, value)
+        if new_value.is_error: return error_status_from_value(new_value)
+        scope.locals[self.target.canonical_name] = new_value
     elif isinstance(self.target, DotField):
       root = self.target.root.run(scope)
       field_name = self.target.field_name.value
@@ -300,6 +306,24 @@ class IntegerConstant(Expression):
     if self.cached_value == None:
       self.cached_value = get_integer_value(self.value)
     return self.cached_value
+
+class WhileLoop(Executable):
+  def __init__(self, while_token, condition, code):
+    super().__init__(while_token)
+    self.condition = condition
+    self.code = code
+  def run(self, scope):
+    while True:
+      condition = self.condition.run(scope)
+      if condition.is_error: return error_status_from_value(condition)
+      if condition.type != 'BOOL': return new_error_status(self.condition.first_token, "while loops must have a boolean as their condition.")
+      if not condition.value: return None
+
+      result = run_code_block(self.code, scope)
+      if result != None:
+        if result.type == 'EXCEPTION': return result
+        if result.type == 'BREAK': return None
+        if result.type == 'RETURN': return result
 
 class ForLoop(Executable):
   def __init__(self, for_token, variable_token, loop_op_token, start_expr, end_expr, code):

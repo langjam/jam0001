@@ -31,6 +31,9 @@ class BoolValue(Value):
     return 'true' if self.value else 'false'
 TRUE_VALUE = BoolValue(True)
 FALSE_VALUE = BoolValue(False)
+def get_bool_value(value):
+  if value: return TRUE_VALUE
+  return FALSE_VALUE
 
 class IntegerValue(Value):
   def __init__(self, value):

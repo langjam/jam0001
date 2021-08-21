@@ -57,7 +57,7 @@ def _parse_markdown_structure(items):
     elif item['type'] == "method":
       method_def = MethodDefinition(item['token'], item['value'], active_class)
       if active_class == None:
-        root.methods.append(method_def)
+        root.add_method(method_def)
       else:
         class_def.add_method(method_def)
       active_method = method_def
@@ -122,6 +122,6 @@ def gather_user_entities(root):
   for class_def in root.class_order:
     output[canonicalize_identifier(class_def.name)] = ClassValue(class_def)
   for method_def in root.method_order:
-    output[canonicalize_identifier(method_def.name.value)] = FunctionValue(method_def)
+    output[canonicalize_identifier(method_def.name)] = FunctionValue(method_def)
     
   return output
