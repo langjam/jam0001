@@ -1,12 +1,11 @@
-(** {1 Codegen}
 
-    Code generation module for KerLang
-*)
+(* Deterministic random number generator *)
 
 #use "lk_IR.ml";;
 
 open Int32;;
 
+(* Linear congruential generator *)
 type lcg_t = int32;;
 
 let i32 (x: int) = Int32.of_int x ;;
@@ -18,6 +17,8 @@ let lsh32 (x: int32) (y: int) = Int32.shift_left x y ;;
 let xor32 (x: int32) (y: int32) = Int32.logxor x y ;;
 
 let lcg_helf_iter (lcg: lcg_t): lcg_t =
+  (* GNU libc parameters, see
+   * https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use *)
   (mod32 (add32 (mul32 lcg (i32 1103515245)) (i32 12345)) (i32 2147483648))
 ;;
 
