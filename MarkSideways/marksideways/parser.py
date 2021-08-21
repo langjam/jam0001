@@ -65,7 +65,10 @@ def parse_if_statement(tokens):
   else_code = []
   if tokens.is_next('else'):
     tokens.pop_expected('else')
-    else_code = parse_code_block(tokens)
+    if tokens.is_next('if'):
+      else_code = [parse_if_statement(tokens)]
+    else:
+      else_code = parse_code_block(tokens)
   return IfStatement(if_token, condition, code, else_code)
 
 def parse_return_statement(tokens):

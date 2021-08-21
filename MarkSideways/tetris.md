@@ -57,14 +57,11 @@ for i = 0 till events.length {
     event = events[i];
     if event == 'left:press' {
         this.tryMoveOverlay(-1, 0);
-    }
-    if event == 'right:press' {
+    } else if event == 'right:press' {
         this.tryMoveOverlay(1, 0);
-    }
-    if event == 'up:press' {
+    } else if event == 'up:press' {
         this.overlayRotate(true);
-    }
-    if event == 'space:press' {
+    } else if event == 'space:press' {
         this.overlayRotate(false);
     }
 }
