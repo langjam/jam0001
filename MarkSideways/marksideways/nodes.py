@@ -239,7 +239,7 @@ class DotField(Expression):
       else:
         return new_error_value(self.dot, "Strings do not have a field called '" + field_name + "'.")
     elif value.type == 'INSTANCE':
-      output = value.fields.get(self.field_name.value)
+      output = value.fields.get(self.canonical_field_name)
       if output != None: return output
       output = value.class_def.methods.get(self.canonical_field_name)
       if output != None:
@@ -333,7 +333,7 @@ class AssignStatement(Executable):
         scope.locals[self.target.canonical_name] = new_value
     elif isinstance(self.target, DotField):
       root = self.target.root.run(scope)
-      field_name = self.target.field_name.value
+      field_name = self.target.canonical_field_name
       if root.is_error: return error_status_from_value(root)
       if is_null(root): return to_null_error_status(self.target.dot)
       if root.type == 'INSTANCE':
@@ -341,7 +341,11 @@ class AssignStatement(Executable):
           root.fields[field_name] = value
           return None
         else:
-          raise Exception("TODO: incremental assignment on instance fields")
+          original_value = root.fields.get(field_name)
+          if original_value == None: return new_error_status(self.assign_op, "This instance has no pre-existing value for " + self.target.field_name.value)
+          new_value = perform_op(self.assign_op, original_value, self.incremental_effective_op, value)
+          if new_value.is_error: return error_status_from_value(new_value)
+          root.fields[field_name] = new_value
       else:
         return new_error_status(self.assign_op, "Assigning a field to this type of value is not supported.")
     elif isinstance(self.target, BracketIndex):
