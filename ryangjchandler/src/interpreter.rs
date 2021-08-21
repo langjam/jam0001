@@ -73,6 +73,7 @@ impl<'i> Interpreter<'i> {
     }
 
     // TODO: Actually do something here. It's useless at the moment.
+    // TODO: Also implemented native functions so that we can test println, etc.
     pub fn execute_expression(&mut self, expression: Expression) -> Result<Option<Value>, InterpreterError> {
         
     }
