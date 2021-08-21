@@ -1,14 +1,4 @@
 /*
-  Hello World
-*/
-comment "say hello";
-
-/*
-  This is an integer : $0
-*/
-comment "log the integer";
-
-/*
   This function takes 2 args
 
   It is a case analysis on the first arg
@@ -18,13 +8,13 @@ comment "log the integer";
   It contains 3
 
   It is a case analysis on the first arg
-  It computes ...
+  It computes
   It performs a recursive call
 
   let A be a recursive application on the first param
-  and let B be a recursive application on ...
+  and let B be a recursive application on
   
-  Then eq returns the sum of A and B if ... is 0
+  Then eq returns the sum of A and B if  is 0
   log the integer A
   say hello
 */
@@ -38,6 +28,6 @@ function eq;
   First argument is and Integer
   Second argument is an Int
   It sums the two arguments
-  and then double the result, when the first param (is even) or return 0 otherwise
+  and then double the result when the first param is even or return 0 otherwise
 */
 function f;
