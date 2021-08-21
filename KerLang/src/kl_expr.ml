@@ -1,3 +1,4 @@
+
 open Kl_parsing
 
 type 'a statement =
@@ -32,6 +33,7 @@ type function_result =
   | Yolo of expr list
 
 type comment_function = {
+  name : string;
   n_args : int;
   declarations : (string * expr) list;
   result : function_result;
@@ -39,14 +41,14 @@ type comment_function = {
 
 let split_lines (comment : tok list) : tok list list =
   let rec split (res : tok list list) (curr_expr : tok list) = function
-  | Sep::q -> split ((List.rev curr_expr)::res) [] q
-  | token::q -> split res (token::curr_expr) q
-  | [] -> List.rev res
-in split [] [] comment
+    | Sep::q -> split ((List.rev curr_expr)::res) [] q
+    | token::q -> split res (token::curr_expr) q
+    | [] -> List.rev res
+  in split [] [] comment
 
 let string_of_tok = function
   | Int (_, n) -> string_of_int n
-  | Word (_, w) -> w
+  | Word (_, w) -> String.lowercase_ascii w
   | Sep -> ""
 
 let rec string_of_comment = function
@@ -56,33 +58,31 @@ let rec string_of_comment = function
 
 let look_for (kw : string) (comment : tok list) : tok list * tok list =
   let rec search (prev : tok list) = function
-  | [] -> failwith ("keyword" ^ kw ^ "not found")
-  | t::q -> if string_of_tok t = kw then (List.rev prev, q)
-  else search (t::prev) q
-in search [] comment
+    | [] -> failwith ("keyword" ^ kw ^ "not found")
+    | t::q -> if string_of_tok t = kw then (List.rev prev, q)
+      else search (t::prev) q
+  in search [] comment
 
 let split_kw (kw : string) (comment : tok list) : tok list list =
   let rec split (res : tok list list) (curr_expr : tok list) = function
-  | [] -> List.rev ((List.rev curr_expr)::res)
-  | t::q -> if string_of_tok t = kw then split ((List.rev curr_expr)::res) [] q
-  else split res (t::curr_expr) q
-in split [] [] comment
+    | [] -> List.rev ((List.rev curr_expr)::res)
+    | t::q -> if string_of_tok t = kw then split ((List.rev curr_expr)::res) [] q
+      else split res (t::curr_expr) q
+  in split [] [] comment
 
 let parse_value (comment : tok list) : value =
   match comment with
   | [] -> Hole
-  | t::q -> (
-    match t with
-    | Int (_, n) -> Cst n
-    | _ -> match string_of_tok t with
-      | "argument" -> (
-        match q with
-        | Int (_, n)::_ -> Arg n
-        | _ -> failwith "expected argument index"
-      )
-      | "something" -> Hole
-      | s -> Var s
-  )
+  | (Int (_, n))::_ -> Cst n
+  | t::q ->
+    let kwd = string_of_tok t in
+    if kwd = "argument" then begin
+      match q with
+      | Int (_, n)::_ -> Arg n
+      | _ -> failwith "expected argument index"
+    end else if kwd = "something" then
+      Hole
+    else Var kwd
 
 let parse_operation (comment : tok list) : operation =
   let f = parse_value in
@@ -106,36 +106,33 @@ let rec parse_statement (comment : tok list) : expr statement =
   let f x = try Node (parse_operation x) with _ -> Leaf (parse_value x) in
   match comment with
   | [] -> Nothing
-  | t::q -> (
+  | t::q ->
     match string_of_tok t with
-    | "takes" -> (
-        match q with
-        | Int(_, n)::_ -> Takes n
-        | _ -> failwith "expected number of arguments"
-      )
+    | "takes" ->
+      begin match q with
+      | Int (_, n)::_ -> Takes n
+      | _ -> failwith "expected number of arguments"
+      end
     | "let" -> let a, b = look_for "be" q in Let (string_of_comment a, f b)
     | "returns" -> Returns (f q)
     | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
     | _ -> parse_statement q
-  )
 
-let parse_function (comment : tok list) =
+let parse_function (Spec (_, name, comment)) =
   let comments = split_lines comment in
   let rec build_function (f : comment_function) = function
     | [] -> f
-    | c::q -> match parse_statement c with
+    | c::q ->
+      match parse_statement c with
       | Nothing -> build_function f q
       | Takes n -> build_function {f with n_args = n} q
       | Let (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
       | Returns e -> build_function {f with result = Function e} q
-      | Uses l -> let r = match f.result with
-        | Function e -> Yolo (e::l)
-        | Yolo l' -> Yolo (l @ l')
-in build_function {f with result = r} q
-in build_function {
-    n_args = 0;
-    declarations = [];
-    result = Yolo []
+      | Uses l ->
+        let r = match f.result with | Function e -> Yolo (e::l) | Yolo l' -> Yolo (l @ l')
+        in build_function {f with result = r} q
+  in build_function {
+    name; n_args = 0; declarations = []; result = Yolo []
   } comments
 
 let rec compile_expr env = function
