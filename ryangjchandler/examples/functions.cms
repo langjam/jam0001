@@ -3,7 +3,7 @@
  */
 
 /*
- * @identifier "hello_world"
+ * @identifier hello_world
  */
 fn {
     println("Hello, world!")

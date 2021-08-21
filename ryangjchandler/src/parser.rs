@@ -3,7 +3,8 @@ use std::mem::discriminant;
 use thiserror::Error;
 
 use crate::token::{Token, TokenKind};
-use crate::ast::{Program, Statement, FileHeader};
+use crate::ast::{Program, Statement, FileHeader, FunctionDefinition, DefinitionHeader};
+use crate::expression::{Expression, Priority, Call};
 
 #[derive(Debug, Clone)]
 pub struct Parser<'p> {
@@ -67,7 +68,127 @@ impl<'p> Parser<'p> {
     }
 
     pub fn parse_statement(&mut self) -> Result<Statement, ParserError> {
-        Ok(Statement::Empty)
+        match self.current.kind {
+            TokenKind::Fn => self.parse_fn(),
+            TokenKind::CommentStarter => self.parse_definition_header(),
+            _ => self.parse_expression_statement(),
+        }
+    }
+
+    pub fn parse_definition_header(&mut self) -> Result<Statement, ParserError>
+    {
+        self.expect_token_and_read(TokenKind::CommentStarter)?;
+        self.expect_token_and_read(TokenKind::Asterisk)?;
+        self.expect_token_and_read(TokenKind::DefinitionDirective("identifier".to_owned()))?;
+
+        let identifier = match self.expect_token_and_read(TokenKind::Identifier("".to_owned()))? {
+            Token { kind: TokenKind::Identifier(i), .. } => i,
+            _ => unreachable!()
+        };
+
+        self.expect_token_and_read(TokenKind::CommentTerminator)?;
+
+        Ok(Statement::DefinitionHeader(DefinitionHeader {
+            identifier
+        }))
+    }
+
+    pub fn parse_expression_statement(&mut self) -> Result<Statement, ParserError>
+    {
+        if let Some(e) = self.parse_expression(Priority::Lowest)? {
+            Ok(Statement::Expression(e))
+        } else {
+            Ok(Statement::Expression(Expression::Empty))
+        }
+    }
+
+    pub fn parse_postfix_expression(&mut self, left: Expression) -> Result<Option<Expression>, ParserError> {
+        Ok(match self.current.kind.clone() {
+            TokenKind::LeftParen => {
+                self.expect_token_and_read(TokenKind::LeftParen)?;
+
+                let mut args: Vec<Expression> = Vec::new();
+
+                while ! self.current_is(TokenKind::RightParen) {
+                    if let Some(e) = self.parse_expression(Priority::Lowest)? {
+                        args.push(e);
+
+                        if self.current_is(TokenKind::Comma) {
+                            self.expect_token_and_read(TokenKind::Comma)?;
+                        }
+                    }
+                }
+
+                self.expect_token_and_read(TokenKind::RightParen)?;
+
+                Some(Expression::Call(Call {
+                    function: Box::new(left),
+                    args
+                }))
+            },
+            _ => None,
+        })
+    }
+
+    pub fn parse_expression(&mut self, precedence: Priority) -> Result<Option<Expression>, ParserError>
+    {
+        Ok(if let Some(e) = self.parse_expression_starter()? {
+            let mut left = e;
+
+            while precedence < Priority::get_precedence(self.current.kind.clone()) {
+                let e = left.clone();
+
+                if let Some(right) = self.parse_postfix_expression(e)? {
+                    left = right;
+                } else {
+                    break;
+                }
+            }
+
+            Some(left)
+        } else {
+            None
+        })
+    }
+
+    pub fn parse_expression_starter(&mut self) -> Result<Option<Expression>, ParserError> {
+        Ok(match self.current.kind.clone() {
+            TokenKind::String(s) => {
+                self.expect_token_and_read(TokenKind::String("".to_owned()))?;
+
+                Some(Expression::String(s))
+            },
+            TokenKind::Identifier(i) => {
+                self.expect_token_and_read(TokenKind::Identifier("".to_owned()))?;
+
+                Some(Expression::GetIdentifier(i))
+            },
+            _ => None,
+        })
+    }
+
+    pub fn parse_fn(&mut self) -> Result<Statement, ParserError>
+    {
+        self.expect_token_and_read(TokenKind::Fn)?;
+        
+        let body = self.parse_block()?;
+
+        Ok(Statement::FunctionDefinition(FunctionDefinition { body }))
+    }
+
+    pub fn parse_block(&mut self) -> Result<Vec<Statement>, ParserError>
+    {
+        self.expect_token_and_read(TokenKind::LeftBrace)?;
+
+        let mut block = Vec::new();
+
+        while ! self.current_is_any_of(&[TokenKind::RightBrace]) {
+            block.push(self.parse_statement()?);
+        }
+
+        self.expect_token_and_read(TokenKind::RightBrace)?;
+
+        Ok(block)
     }
 
     fn expect_token(&mut self, kind: TokenKind) -> Result<Token, ParserError> {
@@ -92,6 +213,16 @@ impl<'p> Parser<'p> {
 
     fn current_is(&self, kind: TokenKind) -> bool {
         discriminant(&self.current.kind) == discriminant(&kind)
+    }
+
+    fn current_is_any_of(&self, kinds: &[TokenKind]) -> bool {
+        for kind in kinds {
+            if self.current_is(kind.clone()) {
+                return true
+            }
+        }
+
+        false
     }
 
     pub fn next(&mut self) -> Result<Option<Statement>, ParserError> {

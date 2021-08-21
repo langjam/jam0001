@@ -40,7 +40,7 @@ impl Token {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
     CommentStarter,
-    MethodDirective(String),
+    DefinitionDirective(String),
     FileDirective(String),
     Identifier(String),
     CommentTerminator,
@@ -54,6 +54,7 @@ pub enum TokenKind {
     RightBrace,
     LeftParen,
     RightParen,
+    Comma,
     None,
 }
 

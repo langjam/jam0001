@@ -6,6 +6,7 @@ mod lexer;
 mod token;
 mod parser;
 mod ast;
+mod expression;
 
 fn has_flag(flag: &str) -> bool {
     args().find(|i| i == flag).is_some()
