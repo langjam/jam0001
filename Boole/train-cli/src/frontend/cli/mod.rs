@@ -15,7 +15,7 @@ impl CliRunner {
     }
 
     pub fn run(&self, mut vm: Data) {
-        loop {
+        while vm.train_count().unwrap() > 0 {
             vm.do_current_step(self);
 
             let mut input_text = String::new();

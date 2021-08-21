@@ -98,7 +98,7 @@ impl Data {
         Self { stations, trains }
     }
 
-    fn train_count(&self) -> Result<usize, VMError> {
+    pub fn train_count(&self) -> Result<usize, VMError> {
         let mut x = 0;
         for (_, station) in self.stations.iter() {
             let st = station.lock()?;
