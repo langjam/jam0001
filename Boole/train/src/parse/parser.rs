@@ -1,5 +1,3 @@
-use std::io::repeat;
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Span {
     pub start: usize,
@@ -44,13 +42,4 @@ pub type ParseResult<'a, T> = Result<T, ParserError>;
 pub struct Parser<'a> {
     pub input: &'a str,
     pub current: usize,
-}
-
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-
 }

@@ -18,7 +18,8 @@ impl<'a> Parser<'a> {
 
         self.expect_exact_line("[FIRST CLASS]")?;
         let mut first_class_passengers = vec![];
-        while let Some(line) = self.rest().lines().next() {
+        loop {
+            let line = self.next_line()?;
             if line == "[SECOND CLASS]" { break }
 
             let res = line.splitn(2, ": ").collect::<Vec<_>>();
@@ -34,10 +35,9 @@ impl<'a> Parser<'a> {
             self.current += 1;
         }
 
-
         self.expect_exact_line("[SECOND CLASS]")?;
         let mut second_class_passengers = vec![];
-        while let Some(line) = self.rest().lines().next() {
+        while let Ok(line) = self.next_line() {
             if line.is_empty() { break }
             let res = line.splitn(2, ": ").collect::<Vec<_>>();
             if res.len() != 2 {

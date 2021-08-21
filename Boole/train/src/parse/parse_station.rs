@@ -40,7 +40,7 @@ impl<'a> Parser<'a> {
 
         let mut next_num = 1;
         let mut output = vec![];
-        while let Some(line) = self.rest().lines().next() {
+        while let Ok(line) = self.next_line() {
             if line.is_empty() { break }
 
             self.expect_exact_text(&format!("track {}: go to ", next_num))?;

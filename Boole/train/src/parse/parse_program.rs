@@ -27,7 +27,6 @@ impl<'a> Parser<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::parse_and_check;
 
     #[test]
