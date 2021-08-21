@@ -28,6 +28,7 @@ for (const child of docTree.children) {
 const list = <List>runtime.getTag('TodoList').getChild()
 const updatedListItem = list.checkItem('**kick ass**')
 if (updatedListItem !== undefined) {
+    console.log(list.getMdastContent().position)
     console.log(mdastToMd(updatedListItem))
 }
 
