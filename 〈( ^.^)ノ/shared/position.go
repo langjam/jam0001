@@ -7,3 +7,7 @@ type Position struct {
 	// Filename string
 	// Filetext string
 }
+
+func (p *Position) Advance() {
+	p.Line += 1
+}
