@@ -52,7 +52,7 @@ impl Communicator for CliRunner {
     }
 
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), train::interface::CommunicatorError> {
-        log::info!("simulation says: train {} moved from {} to {}", train.identifier, from_station.name, to_station.name);
+        log::info!("simulation says: train {} moved from ({} track {}) to ({} track {})", train.identifier, from_station.name, start_track, to_station.name, end_track);
         Ok(())
     }
 
