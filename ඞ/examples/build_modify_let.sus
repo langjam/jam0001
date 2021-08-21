@@ -1,0 +1,18 @@
+
+fn build(ast) {
+    for elem in ast.elements {
+        print(elem.class);
+        if elem.class == "ASTLetStmt" {
+            print("  Before: ", elem.value);
+            elem.value = ASTBinaryExpr {
+                op: "+",
+                lhs: elem.value,
+                rhs: ASTIntLiteral {
+                    value: 1
+                }
+            };
+            print("  After: ", elem.value);
+        }
+    }
+    return ast;
+}

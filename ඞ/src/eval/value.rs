@@ -54,8 +54,8 @@ impl Function {
 
 #[derive(Clone, PartialEq)]
 pub struct Object {
-    pub(crate) class: String,
-    pub(crate) fields: HashMap<String, Value>,
+    pub class: String,
+    pub fields: HashMap<String, Value>,
 }
 
 impl Object {

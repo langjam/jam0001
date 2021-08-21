@@ -2,10 +2,11 @@ use std::collections::HashMap;
 
 use quickscope::ScopeMap;
 
-use self::value::{Class, Function, Object, Value};
+pub use self::value::{Class, Function, Object, Value};
 
 mod ast;
 mod value;
+pub use ast::remove_refs;
 
 pub type EvalResult = Result<Value, String>;
 

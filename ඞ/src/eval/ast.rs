@@ -23,10 +23,10 @@ macro_rules! declare_builtin {
     };
 }
 
-#[allow(unused)]
+#[macro_export]
 macro_rules! ast_obj {
     ($name:literal $(; $($field:literal => $value:expr),*)?) => {
-        Value::Object(Object {
+        $crate::eval::Value::Object($crate::eval::Object {
         class: $name.into(),
         fields: IntoIterator::into_iter([
             $($(
