@@ -24,9 +24,7 @@ fn {
 
 say_hello_to("Ryan")
 
-/*
- * @identifier math
- */
+/** @identifier math */
 fn {
     println(1)
     println(2.5)
