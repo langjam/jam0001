@@ -306,7 +306,7 @@ class InlineIncrement(Expression):
         if bracket_index.type != 'INT': return new_error_value("Can only index into an array using an integer.")
         index = bracket_index.value
         if index < 0 or index >= len(bracket_root.value):
-          return new_error_value(self.bracket_token, "Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(root_value.value)) + ".")
+          return new_error_value(self.bracket_token, "Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(bracket_root.value)) + ".")
       elif bracket_root.type == 'DICTIONARY':
         raise Exception("TODO: dictionaries")
       else:
