@@ -1,10 +1,23 @@
 use std::collections::{HashMap, VecDeque};
 use std::ops::Deref;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use crate::ast::{Program, Station, Train};
 use crate::interface::Communicator;
 use crate::operations::Operation;
+
+#[derive(Debug)]
+pub enum VMError {
+    ConnectionClosed,
+    UnlockError,
+    PassengerMissing,
+}
+
+impl<T> From<PoisonError<MutexGuard<'_, T>>> for VMError {
+    fn from(_: PoisonError<MutexGuard<T>>) -> Self {
+        Self::UnlockError
+    }
+}
 
 #[derive(Clone)]
 struct TrainData {
@@ -77,21 +90,32 @@ impl Data {
                 .unwrap()
                 .lock()
                 .unwrap();
-            interface.train_to_start(st.station.clone(), td.lock().unwrap().train.clone()).unwrap_or(());
+            interface
+                .train_to_start(st.station.clone(), td.lock().unwrap().train.clone())
+                .unwrap_or(());
             st.trains[target.track].push_back(td);
         }
         Self { stations, trains }
     }
 
+    fn train_count(&self) -> Result<usize, VMError> {
+        let mut x = 0;
+        for (_, station) in self.stations.iter() {
+            let st = station.lock()?;
+            x += st.trains.iter().map(|x| x.len()).sum::<usize>();
+        }
+        Ok(x)
+    }
+
     pub fn do_current_step(&mut self, interface: &dyn Communicator) {
         let mut targets = vec![];
         for (_, station_arc) in self.stations.iter() {
-            let mut station = station_arc.lock().unwrap();
+            let mut station = station_arc.lock()?;
             match station.operation {
                 Operation::Nothing => {}
                 Operation::Print => {
                     if let Some(x) = station.trains[0].front() {
-                        let zz = x.lock().unwrap();
+                        let zz = x.lock()?;
                         if let Ok(_) = interface.print(
                             zz.train
                                 .second_class_passengers
@@ -100,28 +124,50 @@ impl Data {
                                 .collect(),
                         ) {
                         } else {
-                            return;
+                            return Err(VMError::ConnectionClosed);
                         }
                     }
                 }
                 Operation::Input => {
                     if let Some(x) = station.trains[0].front() {
-                        let mut t = x.lock().unwrap();
+                        let mut t = x.lock()?;
                         if let Ok(other) = interface.ask_for_input() {
                             for (x, y) in t.train.second_class_passengers.iter_mut().zip(other) {
                                 x.data = y;
                             }
                         } else {
-                            return;
+                            return Err(VMError::ConnectionClosed);
                         }
                     }
                 }
-                Operation::Switch => {
+                Operation::SwitchEqZero => {
                     if let Some(x) = station.trains[0].pop_front() {
                         let xcln = x.clone();
-                        let st = x.lock().unwrap();
-                        let val = st.train.second_class_passengers.first().unwrap();
-                        if val.data > 0 {
+                        let st = x.lock()?;
+                        let val = st
+                            .train
+                            .second_class_passengers
+                            .first()
+                            .ok_or(VMError::PassengerMissing)?;
+                        if val.data == 0 {
+                            let target = station.output.clone()[0].clone();
+                            targets.push((xcln, target, station.station.clone(), 0));
+                        } else {
+                            let target = station.output.clone()[1].clone();
+                            targets.push((xcln, target, station.station.clone(), 0));
+                        }
+                    }
+                }
+                Operation::SwitchGteZero => {
+                    if let Some(x) = station.trains[0].pop_front() {
+                        let xcln = x.clone();
+                        let st = x.lock()?;
+                        let val = st
+                            .train
+                            .second_class_passengers
+                            .first()
+                            .ok_or(VMError::PassengerMissing)?;
+                        if val.data >= 0 {
                             let target = station.output.clone()[0].clone();
                             targets.push((xcln, target, station.station.clone(), 0));
                         } else {
@@ -137,13 +183,13 @@ impl Data {
                 }
                 Operation::Rotate => {
                     if let Some(x) = station.trains[0].front() {
-                        let mut xx = x.lock().unwrap();
+                        let mut xx = x.lock()?;
                         xx.train.second_class_passengers.rotate_left(1);
                     }
                 }
                 Operation::DeleteTop => {
                     if let Some(x) = station.trains[0].front() {
-                        let mut xx = x.lock().unwrap();
+                        let mut xx = x.lock()?;
                         xx.train.second_class_passengers.remove(0);
                     }
                 }
@@ -151,10 +197,10 @@ impl Data {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
                             let xx = {
-                                let mut z = x.lock().unwrap();
+                                let mut z = x.lock()?;
                                 z.train.second_class_passengers.remove(0)
                             };
-                            let mut yy = y.lock().unwrap();
+                            let mut yy = y.lock()?;
                             yy.train.second_class_passengers.push(xx);
                             yy.train.second_class_passengers.rotate_right(1);
                         }
@@ -163,12 +209,19 @@ impl Data {
                 Operation::Add => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock().unwrap();
-                            let yy = y.lock().unwrap();
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).unwrap();
-                            let second_data =
-                                yy.train.second_class_passengers.first().unwrap().data;
+                            let mut xx = x.lock()?;
+                            let yy = y.lock()?;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data += second_data;
                         }
                     }
@@ -176,12 +229,19 @@ impl Data {
                 Operation::Sub => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock().unwrap();
-                            let yy = y.lock().unwrap();
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).unwrap();
-                            let second_data =
-                                yy.train.second_class_passengers.first().unwrap().data;
+                            let mut xx = x.lock()?;
+                            let yy = y.lock()?;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data -= second_data;
                         }
                     }
@@ -189,12 +249,19 @@ impl Data {
                 Operation::Mul => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock().unwrap();
-                            let yy = y.lock().unwrap();
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).unwrap();
-                            let second_data =
-                                yy.train.second_class_passengers.first().unwrap().data;
+                            let mut xx = x.lock()?;
+                            let yy = y.lock()?;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data *= second_data;
                         }
                     }
@@ -202,12 +269,19 @@ impl Data {
                 Operation::Div => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock().unwrap();
-                            let yy = y.lock().unwrap();
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).unwrap();
-                            let second_data =
-                                yy.train.second_class_passengers.first().unwrap().data;
+                            let mut xx = x.lock()?;
+                            let yy = y.lock()?;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data /= second_data;
                         }
                     }
@@ -215,12 +289,19 @@ impl Data {
                 Operation::Mod => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock().unwrap();
-                            let yy = y.lock().unwrap();
-                            let mut first_data =
-                                xx.train.second_class_passengers.get_mut(0).unwrap();
-                            let second_data =
-                                yy.train.second_class_passengers.first().unwrap().data;
+                            let mut xx = x.lock()?;
+                            let yy = y.lock()?;
+                            let mut first_data = xx
+                                .train
+                                .second_class_passengers
+                                .get_mut(0)
+                                .ok_or(VMError::PassengerMissing)?;
+                            let second_data = yy
+                                .train
+                                .second_class_passengers
+                                .first()
+                                .ok_or(VMError::PassengerMissing)?
+                                .data;
                             first_data.data %= second_data;
                         }
                     }
@@ -231,7 +312,10 @@ impl Data {
                 }
             }
 
-            if station.operation != Operation::Delete && station.operation != Operation::Switch {
+            if station.operation != Operation::Delete
+                && station.operation != Operation::SwitchGteZero
+                && station.operation != Operation::SwitchEqZero
+            {
                 {
                     if let Some(x) = station.trains[0].pop_front() {
                         let target = station.output.clone()[0].clone();
@@ -252,22 +336,25 @@ impl Data {
             let mut station = self
                 .stations
                 .get(target.station.as_str())
-                .unwrap()
-                .lock()
-                .unwrap();
+                .ok_or(VMError::PassengerMissing)?
+                .lock()?;
             {
-                let tr = train.lock().unwrap();
-                interface.move_train(
-                    current,
-                    station.station.clone(),
-                    tr.train.clone(),
-                    track,
-                    target.track,
-                ).unwrap_or(());
+                let tr = train.lock()?;
+                interface
+                    .move_train(
+                        current,
+                        station.station.clone(),
+                        tr.train.clone(),
+                        track,
+                        target.track,
+                    )
+                    .unwrap_or(());
             }
             station.trains[target.track].push_back(train);
         }
-        interface.end_simulation_step().unwrap_or(());
+        interface
+            .end_simulation_step()
+            .map_err(|_| VMError::ConnectionClosed)
     }
 }
 
@@ -276,10 +363,11 @@ mod tests {
     use std::sync::mpsc::channel;
 
     use crate::ast::{Program, SecondClassPassenger, Station, Target, Train};
-    use crate::interface::{VMInterface, VmInterfaceMessage};
+    use crate::interface::{Input, VMInterface, VmInterfaceMessage};
     use crate::operations::Operation;
     use crate::parse::parser::Span;
     use crate::vm::Data;
+    use crate::wishes::{ColorChoice, TrainConfig};
     use std::time::Duration;
 
     macro_rules! create_program {
@@ -287,6 +375,11 @@ mod tests {
             Program {
                 trains: vec![
                     Train {
+                        config: TrainConfig {
+                            primary_color: ColorChoice::LightRed.color(),
+                            secondary_color: ColorChoice::DarkRed.color(),
+                            length: 1,
+                        },
                         start: Target {
                             span: Span::from_length(0, 1),
                             track: 0,
@@ -299,6 +392,11 @@ mod tests {
                         }],
                     },
                     Train {
+                        config: TrainConfig {
+                            primary_color: ColorChoice::LightRed.color(),
+                            secondary_color: ColorChoice::DarkRed.color(),
+                            length: 1,
+                        },
                         start: Target {
                             span: Span::from_length(0, 1),
                             track: 1,
@@ -336,10 +434,10 @@ mod tests {
             #[test]
             fn $func() {
                 let program = create_program!($x);
-        let (sender, _) = channel();
+        let (sender, r) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-                pp.do_current_step(&i);
+                pp.do_current_step(&i).unwrap();
                 let train = pp.trains[0].lock().unwrap();
                 assert_eq!(Some(10 $op 20), train.first_passenger_value());
             }
@@ -349,10 +447,11 @@ mod tests {
     #[test]
     fn nothing_does_nothing() {
         let program = create_program!(Operation::Nothing);
-        let (sender, _) = channel();
+        let (sender, recvr) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
+        assert_eq!(pp.train_count().unwrap(), 2);
+        pp.do_current_step(&i).unwrap();
         let train = pp.trains[0].lock().unwrap();
         assert_eq!(Some(10), train.first_passenger_value());
     }
@@ -361,6 +460,11 @@ mod tests {
     fn trains_travel() {
         let program = Program {
             trains: vec![Train {
+                config: TrainConfig {
+                    primary_color: ColorChoice::LightRed.color(),
+                    secondary_color: ColorChoice::DarkRed.color(),
+                    length: 1,
+                },
                 start: Target {
                     span: Span::from_length(0, 1),
                     track: 0,
@@ -410,22 +514,22 @@ mod tests {
         let (sender, receiver) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         {
             let station = pp.stations.get("Test2").unwrap().lock().unwrap();
             assert_eq!(station.trains[0].len(), 1);
         }
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         {
             let station = pp.stations.get("Test").unwrap().lock().unwrap();
             assert_eq!(station.trains[1].len(), 1);
         }
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         {
             let station = pp.stations.get("Test2").unwrap().lock().unwrap();
             assert_eq!(station.trains[1].len(), 1);
         }
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         {
             let station = pp.stations.get("Test").unwrap().lock().unwrap();
             assert_eq!(station.trains[0].len(), 1);
@@ -441,7 +545,7 @@ mod tests {
         let (sender, receiver) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         receiver.recv().unwrap();
         receiver.recv().unwrap();
         if let Ok(m) = receiver.recv() {
@@ -462,19 +566,61 @@ mod tests {
     bin_ops!(div_test, Operation::Div, /);
     bin_ops!(mod_test, Operation::Mod, %);
 
-    // #[test]
+    #[test]
+    #[ignore]
     fn reader_reads() {
-        let program = create_program!(Operation::Input);
-        let (sender, _) = channel();
-        let i = VMInterface::new(sender);
-        let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
+        // let program = Program {
+        //     trains: vec![Train {
+        //         config: TrainConfig {
+        //             primary_color: ColorChoice::LightRed.color(),
+        //             secondary_color: ColorChoice::DarkRed.color(),
+        //             length: 1,
+        //         },
+        //         start: Target {
+        //             span: Span::from_length(0, 1),
+        //             track: 0,
+        //             station: "Test".to_string(),
+        //         },
+        //         first_class_passengers: vec![],
+        //         second_class_passengers: vec![],
+        //     }],
+        //     stations: vec![Station {
+        //         name: "Test".to_string(),
+        //         operation: Operation::Input,
+        //         output: vec![Target {
+        //             span: Span::from_length(0, 1),
+        //             station: "Test".to_string(),
+        //             track: 0,
+        //         }],
+        //     }],
+        // };
+        // let (sender, receiver) = channel();
+        // let i = VMInterface::new(sender);
+        /*std::thread::spawn(|| {
+            let mut pp = Data::new(program, &i);
+            pp.do_current_step(&i).unwrap();
+        });*/
+        // while let Ok(t) = receiver.recv_timeout(Duration::from_millis(10)) {
+        //     println!("{:?}", t);
+        //     if let VmInterfaceMessage::AskForInput(n) = t {
+        //         let h = i.message_ids_in_use.lock().unwrap();
+        //         let sender = h.get(&n).unwrap();
+        //         sender.send(Input {
+        //             value: vec![1, 2, 3, 4, 5],
+        //         }).unwrap();
+        //     }
+        // }
     }
 
     #[test]
     fn switch_switches() {
         let program = Program {
             trains: vec![Train {
+                config: TrainConfig {
+                    primary_color: ColorChoice::LightRed.color(),
+                    secondary_color: ColorChoice::DarkRed.color(),
+                    length: 1,
+                },
                 start: Target {
                     span: Span::from_length(0, 1),
                     track: 0,
@@ -489,7 +635,7 @@ mod tests {
             stations: vec![
                 Station {
                     name: "Test".to_string(),
-                    operation: Operation::Switch,
+                    operation: Operation::SwitchGteZero,
                     output: vec![
                         Target {
                             span: Span::from_length(0, 1),
@@ -505,7 +651,7 @@ mod tests {
                 },
                 Station {
                     name: "Other".to_string(),
-                    operation: Operation::Switch,
+                    operation: Operation::SwitchEqZero,
                     output: vec![
                         Target {
                             span: Span::from_length(0, 1),
@@ -524,7 +670,7 @@ mod tests {
         let (sender, receiver) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         let other = pp.stations.get("Other").unwrap().lock().unwrap();
         assert_eq!(other.trains[1].len(), 0);
         assert_eq!(other.trains[0].len(), 1);
@@ -537,6 +683,11 @@ mod tests {
     fn delete_train() {
         let program = Program {
             trains: vec![Train {
+                config: TrainConfig {
+                    primary_color: ColorChoice::LightRed.color(),
+                    secondary_color: ColorChoice::DarkRed.color(),
+                    length: 1,
+                },
                 start: Target {
                     span: Span::from_length(0, 1),
                     track: 0,
@@ -565,18 +716,27 @@ mod tests {
                 ],
             }],
         };
-        let (sender, _) = channel();
+        let (sender, r) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
-        let station = pp.stations.get("Test").unwrap().lock().unwrap();
-        assert_eq!(station.trains[0].len(), 0)
+        assert_eq!(1, pp.train_count().unwrap());
+        pp.do_current_step(&i).unwrap();
+        {
+            let station = pp.stations.get("Test").unwrap().lock().unwrap();
+            assert_eq!(station.trains[0].len(), 0);
+        }
+        assert_eq!(0, pp.train_count().unwrap());
     }
 
     #[test]
     fn del_top() {
         let program = Program {
             trains: vec![Train {
+                config: TrainConfig {
+                    primary_color: ColorChoice::LightRed.color(),
+                    secondary_color: ColorChoice::DarkRed.color(),
+                    length: 1,
+                },
                 start: Target {
                     span: Span::from_length(0, 1),
                     track: 0,
@@ -605,10 +765,10 @@ mod tests {
                 ],
             }],
         };
-        let (sender, _) = channel();
+        let (sender, r) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         let train = pp.trains.first().unwrap().lock().unwrap();
         assert_eq!(0, train.train.second_class_passengers.len());
     }
@@ -617,6 +777,11 @@ mod tests {
     fn duplicate() {
         let program = Program {
             trains: vec![Train {
+                config: TrainConfig {
+                    primary_color: ColorChoice::LightRed.color(),
+                    secondary_color: ColorChoice::DarkRed.color(),
+                    length: 1,
+                },
                 start: Target {
                     span: Span::from_length(0, 1),
                     track: 0,
@@ -645,10 +810,10 @@ mod tests {
                 ],
             }],
         };
-        let (sender, _) = channel();
+        let (sender, r) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         let station = pp.stations.get("Test").unwrap().lock().unwrap();
         assert_eq!(station.trains[0].len(), station.trains[1].len());
         let t1 = {
@@ -667,6 +832,11 @@ mod tests {
     fn banana_rotate() {
         let program = Program {
             trains: vec![Train {
+                config: TrainConfig {
+                    primary_color: ColorChoice::LightRed.color(),
+                    secondary_color: ColorChoice::DarkRed.color(),
+                    length: 1,
+                },
                 start: Target {
                     span: Span::from_length(0, 1),
                     track: 0,
@@ -709,10 +879,10 @@ mod tests {
                 ],
             }],
         };
-        let (sender, _) = channel();
+        let (sender, r) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         let train = pp.trains.first().unwrap().lock().unwrap();
         assert_eq!(20, train.train.second_class_passengers[0].data);
     }
@@ -722,6 +892,11 @@ mod tests {
         let program = Program {
             trains: vec![
                 Train {
+                    config: TrainConfig {
+                        primary_color: ColorChoice::LightRed.color(),
+                        secondary_color: ColorChoice::DarkRed.color(),
+                        length: 1,
+                    },
                     start: Target {
                         span: Span::from_length(0, 1),
                         track: 0,
@@ -748,6 +923,11 @@ mod tests {
                     ],
                 },
                 Train {
+                    config: TrainConfig {
+                        primary_color: ColorChoice::LightRed.color(),
+                        secondary_color: ColorChoice::DarkRed.color(),
+                        length: 1,
+                    },
                     start: Target {
                         span: Span::from_length(0, 1),
                         track: 1,
@@ -777,10 +957,10 @@ mod tests {
                 ],
             }],
         };
-        let (sender, _) = channel();
+        let (sender, r) = channel();
         let i = VMInterface::new(sender);
         let mut pp = Data::new(program, &i);
-        pp.do_current_step(&i);
+        pp.do_current_step(&i).unwrap();
         let train = pp.trains.first().unwrap().lock().unwrap();
         assert_eq!(20, train.train.second_class_passengers[0].data);
         assert_eq!(3, train.train.second_class_passengers.len());
