@@ -39,7 +39,7 @@ func (l *Lexer) make_tokens() ([]shared.Token, error) {
 	for l.current_char != '\x00' {
 		var err error
 		// handle identifiers
-		if l.current_char == 's' || l.current_char == 'm' || l.current_char == 'a' || l.current_char == 'n' || l.current_char == 'w' || l.current_char == 'T' || l.current_char == 'F' {
+		if l.current_char == 's' || l.current_char == 'm' || l.current_char == 'a' || l.current_char == 'n' || l.current_char == 'w' || l.current_char == 'T' || l.current_char == 'F' || l.current_char == 'p' {
 			var inst_token shared.Token
 			inst_token, err = l.make_identifier_token()
 			tokens = append(tokens, inst_token)
