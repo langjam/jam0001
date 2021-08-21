@@ -4,7 +4,7 @@ start at AmsterdamCS track 1
 Jan: this is a nice long white train!
 Pieter: It has some blue accents as well!
 [SECOND CLASS]
-pieter: 1
+Julius: 1
 
 [LOCOMOTIVE]
 start at UtrechtCentraal track 2
@@ -13,7 +13,7 @@ Gerrit: This train has a very pretty yellow colour!
 Marijke: I like the blue detail.
 Sara: The train is very short though...
 [SECOND CLASS]
-pieter: 1
+Jonathan: 1
 
 {UtrechtCentraal}
 operation: add
