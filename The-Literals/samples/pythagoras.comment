@@ -1,7 +1,7 @@
 This is a sample .comment program. This line, ironically, is ignored because it is not a comment.
 
 /**
- * Calculates a hypotenuse.
+ * Calculates the square of a hypotenuse.
  *
  * @param a
  * @param b
@@ -13,5 +13,6 @@ This is a sample .comment program. This line, ironically, is ignored because it 
 
 The main program is below!
 
-// Calculate a hypotenuse with a as 3 and b as 4.
+// Calculate the square of a hypotenuse with a as 3 and b as 4.
 // Print it.
+// Print "But [c squared] is the square of the hypotenuse, and not the hypotenuse itself.".
