@@ -41,4 +41,7 @@ mutual
 public export
 jValue : Expr -> Either Expr String
 jValue k =
-  exprValue k [("+", Function add)]
+  exprValue k [
+    ("+", Function add),
+    ("*", Function mult),
+    ("%", Function div)]
