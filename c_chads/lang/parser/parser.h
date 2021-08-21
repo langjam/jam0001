@@ -11,9 +11,9 @@ struct Parser_State {
 
 enum Parser_Node_Kind {
     PN_PARAMLIST,
+    PN_DECL,
     PN_BODY,
     PN_TOPLEVEL,
-    PN_DECL,
     PN_ASSIGN,
     PN_STRING,
     PN_IDENT,
@@ -29,10 +29,11 @@ struct Parser_Node {
         struct {
             strview_t type;
             strview_t name;
-        } decl;
+        } def;
         struct {
+            strview_t type;
             strview_t name;
-        } assign;
+        } decl;
         struct {
             strview_t name; 
         } call;

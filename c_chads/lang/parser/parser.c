@@ -43,6 +43,9 @@ static tok_t pull() {
     }
     if (tok.tt == TT_EOF) {
         EH_MESSAGE("Unexpected end of file");
+        if (error_handling.expected != NULL) {
+            EH_MESSAGE(" (Expected %s)", error_handling.expected);
+        }
         if (error_handling.unmatched != 0) {
             EH_MESSAGE(", unclosed `%c`", error_handling.unmatched);
         }
@@ -65,6 +68,9 @@ static void stray(tok_t *tok) {
     EH_MESSAGE("Stray `%.*s`", SPAN_PF(tok->span, parser.lexer.src));
     if (error_handling.expected != NULL) {
         EH_MESSAGE(" (Expected %s)", error_handling.expected);
+    }
+    if (error_handling.unmatched != 0) {
+        EH_MESSAGE(", unclosed `%c`", error_handling.unmatched);
     }
     lineinfo(tok);
     exit(1);
@@ -102,7 +108,7 @@ static void pnode_attach(pnode_t *left, pnode_t right) {
     vec_push(&left->children, &right);
 }
 
-static pnode_t value();
+static pnode_t assignment();
 static pnode_t call(tok_t on) {
     assert_tt(&on, TT_IDENT);
     skip_tt(TT_LPAREN);
@@ -110,7 +116,7 @@ static pnode_t call(tok_t on) {
     pnode_t call_node = pnode_new(PN_CALL);
     call_node.data.call.name = strview_span(on.span, parser.lexer.src);
     while (peek().tt != TT_RPAREN) {
-        pnode_attach(&call_node, value());  
+        pnode_attach(&call_node, assignment());  
         if (peek().tt != TT_RPAREN)
             skip_tt(TT_SEMI);
     }
@@ -124,20 +130,22 @@ static pnode_t declaration(tok_t on);
 static strview_t typedecl() {
     setexpect("type name");
     tok_t token = pull();
-    fprintf(stderr, "%s\n", TT_NAMES[token.tt]);
     assert_tt(&token, TT_IDENT);
     setexpect(NULL);
     return strview_span(token.span, parser.lexer.src);
 }
 
-static pnode_t assignment(tok_t on) {
-    assert_tt(&on, TT_IDENT);
+static pnode_t value();
+static pnode_t assignment() {
+    pnode_t left = value();
+    if (peek().tt != TT_ASSIGN)
+        return left;
     skip_tt(TT_ASSIGN);
     pnode_t right = value();
     pnode_t decl_node = pnode_new(PN_ASSIGN);
     // Attach value
+    pnode_attach(&decl_node, left);
     pnode_attach(&decl_node, right);
-    decl_node.data.assign.name = strview_span(on.span, parser.lexer.src);
     return decl_node;
 }
 
@@ -157,8 +165,6 @@ static pnode_t value() {
         case TT_IDENT:
             if (peek().tt == TT_DEF)
                 return declaration(token);
-            if (peek().tt == TT_ASSIGN)
-                return assignment(token);
             if (peek().tt == TT_LPAREN)
                 return call(token);
             else {
@@ -168,11 +174,26 @@ static pnode_t value() {
             }
         case TT_PROC:
             value_node = pnode_new(PN_PROC);
+            if (peek().tt != TT_LBRACE) {
+                pnode_t param_node = pnode_new(PN_PARAMLIST);
+                skip_tt(TT_LPAREN);
+                delim = begindelim('(');
+                while (peek().tt != TT_RPAREN) {
+                    // For now we are just gonna parse some calls
+                    pnode_attach(&param_node, declaration(pull()));
+                    if (peek().tt != TT_RPAREN)
+                        skip_tt(TT_SEMI);
+                }
+                skip_tt(TT_RPAREN);
+                enddelim(delim);
+
+                pnode_attach(&value_node, param_node);
+            }  
             skip_tt(TT_LBRACE);
             delim = begindelim('{');
             while (peek().tt != TT_RBRACE) {
                 // For now we are just gonna parse some calls
-                pnode_attach(&value_node, value());
+                pnode_attach(&value_node, assignment());
                 skip_tt(TT_SEMI);
             }
             skip_tt(TT_RBRACE);
@@ -189,18 +210,15 @@ static pnode_t declaration(tok_t on) {
     setexpect("`:` followed by type");
     skip_tt(TT_DEF);
     setexpect(NULL);
-    strview_t type = strview_from("_");
-    if (peek().tt != TT_ASSIGN)
-        type = typedecl();
-    skip_tt(TT_ASSIGN);
-    pnode_t right = value();
     pnode_t decl_node = pnode_new(PN_DECL);
-    // Attach value
-    pnode_attach(&decl_node, right);
-    decl_node.data.decl.name = strview_span(on.span, parser.lexer.src);
-    decl_node.data.decl.type = type;
+    decl_node.data.def.name = strview_span(on.span, parser.lexer.src);
+    decl_node.data.def.type = strview_from("_");
+    if (peek().tt != TT_ASSIGN) {
+        decl_node.data.def.type = typedecl();
+    }
     return decl_node;
 }
+
 
 void parser_init(const string src) {
     parser = (struct Parser_State) {
@@ -219,7 +237,11 @@ void parser_deinit() {
 
 pnode_t parser_parse_toplevel() {
     pnode_t node = pnode_new(PN_TOPLEVEL);
-    while (peek().tt != TT_EOF)
-        pnode_attach(&node, declaration(pull()));
+    while (peek().tt != TT_EOF) {
+        pnode_attach(&node, assignment());
+        setexpect("semicolon");
+        skip_tt(TT_SEMI);
+        setexpect(NULL);
+    }
     return node;
 }

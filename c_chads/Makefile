@@ -17,14 +17,14 @@ all:
 interp:
 	if [ ! -d "./bin" ]; then mkdir bin; fi
 	$(CPFX) $(CC) $(CFLAGS) -DENABLE_INTERPRETER $(CSRC) -g -o ./bin/COLAN-21
-	./bin/COLAN-21 input.cln
+	./bin/COLAN-21 input.colan
 
 test:
 	$(CPFX) $(CC) $(CFLAGS) $(CTST) -Wno-gnu-zero-variadic-macro-arguments -g -o ./bin/test
 	./bin/test
 
 run: all
-	./bin/COLAN-21 input.cln
+	./bin/COLAN-21 input.colan
 
 clean:
 	if [ -d "./bin" ]; then rm -r ./bin; fi
