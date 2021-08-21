@@ -18,7 +18,7 @@ An overview over the syntax and all functions is given at the end.
 Values
 ------
 
-Flamingo provides a small variety of value types, the most simple of which is the integer. You can do math on integers with the usual arithmetic operators `+`, `-`, `*`, `/`:
+Flamingo provides a small variety of value types, the most simple of which is the integer (for a complete list see the reference). You can do math on integers with the usual arithmetic operators `+`, `-`, `*`, `/`:
 
 ```
 println + 1 2
@@ -90,7 +90,7 @@ bind 'foo 15
 println assoclist 'foo
 ```
 
-The stashed comment is cleared, when an empty line is encountered.
+The stashed comment is cleared, when an empty line is encountered. Note that a comment is stashed in the current scope.
 
 ```
 { Just a wasted comment. }
@@ -210,7 +210,7 @@ assoc 'inc 'arity 1
 println inc 5
 ```
 
-When a variable name is evaluted, its value is looked up in the current environment. If it is a builtin function or a block and the variable has an arity associated, the parser parses a function call. There is the `&` operator that is similiar in function to `'`. It lookups variables without trying to parse function calls, you always just get the stored value.
+When a variable name is evaluted, its value is looked up in the current scope. If it is a builtin function or a block and the variable has an arity associated, the parser parses a function call. There is the `&` operator that is similiar in function to `'`. It lookups variables without trying to parse function calls, you always just get the stored value.
 
 ```
 println &inc
@@ -298,5 +298,165 @@ We iterate over the list of the parameters and add some code to the already stor
 Reference
 ---------
 
-String list: `<<` val... `>>`
-You can enclose several values (separated by whitespace) in `<<` and `>>`. They are evaluated, converted to string and concatenated.
+There are 20 types of tokens in Flamingo:
+
+> ints floats identifiers comments strings `(` `)` `[` `]` `'` `<<` `>>` `&` `,` `if` `else` `for` `macro` `return` an empty line
+
+Ints and floats can only be written in decimal notation with an optional leading `-`. Floats must start with a minus sign or a digit (`.5` is not a valid float literal).
+
+Identifiers consist of A–Z, a–z, `_`, `+`, `-`, `*`, `/`, `<`, `>`, `=`, `.` and 0–9 but they cannot start with a digit. Note that `<<` and `>>` are not identifiers but their own token types.
+
+Comments are text enclosed in `{` and `}`. The text is arbitrary as long as `{` and `}` are balanced.
+
+Strings are enclosed in `"`. Available escape sequences are: `\n`, `\t` and `\"`. Strings can contain newlines.
+
+An expression consists of a value literal (ints, floats, strings, comments), an identifier, a list (several expressions surrounded by `(` and `)` separated by whitespace), a block (several statements surrounded by `[` and `]`) or a string-list (several expressions surrounded by `<<` and `>>`).
+
+The expressions in a list are evaluated and a list value is created.
+
+The statements in a block are not created but stored in block value.
+
+The expressions in a string-list are evaluated, converted to strings and concatenated resulting in a string value.
+
+An identifier can be preceded by `'` to create an identifier value. When an identifier is encountered, its value is looked up. Flamingo is dynamically scoped. If the value either is a builtin or it is a block and the variable is associated with an `arity`, a number of expressions corresponding to the arity following the identifier are parsed and evaluated. The builtin or the block are called with these arguments and the value is returned. If the value is macro, a number of macro arguments corresponding to the macro’s number of parameters is read, the macro is evaluated and the resulting block is evaluated. An identifier can be preceded by `&` to force a simple lookup without trying to parse function or macro calls.
+
+A statement is either an empty line, an `if`, a `for`, a `macro` definition, a `return` statement or an expression.
+
+An empty line clears the stashed comment in the current scope.
+
+An `if` is followed by an expression that must be of type bool and a code block. It can be followed by an `else` and another code block. If the condition is `yes`, the first block is evaluated producing the value of the `if` statement. If the condition is `no` and an `else` block is provided, this block is evaluated producing the value of the `if` statement. If the condition is `no` and no `else` block is provided, the statement evaluates to `no`.
+
+A `for` is followed by an identifier, an expression and a code block. The expression must produce a list. The block is evaluated for every element of the list. It is evaluated in a new scope and the list element is bound to the given identifier if that identifier is not `_`. The value of the statement is the value of the block of the last iteration. If the list is empty, its value is `no`.
+
+A `macro` TODO
+
+A `return` is followed by an expression and ends the execution of an function call early resulting in the expression value. An execution of a code block constitutes a function call if: its origin is `eval`, its origin is `apply`, its origin is a parsed function call due to a bound block value having an associated `arity`.
+
+If a statement is an expression that results in a comment, this comment is stashed. See `stash-comment` for further semantics.
+
+If a statment is an expression and there is a stashed string comment beginning with "`TEST `" the expression following "`TEST `" is evaluated in the current scope and this test expression is tested for equality with the result of the statement of expression. If they are not equal, execution halts and a failure is displayed. If there is a stashed string comment beginning with "`TESTWITH `", the statement is executed for every `TESTWITH` clause in the comment. A `TESTWITH` clause is followed by an identifier and two expressions. Both expressions are evaluated in the current scope. The result of the first expression is bound to the identifier in the current scope before the statement is executed. The result of statement is compared with the second expression for equality. If they are not equal, execution halts and a failure is displayed.
+
+TODO Macro evaluation.
+
+There are 10 types of values in Flamingo: bools, ints, floats, identifiers, strings, lists, comments, builtins, blocks and macros.
+
+---
+
+`yes`, `no`
+> Bool literals.
+
+`println val:value`
+> Prints `val` to stdout followed by a newline.
+
+`bind name:ident val:value`
+> Bind `val` to `name` in the current scope and clear the assoc list of `name`. Also see `store`.
+
+`store name:ident val:value`
+> Bind `val` to `name` in the inner most scope that contains `name`. If no scope contains `name`, create it in the current scope. Doesn’t touch the assoc-list of `name`.
+
+`assoc name:ident slot:ident val:value`
+> Set `slot` to `val` in the assoc-list of `name`.
+
+`assoclist name:ident`
+> Return the assoc-list of `name`.
+
+`+ a:int b:int` <br>
+`+ a:int,float b:int,float` <br>
+`+ a:block b:block` <br>
+`+ a:list b:list`
+> If `a` and `b` are integers, add them as integers and return an integer. If one or both are float, convert both to float and return the sum.
+> Concatenate blocks and lists.
+
+`- a:int b:int` <br>
+`- a:int,float b:int,float`
+> If both arguments are integers, subtract them as integers. Otherwise subtract them as floats.
+
+`* a:int b:int` <br>
+`* a:int,float b:int,float`
+> If both arguments are integers, multiply them as integers. Otherwise multiply them as floats.
+
+`/ a:int b:int` <br>
+`/ a:int,float b:int,float`
+> If both arguments are integers, subtract them as integers. Otherwise divide them as floats.
+
+`/. a:int,float b:int,float`
+> Divide `a` and `b` as floats.
+
+`mod a:int b:int` <br>
+`mod a:int,float b:int,float`
+> If both arguments are integers, return the modulus of an integer division. Otherwise return the modulus of a float division.
+
+`= a:value b:value`
+> If `a` and `b` are of different types, they are not equal. Integers, floats, strings, identifiers and lists have obvious equality. Comments compare their source location as well as their contained value. Blocks and macros are never equal to each other (not even to themselves).
+
+`<> a:value b:value`
+> Negation of `= a b`.
+
+`<  a:int b:int` <br>
+`<  a:int,float b:int,float` <br>
+`<= a:int b:int` <br>
+`<= a:int,float b:int,float` <br>
+`>= a:int b:int` <br>
+`>= a:int,float b:int,float` <br>
+`>  a:int b:int` <br>
+`>  a:int,float b:int,float` <br>
+> If both arguments are integers, compare them as integers. If one of them is float, compare them as floats.
+
+`and a:bool b:bool`
+> Return `yes` if both arguments are `yes`, otherwise `no`.
+
+`or a:bool b:bool`
+> Return `yes` if one or both arguments are `yes`, otherwise `no`.
+
+`not a:bool`
+> Return `yes` if `a` is `no`, otherwise `no`.
+
+`->string a:value`
+> Convert `a` to a string.
+
+`getloc c:comment`
+> Return an assoc-list containing the source location of `c`. The keys are: `'source` (a string), `'line` (an integer) and `'col` (an integer).
+
+`peel c:comment`
+> Return the contained value of `c`.
+
+`make-comment src:string line:int col:int val:value`
+> Create a comment value.
+
+`stash-comment c:comment`
+> Stash `c` in the current scope. If `c` already contains a comment, the values of both comments are converted to string, concatenated with a newline character in between, and a new comment with the source location of the first comment and the combined value is stashed.
+
+`testtable name:ident inputs:list expected:list`
+> `inputs` and `expected` must match in size. Create and stash a `TESTWITH` comment for the given and name and every pair of elements of `inputs` and `expected`.
+
+`iota n:int`
+> Return a list containing the integers 0 ≤ _i_ < `n`.
+
+`iota+ a:int b:int`
+> Return a list containing the integers `a` ≤ _i_ < `b`.
+
+`eval b:block`
+> Execute the contents of b in the current scope and return the value of the last statement of `b`. If `b` is empty, return `no`. `eval` is equivalent to `apply` with an empty argument list.
+
+`apply b:block args:list`
+> Execute the contents of b in a new scope that has `args` set as parameters and return the value of the last statement of `b`. If `b` is empty, return `no`. Also see `eval`.
+
+`getparam i:int`
+> Retrieve the `i`th (zero-based) of the current scope. Only meaningful in a block execution if the block has been provided with parameters. See `apply`.
+
+`floor x:float`
+> Return the greatest integral value (as float) that is smaller than x.
+
+`sqrt x:float`
+> Return the square root of `x`.
+
+`sin x:float`
+> Return the sine of x.
+
+`cos x:float`
+> Return the cosine of x.
+
+`float->int x:float`
+> Truncate the value of `x` (round towards to zero) and return it as an integer.
+
+`defun` TODO

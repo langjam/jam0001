@@ -189,8 +189,16 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
         Array<u8> s = {};
         s.arena = &arena;
         while (src->count && (*src)[0] != '"') {
-            array_push(&s, (*src)[0]);
-            source_advance(src, loc, 1);
+            if ((*src)[0] == '\\' && src->count > 1) {
+                source_advance(src, loc, 1);
+                if ((*src)[0] == 'n') array_push(&s, (u8)'\n');
+                if ((*src)[0] == 't') array_push(&s, (u8)'\t');
+                if ((*src)[0] == '\"') array_push(&s, (u8)'\"');
+                source_advance(src, loc, 1);
+            } else {
+                array_push(&s, (*src)[0]);
+                source_advance(src, loc, 1);
+            }
         }
         if ((*src)[0] == '"') source_advance(src, loc, 1);
         tok.s = array_slice(&s);
@@ -718,6 +726,29 @@ Value b_gt(Slice<Value> args, Env *env, SourceLoc loc) {
             format_value_type(args[0].type), format_value_type(args[1].type));
         exit(1);
     }
+}
+
+Value b_and(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("and", 0, Value_Bool);
+    CHECK_ARG("and", 1, Value_Bool);
+
+    return {.type = Value_Bool, .b = args[0].b && args[1].b};
+}
+
+Value b_or(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("or", 0, Value_Bool);
+    CHECK_ARG("or", 1, Value_Bool);
+
+    return {.type = Value_Bool, .b = args[0].b || args[1].b};
+}
+
+Value b_not(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("not", 0, Value_Bool);
+
+    return {.type = Value_Bool, .b = !args[0].b};
 }
 
 Value b_tostring(Slice<Value> args, Env *env, SourceLoc loc) {
@@ -1264,12 +1295,14 @@ Value exec_block(Slice<Token> tokens, Env *env) {
     return result;
 }
 
-void usage() {
-    fprintf(stderr, "Usage: flamingo FILE\n");
-    exit(1);
-}
-
 int main(int argc, char **argv) {
+    if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
+        fprintf(stderr, "Usage: flamingo [FILE]\n");
+        fprintf(stderr, "Call flamingo without an argument to start the REPL.\n");
+        fprintf(stderr, "Call it with a file argument to execute that file.\n");
+        exit(1);
+    }
+
     intern(lit_slice("</>")); // Make Atom(0) invalid.
     atom_doc = intern(lit_slice("doc"));
     atom_len = intern(lit_slice("len"));
@@ -1304,6 +1337,9 @@ int main(int argc, char **argv) {
     BIND_BUILTIN1("<=", b_le, 2);
     BIND_BUILTIN1(">=", b_ge, 2);
     BIND_BUILTIN1(">", b_gt, 2);
+    BIND_BUILTIN(and, 2);
+    BIND_BUILTIN(or, 2);
+    BIND_BUILTIN(not, 1);
     BIND_BUILTIN1("->string", b_tostring, 1);
     BIND_BUILTIN(getloc, 1);
     BIND_BUILTIN(peel, 1);
