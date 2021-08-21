@@ -152,7 +152,7 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
     }
     return TT_INVALID;
 }
- 
+
 static enum Token_Type check_for_keyword(struct Lexer_State *self, struct Token *tok) {
     if (spanstreqstr(tok->span, self->src, "return")) {
         return TT_RETURN;

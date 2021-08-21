@@ -8,8 +8,8 @@ struct Lexer_State {
     usize pos;
     usize line;
     usize col;
-    const usize src_len;
-    const string src;
+    usize src_len;
+    string src;
 };
 
 enum Token_Type {
