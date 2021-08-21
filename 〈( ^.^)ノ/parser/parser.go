@@ -134,10 +134,20 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 		"set":   2,
 		"m":     1,
 		"print": 1,
-		"not":   1}[ins]) {
+		"not":   1,
+		"add":   1}[ins]) {
 
 		fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
 		os.Exit(1)
+	}
+
+	if ins == "add" {
+		if args[0].Children[0].Val.Type == shared.TTwcomment {
+			args[0].Children[0].Val.Type = shared.TTwcommentAdd
+		} else {
+			fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
+			os.Exit(1)
+		}
 	}
 
 	for _, arg := range args[0].Children {
@@ -156,10 +166,16 @@ func (p *Parser) parseCall(args []shared.Node) {
 	}
 }
 
-func (p *Parser) parseComment(content string, value []shared.Node) {
+func (p *Parser) parseComment(content string, add bool, value []shared.Node) {
 	p.Parse(value[0])
 
-	p.comments[content] = value[0]
+	if add {
+		p.comments[content] = shared.Node{
+			IsExpression: true,
+			Children: append(p.comments[content].Children, value...)}
+	} else {
+		p.comments[content] = value[0]
+	}
 }
 
 func (p *Parser) parseWhile(args []shared.Node) {
@@ -197,8 +213,11 @@ func (p *Parser) Parse(tree shared.Node) {
 			p.parseInstruction(child.Val.Value, tree.Children[i+1:], child.Val.Pos)
 		case shared.TTstring, shared.TTref:
 			p.parseCall(tree.Children[i+1:])
-		case shared.TTwcomment:
-			p.parseComment(child.Val.Value, tree.Children[1:])
+		case shared.TTwcomment, shared.TTwcommentAdd:
+			p.parseComment(
+				child.Val.Value,
+				child.Val.Type == shared.TTwcomment,
+				tree.Children[1:])
 		case shared.TTwhile:
 			p.parseWhile(tree.Children[1:])
 		}

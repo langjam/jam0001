@@ -13,6 +13,7 @@ const (
 	TTref         // $number
 	TTwhile       // while
 	TTwcomment    // comment
+	TTwcommentAdd // comment under the add statement
 )
 
 type Token struct {
