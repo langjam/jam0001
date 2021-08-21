@@ -1,5 +1,5 @@
 .PHONY: clean, test
-CSAN :=# -fsanitize=address -fsanitize=undefined
+CSAN := -fsanitize=address -fsanitize=undefined
 CWARN := -Wconversion -Wsign-conversion -Wextra -Wall -Wno-initializer-overrides -pedantic
 CSHD := $(shell find aid -name '*.c') $(shell find lang -name '*.c') 
 CSRC := $(CSHD) $(shell find frontend -name '*.c')

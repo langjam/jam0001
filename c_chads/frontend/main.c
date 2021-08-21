@@ -76,8 +76,8 @@ void print_ast(struct Parser_Node *node, usize depth) {
         for (usize i = 0; i < node->children.size; i += 1) {
             print_ast(vec_get(&node->children, i), depth + 1);
         }
-    // just temp
-#ifndef ENABLE_INTERPRETER
+
+#if 0
     if (node->kind != PN_INVAL)
         vec_drop(&node->children);
 #endif
