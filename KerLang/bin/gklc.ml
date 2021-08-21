@@ -4,14 +4,7 @@
   also known as the glorious Ker-Lann Compiler but who cares ?
 *)
 
-(*
-  Pretty print a position in a lexbuf.
-  Code taken from the book "Real World OCaml".
-*)
-let print_position outx lexbuf =
-  let pos = lexbuf.Lexing.lex_curr_p in
-  Printf.fprintf outx "%s:%d:%d" pos.pos_fname
-    pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
+
 
 (**
   Parse a KerLang file and print the result of the parsing
@@ -20,12 +13,13 @@ let parse_and_print f =
   let lexbuf = Lexing.from_channel (open_in f) in
   let blocks = ref [] in
   Lexing.set_filename lexbuf f;
+  let open Kerlang.Kl_parsing in
   try while true do
     blocks := Kerlang.Kl_parser.block lexbuf::!blocks
   done;
   with
   | Kerlang.Kl_parser.Eof ->
-    List.iter (Format.eprintf "@[%a@]\n\n" Kerlang.Kl_parser.pp_spec) (List.rev !blocks)
+    List.iter (Format.eprintf "@[%a@]\n\n" pp_spec) (List.rev !blocks)
   | Kerlang.Kl_parser.SyntaxError msg ->
     Printf.eprintf "\x1b[1;31msyntax error\x1b[0m (%a) : %s\n" print_position lexbuf msg
 
