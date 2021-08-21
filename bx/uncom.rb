@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# string.undump
+
 class UnFunc
 	def initialize(name, checks, func)
 		raise "type checks must match func arity" if checks.length != func.arity
@@ -15,6 +17,8 @@ class UnFunc
 			return false if check == :num and not item.is_a? Integer
 			return false if check == :bool and not (item.is_a?(FalseClass) or item.is_a?(TrueClass))
 			return false if check == :str and not item.is_a? String
+			return false if check == :quote and not item.is_a? UnQuote
+			return false if check == :comment and not item.is_a? UnComment
 			# raise "i don't kow what type #{check} is" if check != :any
 		end
 		return true
@@ -54,27 +58,83 @@ $uncom_words = {}
 ["or", [:bool, :bool], lambda {|a, b| a or b }],
 ["not", [:bool], lambda {|a| not a }],
 
+["any?", [:any], lambda {|a| true }],
+["num?", [:any], lambda {|a| a.is_a?(Integer) }],
+["bool?", [:any], lambda {|a| a.is_a?(FalseClass) or a.is_a?(TrueClass) }],
+["str?", [:any], lambda {|a| a.is_a?(String) }],
+["quote?", [:any], lambda {|a| a.is_a?(UnQuote) }],
+["comment?", [:any], lambda {|a| a.is_a?(UnComment) }],
+
 ].each {|word|
 	$uncom_words[word[0]] = UnFunc.new(*word)
 }
+
+class UnComment
+	# NOTE: MAKE SURE THAT THE LENGTH OF THE SOURCE STRING NEVER GETS CHANGED
+	def initialize(source, start, len)
+		@source = source
+		@start = start
+		@len = len
+		# TODO: save what it looks like at start, so we know what it's variable is called
+	end
+
+	def is_commented?
+		# TODO: check source to see if we're commnted
+	end
+
+	def comment
+		# TODO: install comment
+	end
+
+	def uncomment
+		# TODO: un do the comment
+	end
+
+	def inspect
+		@source[@start, @len]
+	end
+end
+
+class UnQuote
+	def initialize(source, start, len)
+		@source = source
+		@start = start
+		@len = len
+	end
+
+	def string
+		@source[@start + 1, @len - 2]
+	end
+
+	def inspect
+		@source[@start, @len]
+	end
+end
 
 def do_words(words)
 	uncom = Uncom.new
 	words.split(" ").each do |word|
 		uncom.do_word word
 	end
-	puts "-> " + uncom.data.inspect
+	# puts "-> " + uncom.data.inspect
 	uncom
 end
 
+
+# TODO:
+# we need a way to set their check functions and arity
+# for simlicity let's not have any local functions
+
+# functions are declared with `def`, def takes 2 quotes, {name pred-1 pred-2 ...} { body }
+
 class Uncom
-	def initialize(file_path = "")
-		@source = ""
-		if file_path != "" then
-			f = File.new file_path
-			@source = f.read
-			f.close
-		end
+	def initialize(source = "")
+		@source = source
+		#if file_path != "" then
+		#	f = File.new file_path
+		#	@source = f.read
+		#	f.close
+		#end
 
 		@func_stacks = [[]]
 		@data_stacks = [[]]
@@ -83,13 +143,11 @@ class Uncom
 		# storage for locals, mirrors dict, should get pushed / popped when dict does
 		@vars = [{}, {}]
 
-		# TODO:
-		# place "instruction pointer" at the start of the string
-		# instruction pointer
+		# ip should be place at the start of NEXT word to be executed when step() is called
+		@instruction_ptr = 0
 
-		# decide on how functions are declared
-
-		# return stack, saves locations in source to come back to
+		# TODO: call and return functions
+		@return_stack = []
 	end
 
 	def func
@@ -98,6 +156,22 @@ class Uncom
 
 	def data
 		return @data_stacks.last
+	end
+
+	def next_word
+		# get next word, starting at instruction_ptr advancing forwards
+		# can be a string, number, quote or comment
+
+		# !!!!!!!!!!!!!! YOU WERE HERE !!!!!!!!!!!!!!!!!
+		# 1. skip whitespace, make brackets, spaces, curly-braces delimmiters
+		# 2. get to the point that we can replace array.split with this function
+		# 3. when at end of string return special `end` word that sets end of prog
+		# 4. write `step` function that calls this to run the @source program
+		#    step should take an arg for how many words you want to run for
+		#    step should return both? stacks
+		# 5. re-work test function to use step
+		# 6. add support for quotes, making sure to keep track of nested quotes
+		# 7. add support for comments, decide on when their vars get bound
 	end
 
 	# retuns false when nothing was done, true when func(s) were called
@@ -136,6 +210,9 @@ class Uncom
 			return false # no funcs called
 		end
 
+		# quotation -> push
+			# TODO
+
 		# number -> push
 		begin
 			num = Integer(word)
@@ -144,8 +221,6 @@ class Uncom
 		rescue ArgumentError
 			# not number
 		end
-
-		# string -> lookup word
 
 		# found global -> do word
 		if @dict.first.member? word then
@@ -178,31 +253,22 @@ class Uncom
 end
 
 
-# TODO:
-# create some kind of test
-
-# expresions
-# 1 + 2 + 3 -> 6
-# + 1 2 + 3
-# [ 1 0 ] vecdot [ 0.5 0.5 ]
-# average-of-3 + + + 1 1 2 2 3 3
-
-# reverse rpn + prn
-# function stack (), data stack []
-# + 1 2 3 + -> 6
-# + + 1 2 3 -> 6
-# 1 2 3 + + -> 6
-# 1 + 2 + 3 -> 6
-# 1 + . -> () {} # `.` clears both stacks, acting as a statement separtator
-# when either function or data is pushed:
-#	check if there are enough things on the top of data stack to match the arity of top function
-#	if so pop and call top function with top elements of stack and push the result to stack
-
-# global variables
-# begin with $ can be assigned to with $var=
-# $var is a function that pushes the current value
-# $var= is a function that sets the value, calling $undefined= creates the variable
-# $var= and $var are created at read time, as long as nothing else matches
+# t e s t s #
+(lambda {
+	[
+	["+ 1 2 3 +", [6]],
+	["+ + 1 2 3", [6]],
+	["1 2 3 + +", [6]],
+	["1 + 2 + 3", [6]],
+	["( 1 + 2 + 3 ) 4", [6, 4]],
+	["$x= 5 $x= ( $x + $x + $x ) $x", [15]],
+	["5 $x= ( $x + $x + $x ) $x= $x", [15]],
+	["x= 5 x= ( x + x + x ) x", [15]],
+	["5 x= ( x + x + x ) x= x", [15]],
+	].each_with_index {|t, idx|
+		raise "failed test number #{idx + 1}" if do_words(t[0]).data != t[1]
+	}
+}).call
 
 
 
