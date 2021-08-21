@@ -48,14 +48,13 @@ struct LexError {
 class Lexer {
 public:
     Result<Token, LexError> next();
-    Optional<Token> peek() const { return m_current_token; }
+    Token::Position current_source_position() const { return m_current_source_position; }
 
-    LexError make_error_here(String);
     Token emit_token(Token::Type, String);
 
 private:
     Token::Position m_current_source_position;
-    Token m_current_token;
+    Token::Position m_start_source_position;
     Optional<char> m_next_input;
     StringBuilder m_string_builder;
 

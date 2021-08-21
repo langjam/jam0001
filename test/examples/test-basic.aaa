@@ -1,0 +1,9 @@
+// a number
+let x = 4;
+// another number
+let y = 5;
+// yet another number
+let stuff = add(<number>);
+
+print(<number>);
+print(<arithmetic>(<number>));

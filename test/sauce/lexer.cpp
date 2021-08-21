@@ -6,15 +6,19 @@ Result<Token, LexError> Lexer::next()
 {
     InputFileStream stream { stdin };
 
-    m_current_token = {};
-    m_current_token.source_range.start = m_current_source_position;
+    Token token = { .type = Token::Type::Unknown };
+    m_start_source_position = m_current_source_position;
     char ch;
     for (;;) {
+        bool eof = false;
         if (m_next_input.has_value()) {
             ch = m_next_input.release_value();
         } else if (!stream.read_or_error({ &ch, 1 })) {
             stream.handle_any_error();
-            return emit_token(Token::Type::Eof, ""sv);
+            if (m_state == Free)
+                return emit_token(Token::Type::Eof, ""sv);
+            eof = true;
+            ch = 0;
         }
 
         if (ch == '\n') {
@@ -57,72 +61,76 @@ Result<Token, LexError> Lexer::next()
             else if (is_ascii_digit(ch)) {
                 m_state = InInteger;
                 m_string_builder.append(ch);
-                m_current_token.type = Token::Type::Integer;
+                token.type = Token::Type::Integer;
             } else if (ch == '!')
                 m_state = CouldBeInIndirectCommentMention;
             else if (ch == '"') {
                 m_state = InString;
-                m_current_token.type = Token::Type::String;
-                m_current_token.source_range.start = m_current_source_position;
+                token.type = Token::Type::String;
+                token.source_range.start = m_current_source_position;
             } else {
                 m_state = InIdentifier;
                 m_string_builder.append(ch);
-                m_current_token.type = Token::Type::Identifier;
-                m_current_token.source_range.start = m_current_source_position;
+                token.type = Token::Type::Identifier;
+                token.source_range.start = m_current_source_position;
             }
             break;
         case InIdentifier:
-            if (!R"(:(){} <>!"=;,.|)"sv.contains(ch)) {
+            if (!eof && !":(){} <>!\"=;,.|\n"sv.contains(ch)) {
                 m_string_builder.append(ch);
                 continue;
             }
 
-            m_next_input = ch;
+            if (!eof)
+                m_next_input = ch;
             m_state = Free;
-            m_current_token.source_range.end = m_current_source_position;
-            m_current_token.text = m_string_builder.build();
+            token.source_range.end = m_current_source_position;
+            token.text = m_string_builder.build();
             m_string_builder.clear();
-            return m_current_token;
+            return token;
         case CouldBeInComment:
             if (ch == '/') {
                 m_state = InComment;
-                m_current_token.type = Token::Type::Comment;
+                token.type = Token::Type::Comment;
             } else {
-                m_next_input = ch;
-                m_current_token.type = Token::Type::Identifier;
-                m_current_token.text = "/"sv;
+                if (!eof)
+                    m_next_input = ch;
+                token.type = Token::Type::Identifier;
+                token.text = "/"sv;
                 m_state = InIdentifier;
             }
             break;
         case InComment:
-            if (ch == '\n') {
-                m_current_token.text = m_string_builder.build();
+            if (ch == '\n' || eof) {
+                token.text = m_string_builder.build();
                 m_string_builder.clear();
                 m_state = Free;
-                m_current_token.source_range.end = m_current_source_position;
-                return m_current_token;
+                token.source_range.end = m_current_source_position;
+                return token;
             }
 
             m_string_builder.append(ch);
             break;
         case InString:
             if (ch == '"') {
-                m_current_token.text = m_string_builder.build();
+                token.text = m_string_builder.build();
                 m_string_builder.clear();
                 m_state = Free;
-                m_current_token.source_range.end = m_current_source_position;
-                return m_current_token;
+                token.source_range.end = m_current_source_position;
+                return token;
             }
+            if (eof)
+                return LexError { "Unterminated string", m_current_source_position };
             m_string_builder.append(ch);
             break;
         case InInteger:
-            if (!is_ascii_digit(ch)) {
-                m_current_token.text = m_string_builder.build();
+            if (!is_ascii_digit(ch) || eof) {
+                token.text = m_string_builder.build();
                 m_string_builder.clear();
                 m_state = Free;
-                m_current_token.source_range.end = m_current_source_position;
+                token.source_range.end = m_current_source_position;
                 m_next_input = ch;
-                return m_current_token;
+                return token;
             }
             m_string_builder.append(ch);
             break;
@@ -131,21 +139,14 @@ Result<Token, LexError> Lexer::next()
                 m_state = Free;
                 return emit_token(Token::Type::IndirectMentionOpen, "!<"sv);
             }
-            m_next_input = ch;
-            m_current_token.type = Token::Type::Identifier;
-            m_current_token.text = "/";
+            if (!eof)
+                m_next_input = ch;
+            token.type = Token::Type::Identifier;
+            token.text = "/";
             m_state = InIdentifier;
             break;
         }
     }
-}
-
-LexError Lexer::make_error_here(String text)
-{
-    return {
-        move(text),
-        m_current_source_position
-    };
 }
 
 Token Lexer::emit_token(Token::Type type, String text)
@@ -154,7 +155,7 @@ Token Lexer::emit_token(Token::Type type, String text)
         move(text),
         type,
         {
-            m_current_token.source_range.start,
+            m_start_source_position,
             m_current_source_position,
         },
     };
