@@ -14,11 +14,13 @@ pub struct Train {
     pub second_class_passengers: Vec<SecondClassPassenger>
 }
 
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FirstClassPassenger {
     pub name: String,
     pub data: String,
 }
+
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SecondClassPassenger {
@@ -26,12 +28,14 @@ pub struct SecondClassPassenger {
     pub data: i64
 }
 
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Station {
     pub name: String,
     pub operation: Operation,
     pub output: Vec<Target>
 }
+
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Target {

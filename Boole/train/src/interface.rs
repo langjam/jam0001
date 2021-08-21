@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicI64, Ordering};
 
+
 pub struct Input {
     value: Vec<i64>
 }
