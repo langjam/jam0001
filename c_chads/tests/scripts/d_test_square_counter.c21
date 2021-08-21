@@ -1,0 +1,14 @@
+# Doigt's classical "Square Counter", because everyone needs a program that prints squares eternally...
+main := proc () {
+
+    a := 1;
+    b := 3;
+    maximum := 1000000;
+
+    while (a < maximum) {
+
+        print(a);
+        a = a + b;
+        b = b + 2;
+    }
+};
