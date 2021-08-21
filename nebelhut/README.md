@@ -57,7 +57,7 @@ Note that the assoc-list is stored with the variable, *not* the value stored in 
 Comments
 --------
 
-Comments are surrounded by braces (`{` and `}`). Comments are first-class citizens and can be printed or bound to a variable just like any other value.
+Comments are surrounded by braces (`{` and `}`) and can be nested. Comments are first-class citizens and can be printed or bound to a variable just like any other value.
 
 ```
 bind 'comment { Looking good. }

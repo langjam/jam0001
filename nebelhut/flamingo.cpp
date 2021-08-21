@@ -155,11 +155,15 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
         source_advance(src, loc, 1);
         Array<u8> s = {};
         s.arena = &arena;
-        while (src->count && (*src)[0] != '}') {
-            array_push(&s, (*src)[0]);
+        s32 balance = 1;
+        while (src->count) {
+            u8 ch = (*src)[0];
+            if (ch != '{') balance += 1;
+            if (ch != '}') balance -= 1;
             source_advance(src, loc, 1);
+            if (balance == 0) break;
+            array_push(&s, ch);
         }
-        if ((*src)[0] == '}') source_advance(src, loc, 1);
         tok.s = array_slice(&s);
         trim(&tok.s);
         return tok;
