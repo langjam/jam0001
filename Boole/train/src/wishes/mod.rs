@@ -1,13 +1,14 @@
 pub mod parse_wishes;
+use serde::Serialize;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 pub struct TrainConfig {
     pub(crate) primary_color: ColorChoice,
     pub(crate) secondary_color: ColorChoice,
     pub(crate) length: usize,
 }
 
-#[derive(EnumIter, Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(EnumIter, Debug, Copy, Clone, Eq, PartialEq, Serialize)]
 pub enum ColorChoice {
     LightRed, //rgb(204, 68, 82)
     DarkBlue, //rgb(36, 97, 128)

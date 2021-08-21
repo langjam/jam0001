@@ -1,7 +1,8 @@
 use std::fmt::{Display, Formatter};
 use std::cell::Cell;
+use serde::Serialize;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize)]
 pub struct Span {
     pub start: usize,
     pub end: usize,

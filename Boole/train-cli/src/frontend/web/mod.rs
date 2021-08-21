@@ -23,8 +23,16 @@ use crate::frontend::web::runner::{WebRunner, send};
 pub enum MessageToWebpage{
     AskForInput(i64),
     Print(Vec<i64>),
-    MoveTrain(),
-    VisualizerData(String)
+    PrintChar(Vec<i64>),
+    MoveTrain{
+        from_station: Station,
+        to_station: Station,
+        train: Train,
+        start_track: usize,
+        end_track: usize
+    },
+    VisualizerData(String),
+    Error(String),
 }
 
 #[derive(Deserialize)]
@@ -36,8 +44,10 @@ pub enum MessageFromWebpage{
 async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
     let (mut ws_tx, mut ws_rx) = ws.split();
 
-    let runner = WebRunner::new(program.clone());
-    let vm = Data::new(program);
+    let (mut response_tx, response_rx) = channel();
+
+    let mut runner = WebRunner::new(program.clone(), response_tx);
+    let mut vm = Data::new(program);
 
 
     let visualizer_path = runner.generate_visualizer_file(connection_id);
@@ -50,8 +60,15 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
                         log::info!("{}", i);
                         match serde_json::from_str::<MessageFromWebpage>(i) {
                             Ok(message) => match message {
-                                MessageFromWebpage::AdvanceSimulation => {}
-                                MessageFromWebpage::SendInputResponse(_, _) => {}
+                                MessageFromWebpage::AdvanceSimulation => {
+                                    match vm.do_current_step(&runner) {
+                                        Err(e) => runner.send(MessageToWebpage::Error(format!("{:?}", e))).expect("failed to send"),
+                                        Ok(i) => {},
+                                    }
+                                }
+                                MessageFromWebpage::SendInputResponse(id, response) => {
+                                    // runner.input_response(id, response);
+                                }
                             }
                             Err(e) => log::error!("{}", e)
                         }
@@ -64,24 +81,16 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
     });
 
     tokio::task::spawn(async move {
+        let rx = response_rx;
+
         send(&mut ws_tx, &MessageToWebpage::VisualizerData(format!("{:?}", visualizer_path))).await;
 
         loop {
-            // let res = match message {
-            //     VmInterfaceMessage::AskForInput(id) => {
-            //         serialize_silent!(&MessageToWebpage::AskForInput(id))
-            //     }
-            //     VmInterfaceMessage::Print(i) => {
-            //         serialize_silent!(&MessageToWebpage::Print(i))
-            //     }
-            //     VmInterfaceMessage::MoveTrain(_, _) => {
-            //         serialize_silent!(&MessageToWebpage::MoveTrain())
-            //     }
-            //     VmInterfaceMessage::EndSimulationStep => {
-            //         serialize_silent!(&MessageToWebpage::EndSimulationStep)
-            //     }
-            // };
+            let res = rx.recv();
 
+            if let Ok(i) = res {
+                send(&mut ws_tx, &i).await;
+            }
         }
     });
 }
