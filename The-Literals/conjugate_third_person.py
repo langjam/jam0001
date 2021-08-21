@@ -16,6 +16,16 @@ def conjugate_third_person(verb: str):
     elif verb.endswith(es_endings):
         return verb + "es"
     elif verb.endswith("y"):
-        return verb.rstrip('y') + "ies"
+        return verb.rstrip("y") + "ies"
     else:
         return verb + "s"
+
+
+def get_funcdef_name(func_call: str):
+    words = func_call.split()
+    first_word = conjugate_third_person(words[0]).title()
+    if len(words) == 1:
+        return first_word
+    else:
+        rest_of_name = " ".join(words[1:])
+        return first_word + " " + rest_of_name

@@ -1,5 +1,5 @@
 import unittest
-from conjugate_third_person import conjugate_third_person
+from conjugate_third_person import conjugate_third_person, get_funcdef_name
 
 
 class TestConjugateThirdPerson(unittest.TestCase):
@@ -81,6 +81,28 @@ class TestConjugateThirdPerson(unittest.TestCase):
     def test_on_bury(self):
         actual_result = conjugate_third_person("bury")
         expected_result = "buries"
+        self.assertEqual(actual_result, expected_result)
+
+
+class TestGetFuncdefName(unittest.TestCase):
+    def test_when_lowercase(self):
+        actual_result = get_funcdef_name("print a blank line")
+        expected_result = "Prints a blank line"
+        self.assertEqual(actual_result, expected_result)
+
+    def test_when_starts_capital(self):
+        actual_result = get_funcdef_name("Print a blank line")
+        expected_result = "Prints a blank line"
+        self.assertEqual(actual_result, expected_result)
+
+    def test_when_single_word_lowercase(self):
+        actual_result = get_funcdef_name("meow")
+        expected_result = "Meows"
+        self.assertEqual(actual_result, expected_result)
+
+    def test_when_single_word_starts_capital(self):
+        actual_result = get_funcdef_name("Meow")
+        expected_result = "Meows"
         self.assertEqual(actual_result, expected_result)
 
 
