@@ -77,6 +77,8 @@ pub enum ValueAst {
     Text(String),
     Struct(StructValue),
     Reference(String),
+    CommentAccess(Box<ValueAst>, String),
+    FieldAccess(Box<ValueAst>, String),
     // TODO: expressions?
 }
 

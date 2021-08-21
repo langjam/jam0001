@@ -125,6 +125,29 @@ impl Env {
                 })))
             },
             ValueAst::Reference(r) => Ok(self.value_registry.get(r).ok_or_else(|| format!("value not found: {}", r))?.clone()),
+            ValueAst::CommentAccess(source, field) => {
+                match self.evaluate(source)? {
+                    Value::Unit => Err("unit has no comments (why?)".into()),
+                    Value::Number(_) => Err("number has no comments (why?)".into()),
+                    Value::Text(_) => Err("text has no comments (why?)".into()),
+                    Value::Comment(c) => Err("comment has no comments (why?)".into()),
+                    Value::Struct(s) => s.comment.get_field(field),
+                }
+            }
+            ValueAst::FieldAccess(source, field) => {
+                match self.evaluate(source)? {
+                    Value::Unit => Err("unit has no fields".into()),
+                    Value::Number(_) => Err("number has no fields".into()),
+                    Value::Text(_) => Err("text has no fields".into()),
+                    Value::Comment(c) => c.get_field(field),
+                    Value::Struct(s) => {
+                        match s.fields.get(field) {
+                            None => Err(format!("struct has no field named {}", field)),
+                            Some(f) => Ok(f.value.clone())
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -75,6 +75,18 @@ impl CommentValueData {
         }
     }
 
+    pub fn get_field(&self, field: &str) -> Result<Value, String> {
+        if field == "text" {
+            return Ok(Value::Text(self.text.clone()));
+        }
+
+        match &self.record {
+            Value::Unit => Err(format!("comment has no field named {}", field)),
+            Value::Struct(s) => Ok(s.fields.get(field).ok_or_else(|| format!("comment has no field named {}", field))?.value.clone()),
+            _ => panic!("this should not allow non-structs really"),
+        }
+    }
+
     pub fn extend_with_lines(&mut self, lines: &[String]) {
         println!();
         println!("extending with lines");

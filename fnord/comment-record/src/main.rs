@@ -64,6 +64,20 @@ fn main() {
                     },
                 })),
             ),
+            ast::Ast::ValueDef(
+                "result".into(),
+                ast::ValueAst::FieldAccess(
+                    Box::new(ast::ValueAst::Reference("pi".into())),
+                    "numerator".into(),
+                ),
+            ),
+            ast::Ast::ValueDef(
+                "verified".into(),
+                ast::ValueAst::CommentAccess(
+                    Box::new(ast::ValueAst::Reference("pi".into())),
+                    "VERIFIED".into(),
+                ),
+            ),
         ],
     };
 
