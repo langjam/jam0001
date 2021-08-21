@@ -2,6 +2,11 @@
 layout: post
 title:  "Jam0001"
 ---
+# Synopsis
+
+Transpile drawings to code using drawio, PROLOG, Ohm-JS.
+
+# Introduction
 
 The following is a discussion about the [language jam](https://github.com/langjam/langjam).
 

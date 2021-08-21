@@ -84,7 +84,8 @@ connectionOf(C,connection{name:ConnectionName,source:pair{component:SourceName,p
     
 componentname(C,Name):-
     fillColor(C,"red"),
-    gensym(c,Name).
+    gensym(c,Name),
+    !.
 componentname(C,Name):-
     value(C,Name).
 
