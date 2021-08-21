@@ -36,9 +36,34 @@ impl<'p> Parser<'p> {
             _ => unreachable!()
         };
 
+        let mut description: Option<String> = None;
+        let mut author: Option<String> = None;
+
+        while self.current_is(TokenKind::Asterisk) {
+            self.expect_token_and_read(TokenKind::Asterisk)?;
+
+            match self.current.kind.clone() {
+                TokenKind::FileDirective(d) => {
+                    let d_token = self.expect_token_and_read(TokenKind::FileDirective("".to_owned()))?;
+
+                    let value = match self.expect_token_and_read(TokenKind::String("".to_owned()))? {
+                        Token { kind: TokenKind::String(s), .. } => s,
+                        _ => unreachable!()
+                    };
+
+                    match d.as_str() {
+                        "author" => author = Some(value),
+                        "description" => description = Some(value),
+                        _ => return Err(ParserError::InvalidFileHeader(d, d_token.position.line)),
+                    }
+                },
+                _ => todo!()
+            };
+        }
+
         self.expect_token_and_read(TokenKind::CommentTerminator)?;
 
-        Ok(Statement::FileHeader(FileHeader { name }))
+        Ok(Statement::FileHeader(FileHeader { name, description, author }))
     }
 
     pub fn parse_statement(&mut self) -> Result<Statement, ParserError> {
@@ -46,7 +71,7 @@ impl<'p> Parser<'p> {
     }
 
     fn expect_token(&mut self, kind: TokenKind) -> Result<Token, ParserError> {
-        if discriminant(&self.current.kind) == discriminant(&kind) {
+        if self.current_is(kind.clone()) {
             Ok(self.current.clone())
         } else {
             Err(ParserError::UnexpectedToken(self.current.kind.clone(), self.current.position.line, kind))
@@ -63,6 +88,10 @@ impl<'p> Parser<'p> {
 
     fn peek_is(&self, kind: TokenKind) -> bool {
         discriminant(&self.peek.kind) == discriminant(&kind)
+    }
+
+    fn current_is(&self, kind: TokenKind) -> bool {
+        discriminant(&self.current.kind) == discriminant(&kind)
     }
 
     pub fn next(&mut self) -> Result<Option<Statement>, ParserError> {
@@ -93,5 +122,8 @@ pub fn parse(tokens: Iter<Token>) -> Result<Program, ParserError> {
 #[derive(Error, Debug)]
 pub enum ParserError {
     #[error("Unexpected token {0:?} on line {1}, expected {2:?}.")]
-    UnexpectedToken(TokenKind, u16, TokenKind)
+    UnexpectedToken(TokenKind, u16, TokenKind),
+
+    #[error("Invalid file header {0} on line {1}.")]
+    InvalidFileHeader(String, u16),
 }

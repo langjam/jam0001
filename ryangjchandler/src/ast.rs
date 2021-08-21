@@ -9,6 +9,6 @@ pub enum Statement {
 #[derive(Debug, Clone)]
 pub struct FileHeader {
     pub name: String,
-    // description: Option<String>,
-    // author: Option<String>
+    pub description: Option<String>,
+    pub author: Option<String>
 }
