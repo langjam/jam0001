@@ -49,13 +49,13 @@ and eval_op (self : ast option) = function
 
 and pp_ast fmt = function
   | App (op, args) ->
-    Format.fprintf fmt "(%a %a)" pp_op op pp_list args
+    Format.fprintf fmt "@[(%a@, @[%a@])@]" pp_op op pp_list args
   | Cst n ->
     Format.pp_print_int fmt n
   | Var x ->
     Format.fprintf fmt "x%d" x
   | If (c, e1, e2) ->
-    Format.fprintf fmt "(if %a %a %a)" pp_ast c pp_ast e1 pp_ast e2
+    Format.fprintf fmt "(if @[%a@]@, @[%a@]@, @[%a@])" pp_ast c pp_ast e1 pp_ast e2
 
 and pp_op fmt = function
   | OUT -> Format.pp_print_string fmt "out"
@@ -72,9 +72,10 @@ and pp_op fmt = function
 and pp_list fmt = function
     | [] -> ()
     | [x] -> pp_ast fmt x
-    | x::xs -> Format.fprintf fmt "%a %a" pp_ast x pp_list xs
+    | x::xs -> Format.fprintf fmt "%a @,%a" pp_ast x pp_list xs
 
 let test = app (func @@ mul (Cst 2) (Var 0)) [add (Cst 1) (Cst 2)]
+
 let count = func @@
   If (Var 0,
     app OUT [Var 0; app SELF [sub (Var 0) (Cst 1)]],
