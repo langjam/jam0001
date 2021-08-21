@@ -64,6 +64,7 @@ pub enum TokenKind {
     Null,
     If,
     Else,
+    While,
 }
 
 pub type TokenList = Vec<Token>;

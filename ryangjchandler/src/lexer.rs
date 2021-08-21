@@ -195,7 +195,8 @@ fn get_keyword(keyword: &str) -> Option<TokenKind> {
         "false" => TokenKind::False,
         "null" => TokenKind::Null,
         "if" => TokenKind::If,
-        "else" => TokenKind::Else
+        "else" => TokenKind::Else,
+        "while" => TokenKind::While
     }
 }
 

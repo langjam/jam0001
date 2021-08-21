@@ -9,6 +9,7 @@ pub enum Statement {
     FunctionDefinition(FunctionDefinition),
     Expression(Expression),
     If(If),
+    While(While),
 
     // TODO: Remove this nasty ass placeholder.
     Empty
@@ -19,6 +20,12 @@ pub struct If {
     pub condition: Expression,
     pub then: Vec<Statement>,
     pub otherwise: Vec<Statement>
+}
+
+#[derive(Debug, Clone)]
+pub struct While {
+    pub condition: Expression,
+    pub then: Vec<Statement>,
 }
 
 #[derive(Debug, Clone)]
