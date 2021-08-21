@@ -12,6 +12,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "ast2str"
+version = "0.1.0"
+source = "git+https://github.com/optimalstrategy/ast2str#2351c57a3547dbfd218aa216e8c1f95f3302e50b"
+dependencies = [
+ "ast2str-derive",
+ "ast2str-lib",
+]
+
+[[package]]
+name = "ast2str-derive"
+version = "0.2.1"
+source = "git+https://github.com/optimalstrategy/ast2str#2351c57a3547dbfd218aa216e8c1f95f3302e50b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "ast2str-lib"
+version = "0.2.0"
+source = "git+https://github.com/optimalstrategy/ast2str#2351c57a3547dbfd218aa216e8c1f95f3302e50b"
+
+[[package]]
 name = "bumpalo"
 version = "3.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -37,6 +61,7 @@ dependencies = [
 name = "dank"
 version = "0.1.0"
 dependencies = [
+ "ast2str",
  "peg",
  "pretty_assertions",
  "wasm-bindgen",

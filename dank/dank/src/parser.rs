@@ -1,6 +1,23 @@
 #![allow(clippy::nonstandard_macro_braces)]
+#![allow(clippy::redundant_closure_call)]
+
 use crate::ast::*;
 use crate::data::Value;
+
+macro_rules! op_node {
+    ($x:ident, $y:ident, $kind:expr) => {
+        Expr {
+            span: $x.span.start..$y.span.end,
+            kind: ExprKind::Binary(Box::new($x), $kind, Box::new($y)),
+        }
+    };
+    ($x:ident, $kind:expr) => {
+        Expr {
+            span: $x.span.clone(),
+            kind: ExprKind::Unary($kind, Box::new($x)),
+        }
+    };
+}
 
 peg::parser!(pub grammar dank() for str {
     /// Parses whitespace
@@ -44,8 +61,26 @@ peg::parser!(pub grammar dank() for str {
          = p:print() ";" {p}
          / b:binding() ";" {b}
 
-    pub rule expr() -> Expr<'input>
-    = primary()
+    pub rule expr() -> Expr<'input> = operators()
+
+
+    pub rule operators() -> Expr<'input>
+    = precedence! {
+        x:(@) _ "&&" _ y:@ { op_node!(x, y, BinOpKind::And) }
+        x:(@) _ "||" _ y:@ { op_node!(x, y, BinOpKind::Or) }
+        --
+        x:(@) _ "+" _ y:@ { op_node!(x,y, BinOpKind::Add) }
+        x:(@) _ "-" _ y:@ { op_node!(x,y, BinOpKind::Sub) }
+        --
+        x:(@) _ "*" _ y:@ { op_node!(x, y, BinOpKind::Mul) }
+        x:(@) _ "/" _ y:@ { op_node!(x, y, BinOpKind::Div) }
+        --
+        "-" x:(@) { op_node!(x, UnOpKind::Neg) }
+        "!" x:(@) { op_node!(x, UnOpKind::Not) }
+        --
+        p:primary() { p }
+        "(" _ e:expr() _ ")" { e }
+    }
 
     pub rule primary() -> Expr<'input>
         = start:position!() i:ident() end:position!() { Expr { kind: ExprKind::Variable(i.into()), span: start..end } }
@@ -118,10 +153,24 @@ peg::parser!(pub grammar dank() for str {
 
 #[cfg(test)]
 pub mod tests {
+    use ast2str::AstToStr;
     use peg::str::LineCol;
     use pretty_assertions::assert_eq;
 
     use super::*;
+
+    macro_rules! test_eq {
+        ($input:expr, $expected:expr) => {
+            assert_eq!(
+                dank::file($input)
+                    .unwrap()
+                    .ast_to_str()
+                    .replace(|c| ['├', '─', '│', '╰', '✕', '↓'].contains(&c), " ")
+                    .as_display(),
+                $expected.as_display()
+            )
+        };
+    }
 
     #[test]
     fn header_comments() {
@@ -199,6 +248,71 @@ pub mod tests {
         )
     }
 
+    #[test]
+    fn arithmetics() {
+        let test = r#"
+        let a = 1 + 2 * 3 / 4;
+        let b = -false;
+        let c = null;
+        let d = a && b || (!c);
+        "#;
+        test_eq!(
+            test,
+            r#"FileAst
+  header_comments= 
+  code: Ast
+    statements= 
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "a"
+          initializer: ExprKind::Binary
+            left: ExprKind::Literal
+              field0: Num(1.0)
+            op: BinOpKind::Add
+            right: ExprKind::Binary
+              left: ExprKind::Binary
+                left: ExprKind::Literal
+                  field0: Num(2.0)
+                op: BinOpKind::Mul
+                right: ExprKind::Literal
+                  field0: Num(3.0)
+              op: BinOpKind::Div
+              right: ExprKind::Literal
+                field0: Num(4.0)
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "b"
+          initializer: ExprKind::Unary
+            op: UnOpKind::Neg
+            operand: ExprKind::Literal
+              field0: Bool(false)
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "c"
+          initializer: ExprKind::Literal
+            field0: Null
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "d"
+          initializer: ExprKind::Binary
+            left: ExprKind::Binary
+              left: ExprKind::Variable
+                name: "a"
+              op: BinOpKind::And
+              right: ExprKind::Variable
+                name: "b"
+            op: BinOpKind::Or
+            right: ExprKind::Unary
+              op: UnOpKind::Not
+              operand: ExprKind::Variable
+                name: "c""#
+        );
+    }
+
     #[allow(clippy::approx_constant)]
     #[test]
     fn let_declarations() {
@@ -209,80 +323,69 @@ pub mod tests {
         let d = false;
         let e = null;
         "#;
-        assert_eq!(
-            dank::file(test).unwrap(),
-            FileAst {
-                header_comments: vec![],
-                code: Ast {
-                    statements: vec![
-                        LineComment {
-                            body: CommentBody::Empty,
-                            stmt: Some(Stmt {
-                                kind: StmtKind::LetDecl(
-                                    "a".into(),
-                                    Some(Box::new(Expr {
-                                        kind: ExprKind::Literal(Value::Num(3.141592)),
-                                        span: 17..25,
-                                    })),
-                                ),
-                                span: 9..25,
-                            },),
-                        },
-                        LineComment {
-                            body: CommentBody::Empty,
-                            stmt: Some(Stmt {
-                                kind: StmtKind::LetDecl(
-                                    "b".into(),
-                                    Some(Box::new(Expr {
-                                        kind: ExprKind::Literal(Value::Str("hello".into()),),
-                                        span: 43..50,
-                                    })),
-                                ),
-                                span: 35..50,
-                            },),
-                        },
-                        LineComment {
-                            body: CommentBody::Empty,
-                            stmt: Some(Stmt {
-                                kind: StmtKind::LetDecl(
-                                    "c".into(),
-                                    Some(Box::new(Expr {
-                                        kind: ExprKind::Literal(Value::Bool(true,),),
-                                        span: 68..72,
-                                    })),
-                                ),
-                                span: 60..72,
-                            },),
-                        },
-                        LineComment {
-                            body: CommentBody::Empty,
-                            stmt: Some(Stmt {
-                                kind: StmtKind::LetDecl(
-                                    "d".into(),
-                                    Some(Box::new(Expr {
-                                        kind: ExprKind::Literal(Value::Bool(false,),),
-                                        span: 90..95,
-                                    })),
-                                ),
-                                span: 82..95,
-                            },),
-                        },
-                        LineComment {
-                            body: CommentBody::Empty,
-                            stmt: Some(Stmt {
-                                kind: StmtKind::LetDecl(
-                                    "e".into(),
-                                    Some(Box::new(Expr {
-                                        kind: ExprKind::Literal(Value::Null,),
-                                        span: 113..117,
-                                    })),
-                                ),
-                                span: 105..117,
-                            },),
-                        },
-                    ]
-                }
-            }
-        )
+        test_eq!(
+            test,
+            r#"FileAst
+  header_comments= 
+  code: Ast
+    statements= 
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "a"
+          initializer: ExprKind::Literal
+            field0: Num(3.141592)
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "b"
+          initializer: ExprKind::Literal
+            field0: Str("hello")
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "c"
+          initializer: ExprKind::Literal
+            field0: Bool(true)
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "d"
+          initializer: ExprKind::Literal
+            field0: Bool(false)
+      LineComment
+        body: CommentBody::Empty
+        stmt: StmtKind::LetDecl
+          name: "e"
+          initializer: ExprKind::Literal
+            field0: Null"#
+        );
+    }
+
+    pub trait AsDisplay: std::fmt::Display {
+        fn as_display(&self) -> DisplayAsDebugWrapper<&'_ Self> {
+            DisplayAsDebugWrapper(self)
+        }
+    }
+    impl AsDisplay for str {}
+
+    #[derive(Clone, PartialEq)]
+    pub struct DisplayAsDebugWrapper<T>(T);
+
+    impl<T> std::fmt::Debug for DisplayAsDebugWrapper<T>
+    where
+        T: std::fmt::Display,
+    {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    impl<T> std::ops::Deref for DisplayAsDebugWrapper<T> {
+        type Target = T;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
     }
 }
