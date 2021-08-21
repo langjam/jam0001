@@ -97,7 +97,7 @@ static pnode_t value() {
             return value_node;
         case TT_NUMBER:
             value_node = pnode_new(PN_NUMBER);
-            value_node.data.string.val = token.span;
+            value_node.data.number.val = token.span;
             return value_node;
         case TT_IDENT:
             if (peek().tt == TT_ASSIGN)
