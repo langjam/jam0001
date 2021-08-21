@@ -22,6 +22,13 @@ main = do
 
   putStrLn $ show $ jValue $ ConsList [Symbol "+", Array0 (Natural 1), Array1 [Natural 4, Natural 9]]
 
+  putStrLn $ show $ jValue $ Array2 [[Natural 4, Natural 9], [Natural 5, Natural 6]]
+  putStrLn $ show $ jValue $ ConsList [Symbol "+", Array0 (Natural 20), Array2 [[Natural 4, Natural 9], [Natural 5, Natural 6]]]
+
+  putStrLn $ show $ jValue $ ConsList [Symbol "+", Array1 [Finite 1 3, Finite 2 3], Array1 [Finite 2 3, Finite 0 3]]
+
+  putStrLn $ show $ jValue $ ConsList [Symbol "+", Array1 [Natural 4, Natural 2], Array0 (Natural 3)]
+
   -- putStrLn $ show $ jValue $ Natural 3
   -- putStrLn $ show $ jValue $ Finite 3 4
   -- putStrLn $ show $ jValue $ Finite 3 4
