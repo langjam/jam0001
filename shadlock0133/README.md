@@ -22,4 +22,7 @@ comments.
 (define succ (lambda (a) (+ a 1)))
 ; Oops, forgot to add comment ;
 (set-doc 'succ ; Returns next natural number ;)
+
+; assert: 4 ;
+(+ 2 2)
 ```
