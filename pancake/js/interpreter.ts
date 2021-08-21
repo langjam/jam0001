@@ -1,6 +1,7 @@
 
 export interface StateInfo {
-
+    currentLine: number;
+    activeLines: number[];
 }
 
 export class Interpreter {
@@ -11,7 +12,10 @@ export class Interpreter {
     }
 
     async step(): Promise<StateInfo> {
-        const state: StateInfo = {};
+        const state: StateInfo = {
+            currentLine: 0,
+            activeLines: []
+        };
         return state;
     }
 }

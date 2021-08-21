@@ -1,9 +1,9 @@
-import { PageEvents } from "..";
+import { StateInfo } from "../interpreter";
+import { Runtime } from "../runtime";
 
 interface EditorProps {
-    pageEvents: PageEvents,
-    currentLine: number,
-    activeCodeLines: number[]
+    runtime: Runtime,
+    state: StateInfo
 }
 
 export function Editor(props: EditorProps) {

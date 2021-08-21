@@ -1,15 +1,15 @@
-import { PageEvents } from '../index';
+import { Runtime } from "../runtime";
 
 interface ControlsProps {
-    pageEvents: PageEvents
+    runtime: Runtime
 }
 
-export function Controls({ pageEvents }: ControlsProps) {
+export function Controls({ runtime }: ControlsProps) {
     // TODO use flex-box row style and make look nice
     return <div>
-        <button onClick={pageEvents.onStep}>Step</button>
-        <button onClick={pageEvents.onRun}>Run</button>
-        <button onClick={pageEvents.onStop}>Stop</button>
+        <button onClick={() => runtime.step(1)}>Step</button>
+        <button onClick={runtime.start}>Run</button>
+        <button onClick={runtime.stop}>Stop</button>
         {/* TODO Slider for speed (use pageEvents.onChangeSpeed) */}
     </div>
 }
