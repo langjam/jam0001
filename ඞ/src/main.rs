@@ -30,21 +30,18 @@ fn main() -> Result<()> {
     let mut build_ast = parse_input(build, build_path)?.to_value();
     remove_refs(&mut build_ast);
 
+    // insert synthetic call to `build`
     let call = ast_obj! { "ASTFnCall";
         "name" => Value::String("build".into()),
         "args" => Value::List{
             elems: vec![Value::ObjectRef(Box::new(ast))]
         }
     };
-    let result = ast_obj! { "ASTLetStmt";
-        "var_name" => Value::String("__build__result".into()),
-        "value" => call
-    };
     match &mut build_ast {
         Value::Object(o) => {
             let elems = o.get_field_mut("elements").unwrap();
             match elems {
-                Value::List { elems } => elems.push(result),
+                Value::List { elems } => elems.push(call),
                 _ => unreachable!(),
             }
         }
@@ -55,16 +52,6 @@ fn main() -> Result<()> {
     let mut eval = Evaluator::new();
     eval.eval_ast(&mut build_ast)
         .map_err(|s| anyhow::anyhow!(s))?;
-    let ast = unsafe {
-        &mut *eval
-            .get_var("__build__result")
-            .map_err(|s| anyhow::anyhow!(s))?
-    };
-    remove_refs(ast);
-
-    println!("Executing Source File");
-    let mut eval = Evaluator::new();
-    eval.eval_ast(ast).map_err(|s| anyhow::anyhow!(s))?;
 
     Ok(())
 }

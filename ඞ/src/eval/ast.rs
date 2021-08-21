@@ -265,6 +265,28 @@ impl Evaluator {
                                 println!();
                                 Value::Unit
                             }
+                            "eval" => {
+                                if eval_args.len() != 1 {
+                                    return Err(format!(
+                                        "Expected 1 arguments for function `eval`, but got {}",
+                                        eval_args.len()
+                                    ));
+                                }
+                                let ast = &mut eval_args[0];
+                                match ast {
+                                    Value::Object(o) => {
+                                        if !o.class.starts_with("AST") {
+                                            return Err(format!(
+                                                "Cannot `eval` non-ast class {}",
+                                                &o.class
+                                            ));
+                                        }
+                                    }
+                                    v => return Err(format!("Cannot `eval` non-object {}", v)),
+                                }
+                                remove_refs(ast);
+                                self.eval_ast(ast)?
+                            }
                             "range" => {
                                 let (start, stop) = match eval_args.len() {
                                     1 => (

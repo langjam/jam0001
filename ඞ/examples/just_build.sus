@@ -1,4 +1,5 @@
 
 fn build(ast) {
-    return ast;
+    print("Executing Source File");
+    eval(ast);
 }
