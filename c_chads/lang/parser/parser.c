@@ -123,12 +123,12 @@ static void skip_tt(enum Token_Type tt) {
     }
 }
 
-static void skip_tt_panic(enum Token_Type tt) {
+static void skip_tt_panic(const string shut) {
     tok_t tok = peek();
-    if (tok.tt != tt) {
+    if (tok.tt != TT_SEMI) {
         error_handling.fail = true;
         stray_panic(&tok);
-        while (peek().tt != tt) {
+        while (!(peek().tt == TT_SEMI || check(shut))) {
             pull();
         };
     }
@@ -241,10 +241,9 @@ static pnode_t delimited(pnode_kind_t kind, const string open, const string shut
             setexpect("Invalid expression");
         else
             setexpect("Expected semicolon");
-
         if (check(shut) && (!mustclose)) break;
         if (!check(shut) || mustclose || isinval(v)) { 
-            skip_tt_panic(TT_SEMI);
+            skip_tt_panic(shut);
         }
         setexpect(NULL);
     }

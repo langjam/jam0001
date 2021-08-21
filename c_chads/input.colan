@@ -1,5 +1,7 @@
-main := proc () {
-    print(0(2+3));
-    x = 4;
-    print("
+say := proc (i: int; s: string) {
+    say(i; s);
+};
+
+main := proc (){
+    print("Hello");
 };
