@@ -66,15 +66,7 @@ class Parser:
         token, value = self.advance()
         if token != Token.TO:
             raise UnexpectedTokenError(Token.TO, token)
-        token, value = self.peek_lexeme()
-        if token == Token.NUMBER:
-            first_operand_token, first_operand_value = self.expect(Token.NUMBER)
-        elif token == Token.IDENTIFIER_WORD:
-            self.parse_identifier()
-        else:
-            raise UnexpectedTokenError(
-                Token.IDENTIFIER_WORD, token
-            )  # TODO: could be either.
+        self.parse_operand()
 
     def parse_identifier(self):
         token, value = self.peek_lexeme()
@@ -88,29 +80,23 @@ class Parser:
         self.parse_stmt_contents()
 
     def parse_expr(self):
+        self.parse_operand()
+
+        potential_operator, next_value = self.peek_lexeme()
+        if potential_operator == Token.BINOP or potential_operator == Token.COMPARISON:
+            self.advance()  # we already have these values!
+            self.parse_operand()
+
+    def parse_operand(self):
         token, value = self.peek_lexeme()
         if token == Token.NUMBER:
-            first_operand_token, first_operand_value = self.expect(Token.NUMBER)
+            operand_token, operand_value = self.expect(Token.NUMBER)
         elif token == Token.IDENTIFIER_WORD:
             self.parse_identifier()
         else:
             raise UnexpectedTokenError(
                 Token.IDENTIFIER_WORD, token
             )  # TODO: could be either.
-
-        potential_operator, next_value = self.peek_lexeme()
-        if potential_operator == Token.BINOP or potential_operator == Token.COMPARISON:
-            self.advance()  # we already have these values!
-            token, value = self.peek_lexeme()
-            if token == Token.NUMBER:
-                second_operand_token, second_operand_value = self.expect(Token.NUMBER)
-            elif token == Token.IDENTIFIER_WORD:
-                self.parse_identifier()
-            else:
-                raise UnexpectedTokenError(
-                    Token.IDENTIFIER_WORD, token
-                )  # TODO: could be either.
-
 
 if __name__ == "__main__":
 
