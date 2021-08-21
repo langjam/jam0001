@@ -9,6 +9,8 @@ pub type Env = Vec<ValBinding>;
 pub enum Val {
     Void,
     Text(String),
+    Nat(usize),
+    Bool(bool),
     Closure(Env, String, Tm),
 }
 
@@ -17,6 +19,8 @@ impl Display for Val {
         match self {
             Val::Void => write!(f, "void"),
             Val::Text(txt) => write!(f, "{:?}", txt),
+            Val::Nat(n) => write!(f, "{}", n),
+            Val::Bool(b) => write!(f, "{}", b),
             Val::Closure(_env, param, body) => write!(f, "[fn {} -> {}]", param, body),
         }
     }
@@ -24,9 +28,24 @@ impl Display for Val {
 
 impl Val {
     fn unwrap_text(&self) -> &str {
-        match self {
-            Self::Text(txt) => txt,
-            _ => unreachable!(),
+        if let Self::Text(txt) = self {
+            txt
+        } else {
+            unreachable!()
+        }
+    }
+    fn unwrap_nat(&self) -> usize {
+        if let Self::Nat(x) = self {
+            *x
+        } else {
+            unreachable!()
+        }
+    }
+    fn unwrap_bool(&self) -> bool {
+        if let Self::Bool(x) = self {
+            *x
+        } else {
+            unreachable!()
         }
     }
 }
@@ -66,6 +85,10 @@ impl Eval {
     pub fn eval(&mut self, tm: &Tm) -> Val {
         match tm {
             Tm::Text(_loc, txt) => Val::Text(txt.clone()),
+
+            Tm::Nat(_loc, n) => Val::Nat(*n),
+
+            Tm::Bool(_loc, b) => Val::Bool(*b),
 
             Tm::Var(_loc, name) => self.lookup_var(&name),
 
@@ -110,11 +133,10 @@ impl Eval {
                 Val::Void
             }
 
-            Tm::Op(_loc, x, op, y) => {
-                let x = self.eval(x);
-                let y = self.eval(y);
+            Tm::Op(loc, x_tm, op, y_tm) => {
+                let x = self.eval(x_tm);
+                let y = self.eval(y_tm);
                 match op {
-                    Op::Concat => Val::Text(x.unwrap_text().to_owned() + y.unwrap_text()),
                     Op::SpaceConcat => {
                         let x = x.unwrap_text().to_owned();
                         let y = y.unwrap_text();
@@ -126,6 +148,20 @@ impl Eval {
                             Val::Text(x + " " + y)
                         }
                     }
+                    Op::Concat => Val::Text(x.unwrap_text().to_owned() + y.unwrap_text()),
+                    Op::Add => Val::Nat(x.unwrap_nat() + y.unwrap_nat()),
+                    Op::Sub => Val::Nat(x.unwrap_nat() - y.unwrap_nat()),
+                    Op::Mul => Val::Nat(x.unwrap_nat() * y.unwrap_nat()),
+                    Op::Div => Val::Nat(x.unwrap_nat() / y.unwrap_nat()),
+                    Op::Apply => self.eval(&Tm::App(loc.clone(), x_tm.clone(), y_tm.clone())),
+                    Op::And => Val::Bool(x.unwrap_bool() && y.unwrap_bool()),
+                    Op::Or => Val::Bool(x.unwrap_bool() || y.unwrap_bool()),
+                    Op::Lt => Val::Bool(x.unwrap_nat() < y.unwrap_nat()),
+                    Op::Lte => Val::Bool(x.unwrap_nat() <= y.unwrap_nat()),
+                    Op::Gt => Val::Bool(x.unwrap_nat() > y.unwrap_nat()),
+                    Op::Gte => Val::Bool(x.unwrap_nat() >= y.unwrap_nat()),
+                    Op::NatEq => Val::Bool(x.unwrap_nat() == y.unwrap_nat()),
+                    Op::TextEq => Val::Bool(x.unwrap_text() == y.unwrap_text()),
                 }
             }
         }

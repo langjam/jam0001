@@ -66,6 +66,10 @@ impl Check {
         match tm {
             Tm::Text(_, _) => Ok(Ty::text()),
 
+            Tm::Nat(_, _) => Ok(Ty::nat()),
+
+            Tm::Bool(_, _) => Ok(Ty::bool()),
+
             Tm::Var(loc, name) => self.lookup_var(loc, name),
 
             Tm::Lam(loc, param, param_ty, body) => {
@@ -111,11 +115,34 @@ impl Check {
                 Ok(Ty::void())
             }
 
-            Tm::Op(_loc, x, Op::Concat | Op::SpaceConcat, y) => {
-                self.check(x, &Ty::text())?;
-                self.check(y, &Ty::text())?;
-                Ok(Ty::text())
-            }
+            Tm::Op(loc, x, op, y) => match op {
+                Op::SpaceConcat | Op::Concat => {
+                    self.check(x, &Ty::text())?;
+                    self.check(y, &Ty::text())?;
+                    Ok(Ty::text())
+                }
+                Op::Add | Op::Sub | Op::Mul | Op::Div => {
+                    self.check(x, &Ty::nat())?;
+                    self.check(y, &Ty::nat())?;
+                    Ok(Ty::nat())
+                }
+                Op::Apply => self.infer(&Tm::App(loc.clone(), x.clone(), y.clone())),
+                Op::And | Op::Or => {
+                    self.check(x, &Ty::bool())?;
+                    self.check(y, &Ty::bool())?;
+                    Ok(Ty::bool())
+                }
+                Op::Lt | Op::Lte | Op::Gt | Op::Gte | Op::NatEq => {
+                    self.check(x, &Ty::nat())?;
+                    self.check(y, &Ty::nat())?;
+                    Ok(Ty::bool())
+                }
+                Op::TextEq => {
+                    self.check(x, &Ty::text())?;
+                    self.check(y, &Ty::text())?;
+                    Ok(Ty::bool())
+                }
+            },
         }
     }
 
@@ -233,9 +260,6 @@ impl Check {
                 let x = self.resolve_ty_vars(loc, x.as_ref())?;
                 let y = self.resolve_ty_vars(loc, y.as_ref())?;
                 Ok(Ty::Arr(Box::new(x), Box::new(y)))
-            }
-            Ty::ForAll(_tcx, _ty_var, _ty_body) => {
-                unimplemented!()
             }
             Ty::Builtin(_) => Ok(ty.clone()),
         }

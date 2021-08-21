@@ -14,7 +14,9 @@ use nom_supreme::{final_parser::final_parser, ParserExt};
 
 use crate::ast::{Loc, Op, Tm, Ty};
 
-const KEYWORDS: &'static [&'static str] = &["fn", "any", "def"];
+const KEYWORDS: &'static [&'static str] = &[
+    "fn", "any", "def", "true", "false", "and", "or", "lt", "lte", "gt", "gte", "nat_eq", "text_eq",
+];
 
 pub fn parse_from_file(path: impl AsRef<Path>) -> Result<Tm, String> {
     let src = std::fs::read_to_string(&path).map_err(|e| format!("{}", e))?;
@@ -44,32 +46,66 @@ fn nested_ops(i: &str) -> IResult<&str, Tm> {
     let (i, first) = tm_first(i)?;
     fold_many1(
         tuple((ws::allowed::before(op), ws::allowed::before(tm))),
-        first,
-        |left, (op, right)| Tm::Op(Loc, Box::new(left), op, Box::new(right)),
-    )(i)
+        (vec![Box::new(first)], vec![]),
+        |(mut tms, mut ops), (op, tm)| {
+            tms.push(Box::new(tm));
+            ops.push(op);
+            (tms, ops)
+        },
+    )
+    .map(|x| todo!())
+    .parse(i)
 }
 
 fn op(i: &str) -> IResult<&str, Op> {
     alt((
         tag("+++").value(Op::SpaceConcat),
         tag("++").value(Op::Concat),
+        tag("+").value(Op::Add),
+        tag("-").value(Op::Sub),
+        tag("*").value(Op::Mul),
+        tag("/").value(Op::Div),
+        tag("$").value(Op::Apply),
+        tag("and").value(Op::And),
+        tag("or").value(Op::Or),
+        tag("lt").value(Op::Lt),
+        tag("lte").value(Op::Lte),
+        tag("gt").value(Op::Gt),
+        tag("gte").value(Op::Gte),
+        tag("nat_eq").value(Op::NatEq),
+        tag("text_eq").value(Op::TextEq),
     ))(i)
 }
 
 #[test]
 fn test_op() {
-    let (_, op) = tm("this ++ that ++ the_other").unwrap();
-    match &op {
-        &Tm::Op(Loc, _, Op::Concat, ref tail) => match tail.as_ref() {
-            &Tm::Op(Loc, _, Op::Concat, _) => {}
-            _ => panic!("Unexpected value: {}", op),
-        },
-        _ => panic!("Unexpected value: {}", op),
-    }
+    let (_, actual) = tm("this $ that $ the_other").unwrap();
+    let expected = Tm::Op(
+        Loc,
+        Box::new(Tm::Op(
+            Loc,
+            Box::new(Tm::Var(Loc, "this".to_string())),
+            Op::Apply,
+            Box::new(Tm::Var(Loc, "that".to_string())),
+        )),
+        Op::Apply,
+        Box::new(Tm::Var(Loc, "the_other".to_string())),
+    );
+    assert_eq!(actual, expected);
 }
 
 fn tm_first(i: &str) -> IResult<&str, Tm> {
-    alt((var_tm, text_tm, lam_tm, app_tm, block_tm, def_tm))(i)
+    alt((
+        paren_tm, var_tm, text_tm, nat_tm, bool_tm, lam_tm, app_tm, block_tm, def_tm,
+    ))(i)
+}
+
+fn paren_tm(i: &str) -> IResult<&str, Tm> {
+    delimited(
+        tag("("),
+        tm.preceded_by(multispace0).terminated(multispace0),
+        tag(")"),
+    )(i)
 }
 
 fn var_tm(i: &str) -> IResult<&str, Tm> {
@@ -78,6 +114,19 @@ fn var_tm(i: &str) -> IResult<&str, Tm> {
 
 fn text_tm(i: &str) -> IResult<&str, Tm> {
     parse_string.map(|s| Tm::Text(Loc, s)).parse(i)
+}
+
+fn nat_tm(i: &str) -> IResult<&str, Tm> {
+    nom::character::complete::digit1
+        .map(|u: &str| Tm::Nat(Loc, u.parse().unwrap()))
+        .parse(i)
+}
+
+fn bool_tm(i: &str) -> IResult<&str, Tm> {
+    alt((
+        tag("true").value(Tm::Bool(Loc, true)),
+        tag("false").value(Tm::Bool(Loc, false)),
+    ))(i)
 }
 
 fn parse_string(i: &str) -> IResult<&str, String> {
@@ -126,7 +175,7 @@ fn def_tm(i: &str) -> IResult<&str, Tm> {
 }
 
 fn ty(i: &str) -> IResult<&str, Ty> {
-    alt((arr_ty, forall_ty, var_ty))(i)
+    alt((arr_ty, var_ty))(i)
 }
 
 fn arr_ty(i: &str) -> IResult<&str, Ty> {
@@ -136,17 +185,6 @@ fn arr_ty(i: &str) -> IResult<&str, Ty> {
         ws::allowed::before(ty),
     )))
     .map(|(x, _, y)| Ty::Arr(Box::new(x), Box::new(y)))
-    .parse(i)
-}
-
-fn forall_ty(i: &str) -> IResult<&str, Ty> {
-    tuple((
-        tag("any"),
-        ws::required::before(identifier),
-        ws::allowed::before(tag(".")),
-        ws::required::before(ty),
-    ))
-    .map(|(_, var, _, ty)| Ty::ForAll(vec![], var.to_string(), Box::new(ty)))
     .parse(i)
 }
 
