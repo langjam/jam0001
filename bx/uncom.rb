@@ -49,14 +49,19 @@ print-hello # does nothing
 class UnFunc
 	def initialize
 	end
-	# def is_callable? (data_stack) -> bool
+	#def is_callable? (data_stack) # -> bool
+	#	return true
+	#end
 	# def call (uncom)
 end
 
 $uncom_words = {}
 $uncom_words["+"] = Class.new(UnFunc) do
-	def is_callable?(stack)
-		return stack.length >= 2
+	def is_callable?(s)
+		return false if s.length < 2
+		return false if not s[-1].is_a? Integer
+		return false if not s[-2].is_a? Integer
+		return true
 	end
 
 	def call(uncom)
@@ -67,8 +72,11 @@ $uncom_words["+"] = Class.new(UnFunc) do
 end.new
 
 $uncom_words["-"] = Class.new(UnFunc) do
-	def is_callable?(stack)
-		return stack.length >= 2
+	def is_callable?(s)
+		return false if s.length < 2
+		return false if not s[-1].is_a? Integer
+		return false if not s[-2].is_a? Integer
+		return true
 	end
 
 	def call(uncom)
@@ -78,12 +86,36 @@ $uncom_words["-"] = Class.new(UnFunc) do
 	def inspect() "-" end
 end.new
 
+$uncom_words[">"] = Class.new(UnFunc) do
+	def is_callable?(s)
+		return false if s.length < 2
+		return false if not s[-1].is_a? Integer
+		return false if not s[-2].is_a? Integer
+		return true
+	end
+
+	def call(uncom)
+		uncom.data.push(uncom.data.pop <= uncom.data.pop)
+	end
+
+	def inspect() ">" end
+end.new
+
+def do_words(words)
+	uncom = Uncom.new
+	words.split(" ").each do |word|
+		uncom.do_word word
+	end
+	puts "-> " + uncom.data.inspect
+	uncom
+end
+
 class Uncom
 	def initialize()
 		@func_stacks = [[]]
 		@data_stacks = [[]]
 		# first one is global, rest are used for func locals, where last is for current func
-		@dict = [$uncom_words, {}]
+		@dict = [$uncom_words.merge({}), {}]
 		# TODO:
 		# return stack, saves locations in source to come back to
 	end
