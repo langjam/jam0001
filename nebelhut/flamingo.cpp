@@ -670,25 +670,17 @@ Value b_getparam(Slice<Value> args, Env *env, SourceLoc loc) {
 Slice<Token> get_macro_arg(Slice<Token> *tokens) {
     if (!tokens->count) return {};
 
-    if ((*tokens)[0].type == Token_Lparen) {
+    if ((*tokens)[0].type == Token_Lparen || (*tokens)[0].type == Token_Lbracket) {
+        TokenType left = (*tokens)[0].type, right;
+        if (left == Token_Lparen) right = Token_Rparen;
+        if (left == Token_Lbracket) right = Token_Rbracket;
+
         slice_advance(tokens, 1);
         Slice<Token> result = {.data = tokens->data, .count = 0};
         s32 balance = 1;
         while (tokens->count) {
-            if ((*tokens)[0].type == Token_Lparen) balance += 1;
-            if ((*tokens)[0].type == Token_Rparen) balance -= 1;
-            slice_advance(tokens, 1);
-            if (balance == 0) break;
-            result.count += 1;
-        }
-        return result;
-    } else if ((*tokens)[0].type == Token_Lbracket) {
-        slice_advance(tokens, 1);
-        Slice<Token> result = {.data = tokens->data, .count = 0};
-        s32 balance = 1;
-        while (tokens->count) {
-            if ((*tokens)[0].type == Token_Lbracket) balance += 1;
-            if ((*tokens)[0].type == Token_Rbracket) balance -= 1;
+            if ((*tokens)[0].type == left) balance += 1;
+            if ((*tokens)[0].type == right) balance -= 1;
             slice_advance(tokens, 1);
             if (balance == 0) break;
             result.count += 1;
@@ -1087,6 +1079,52 @@ int main(int argc, char **argv) {
 #undef BIND_BUILTIN1
     bind(&env, lit_slice("yes"))->value = {.type = Value_Bool, .b = true};
     bind(&env, lit_slice("no"))->value = {.type = Value_Bool, .b = false};
+    {
+        Token body[] = {
+            {.loc = {}, .type = Token_Ident, .s = lit_slice("bind")},
+            {.loc = {}, .type = Token_Quote, {}},
+            {.loc = {}, .type = Token_Comma, {}},
+            {.loc = {}, .type = Token_Int, .i = 0},
+            {.loc = {}, .type = Token_Lbracket, {}},
+                {.loc = {}, .type = Token_Comma, {}},
+                {.loc = {}, .type = Token_Int, .i = 2},
+            {.loc = {}, .type = Token_Rbracket, {}},
+
+            {.loc = {}, .type = Token_Ident, .s = lit_slice("assoc")},
+            {.loc = {}, .type = Token_Quote, {}},
+            {.loc = {}, .type = Token_Comma, {}},
+            {.loc = {}, .type = Token_Int, .i = 0},
+            {.loc = {}, .type = Token_Quote, {}},
+            {.loc = {}, .type = Token_Ident, .s = lit_slice("arity")},
+            {.loc = {}, .type = Token_Comma, {}},
+            {.loc = {}, .type = Token_Ident, .s = lit_slice("len")},
+            {.loc = {}, .type = Token_Int, .i = 1},
+
+            {.loc = {}, .type = Token_Comma, {}},
+            {.loc = {}, .type = Token_KwFor, {}},
+            {.loc = {}, .type = Token_Int, .i = 1},
+            {.loc = {}, .type = Token_Lbracket, {}},
+                {.loc = {}, .type = Token_Ident, .s = lit_slice("store")},
+                {.loc = {}, .type = Token_Quote, {}},
+                {.loc = {}, .type = Token_Comma, {}},
+                {.loc = {}, .type = Token_Int, .i = 0},
+                {.loc = {}, .type = Token_Ident, .s = lit_slice("+")},
+                {.loc = {}, .type = Token_Lbracket, {}},
+                    {.loc = {}, .type = Token_Ident, .s = lit_slice("bind")},
+                    {.loc = {}, .type = Token_Quote, {}},
+                    {.loc = {}, .type = Token_Comma, {}},
+                    {.loc = {}, .type = Token_Int, .i = 3},
+                    {.loc = {}, .type = Token_Ident, .s = lit_slice("getparam")},
+                    {.loc = {}, .type = Token_Comma, {}},
+                    {.loc = {}, .type = Token_Int, .i = 4},
+                {.loc = {}, .type = Token_Rbracket, {}},
+                {.loc = {}, .type = Token_Amp, {}},
+                {.loc = {}, .type = Token_Comma, {}},
+                {.loc = {}, .type = Token_Int, .i = 0},
+            {.loc = {}, .type = Token_Rbracket, {}},
+        };
+        bind(&env, lit_slice("defun"))->value = {.type = Value_Macro, .macro = {.param_count = 3, .body = {.data = body, .count = ARRAY_COUNT(body)}}};
+    }
 
     if (argc == 1) {
         printf("Entering Flamingo REPL.\nExit by pressing Ctrl-C whenever, Ctrl-D on an empty line, or typing .quit.\n\n");

@@ -233,6 +233,65 @@ store 'square + [ bind 'x getparam 0 ] &square
 println square 3
 ```
 
+If there was a macro facility, we would be able to write a macro to handle all the boilerplate.
+
+
+Macros
+------
+
+Use the `macro` keyword to define a macro. It expects a name for the macro, the nubmer of parameters and a body.
+
+```
+macro answer 0 [ 42 ]
+```
+
+If a macro is encountered, the parser consumes as many macro arguments as are specified. A macro argument is either a simple token or all the tokens between (balanced) parentheses and brackets. The arguments are inserted into the body of the macro and the result is evaluated. Note that the resulting body must be a valid list of Flamingo statements. You can’t use macros to generate only parts of a construct. Neither the body of the macro nor the arguments must be valid—they are just lists of tokens—as long as the final result is valid.
+
+The simplest way to insert a macro argument is `,`_n_, a comma followed by a integer token. The integer must be greater or equal to zero and less than the number of parameters. The tokens of the given argument are spliced in-place.
+
+```
+macro debug 1 [ println << ',0 ": " ,0 >> ]
+```
+
+This defines a simple macro that expects an identifier and results in a statement that prints the name and the value of the corresponding variable.
+
+Another use of arguments is `,len` _n_ (note that there must be a space between `len` and the integer). It inserts an integer token representing the number of tokens in the given argument.
+
+```
+macro count-tokens 1 [ println << ,len0 " tokens" >> ]
+```
+
+Note that if you pass a token list (using parentheses or brackets) only the tokens between the parentheses or brackets are passed. There is also no way to find out if parentheses or brackets were used.
+
+With this information we can already write a small macro that helps defining functions.
+
+```
+macro func 3 [
+    bind ',0 [ ,2 ]
+    assoc ',0 'arity ,len 1
+]
+
+func square (x) [ * x x ]
+```
+
+This macro binds the given block to a variable and associates the arity derived from the parameter list. Note the brackets around `,2`. Since only the contents of the block is passed to the macro we need to surround it with brackets.
+
+This macro isn’t yet complete (and the execution would fail) since we don’t the numeric block arguments to the given parameter name `x`. For this we need loops.
+
+`,for` expects an argument and a block. It inserts the evaluated body for every token in the given argument. In the body of the loop two new arguments are made available (that are just appended to the current list of arguments): the token of the current iteration and an integer token representing the loop index.
+
+```
+macro func 3 [
+    bind ',0 [ ,2 ]
+    assoc ',0 'arity ,len 1
+    ,for 1 [
+        store ',0 + [ bind ',3 getparam ,4 ] &,0
+    ]
+]
+```
+
+We iterate over the list of the parameters and add some code to the already stored function block. The code we preprend just binds the parameter index (macro argument `4`) to the parameter name (macro argument `3`). This is in fact the definition of the built-in macro `defun`.
+
 
 Reference
 ---------
