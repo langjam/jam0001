@@ -23,6 +23,12 @@ void print_ast(struct Parser_Node *node, usize depth) {
         case PN_TOPLEVEL:
             printf("Toplevel\n");
             break;
+        case PN_IF:
+            printf("If\n");
+            break;
+        case PN_WHILE:
+            printf("While\n");
+            break;
         case PN_TYPELIST:
             printf("TypeList\n");
             break;

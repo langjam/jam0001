@@ -17,6 +17,8 @@ enum Parser_Node_Addressing {
 
 enum Parser_Node_Kind {
     PN_TYPELIST, // LISTING
+    PN_IF,       // BINARY
+    PN_WHILE,    // BINARY
     PN_PARAMS,   // LISTING
     PN_DECL,     // ENDPOINT 
     PN_BODY,     // LISTING

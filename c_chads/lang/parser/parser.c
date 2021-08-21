@@ -30,6 +30,12 @@ static void enddelim(rune prev) {
 
 
 static void lineinfo(tok_t *token) {
+    if (error_handling.expected != NULL) {
+        EH_MESSAGE(". %s", error_handling.expected);
+    }
+    if (error_handling.unmatched != 0) {
+        EH_MESSAGE(", while closing `%c`", error_handling.unmatched);
+    }
     eh_error(token->line, token->col, parser.lexer.src);
 }
 
@@ -37,18 +43,12 @@ static tok_t pull() {
     tok_t tok = parser.current_token;
     parser.current_token = lex_determine(&parser.lexer);
     if (tok.tt == TT_INVALID) {
-        EH_MESSAGE("Invalid character: `%.*s`\n", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
+        EH_MESSAGE("Invalid character: `%.*s`", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
         lineinfo(&tok);
         exit(1);
     }
     if (tok.tt == TT_EOF) {
         EH_MESSAGE("Unexpected end of file");
-        if (error_handling.expected != NULL) {
-            EH_MESSAGE(" (Expected %s)", error_handling.expected);
-        }
-        if (error_handling.unmatched != 0) {
-            EH_MESSAGE(", unclosed `%c`", error_handling.unmatched);
-        }
         lineinfo(&parser.current_token);
         if (parser.lexer.src[tok.span.from] == '\"') {
             fprintf(stderr, "(Probably due to unclosed \")\n");
@@ -70,12 +70,6 @@ bool check(const string against) {
 
 static void stray(tok_t *tok) {
     EH_MESSAGE("Stray `%.*s`", SPAN_PF(tok->span, parser.lexer.src));
-    if (error_handling.expected != NULL) {
-        EH_MESSAGE(" (Expected %s)", error_handling.expected);
-    }
-    if (error_handling.unmatched != 0) {
-        EH_MESSAGE(", unclosed `%c`", error_handling.unmatched);
-    }
     lineinfo(tok);
     exit(1);
 }
@@ -100,13 +94,6 @@ static void skip_v(const string v) {
         stray(&tok);
     }
 }
-/*
-static pnode_t pnode_new(pnode_kind_t kind) {
-    return (pnode_t) {
-        .kind = kind,
-        .children = vec_new(sizeof(pnode_t))
-    };
-}*/
 
 static void pnode_attach(pnode_t *left, pnode_t right) {
     vec_push(&left->children, &right);
@@ -156,13 +143,18 @@ static pnode_t pnode_endpoint(pnode_kind_t kind) {
 }
 
 static pnode_t delimited(pnode_kind_t kind, const string open, const string shut, bool mustclose, pnode_t callback()) {
+    if (kind == PN_TYPELIST && check("{")) 
+        setexpect("Did you mean to create a parameter list?");
     pnode_t node = pnode_listing(kind);
-    rune delim = begindelim(*open);
     skip_v(open);
+    setexpect(NULL);
+    rune delim = begindelim(*open);
     while (!check(shut)) {
         pnode_attach(&node, callback());
+        setexpect("Expected semicolon");
         if (!check(shut) || mustclose)
             skip_tt(TT_SEMI);
+        setexpect(NULL);
     }
     enddelim(delim);
     skip_v(shut);
@@ -183,7 +175,7 @@ static pnode_t maybe_call() {
 static pnode_t declaration(tok_t on);
 
 static strview_t typedecl() {
-    setexpect("type name");
+    setexpect("Expected type name");
     tok_t token = pull();
     assert_tt(&token, TT_IDENT);
     setexpect(NULL);
@@ -201,6 +193,34 @@ static pnode_t assignment() {
 
 static pnode_t pulldeclaration() {
     return declaration(pull());
+}
+
+static pnode_t statement();
+
+static pnode_t body() {
+    return delimited(PN_BODY, "{", "}", true, statement);
+}
+
+static pnode_t statement() {
+    if (check("while")) {
+        skip_v("while");
+        rune delim = begindelim('(');
+        skip_v("(");
+        pnode_t left = assignment();
+        skip_v(")");
+        enddelim(delim);
+        return pnode_binary(PN_WHILE, left, body());
+    }
+    else if (check("if")) {
+        skip_v("if");
+        rune delim = begindelim('(');
+        skip_v("(");
+        pnode_t left = assignment();
+        skip_v(")");
+        enddelim(delim);
+        return pnode_binary(PN_IF, left, body());
+    }
+    return assignment();
 }
 
 static pnode_t value() {
@@ -227,8 +247,18 @@ static pnode_t value() {
             return pnode_binary(
                 PN_PROC, 
                 delimited(PN_TYPELIST, "(", ")", false, pulldeclaration),
-                delimited(PN_BODY, "{", "}", true, assignment)
+                body()
             );
+        case TT_LPAREN:
+            skip_tt(TT_LPAREN);
+            value_node = assignment();
+            skip_tt(TT_RPAREN);
+            return value_node;
+        case TT_LBRACE:
+            skip_tt(TT_LBRACE);
+            value_node = body();
+            skip_tt(TT_RBRACE);
+            return value_node;
         default:
             stray(&token);
             exit(1);
@@ -237,7 +267,7 @@ static pnode_t value() {
 
 static pnode_t declaration(tok_t on) {
     assert_tt(&on, TT_IDENT);
-    setexpect("`:` followed by type");
+    setexpect("Expected `:` followed by type");
     skip_tt(TT_DEF);
     setexpect(NULL);
     pnode_t decl_node = pnode_endpoint(PN_DECL);
@@ -269,7 +299,7 @@ pnode_t parser_parse_toplevel() {
     pnode_t node = pnode_listing(PN_TOPLEVEL);
     while (peek().tt != TT_EOF) {
         pnode_attach(&node, assignment());
-        setexpect("semicolon");
+        setexpect("Expected semicolon");
         skip_tt(TT_SEMI);
         setexpect(NULL);
     }
