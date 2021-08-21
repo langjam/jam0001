@@ -2,7 +2,13 @@ use std::collections::HashMap;
 use std::iter::Peekable;
 
 const SOURCE: &str = r#"
-(print (! (== 0 5)))
+(block
+	(define x 1)
+	(while (!= x 11)
+		(block
+			(print "Hello!" x)
+			(set x (+ x 1))))
+)
 "#;
 
 // const SOURCE: &str = r#"
@@ -102,6 +108,11 @@ enum TreeNode<'a> {
 
 	Block(Vec<TreeNode<'a>>),
 
+	While {
+		expr: Box<TreeNode<'a>>,
+		body: Box<TreeNode<'a>>,
+	},
+
 	Define {
 		name: &'a str,
 		rhs: Box<TreeNode<'a>>,
@@ -198,6 +209,15 @@ fn parse_matching_parens<'a>(tokens: &mut TokenIterator<'a>) -> TreeNode<'a> {
 			}
 
 			TreeNode::Block(block)
+		}
+
+		"while" => {
+			let expr = Box::new(parse_expression(tokens));
+			let body = Box::new(parse_expression(tokens));
+
+			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+
+			TreeNode::While { expr, body }
 		}
 
 		ident => {
@@ -324,6 +344,24 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 
 			for entry in block {
 				result = evaluate(state, entry);
+			}
+
+			result
+		}
+
+		TreeNode::While { expr, body } => {
+			let mut result = Value::None;
+
+			for _ in 0..20 {
+				let expr_result = evaluate(state, expr);
+				let should_loop = !matches!(expr_result, Value::Bool(false));
+				if !should_loop {
+					break;
+				}
+
+				state.push_scope();
+				result = evaluate(state, body);
+				state.pop_scope();
 			}
 
 			result
