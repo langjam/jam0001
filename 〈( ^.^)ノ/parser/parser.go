@@ -4,27 +4,34 @@ import (
 	"github.com/grossamos/jam0001/shared"
 )
 
-func GenerateAst(toks *[]shared.Token) []shared.Node {
+type Parser struct {
+	toks []shared.Token
+}
+
+func (p *Parser) make_ast() []shared.Node {
 	out := make([]shared.Node, 0, 256)
 
-	for len(*toks) != 0 {
-		tok := (*toks)[0]
+	for len(p.toks) != 0 {
+		tok := p.toks[0]
 
 		switch tok.Type {
 		case shared.TTlparen, shared.TTopenBlock:
-			*toks = (*toks)[1:]
+			p.toks = p.toks[1:]
 
 			out[len(out)-1].Children = append(
 				out[len(out)-1].Children,
 				shared.Node{
 					IsExpression: true,
-					Children:     GenerateAst(toks)})
+					Children:     p.make_ast()})
 
 		case shared.TTrparen, shared.TTcloseBlock:
 			return out
 
 		case shared.TTinstruction: // (instruction (arguments))
-			*toks = (*toks)[1:]
+			p.toks = p.toks[1:]
+
+			if len(p.toks) > 0 &&
+				p.toks[0].Type == shared.TTlparen {
 
 			out = append(out,
 				shared.Node{
@@ -34,10 +41,10 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 			continue
 
 		case shared.TTstring, shared.TTref:
-			if len(*toks) > 1 &&
-				(*toks)[1].Type == shared.TTlparen {
+			if len(p.toks) > 1 &&
+				(p.toks)[1].Type == shared.TTlparen {
 
-				*toks = (*toks)[1:]
+				p.toks = (p.toks)[1:]
 
 				out = append(out,
 					shared.Node{
@@ -63,7 +70,7 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 					out[index]}}
 
 		case shared.TTwhile:
-			if len(*toks) <= 1 {
+			if len(p.toks) <= 1 {
 				break
 			}
 
@@ -76,12 +83,17 @@ func GenerateAst(toks *[]shared.Token) []shared.Node {
 			out = append(out, shared.Node{Val: tok})
 		}
 
-		if len(*toks) < 1 {
+		if len(p.toks) < 1 {
 			break
 		}
 
-		*toks = (*toks)[1:]
+		p.toks = p.toks[1:]
 	}
 
 	return out
+}
+
+func GenerateAst(toks []shared.Token) []shared.Node {
+	parser := Parser{toks}
+	return parser.make_ast()
 }
