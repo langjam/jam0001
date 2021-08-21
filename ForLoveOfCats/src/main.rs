@@ -3,16 +3,21 @@ use std::iter::Peekable;
 
 const SOURCE: &str = r#"
 (block
-	(define sum-even-fib
-		(lambda (f1 f2 total)
-			(if (<= f2 4000000)
-				(sum-even-fib f2 (set f2 (+ f1 f2)) (+ total (* f2 (mod f2 2))))
-				total
+	(# "Defining x to be one")
+	(define x 1)
+
+	(while true
+		(block
+			(print x)
+			(set x (* x 6))
+
+			(# "This is a comment, current value of x is" x)
+			(if (> x 10000000)
+				(panic)
+				()
 			)
 		)
 	)
-
-	(print (sum-even-fib 0 1 1))
 )
 "#;
 
@@ -365,29 +370,49 @@ impl std::fmt::Display for Value {
 }
 
 #[derive(Debug)]
+struct Scope {
+	symbols: HashMap<String, Value>,
+	comments: Vec<Vec<Value>>,
+}
+
+impl Scope {
+	fn new() -> Scope {
+		Scope {
+			symbols: HashMap::new(),
+			comments: Vec::new(),
+		}
+	}
+}
+
+#[derive(Debug)]
 struct ScopeState {
-	scopes: Vec<HashMap<String, Value>>,
+	scopes: Vec<Scope>,
 }
 
 impl ScopeState {
 	fn new() -> ScopeState {
 		ScopeState {
-			scopes: vec![HashMap::new()],
+			scopes: vec![Scope::new()],
 		}
 	}
 
 	fn push_scope(&mut self) {
-		self.scopes.push(HashMap::new());
+		self.scopes.push(Scope::new());
 	}
 
 	fn pop_scope(&mut self) {
 		self.scopes.pop();
 	}
 
+	fn insert_comment(&mut self, values: Vec<Value>) {
+		self.scopes.last_mut().unwrap().comments.push(values);
+	}
+
 	fn define(&mut self, name: &str, value: Value) -> Value {
 		self.scopes
 			.last_mut()
 			.unwrap()
+			.symbols
 			.insert(name.to_string(), value.clone());
 
 		value
@@ -395,7 +420,7 @@ impl ScopeState {
 
 	fn set(&mut self, name: &str, value: Value) -> Value {
 		for scope in self.scopes.iter_mut().rev() {
-			if let Some(ptr) = scope.get_mut(name) {
+			if let Some(ptr) = scope.symbols.get_mut(name) {
 				*ptr = value.clone();
 				return value;
 			}
@@ -406,7 +431,7 @@ impl ScopeState {
 
 	fn read(&self, name: &str) -> Value {
 		for scope in self.scopes.iter().rev() {
-			if let Some(ptr) = scope.get(name) {
+			if let Some(ptr) = scope.symbols.get(name) {
 				return ptr.clone();
 			}
 		}
@@ -502,6 +527,8 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 			};
 
 			match name.as_str() {
+				"#" => insert_comment(state, &args),
+
 				"+" => add_all(&args),
 				"-" => sub_all(&args),
 				"*" => mul_all(&args),
@@ -519,6 +546,7 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 				"mod" => mod_impl(&args),
 
 				"print" => print_values(&args),
+				"panic" => panic_impl(state, &args),
 
 				name => {
 					let symbol = state.read(name);
@@ -668,6 +696,49 @@ fn print_values(values: &[Value]) -> Value {
 	}
 
 	Value::None
+}
+
+fn insert_comment(state: &mut ScopeState, values: &[Value]) -> Value {
+	state.insert_comment(values.to_vec());
+	Value::None
+}
+
+fn panic_impl(state: &ScopeState, values: &[Value]) -> Value {
+	if !values.is_empty() {
+		print!("Panic!: ");
+
+		let count = values.len();
+		for (index, value) in values.iter().enumerate() {
+			if index + 1 >= count {
+				println!("{}", value);
+			} else {
+				print!("{} ", value);
+			}
+		}
+	} else {
+		println!("Panic!");
+	}
+
+	println!("========================================");
+
+	let mut indent_level = 0;
+	for scope_index in 0..state.scopes.len() {
+		let scope = &state.scopes[scope_index];
+
+		for comment in &scope.comments {
+			for _ in 0..indent_level {
+				print!("  ");
+			}
+
+			print_values(comment);
+		}
+
+		if !scope.comments.is_empty() {
+			indent_level += 1;
+		}
+	}
+
+	std::process::exit(-1);
 }
 
 fn main() {
