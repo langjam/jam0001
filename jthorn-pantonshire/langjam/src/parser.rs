@@ -70,7 +70,7 @@ pub struct LoopStmt {
 
 #[derive(Debug)]
 pub struct PrintStmt {
-    pub value: String
+    pub value: Expr,
 }
 
 #[derive(Debug)]
@@ -137,7 +137,9 @@ pub fn parse(source: &str) -> anyhow::Result<Program> {
         }
     }
 
-    todo!()
+    Ok(Program {
+        functions,
+    })
 }
 
 fn parse_semantic_body(semantic_body: Pair) -> Vec<Function> {
@@ -172,6 +174,7 @@ fn parse_comment(comment: Pair) -> Vec<Stmt> {
 
 fn parse_statement(pair: Pair) -> Stmt {
     let pair = pair.into_inner().next().unwrap();
+
     match pair.as_rule() {
         Rule::varStmt => {
             let mut pairs = pair.into_inner();
@@ -184,9 +187,19 @@ fn parse_statement(pair: Pair) -> Stmt {
         },
 
         Rule::argsStmt => todo!("args statement"),
+
         Rule::loopStmt => todo!("loop statement"),
-        Rule::printStmt => todo!("print statement"),
+
+        Rule::printStmt => {
+            let mut pairs = pair.into_inner();
+            let expr = parse_expr(pairs.next().unwrap());
+            Stmt::Print(PrintStmt {
+                value: expr,
+            })
+        },
+
         Rule::condStmt => todo!("cond statement"),
+
         _ => unreachable!(),
     }
 }
@@ -358,9 +371,5 @@ fn parse_expr(pair: Pair) -> Expr {
         } 
     }
 
-    let lhs = pair.into_inner().next().unwrap();
-    let res = parse_equality(lhs);
-    println!("{:?}", res);
-    println!();
-    res
+    parse_equality(pair.into_inner().next().unwrap())
 }

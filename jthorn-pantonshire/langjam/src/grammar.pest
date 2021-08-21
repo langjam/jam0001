@@ -41,13 +41,13 @@ primary     = { number | litTrue | litFalse | alphanumeric | string | "(" ~ hws*
 //statements
 varStmt = {"stores" ~ hws+ ~ expr ~ hws+ ~ "in" ~ hws+ ~ literal}
 loopStmt = {"repeat" ~ hws+ ~ "(" ~ stmt ~ ")" ~ hws+ ~ number ~ hws+ ~ "times"}
-printStmt = {("prints" | "print") ~ hws+ ~ string}
+printStmt = {("prints" | "print") ~ hws+ ~ expr}
 listStmt = {literal | literal ~ "," ~ listStmt}
 argsStmt = {"takes" ~ hws+ ~ listStmt}
 condStmt = {"if" ~ hws+ ~ expr ~ hws+ ~ "then" ~ hws+ ~ stmt ~ hws+ ~ "else" ~ hws+ ~ stmt}
 stmt = {argsStmt | varStmt | loopStmt | printStmt | condStmt}
 //comment = { (stmt ~ hws* | literal ~ hws* )+ }
-comment = { stmt ~ (hws* ~ stmt)* }
+comment = { stmt ~ (hws+ ~ "then" ~ (hws | ",") ~ hws* ~ stmt)* }
 commentStmt = { "//" ~ hws* ~ comment ~ vws+ ~ literal }
 semanticBody = {commentStmt ~ (vws+ ~ semanticBody)*}
 syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (("\n")*~mainStmt~("\n")*)* ~ "}"}

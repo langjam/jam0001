@@ -20,3 +20,12 @@ impl RuntimeError {
         }
     }
 }
+
+impl RuntimeErrorCause {
+    pub const fn error(self, span: Span) -> RuntimeError {
+        RuntimeError {
+            span,
+            cause: self,
+        }
+    }
+}

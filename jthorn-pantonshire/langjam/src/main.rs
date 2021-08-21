@@ -34,8 +34,16 @@ fn main() -> anyhow::Result<()> {
 
 fn run_source(source: String) -> anyhow::Result<()> {
     let ast = parser::parse(&source)?;
+    let interpreter = interpreter::Interpreter::new(ast);
+    let res = interpreter.exec_main();
 
-    todo!()
+    match res {
+        Ok(value::Value::Void) => (),
+        Ok(val) => println!("> {}", val),
+        Err(err) => todo!("error reporting"),
+    }
+
+    Ok(())
 }
 
 fn run_cli() -> anyhow::Result<()> {
