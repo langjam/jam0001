@@ -227,34 +227,26 @@ def code_tokenize(filename, code):
   length = len(tokens)
   while i < length:
     token = tokens[i]
-    continuous_chain_size = 1
+    new_tokens.append(token)
 
-    if i + 1 < length and token.token_type == 'NUMBER' and tokens[i + 1].value == '.':
-      if i + 2 < length and tokens[i + 2].token_type == 'NUMBER':
-        continuous_chain_size = 3
-      else:
-        continuous_chain_size = 2
-    elif token.value == '.' and i + 1 < length and tokens[i + 1].token_type == 'NUMBER':
-      continuous_chain_size = 2
+    if token.value == '.':
+      # consolidate with previous
+      previous = tokens[i - 1]
+      if i > 0 and previous.token_type == 'NUMBER':
+        if previous.line == token.line and previous.col + len(previous.value) == token.col:
+          new_tokens.pop()
+          previous.token_type = 'FLOAT'
+          previous.value += '.'
+      
+      # consolidate with next
+      if i + 1 < length and tokens[i + 1].token_type == 'NUMBER':
+        next = tokens[i + 1]
+        current = new_tokens[-1]
+        if next.line == current.line and current.col + len(current.value) == next.col:
+          current.token_type = 'FLOAT'
+          current.value += next.value
+          i += 1
+
+    i += 1
     
-    if continuous_chain_size > 1:
-      col = token.col
-      for j in range(2, continuous_chain_size + 1):
-        next_token = tokens[i + j - 1]
-        if next_token.line == token.line and next_token.col == col + len(token.value):
-          col = next_token.col
-        else:
-          continuous_chain_size = 1
-          break
-
-    if continuous_chain_size > 1:
-      new_token_value = ''
-      for j in range(continuous_chain_size):
-        new_token_value += tokens[i + j].value
-      new_tokens.append(Token(filename, new_token_value, token.line, token.col, 'FLOAT'))
-    else:
-      new_tokens.append(token)
-
-    i += continuous_chain_size
-
   return TokenStream(filename, new_tokens)
