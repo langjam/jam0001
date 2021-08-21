@@ -1,3 +1,7 @@
+/********************
+ * Example 4: Lists *
+ ********************/
+
 mylist = ["Element1" : 2]?
 
 out("The initial List:" : mylist)?

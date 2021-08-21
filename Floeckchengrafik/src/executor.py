@@ -108,7 +108,7 @@ class ComstructExecutor:
             for func_node in node_call.content:
                 ret = self.walkTree(func_node)
                 can_return = False
-                for item in node.description:
+                for item in node_call.description:
                     if item[0] == "returns":
                         can_return = True
                         break
