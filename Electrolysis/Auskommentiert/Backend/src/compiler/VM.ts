@@ -14,7 +14,7 @@ export class VM {
         if(firstComment === undefined) {
             return;
         }
-        this.traverse(firstComment.content);
+        this.traverse(firstComment.ast);
     }
     private traverse(ast : AST.Comment) {
         if(ast.kind == AST.ASTKinds.WhileComment) {
@@ -28,7 +28,7 @@ export class VM {
     }
     private evaluateExpression(expression : AST.Expression) : VMValue {
         if(expression.kind === AST.ASTKinds.AtomicExpression_1) {
-            // variable
+            
         }
         console.log(inspect(expression, false, null, true));
         return false;
