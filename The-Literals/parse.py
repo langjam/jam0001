@@ -23,6 +23,9 @@ class Parser:
         self.current_lexeme = self.next_lexeme
         if self.current_lexeme[0] != Token.EOF:
             self.next_lexeme = self.get_token()
+            # Swallow CODE at the start of a line or at the start of the file.
+            if self.next_lexeme[0] == Token.CODE and self.current_lexeme[0] in (Token.EOL, Token.BOF):
+                self.next_lexeme = self.get_token()
         return self.current_lexeme
 
     def expect(self, expected_token):
@@ -88,7 +91,7 @@ class Parser:
         self.expect(Token.EOL)
 
     def parse_stmts(self):
-        stmts_end_tokens = [Token.LEAVE_FUNC, Token.EOF]
+        stmts_end_tokens = [Token.LEAVE_FUNC, Token.EOF]  # TODO: END_DEF here?
         done = False
         while not done:
             token, value = self.peek_lexeme()
@@ -261,6 +264,9 @@ if __name__ == "__main__":
         yield (Token.HEADER_END, "*/")
         yield (Token.EOL, "\n")
 
+    def code():
+        yield (Token.CODE, "//")
+
     def program(*fragments):
         def generator():
             yield (Token.BOF, "")
@@ -300,4 +306,7 @@ if __name__ == "__main__":
     parser.parse()
 
     parser = Parser(program(function_header_params_and_return))
+    parser.parse()
+
+    parser = Parser(program(code, set_var_to_constant))
     parser.parse()

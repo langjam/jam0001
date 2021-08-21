@@ -22,7 +22,9 @@ return ::= FILLER RETURN full_identifier {Return($3)}
 
 params = list(param) {$1}
 
-stmt ::= stmt_contents DOT {$1}
+stmt ::=
+    stmt_contents LEAVE_FUNC DOT {$1} ...?
+  | stmt_contents DOT {$1}
 
 func_stmt ::= 
     func_stmt_contents LEAVE_FUNC DOT {FuncStmtDone($1, $2)}
