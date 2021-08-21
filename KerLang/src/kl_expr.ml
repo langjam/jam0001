@@ -1,3 +1,4 @@
+
 open Kl_parsing
 
 type 'a statement =
@@ -40,10 +41,10 @@ type comment_function = {
 
 let split_lines (comment : tok list) : tok list list =
   let rec split (res : tok list list) (curr_expr : tok list) = function
-  | Sep::q -> split ((List.rev curr_expr)::res) [] q
-  | token::q -> split res (token::curr_expr) q
-  | [] -> List.rev res
-in split [] [] comment
+    | Sep::q -> split ((List.rev curr_expr)::res) [] q
+    | token::q -> split res (token::curr_expr) q
+    | [] -> List.rev res
+  in split [] [] comment
 
 let string_of_tok = function
   | Int(_, n) -> string_of_int n
@@ -57,33 +58,33 @@ let rec string_of_comment = function
 
 let look_for (kw : string) (comment : tok list) : tok list * tok list =
   let rec search (prev : tok list) = function
-  | [] -> failwith ("keyword" ^ kw ^ "not found")
-  | t::q -> if string_of_tok t = kw then (List.rev prev, q)
-  else search (t::prev) q
-in search [] comment
+    | [] -> failwith ("keyword" ^ kw ^ "not found")
+    | t::q -> if string_of_tok t = kw then (List.rev prev, q)
+      else search (t::prev) q
+  in search [] comment
 
 let split_kw (kw : string) (comment : tok list) : tok list list =
   let rec split (res : tok list list) (curr_expr : tok list) = function
-  | [] -> List.rev ((List.rev curr_expr)::res)
-  | t::q -> if string_of_tok t = kw then split ((List.rev curr_expr)::res) [] q
-  else split res (t::curr_expr) q
-in split [] [] comment
+    | [] -> List.rev ((List.rev curr_expr)::res)
+    | t::q -> if string_of_tok t = kw then split ((List.rev curr_expr)::res) [] q
+      else split res (t::curr_expr) q
+  in split [] [] comment
 
 let parse_value (comment : tok list) : value =
   match comment with
   | [] -> SOMETHING
   | t::q -> (
-    match t with
-    | Int(_, n) -> CONST n
-    | _ -> match string_of_tok t with
-      | "argument" -> (
-        match q with
-        | Int(_, n)::_ -> ARG n
-        | _ -> failwith "expected argument index"
-      )
-      | "something" -> SOMETHING
-      | s -> VAR s
-  )
+      match t with
+      | Int(_, n) -> CONST n
+      | _ -> match string_of_tok t with
+        | "argument" -> (
+            match q with
+            | Int(_, n)::_ -> ARG n
+            | _ -> failwith "expected argument index"
+          )
+        | "something" -> SOMETHING
+        | s -> VAR s
+    )
 
 let parse_operation (comment : tok list) : value operation =
   let f = parse_value in
@@ -108,17 +109,17 @@ let rec parse_statement (comment : tok list) : expr statement =
   match comment with
   | [] -> NONE
   | t::q -> (
-    match string_of_tok t with
-    | "takes" -> (
-        match q with
-        | Int(_, n)::_ -> TAKES n
-        | _ -> failwith "expected number of arguments"
-      )
-    | "let" -> let a, b = look_for "be" q in LET (string_of_comment a, f b)
-    | "returns" -> RETURNS (f q)
-    | "uses" -> let l = split_kw "and" q in USES (List.map f l)
-    | _ -> parse_statement q
-  )
+      match string_of_tok t with
+      | "takes" -> (
+          match q with
+          | Int(_, n)::_ -> TAKES n
+          | _ -> failwith "expected number of arguments"
+        )
+      | "let" -> let a, b = look_for "be" q in LET (string_of_comment a, f b)
+      | "returns" -> RETURNS (f q)
+      | "uses" -> let l = split_kw "and" q in USES (List.map f l)
+      | _ -> parse_statement q
+    )
 
 let parse_function (Spec(_, name, comment)) =
   let comments = split_lines comment in
