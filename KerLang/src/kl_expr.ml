@@ -91,8 +91,8 @@ let parse_operation (comment : tok list) : value operation =
   | [] -> failwith "no operation"
   | t::q -> (
     match string_of_tok t with
-    | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in IF (f (List.rev prev), f a, f b)
-    | "addition" -> let _, b = look_for "of" q in let a, b = look_for "and" b in SUM (f a, f b)
+    | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in IF (f a, f (List.rev prev), f b)
+    | "sum" -> let _, b = look_for "of" q in let a, b = look_for "and" b in SUM (f a, f b)
     | "difference" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIFF (f a, f b)
     | "product" -> let _, b = look_for "of" q in let a, b = look_for "and" b in PROD (f a, f b)
     | "division" -> let _, b = look_for "of" q in let a, b = look_for "and" b in DIV (f a, f b)
@@ -131,7 +131,7 @@ let parse_function (Spec(_, name, comment)) =
       | RETURNS e -> build_function {f with result = RETURN e} q
       | USES l -> let r = match f.result with
         | RETURN e -> YOLO (e::l)
-        | YOLO l' -> YOLO (l @ l')
+        | YOLO l' -> YOLO (l' @ l)
 in build_function {f with result = r} q
 in build_function {
     name = name;
@@ -147,7 +147,7 @@ let parse_file f =
   try while true do
     blocks := Kl_parser.block lexbuf::!blocks
   done;
-  failwith "osef"
+  failwith "should not happen"
   with
   | Kl_parser.Eof ->
     List.map (parse_function) (List.rev !blocks)
