@@ -1,3 +1,5 @@
+:- dynamic edge/2.
+
 % rectangles can contain rectangles or edges
 allContains1:-
     bagof(R1,(rect(R1,_),(rect(R2,_);edge(R2,_)),R1 \= R2,onSameDiagram(R1,R2),printContainment(R1,R2)),_),!.

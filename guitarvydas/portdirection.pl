@@ -1,3 +1,5 @@
+:- dynamic ellipse/2.
+
 portdirection([P,'input']):-
     ellipse(P,_),
     fillColor(P,"green").

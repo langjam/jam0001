@@ -1,3 +1,6 @@
+:- dynamic edge/2.
+:- dynamic ellipse/2.
+
 containsport(R,C):-
     rightsideinsideBB(C,R).
 containsport(R,C):-

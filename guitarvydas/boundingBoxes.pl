@@ -1,5 +1,7 @@
 % create bounding box (Left, Top, Right, Bottom rectangle) for every vertex cell
 
+:- dynamic edge/2.
+
 makebb(CellID):-
     vertex(CellID,_),
     x(CellID,X),

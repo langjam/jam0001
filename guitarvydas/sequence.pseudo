@@ -1,0 +1,36 @@
+{"diagram":"id1", "toplevelcomponent":"id4"}
+
+{
+  "children": ["rects", "bounding boxes" ],
+  "connections": [
+    {
+      "name":"x2",
+      "source": {"component":"rects", "port":"fb"},
+      "target": {"component":"bounding boxes", "port":"in"}
+    }
+  ],
+  "diagram":"id1",
+  "id":"id4",
+  "inputs": [],
+  "name":"topLevel",
+  "outputs": []
+}
+{
+  "children": [],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id5",
+  "inputs": [],
+  "name":"rects",
+  "outputs": ["fb" ]
+}
+{
+  "children": [],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id6",
+  "inputs": ["in" ],
+  "name":"bounding boxes",
+  "outputs": []
+}
+

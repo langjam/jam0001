@@ -25,4 +25,17 @@ swipl -q \
 # augment the factbase (fb.pl) after every inferencing step
 cat sequence.pl temp.pl | sort >fb.pl
 
+./run-aux.bash >sequence.pseudo
+
+## now do details.drawio
+swipl -q \
+      -g 'consult(details).' \
+      -g 'consult(rects).' \
+      -g 'printRects.' \
+      -g 'halt.' \
+      > temp.pl
+
+# augment the factbase (fb.pl) after every inferencing step
+cat details.pl temp.pl | sort >fb.pl
+
 ./run-aux.bash

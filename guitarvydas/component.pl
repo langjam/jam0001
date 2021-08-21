@@ -1,7 +1,10 @@
+:- dynamic edge/2.
+:- dynamic ellipse/2.
+
 component(Diagram,C,Name,Ins,Outs,Children,Connections) :-
     diagramContains(Diagram,C),
     rect(C,_),
-    cname(C,Name),
+    componentname(C,Name),
     inputsof(C,Ins),
     outputsof(C,Outs),
     childrenOf(C,Children),
@@ -53,37 +56,40 @@ inputof(C,Name):-
     ellipse(I,_),
     contains(C,I),
     fillColor(I,"green"),
-    cname(I,Name).
+    componentname(I,Name).
 
 outputof(C,Name):-
     ellipse(O,_),
     contains(C,O),
     fillColor(O,"yellow"),
-    cname(O,Name).
+    componentname(O,Name).
 
 childof(C,Name):-
     contains(C,Child),
     rect(Child,_),
-    cname(Child,Name).
+    componentname(Child,Name).
 
 connectionOf(C,connection{name:ConnectionName,source:pair{component:SourceName,port:SourcePort},target:pair{component:TargetName,port:TargetPort}}):-
     contains(C,E),
     edge(E,_),
     source(E,SC),
-    cname(SC,SourcePort),
+    componentname(SC,SourcePort),
     contains(SourceParent,SC),
     getname(C,SourceParent,SourceName),
     target(E,TC),
-    cname(TC,TargetPort),
+    componentname(TC,TargetPort),
     contains(TargetParent,TC),
     getname(C,TargetParent,TargetName),
     gensym(x,ConnectionName).
     
-cname(C,Name):-value(C,Name).
-cname(_,C,Name):-cname(C,Name).
+componentname(C,Name):-
+    fillColor(C,"red"),
+    gensym(c,Name).
+componentname(C,Name):-
+    value(C,Name).
 
 getname(Parent,Child,Name):-
     Child \= Parent,
-    cname(Child,Name),
+    componentname(Child,Name),
     !.
 getname(_,_,self).

@@ -1,103 +1,67 @@
 
-b(id4,390).
-b(id5,340).
+b(id4,340).
+b(id5,320).
 b(id6,340).
-b(id7,325).
-b(id8,310).
-b(id9,325).
-cell(id10,"").
-cell(id11,"").
+b(id7,320).
 cell(id2,"").
 cell(id3,"").
 cell(id4,"").
 cell(id5,"").
 cell(id6,"").
 cell(id7,"").
-cell(id8,"").
-cell(id9,"").
 contains(id4,id5).
-contains(id4,id6).
-contains(id4,id8).
-contains(id5,id9).
 contains(id6,id7).
 contains1(id4,id5).
-contains1(id4,id6).
-contains1(id4,id8).
+contains1(id6,id7).
 diagram(id1, "").
-diagramContains(id1, id10).
-diagramContains(id1, id11).
 diagramContains(id1, id2).
 diagramContains(id1, id3).
 diagramContains(id1, id4).
 diagramContains(id1, id5).
 diagramContains(id1, id6).
 diagramContains(id1, id7).
-diagramContains(id1, id8).
-diagramContains(id1, id9).
-edge(id10, "").
-edge(id11, "").
-edge(id8, "").
-ellipse(id7, "").
-ellipse(id9, "").
-fillColor(id7, "green").
-fillColor(id9, "yellow").
-height(id4, 150).
-height(id5, 60).
-height(id6, 60).
-height(id7, 30).
-height(id9, 30).
-l(id4,200).
-l(id5,280).
+fillColor(id5, "red").
+fillColor(id7, "red").
+height(id4, 180).
+height(id5, 125).
+height(id6, 180).
+height(id7, 125).
+l(id4,160).
+l(id5,190).
 l(id6,520).
-l(id7,510).
-l(id8,395).
-l(id9,380).
-name(id1, "sequence").
-portdirection(id7,input).
-portdirection(id9,output).
-r(id4,720).
-r(id5,400).
-r(id6,640).
-r(id7,540).
-r(id8,525).
-r(id9,410).
+l(id7,550).
+name(id1, "Details").
+r(id4,360).
+r(id5,330).
+r(id6,770).
+r(id7,740).
 rect(id2,"").
 rect(id3,"").
 rect(id4,"").
 rect(id5,"").
 rect(id6,"").
-source(id8, id9).
-t(id4,240).
-t(id5,280).
-t(id6,280).
-t(id7,295).
-t(id8,310).
-t(id9,295).
-target(id10, "mx_kBMiYbfJri47WsX8j__12").
-target(id11, "mx_kBMiYbfJri47WsX8j__4").
-target(id8, id7).
-value(id4, "topLevel").
-value(id5, "rects").
+rect(id7,"").
+t(id4,160).
+t(id5,195).
+t(id6,160).
+t(id7,195).
+value(id4, "rects").
+value(id5, "&lt;div&gt;swipl -q \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(fb).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(rects).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'printRects.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'halt.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; | ./augment__fb&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;").
 value(id6, "bounding boxes").
-value(id7, "in").
-value(id9, "fb").
+value(id7, "&lt;div&gt;&lt;div&gt;swipl -q \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(fb).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'consult(boundingBoxes).' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'printBB.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; -g 'halt.' \\&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; | ./augment__fb&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;/div&gt;").
 vertex(id4, "").
 vertex(id5, "").
 vertex(id6, "").
 vertex(id7, "").
-vertex(id9, "").
-width(id4, 520).
-width(id5, 120).
-width(id6, 120).
-width(id7, 30).
-width(id9, 30).
-x(id4, 200).
-x(id5, 280).
+width(id4, 200).
+width(id5, 140).
+width(id6, 250).
+width(id7, 190).
+x(id4, 160).
+x(id5, 190).
 x(id6, 520).
-x(id7, 510).
-x(id9, 380).
-y(id4, 240).
-y(id5, 280).
-y(id6, 280).
-y(id7, 295).
-y(id9, 295).
+x(id7, 550).
+y(id4, 160).
+y(id5, 195).
+y(id6, 160).
+y(id7, 195).
