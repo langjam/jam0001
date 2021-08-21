@@ -16,6 +16,10 @@ class Tag extends Base {
         this.child = child
     }
 
+    getChild(): Base | undefined {
+        return this.child
+    }
+
     getMdastContent(): Definition {
         return <Definition>this.mdastContent
     }

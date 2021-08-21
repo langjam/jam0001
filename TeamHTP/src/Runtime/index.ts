@@ -7,15 +7,15 @@ class Runtime {
         this.tagDefs = {}
     }
 
-    isTagDefined(tagName: string) {
+    isTagDefined(tagName: string): boolean {
         return this.tagDefs[tagName] !== undefined
     }
 
-    defineTag(tagName: string, tag: Tag) {
+    defineTag(tagName: string, tag: Tag): void {
         this.tagDefs[tagName] = tag
     }
 
-    getTag(tagName: string) {
+    getTag(tagName: string): Tag {
         return this.tagDefs[tagName]
     }
 }

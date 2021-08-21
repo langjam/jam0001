@@ -31,9 +31,6 @@ def check(n) {
 )
 `
 
-// [TodoList kickass]
-// [self ayy]
-
 const runtime = new Runtime()
 
 const docTree = unified()
