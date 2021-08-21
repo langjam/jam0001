@@ -101,7 +101,7 @@ impl Data {
                                 .iter()
                                 .map(|x| x.data)
                                 .collect(),
-                        )
+                        );
                     }
                 }
                 Operation::Input => {
@@ -111,7 +111,7 @@ impl Data {
                             .train
                             .second_class_passengers
                             .iter_mut()
-                            .zip(interface.ask_for_input())
+                            .zip(interface.ask_for_input().unwrap_or(vec![]))
                         {
                             x.data = y;
                         }
@@ -451,28 +451,28 @@ mod tests {
 
     #[test]
     fn stupid_stuff() {
-        let program = Program {
-            trains: vec![Train {
-                start: Target {
-                    track: 0,
-                    station: "Test".to_string(),
-                },
-                first_class_passengers: vec![],
-                second_class_passengers: vec![SecondClassPassenger {
-                    data: 10,
-                    name: "Kees".to_string(),
-                }],
-            }],
-            stations: vec![Station {
-                name: "Test".to_string(),
-                operation: Operation::Nothing,
-                output: vec![Target {
-                    station: "Test".to_string(),
-                    track: 0,
-                }],
-            }],
-        };
-        let mut pp = Data::new(program);
-        // pp.do_current_step(&VMInterface {})
+        // let program = Program {
+        //     trains: vec![Train {
+        //         start: Target {
+        //             track: 0,
+        //             station: "Test".to_string(),
+        //         },
+        //         first_class_passengers: vec![],
+        //         second_class_passengers: vec![SecondClassPassenger {
+        //             data: 10,
+        //             name: "Kees".to_string(),
+        //         }],
+        //     }],
+        //     stations: vec![Station {
+        //         name: "Test".to_string(),
+        //         operation: Operation::Nothing,
+        //         output: vec![Target {
+        //             station: "Test".to_string(),
+        //             track: 0,
+        //         }],
+        //     }],
+        // };
+        // let mut pp = Data::new(program);
+        // // pp.do_current_step(&VMInterface {})
     }
 }
