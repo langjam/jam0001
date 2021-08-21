@@ -10,9 +10,21 @@ pub enum Statement {
     Expression(Expression),
     If(If),
     While(While),
+    Var(Var),
+    Const(Const),
 
     // TODO: Remove this nasty ass placeholder.
     Empty
+}
+
+#[derive(Debug, Clone)]
+pub struct Var {
+    pub init: Expression,
+}
+
+#[derive(Debug, Clone)]
+pub struct Const {
+    pub init: Expression,
 }
 
 #[derive(Debug, Clone)]

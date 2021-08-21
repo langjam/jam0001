@@ -3,7 +3,7 @@ use std::mem::discriminant;
 use thiserror::Error;
 
 use crate::token::{Token, TokenKind};
-use crate::ast::{Program, Statement, FileHeader, FunctionDefinition, DefinitionHeader, If, While};
+use crate::ast::{Program, Statement, FileHeader, FunctionDefinition, DefinitionHeader, If, While, Var, Const};
 use crate::expression::{Expression, Priority, Call};
 
 #[derive(Debug, Clone)]
@@ -75,8 +75,26 @@ impl<'p> Parser<'p> {
             TokenKind::CommentStarter => self.parse_definition_header(),
             TokenKind::If => self.parse_if(),
             TokenKind::While => self.parse_while(),
+            TokenKind::Var => self.parse_var(),
+            TokenKind::Const => self.parse_const(),
             _ => self.parse_expression_statement(),
         }
+    }
+
+    pub fn parse_var(&mut self) -> Result<Statement, ParserError> {
+        self.expect_token_and_read(TokenKind::Var)?;
+
+        let init = self.expect_expression(Priority::Assign)?;
+
+        Ok(Statement::Var(Var { init }))
+    }
+
+    pub fn parse_const(&mut self) -> Result<Statement, ParserError> {
+        self.expect_token_and_read(TokenKind::Const)?;
+
+        let init = self.expect_expression(Priority::Assign)?;
+
+        Ok(Statement::Const(Const { init }))
     }
 
     pub fn parse_while(&mut self) -> Result<Statement, ParserError> {

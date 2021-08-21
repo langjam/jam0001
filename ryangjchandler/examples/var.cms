@@ -1,0 +1,8 @@
+/*
+ * @name "Variables and Constants"
+ */
+
+/** @identifier name */
+var "Ryan Chandler"
+
+println(name)

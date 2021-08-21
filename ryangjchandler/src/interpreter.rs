@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use thiserror::Error;
 
-use crate::ast::{Program, Statement, FileHeader, DefinitionHeader, FunctionDefinition, If, While};
+use crate::ast::{Program, Statement, FileHeader, DefinitionHeader, FunctionDefinition, If, While, Var, Const};
 use crate::expression::{Expression, Call};
 use crate::environment::Environment;
 use crate::value::{Value, Function, NativeFunction};
@@ -52,6 +52,23 @@ impl<'i> Interpreter<'i> {
                 } else {
                     self.header = Some(h);
                 }
+            },
+            Statement::Var(Var { init }) => {
+                if self.header.is_none() {
+                    return Err(InterpreterError::MissingDefinitionHeader);
+                }
+
+                let (name) = match self.header.as_ref().unwrap() {
+                    Statement::DefinitionHeader(DefinitionHeader { identifier, .. }) => (identifier.clone()),
+                    _ => unreachable!()
+                };
+
+                let value = match self.execute_expression(init)? {
+                    Some(v) => v,
+                    None => unreachable!()
+                };
+
+                self.environment.borrow_mut().set(name, &value);
             },
             Statement::FunctionDefinition(FunctionDefinition { body }) => {
                 if self.header.is_none() {
@@ -272,7 +289,7 @@ pub enum InterpreterError {
     #[error("A definition header with no definition was encountered.")]
     UnusedDefinitionHeader,
 
-    #[error("All definitions must be preceded with a valid definition header.")]
+    #[error("All definitions (fn, var, const) must be preceded with a valid definition header.")]
     MissingDefinitionHeader,
 
     #[error("Trying to access undefined identifier {0}.")]

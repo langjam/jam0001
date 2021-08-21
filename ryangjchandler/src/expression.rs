@@ -3,6 +3,7 @@ use crate::token::TokenKind;
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum Priority {
     Lowest,
+    Assign,
     Sum,
     Product,
     Call,
