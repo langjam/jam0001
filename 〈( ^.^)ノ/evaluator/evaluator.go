@@ -17,39 +17,60 @@ type Evaluator struct {
 }
 
 func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
-	// recursibve calls to eval sub-nodes
+	// Deal with instructions
+	if isInstruction(expr.Children[0], expr.Children[1]) {
+		instruction_type := expr.Children[0].Val.Value
+		instruction_args := expr.Children[1].Children
 
-	if expr.Val.Type == shared.TTnull && len(expr.Children) > 0 && expr.Children[0].Val.Type == shared.TTinstruction && expr.Children[len(expr.Children)-1].Val.Type != shared.TTwcomment {
-		// Deal with instructions
-		if expr.Children[0].Val.Value == lexer.II_set {
-			// TODO catch if set doesn;t have enough children (maybe, or in the parser, idk)
-			e.eval_children(&expr.Children[1])
+		switch instruction_type {
+		case lexer.II_set:
+			// TODO: add error if args aren't two and one isn't ref
+			set_values := instruction_args[1:]
+			set_ref := instruction_args[0]
+			e.eval_children(&set_values)
 
-			varIndex, err := strconv.Atoi(expr.Children[1].Children[0].Val.Value)
-			varIndex *= -1
-			val := expr.Children[1].Children[1].Val.Value
-			for len(e.vars) <= varIndex {
-				e.vars = append(e.vars, "0")
-			}
-			e.vars[varIndex] = val
+			varsIndex, err := strconv.Atoi(set_ref.Val.Value)
+			varsIndex *= -1
+
 			if err != nil {
-				fmt.Println("TypeError, type used is invalid!", expr.Children[1].Val.Value, expr.Children[2].Val.Value)
+				fmt.Println("TypeError, type used is invalid!", set_ref.Val.Value)
 				os.Exit(1)
 			}
-		} else if expr.Children[0].Val.Value == lexer.II_print {
-			// TODO: catch it being empty
-			var prnt_out string
-			if expr.Children[1].Children[0].Val.Type == shared.TTref {
-				prnt_out = e.getRefValue(expr.Children[1].Children[0])
-			} else {
-				prnt_out = expr.Children[1].Children[0].Val.Value
+
+			// fill up vars and set it
+			for len(e.vars) <= varsIndex {
+				e.vars = append(e.vars, "0")
 			}
-			fmt.Println(prnt_out)
+			e.vars[varsIndex] = set_values[0].Val.Value
+
+		case lexer.II_print:
+			for _, arg := range instruction_args {
+				if arg.Val.Type == shared.TTref {
+					fmt.Println(e.getRefValue(arg))
+				} else {
+					fmt.Println(arg.Val.Value)
+				}
+			}
 		}
 		return shared.Node{}
+
 	} else {
 		fmt.Println("Illegal Expression ERROR", expr.Val)
+		os.Exit(1)
 		return shared.Node{}
+	}
+}
+
+func isInstruction(possible_instruction shared.Node, args shared.Node) bool {
+	return possible_instruction.Val.Type == shared.TTinstruction &&
+		len(args.Children) > 0
+}
+
+func (e *Evaluator) eval_children(parentNode *[]shared.Node) {
+	for index, subnode := range *parentNode {
+		if subnode.IsExpression {
+			(*parentNode)[index] = e.eval_expr(subnode)
+		}
 	}
 }
 
@@ -62,14 +83,6 @@ func (e *Evaluator) getRefValue(expr shared.Node) string {
 	}
 	// TODO catch if vars isn't big enough
 	return e.vars[varIndex]
-}
-
-func (e *Evaluator) eval_children(parentNode *shared.Node) {
-	for index, subnode := range parentNode.Children {
-		if subnode.IsExpression {
-			parentNode.Children[index] = e.eval_expr(subnode)
-		}
-	}
 }
 
 func RunEvaluator(nodes []shared.Node) {
