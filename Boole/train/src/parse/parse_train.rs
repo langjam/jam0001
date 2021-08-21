@@ -88,6 +88,7 @@ mod tests {
             Ok(train) => {
                 println!("{:?}", train);
                 let expected = Train {
+                    identifier: 0,
                     start: Target { station: String::from("Groningen"), track: 0, span: Span{ start: 22, end: 39 } },
                     first_class_passengers: vec![
                         FirstClassPassenger { name: String::from("robert"), data: String::from("The train has a nice red locomotive and is big") },
