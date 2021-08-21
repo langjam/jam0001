@@ -64,9 +64,11 @@ class ComstructExecutor:
                         can_return = True
                         break
 
-                if can_return:
-                    if stmt_node:
-                        ret = self.walkTree(stmt_node)
+                if stmt_node:
+                    ret_evt = self.walkTree(stmt_node)
+
+                    if can_return:
+                        ret = ret_evt
 
             return ret
         elif isinstance(node, StatementNode.FunctionDefinitionNode):
@@ -88,8 +90,6 @@ class ComstructExecutor:
             if node_call.description is None:
                 node_call.description = []
 
-            ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
-
             old_env = env
             new_env = env.copy()
             i = 0
@@ -106,7 +106,7 @@ class ComstructExecutor:
 
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             for func_node in node_call.content:
-                ret = self.walkTree(func_node)
+                ret_evt = self.walkTree(func_node)
                 can_return = False
                 for item in node_call.description:
                     if item[0] == "returns":
@@ -115,7 +115,7 @@ class ComstructExecutor:
 
                 if can_return:
                     if func_node:
-                        ret = self.walkTree(func_node)
+                        ret = ret_evt
 
             env = old_env
 
