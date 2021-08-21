@@ -222,9 +222,10 @@ static void lex_skip_stuff(struct Lexer_State *self) {
 }
  
 struct Token lex_determine(struct Lexer_State *self) {
+    lex_skip_stuff(self);
     usize tok_line = self->line;
     usize tok_col = self->col;
-    lex_skip_stuff(self);
+
     // Starting line/col pair for token
     const Lexer_Function lexfn[] = {
         lex_num, lex_str, lex_ident, lex_single_rune
@@ -242,6 +243,10 @@ struct Token lex_determine(struct Lexer_State *self) {
         if (tok.tt != TT_INVALID) break;
     }
 end:
+    // This is needed, because INVALID unwinds, while others don't
+    // Idk why i do that for EOF but it makes it work somehow too
+    if (tok.tt != TT_INVALID && tok.tt != TT_EOF)
+        tok_col -= 1;
     tok.line = tok_line;
     tok.col = tok_col;
     return tok;

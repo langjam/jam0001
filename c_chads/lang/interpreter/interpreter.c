@@ -1,7 +1,6 @@
 #include "interpreter.h"
-
+#ifdef ENABLE_INTERPRETER
 static struct Interpreter_State intrp;
-
 static struct Interpreter_Value void_val() {
     return (struct Interpreter_Value){ IT_VOID, {0} };
 }
@@ -155,3 +154,4 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node) {
 struct Interpreter_Value intrp_main() {
     return execute(find_var("main", 4)->val.data.func.body);
 }
+#endif
