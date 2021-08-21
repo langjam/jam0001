@@ -116,10 +116,26 @@ impl Data {
                 Operation::Nothing => {
                     did_work = true;
                 }
-                Operation::PrintString => {
+                Operation::PrintNumber => {
                     if let Some(x) = station.trains[0].front() {
                         let zz = x.lock()?;
                         if let Ok(_) = interface.print(
+                            zz.train
+                                .second_class_passengers
+                                .iter()
+                                .map(|x| x.data)
+                                .collect(),
+                        ) {
+                            did_work = true;
+                        } else {
+                            return Err(VMError::ConnectionClosed);
+                        }
+                    }
+                }
+                Operation::PrintString => {
+                    if let Some(x) = station.trains[0].front() {
+                        let zz = x.lock()?;
+                        if let Ok(_) = interface.print_char(
                             zz.train
                                 .second_class_passengers
                                 .iter()
@@ -419,6 +435,10 @@ mod tests {
         }
 
         fn print(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
+            Ok(())
+        }
+
+        fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
             Ok(())
         }
 

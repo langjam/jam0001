@@ -1,5 +1,5 @@
 use train::vm::Data;
-use train::interface::Communicator;
+use train::interface::{Communicator, CommunicatorError};
 use std::{thread, io};
 use train::ast::{Station, Train};
 
@@ -48,6 +48,12 @@ impl Communicator for CliRunner {
 
     fn print(&self, data: Vec<i64>) -> Result<(), train::interface::CommunicatorError> {
         log::info!("simulation says: {:?}", data);
+        Ok(())
+    }
+
+    fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
+        let char_data = data.iter().map(|x| (x&0xFF) as u8).collect::<Vec<_>>();
+        log::info!("simulation says: {}", String::from_utf8(char_data).map_err(|_| CommunicatorError)?);
         Ok(())
     }
 

@@ -1,0 +1,13 @@
+[LOCOMOTIVE]
+start at printCS track 1
+[FIRST CLASS]
+jan: This is a nice red train
+[SECOND CLASS]
+
+
+{printCS}
+operation: print string
+track 1: go to DelCS track 1
+
+{DelCS}
+operation: delete
