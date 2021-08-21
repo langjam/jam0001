@@ -6,7 +6,8 @@ pub mod ast;
 pub mod parse;
 pub mod vm;
 pub mod interface;
-mod check;
+pub mod check;
+pub mod wishes;
 
 #[macro_use]
 extern crate lazy_static;

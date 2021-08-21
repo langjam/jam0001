@@ -1,5 +1,6 @@
 use crate::parse::parser::*;
 use crate::ast::*;
+use crate::wishes::parse_wishes::parse_wishes;
 
 impl<'a> Parser<'a> {
     pub fn parse_target(&mut self) -> ParseResult<Target> {
@@ -62,13 +63,18 @@ impl<'a> Parser<'a> {
             self.current += 1;
         }
 
-        Ok(Train { start, first_class_passengers, second_class_passengers })
+        let config = parse_wishes(&first_class_passengers);
+
+        Ok(Train { start, first_class_passengers, second_class_passengers, config })
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use color::Rgb;
+    use crate::wishes::TrainConfig;
+    use color::color_space::Srgb;
 
     #[test]
     fn test_train() {
@@ -80,13 +86,16 @@ mod tests {
                 let expected = Train {
                     start: Target { station: String::from("Groningen"), track: 0, span: Span{ start: 22, end: 39 } },
                     first_class_passengers: vec![
-                        FirstClassPassenger { name: String::from("robert"), data: String::from("this train is nice and red") },
-                        FirstClassPassenger { name: String::from("peter"), data: String::from("this train must be at least") }
+                        FirstClassPassenger { name: String::from("robert"), data: String::from("The train has a nice red locomotive and is big") },
+                        FirstClassPassenger { name: String::from("jan"), data: String::from("NO! It is a orange red color!") },
+                        FirstClassPassenger { name: String::from("yeet"), data: String::from("It has a brown stripe which is ugly") },
+                        FirstClassPassenger { name: String::from("peter"), data: String::from("Big train is big") },
                     ],
                     second_class_passengers: vec![
                         SecondClassPassenger { name: String::from("jonathan"), data: 1 },
                         SecondClassPassenger { name: String::from("pietje"), data: -1 }
-                    ]
+                    ],
+                    config: TrainConfig { primary_color: Rgb::new(204, 111, 78), secondary_color: Rgb::new(102, 82, 74), length: 3 }
                 };
                 assert_eq!(train, expected)
             }

@@ -1,5 +1,6 @@
 use crate::operations::Operation;
 use crate::parse::parser::Span;
+use crate::wishes::TrainConfig;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Program {
@@ -11,7 +12,8 @@ pub struct Program {
 pub struct Train {
     pub start: Target,
     pub first_class_passengers: Vec<FirstClassPassenger>,
-    pub second_class_passengers: Vec<SecondClassPassenger>
+    pub second_class_passengers: Vec<SecondClassPassenger>,
+    pub config: TrainConfig,
 }
 
 

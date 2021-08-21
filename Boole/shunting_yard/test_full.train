@@ -1,16 +1,20 @@
 [LOCOMOTIVE]
 start at Groningen track 1
 [FIRST CLASS]
-robert: this train is nice and red
-peter: this train must be at least
+robert: The train has a nice dark red locomotive and is big
+jan: NO! It is a orange red color!
+yeet: It has a brown stripe which is ugly
+peter: Medium train is intermediate
 [SECOND CLASS]
 jonathan: 1
 
 [LOCOMOTIVE]
 start at Utrecht track 1
 [FIRST CLASS]
-robert: this train is nice and red
-peter: this train must be at least
+robert: The train has a nice light green locomotive and is big
+jan: NO! It is a dark green color!
+yeet: It has a lime green stripe which is ugly
+peter: The train is small
 [SECOND CLASS]
 noah: 0
 
