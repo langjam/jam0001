@@ -61,7 +61,8 @@ Value lang$print(Context&, void* ptr, size_t count)
     return { Empty {} };
 }
 
-Value lang$sub(Context&, void* ptr, size_t count)
+template<typename Operator>
+Value lang$fold_op(Context&, void* ptr, size_t count)
 {
     Span<Value> args { reinterpret_cast<Value*>(ptr), count };
     Variant<Empty, int> accumulator { Empty {} };
@@ -70,7 +71,7 @@ Value lang$sub(Context&, void* ptr, size_t count)
         if constexpr (requires { arg.template has<int>(); }) {
             if (arg.template has<Empty>() || arg.template has<int>())
                 value = arg.template downcast<Empty, int>();
-        } else if constexpr (IsSame<decltype(arg), int>) {
+        } else if constexpr (IsSame<RemoveCVReference<decltype(arg)>, int>) {
             value = arg;
         }
 
@@ -78,7 +79,7 @@ Value lang$sub(Context&, void* ptr, size_t count)
             accumulator = value;
         } else if (accumulator.template has<int>()) {
             if (value.template has<int>()) {
-                accumulator = accumulator.template get<int>() - value.template get<int>();
+                accumulator = Operator {}(accumulator.template get<int>(), value.template get<int>());
             }
         }
     };
@@ -147,6 +148,27 @@ Value lang$add(Context&, void* ptr, size_t count)
     return { move(accumulator).downcast<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType, RecordValue>() };
 }
 
+static bool truth(Value const& condition)
+{
+    return condition.value.visit(
+        [](Empty) -> bool { return false; },
+        [](FunctionValue const&) -> bool { return true; },
+        [](NonnullRefPtr<Type> const&) -> bool { return true; },
+        [](NonnullRefPtr<CommentResolutionSet> const& crs) -> bool {
+            return all_of(crs->values, truth);
+        },
+        [](NativeFunctionType const&) -> bool { return true; },
+        [](RecordValue const&) { return true; },
+        [](auto const& value) -> bool {
+            if constexpr (requires { (bool)value; })
+                return (bool)value;
+            else if constexpr (requires { value.is_empty(); })
+                return !value.is_empty();
+            else
+                return true;
+        });
+}
+
 Value lang$cond(Context&, void* ptr, size_t count)
 {
     Span<Value> args { reinterpret_cast<Value*>(ptr), count };
@@ -154,24 +176,7 @@ Value lang$cond(Context&, void* ptr, size_t count)
     for (; i + 1 < count; i += 2) {
         auto& condition = args[i];
         auto& value = args[i + 1];
-        if (condition.value.visit(
-                [&](Empty) -> bool { return false; },
-                [&](FunctionValue const&) -> bool { return true; },
-                [&](NonnullRefPtr<Type> const&) -> bool { return true; },
-                [&](NonnullRefPtr<CommentResolutionSet> const& crs) -> bool {
-                    // TODO.
-                    return true;
-                },
-                [&](NativeFunctionType const&) -> bool { return true; },
-                [](RecordValue const&) { return true; },
-                [&](auto const& value) -> bool {
-                    if constexpr (requires { (bool)value; })
-                        return (bool)value;
-                    else if constexpr (requires { value.is_empty(); })
-                        return !value.is_empty();
-                    else
-                        return true;
-                }))
+        if (truth(condition))
             return value;
     }
     if (i < count)
@@ -226,6 +231,62 @@ Value lang$is(Context&, void* ptr, size_t count)
     return { 0 };
 }
 
+Value lang$loop(Context& context, void* ptr, size_t count)
+{
+    // loop(start, step_fn, stop_cond) :: v=start; while(!stop_cond(v)) v = step_cond(v); return v;
+    Span<Value> args { reinterpret_cast<Value*>(ptr), count };
+    if (args.size() < 3)
+        return { Empty {} };
+
+    auto value = args[0];
+    auto& step = args[1];
+    auto& stop = args[2];
+
+    auto step_fn = [&] {
+        value = create<Call>(
+            static_ptr_cast<ASTNode>(create<SyntheticNode>(step)),
+            Vector { static_ptr_cast<ASTNode>(create<SyntheticNode>(value)) })
+                    ->run(context);
+    };
+
+    auto stop_fn = [&] {
+        auto res = create<Call>(
+            static_ptr_cast<ASTNode>(create<SyntheticNode>(stop)),
+            Vector { static_ptr_cast<ASTNode>(create<SyntheticNode>(value)) })
+                       ->run(context);
+        return truth(res);
+    };
+
+    while (!stop_fn())
+        step_fn();
+
+    return value;
+}
+
+struct Sub {
+    int operator()(int a, int b) { return a - b; }
+};
+
+struct Mul {
+    int operator()(int a, int b) { return a * b; }
+};
+
+struct Div {
+    int operator()(int a, int b) { return a / b; }
+};
+
+struct Mod {
+    int operator()(int a, int b) { return a % b; }
+};
+
+struct Greater {
+    int operator()(int a, int b) { return a > b; }
+};
+
+struct Equal {
+    int operator()(int a, int b) { return a == b; }
+};
+
 void initialize_base(Context& context)
 {
     context.scope.empend();
@@ -233,11 +294,17 @@ void initialize_base(Context& context)
 
     auto& scope = context.scope.last();
 
-    scope.set("print", { NativeFunctionType { lang$print, { "print", "native" } } });
+    scope.set("print", { NativeFunctionType { lang$print, { "print function", "native operation" } } });
     scope.set("add", { NativeFunctionType { lang$add, { "native arithmetic addition operation" } } });
-    scope.set("sub", { NativeFunctionType { lang$sub, { "native arithmetic subtract operation" } } });
+    scope.set("sub", { NativeFunctionType { lang$fold_op<Sub>, { "native arithmetic subtract operation" } } });
+    scope.set("mul", { NativeFunctionType { lang$fold_op<Mul>, { "native arithmetic multiply operation" } } });
+    scope.set("div", { NativeFunctionType { lang$fold_op<Div>, { "native arithmetic divide operation" } } });
+    scope.set("mod", { NativeFunctionType { lang$fold_op<Mod>, { "native arithmetic modulus operation" } } });
     scope.set("cond", { NativeFunctionType { lang$cond, { "native conditional selection operation" } } });
     scope.set("is", { NativeFunctionType { lang$is, { "native comment query operation" } } });
+    scope.set("loop", { NativeFunctionType { lang$loop, { "native loop flow operation" } } });
+    scope.set("gt", { NativeFunctionType { lang$fold_op<Greater>, { "native comparison greater_than operation" } } });
+    scope.set("eq", { NativeFunctionType { lang$fold_op<Equal>, { "native comparison equality operation" } } });
 }
 
 int main(int argc, char** argv)

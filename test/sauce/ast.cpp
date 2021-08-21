@@ -157,6 +157,9 @@ Value Call::execute(Context& context)
             context.comment_scope.template empend();
             auto& scope = context.scope.last();
 
+            if (ptr->node->return_())
+                scope.set(ptr->node->return_()->name(), { Empty {} });
+
             size_t i = 0;
             for (auto& param : ptr->node->parameters()) {
                 if (arguments.size() > i)
@@ -165,9 +168,6 @@ Value Call::execute(Context& context)
                     scope.set(param->name(), { Empty {} });
                 ++i;
             }
-
-            if (ptr->node->return_())
-                scope.set(ptr->node->return_()->name(), { Empty {} });
 
             auto old_comments = move(context.unassigned_comments);
             for (auto& node : ptr->node->body())

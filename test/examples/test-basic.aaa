@@ -57,3 +57,10 @@ print(Vec3(any)(1 "test" 3).x);
 
 print(is(Vec3 "vector uniform"));
 print(is(Vec3 "vector uniform 2D"));
+
+let step = { |a|: b let b = add(a 1); };
+let stop = { |a|: b
+   let b = gt(a 9);
+   print("iteration" a);
+};
+loop(0 step stop);

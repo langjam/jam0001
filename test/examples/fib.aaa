@@ -1,0 +1,29 @@
+// the name of a print function
+add("p" "r" "i" "n" "t");
+
+// accumulator type
+let acc = record { i a b };
+
+// fibonacci function
+{ |n|: res
+    // step function
+    let step = { |rec|: res
+        let res = acc(
+            add(rec.i 1)
+            rec.b
+            add(rec.a rec.b)
+        )
+    };
+
+    // stop condition
+    { |rec|: res
+        let res = eq(rec.i n);
+    };
+
+    let res = loop(
+        <accumulator type>(0 0 1)
+        step
+        <stop cond>).a;
+};
+
+!<add(<name of print> " native")>(<fib>(10));
