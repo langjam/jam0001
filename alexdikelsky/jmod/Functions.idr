@@ -67,12 +67,12 @@ add (ConsList (x :: xs)) =
               Right r => Right r
      (Array0 n, Left (Array2 twod)) =>
          case all2d (addNumbers n) twod of
-              Left s =>  Right $ "here" ++ show s
+              Left s =>  Left (Array2 s)
               Right k => Right $ "Not" ++ show k
 
      (Array2 n, Left (Array2 m)) =>
          case addMatToMat n m of
-              Left s =>  Right $ "here" ++ show s
+              Left s =>  Left (Array2 s)
               Right k => Right $ "Not" ++ show k
 
      (Array1 n, Left (Array1 k)) => 
