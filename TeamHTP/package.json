@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --loader ts-node/esm ./src/index.ts",
+    "start": "node --es-module-specifier-resolution=node --loader ts-node/esm ./src/index.ts",
     "build": "tsc"
   },
   "author": "TeamHTP",

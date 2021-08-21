@@ -1,6 +1,7 @@
 import {unified} from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
+import {startRepl} from './Repl'
 
 const src = `
 # Things I'm here to do
@@ -35,9 +36,13 @@ def check(n) {
 // [TodoList kickass]
 // [self ayy]
 
-const tree = unified()
+const docTree = unified()
     .use(remarkParse)
     .use(remarkGfm)
     .parse(src)
 
-console.log(tree)
+console.log(docTree)
+
+startRepl((input) => {
+    console.log(input)
+}).catch(console.log)
