@@ -8,7 +8,26 @@ static struct Interpreter_Value void_val() {
 
 #include <stdio.h>
 static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Value) *args) {
-    printf("%s\n", ((struct Interpreter_Value*)vec_get(args, 0))->data.string.str);
+
+    for (usize i = 0; i < args->size; i++) {
+        struct Interpreter_Value* arg = vec_get(args, i);
+
+        switch (arg->type) {
+            case IT_INT:
+                printf("%d", arg->data.intg.val);
+            break;
+            case IT_STRING:
+                printf("%s", arg->data.string.str);
+            break;
+            case IT_VOID:
+                printf("(void)");
+            break;
+        }
+
+        printf("\t");
+    }
+    printf("\n");
+
     return void_val();
 }
 
@@ -29,6 +48,10 @@ static struct Interpreter_Value eval(const string source, struct Parser_Node* no
         case PN_STRING:
             ret.type = IT_STRING;
             ret.data.string.str = strndup(source + node->data.string.val.from + 1, node->data.string.val.size - 2);
+        break;
+        case PN_NUMBER:
+            ret.type = IT_INT;
+            ret.data.intg.val = atoi(source + node->data.string.val.from);
         break;
         default:
         break;

@@ -3,12 +3,16 @@
 
 enum Interpreter_Type {
     IT_VOID,
-    IT_STRING 
+    IT_INT,
+    IT_STRING
 };
 
 struct Interpreter_Value {
     enum Interpreter_Type type;
     union {
+        struct {
+            int val;
+        } intg;
         struct {
             char* str;
         } string;
