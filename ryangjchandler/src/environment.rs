@@ -25,6 +25,13 @@ impl Environment {
         }
     }
 
+    pub fn is_constant(&self, name: impl Into<String>) -> bool {
+        match self.get(name) {
+            Some(Value::Const(_)) => true,
+            _ => false,
+        }
+    }
+
     pub fn has(&self, name: impl Into<String>) -> bool {
         self.store.contains_key(&name.into())
     }

@@ -296,6 +296,10 @@ impl<'i> Interpreter<'i> {
                     return Err(InterpreterError::AssigningToUndefinedValue(target));
                 }
 
+                if self.environment.borrow().is_constant(target.clone()) {
+                    return Err(InterpreterError::AssigningToConstant(target));
+                }
+
                 let value = match self.execute_expression(*value)? {
                     Some(e) => e,
                     None => unreachable!()
@@ -361,6 +365,9 @@ pub enum InterpreterError {
 
     #[error("Trying to assign value to undefined variable {0}.")]
     AssigningToUndefinedValue(String),
+
+    #[error("Trying to assign value to constant {0}.")]
+    AssigningToConstant(String),
 }
 
 pub fn interpret<'i>(program: Program) -> Result<(), InterpreterError> {

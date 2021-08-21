@@ -4,6 +4,7 @@
 * [*] Add support for constant declarations
 * [*] Type check variable declarations
 * [*] Add support for variable assignments
+* [ ] Prevent reassigning to constants
 * [ ] Add support for lists/arrays
 * [ ] Add support for for..in
 * [ ] Add support for optional parameters
