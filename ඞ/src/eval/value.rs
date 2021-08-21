@@ -15,6 +15,7 @@ pub enum Value {
     Comment { content: String },
     List { elems: Vec<Value> },
     Object(Object),
+    ObjectRef(Box<Value>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -51,7 +52,7 @@ impl Function {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Object {
     pub(crate) class: String,
     pub(crate) fields: HashMap<String, Value>,
@@ -72,6 +73,26 @@ impl Object {
     }
 }
 
+impl fmt::Debug for Object {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut this = f.debug_struct(&self.class);
+        for (name, value) in &self.fields {
+            this.field(name, value);
+        }
+        this.finish()
+    }
+}
+
+impl fmt::Display for Object {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut this = f.debug_struct(&self.class);
+        for (name, value) in &self.fields {
+            this.field(name, value);
+        }
+        this.finish()
+    }
+}
+
 impl fmt::Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -85,13 +106,8 @@ impl fmt::Debug for Value {
             Value::Ptr(ptr) => write!(f, "*{}", unsafe { &**ptr }),
             Value::Comment { content } => write!(f, "/* {} */", content),
             Value::List { elems } => f.debug_list().entries(elems).finish(),
-            Value::Object(o) => {
-                writeln!(f, "{} {{", &o.class)?;
-                for (name, value) in &o.fields {
-                    writeln!(f, "{}: {},", name, value)?;
-                }
-                write!(f, "}}")
-            }
+            Value::Object(o) => write!(f, "{:?}", o),
+            Value::ObjectRef(o) => write!(f, "ref {:?}", o),
         }
     }
 }
@@ -109,13 +125,8 @@ impl fmt::Display for Value {
             Value::Ptr(ptr) => write!(f, "*{}", unsafe { &**ptr }),
             Value::Comment { content } => write!(f, "/* {} */", content),
             Value::List { elems } => f.debug_list().entries(elems).finish(),
-            Value::Object(o) => {
-                writeln!(f, "{} {{", &o.class)?;
-                for (name, value) in &o.fields {
-                    writeln!(f, "{}: {},", name, value)?;
-                }
-                write!(f, "}}")
-            }
+            Value::Object(o) => write!(f, "{:?}", o),
+            Value::ObjectRef(o) => write!(f, "ref {:?}", o),
         }
     }
 }
