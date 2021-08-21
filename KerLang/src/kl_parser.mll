@@ -1,12 +1,13 @@
 {
 open Lexing
 
-type tok = Int of int | Word of string
+type tok = Int of Lexing.position * int | Word of Lexing.position * string | Sep
 type spec = Spec of bool * string * tok list
 
 let pp_tok fmt = function
-  | Int i -> Format.fprintf fmt "(Int %d)" i
-  | Word i -> Format.fprintf fmt "(Id %s)" i
+  | Int (_, i) -> Format.fprintf fmt "%d" i
+  | Word (_, i) -> Format.fprintf fmt "%s" i
+  | Sep -> ()
 
 let pp_spec fmt (Spec (b, f, xs)) =
   Format.fprintf fmt "Spec [strict = %B] of %s is [%s]" b f @@
@@ -27,6 +28,7 @@ let next_line lexbuf =
 let int = '-'? ['0'-'9'] ['0'-'9']*
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
+let sep = ',' | '.' | '!' | '?'
 let word = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
 rule block = parse
@@ -46,8 +48,9 @@ and comment l = parse
   | white     { comment l lexbuf }
   | newline   { next_line lexbuf; comment l lexbuf }
   | "*/"      { defun (List.rev !l) lexbuf }
-  | word      { l := (Word (Lexing.lexeme lexbuf))::!l; comment l lexbuf }
-  | int       { l := (Int (int_of_string (Lexing.lexeme lexbuf)))::!l; comment l lexbuf }
+  | word      { l := (Word (lexbuf.lex_curr_p, Lexing.lexeme lexbuf))::!l; comment l lexbuf }
+  | int       { l := (Int (lexbuf.lex_curr_p, int_of_string (Lexing.lexeme lexbuf)))::!l; comment l lexbuf }
+  | sep       { l := Sep::!l; comment l lexbuf }
   | _         {
     let c = Lexing.lexeme lexbuf in
     raise (SyntaxError ("invalid token '" ^ c ^ "' found while parsing a comment"))
