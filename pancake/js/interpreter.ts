@@ -24,7 +24,13 @@ export class Interpreter {
     nextStateCallback?: (s: StateInfo) => void;
 
     constructor() {
-        this.ports = {} // TODO
+        // TODO replace this mock with actual thing
+        this.ports = {
+            compile: { send: (a) => {} },
+            result: { subscribe: (a) => {} },
+            step: { send: (a) => {} },
+            state: { subscribe: (a) => {} }
+        } 
 
         // Bind results to call the next callback
         this.ports.result.subscribe((result: Result) => {

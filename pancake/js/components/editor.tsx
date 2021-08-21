@@ -12,6 +12,8 @@ export function Editor(props: EditorProps) {
     // use the other props when they change (useEffect/useMemo for that) to alter the editor highlights
 
     return (
-        <div>Hazah!</div>
+        <div>
+            <h1>Editor</h1>
+        </div>
     )
 }

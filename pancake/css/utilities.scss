@@ -1,0 +1,26 @@
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.horizontal-rhythm-4 * {
+    margin-left: 4px;
+}
+.horizontal-rhythm-4:first-child {
+    margin-left: 0px;
+}
+
+.horizontal-rhythm-8 * {
+    margin-left: 8px;
+}
+.horizontal-rhythm-8:first-child {
+    margin-left: 0px;
+}
+
+.horizontal-rhythm-16 * {
+    margin-left: 16px;
+}
+.horizontal-rhythm-16:first-child {
+    margin-left: 0px;
+}

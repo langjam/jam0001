@@ -6,6 +6,8 @@ interface StackProps {
 
 export function Stack(props: StackProps) {
     return (
-        <div>foobar!</div>
+        <div>
+            <h1>Stack</h1>
+        </div>
     )
 }

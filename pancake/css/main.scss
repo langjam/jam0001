@@ -1,0 +1,42 @@
+
+.app {
+    background-color: #E8AE68;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    color: white;
+    width: 100vw;
+    height: 100vh;
+}
+
+.header {
+    overflow: hidden;
+    background-color: #5E503F;
+    position: fixed; /* Set the navbar to fixed position */
+    top: 0; /* Position the navbar at the top of the page */
+    width: 100%; /* Full width */
+    height: 128px;
+}
+
+.content {
+    padding-top: 128px;
+}
+
+.logo {
+    padding: 8px;
+    font-size: 32px;
+}
+
+button {
+    background-color: #E8AE68;
+    color: white;
+    font-size: 24px;
+    border: none;
+    border-radius: 4px;
+    height: 64px;
+    padding-left: 64px;
+    padding-right: 64px;
+}
+
+button:hover {
+    background-color: #E5B680;
+    color: #5E503F;
+}

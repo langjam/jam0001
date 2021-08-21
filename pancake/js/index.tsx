@@ -1,10 +1,11 @@
 import * as React from "react";
-import { render } from "react-dom"
-import { Controls } from "./components/controls";
+import ReactDom from "react-dom"
+import { Header } from "./components/header";
 import { Editor } from "./components/editor";
 import { Stack } from "./components/stack";
 import { StateInfo } from "./interpreter";
 import { Runtime } from "./runtime";
+import { Body } from "./components/body";
 
 function App() {
 	const [state, setState] = React.useState<StateInfo | null>(null)
@@ -12,16 +13,14 @@ function App() {
 	const runtime = React.useMemo(() => new Runtime(setState), []);
 
 	return (
-		<div>
-			<Controls runtime={runtime} />
-			<Editor
+		<div className='app'>
+			<Header runtime={runtime} />
+			<Body
 				runtime={runtime}
 				state={state}
 			/>
-			<Stack state={state} />
-			<p>It works!</p>
 		</div>	
 	);
 }
 
-render(<App />, document.getElementById("app"))
+ReactDom.render(<App />, document.getElementById("app"));
