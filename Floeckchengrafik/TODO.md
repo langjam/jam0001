@@ -4,24 +4,34 @@
 - [x] Decide for Tokens
 - [x] Decide for a Language tree
 - [x] Implement the Lexer
-- [ ] Work on the Parser and the Executor
-- [ ] Have FUN!
+- [x] Work on a Parser and an Executor that uses Nodes
+- [x] Have FUN!
+- [x] Implement a cli interpreter
+- [x] Implement length()
+- [ ] Implement Lists
+- [ ] Implement Classes
+- [ ] Implement If
+- [ ] Implement while
 - [ ] Submit a PR (before the end of the jam)
 
 
-```
-typeclass = class({
-    NUM=0?
-    STR=1?
-    OBJ=2?
-})?
-TYPE = typeclass()?
 
 
-myclass = class({ 
-    comment = function({
-        comment: Kommentar
-        x = comment: Kommentar
-    }, TYPE.NUM, TYPE.OBJ, TYPE.STR)?
-})?
-```
+while(expr=true, {
+    code gets executed
+})
+
+for ( num : intrange(0, 100), {
+
+})
+
+= 
+
+x = intrange(0, 100)
+i = 0
+
+while (i < length(x){
+    num = x[i]
+    code goes here
+    i++
+})

@@ -1,8 +1,2 @@
-x = function({
-    y=1?
-    out(y)?
-})?
-
-x()?
-x()?
-x()?
+out(["Test1" : 2 : "Test3"])?
+out([])?

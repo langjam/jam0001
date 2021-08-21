@@ -92,6 +92,14 @@ class ComstructParser(Parser):
     def expr(self, p):
         return StatementNode.FunctionCallNode(p.NAME, [])
 
+    @_("LBRACK RBRACK")
+    def expr(self, p):
+        return StatementNode.LiterallyNode([])
+
+    @_("LBRACK arglist RBRACK")
+    def expr(self, p):
+        return p.arglist
+
     @_('expr')
     def elem(self, p):
         return p.expr

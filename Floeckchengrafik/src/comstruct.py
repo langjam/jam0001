@@ -13,14 +13,25 @@ from executor import ComstructExecutor
 
 
 if __name__ == '__main__':
-    if len(argv) != 2:
-        print("You need to specify exactly one file as an argument")
-        exit(0)
-
-    file = open(argv[1]).read()
-
     clexer = ComstructLexer()
     cparser = ComstructParser()
+
+    if len(argv) != 2:
+        while True:
+            text = input("comstruct » ")
+            tokens = clexer.tokenize(text)
+            tree = cparser.parse(tokens)
+
+            print(" » Begin Execution")
+            try:
+                ComstructExecutor(tree)
+            except Exception as e:
+                print(e)
+
+            environment = executor.env
+            print(" » End Execution")
+
+    file = open(argv[1]).read()
 
     # print(" |------------|------------|------------|")
     # print(" |    Type    |    Value   |    Line    |")

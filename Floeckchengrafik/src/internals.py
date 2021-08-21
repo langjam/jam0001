@@ -16,14 +16,20 @@ def readline(args):
     return input(args[0] if len(args) == 1 else "")
 
 
+def length(args):
+    return len(args[0])
+
+
 internals = {
     "function": function,
     "out": out,
-    "readline": readline
+    "readline": readline,
+    "length": length,
 }
 
 env = {
     "function": StatementNode.FunctionDefinitionNode("internal", []),
     "out": StatementNode.FunctionDefinitionNode("internal", []),
-    "readline": StatementNode.FunctionDefinitionNode("internal", [])
+    "readline": StatementNode.FunctionDefinitionNode("internal", []),
+    "length": StatementNode.FunctionDefinitionNode("internal", []),
 }

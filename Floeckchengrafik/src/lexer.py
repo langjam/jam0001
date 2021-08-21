@@ -16,6 +16,8 @@ class ComstructLexer(Lexer):
         "RPAREN",  # )
         "LBRACE",  # {
         "RBRACE",  # }
+        "LBRACK",  # [
+        "RBRACK",  # ]
         "EQ",  # ==
         "NOTEQ",  # !=
         "GT",  # Greater than >
@@ -41,6 +43,8 @@ class ComstructLexer(Lexer):
     RPAREN = r'\)'
     LBRACE = r'\{'
     RBRACE = r'\}'
+    LBRACK = r'\['
+    RBRACK = r'\]'
     EQ = r'=='
     NOTEQ = r'!='
     GT = r'>'
