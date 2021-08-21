@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<title>lang</title>
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==">
+<h2>input</h2>
+<textarea id="input"></textarea><br>
+<pre id="highlight"></pre>
+<h2>errors</h2>
+<textarea id="errors" readonly></textarea>
+<h2>output</h2>
+<textarea id="output" readonly></textarea>
+<style>
+body, textarea, input {
+  background-color: #222;
+  color: white;
+}
+
+textarea {
+  width: 100%;
+  min-height: 15em;
+  font-family: monospace;
+  tab-size: 16;
+}
+
+#highlight {
+  font-family: monospace;
+}
+
+:root {
+  --comment: #727072;
+  --string: #ffd866;
+  --integer: #ab9df2;
+  --decimal: #ab9df2;
+  --boolean: #ab9df2;
+  --null: #ab9df2;
+  --property: #a9dc76;
+}
+</style>
+<script>
+///<reference lib="es2020" />
+// @ts-check
+/** @type {HTMLTextAreaElement} */
+// @ts-ignore
+const errors = document.getElementById('errors');
+/** @type {HTMLTextAreaElement} */
+// @ts-ignore
+const input = document.getElementById('input');
+/** @type {HTMLTextAreaElement} */
+// @ts-ignore
+const output = document.getElementById('output');
+const highlight = document.getElementById('highlight');
+// notes
+// we skip various steps like typechecking and semantic analysis (no break outside of loops)
+
+console.log = (obj) => { output.value += obj; }
+console.error = (obj) => { errors.value += obj; }
+
+function prettyPrintToken(tok) {
+  return `${tok.type}\t${tok.value}\t${tok.start}:${tok.end}`;
+}
+
+function prettyPrintNode(node, toks, padding='', name='') {
+  const isObj = typeof node === 'object' && node !== null;
+  const isArr = Array.isArray(node);
+  // const desc = isArr ? '' : isObj ? 'value' in node ? `${node.type}(${JSON.stringify(node.value)})` : node.type : JSON.stringify(node);
+  const desc = isArr ? '' : isObj ? node.type : JSON.stringify(node);
+  let result = padding + (name ? desc ? `${name}: ${desc}` : name : desc); // + (isObj && !isArr ? ` ${toks[node.start].start}:${toks[node.end - 1].end}` : '');
+  result += '\n';
+  // if (!isObj || 'value' in node) { return result; }
+  if (!isObj) { return result; }
+  const newPadding = padding.replace(/ ├$/, ' │').replace(/ └$/, '  ');
+  // filter out type, start, end (because they've already been used) and an empty directives property
+  const kvs = Object.entries(node).filter(([k, v]) => !['type', 'start', 'end'].includes(k) && (k !== 'directives' || (v && v.length !== 0)) && v !== null);
+  // find last property name that is not `type`
+  for (const [k, v] of kvs.slice(0, -1)) {
+    result += prettyPrintNode(v, toks, newPadding + ' ├', isArr ? '' : k)
+  }
+  if (kvs.length >= 1) {
+    const [lastK, lastV] = kvs[kvs.length - 1];
+    result += prettyPrintNode(lastV, toks, newPadding + ' └', isArr ? '' : lastK);
+  }
+  return result;
+}
+
+function highlightInto(code, toks, node, element) {
+  // todo
+  // also todo: associate ast/cst with function, associate element with ast/cst node
+  // add node type & node syntax type (if it exists) to class name
+
+  // element.innerText = prettyPrintNode(node, toks);
+}
+
+function didError(node) {
+  if (typeof node !== 'object' || Array.isArray(node)) { return false; }
+  if ('error' in node) { return true; }
+  return Object.values(node).some(didError);
+}
+
+function debounce(fn, timeout) {
+  let handle = 0;
+  return (...args) => {
+    clearTimeout(handle);
+    handle = setTimeout(() => {
+      fn(...args);
+    }, timeout);
+  };
+}
+
+input.oninput = debounce(() => {
+  output.value = '';
+  errors.value = '';
+  try {
+    const toks = lex(input.value);
+    const ast = parse(toks);
+    highlightInto(input.value, toks, ast, highlight);
+    functionize(ast)(BUILTINS_SCOPE);
+  } catch(e) {
+    // errors.value = e;
+    errors.value += e.stack + '\n';
+  }
+  // output.value = lex(input.value).map((obj) => prettyPrintToken(obj)).join('\n');
+}, 250);
+
+/*
+integer (call this int)
+neg (a function from a to b) = 
+foo (a function from a and b to c and d) =
+*/
+
+input.value = `\
+(:let int = integer)
+
+(: no generics yet :/)
+function id[value] (: use this for grouping - () is taken) { value (return this) }
+function neg[value (: an integer or a decimal)] (returns an integer) {
+  0 - value (return this)
+}
+function not[value (a boolean)] (returns a boolean) {
+  !value (return this)
+}
+
+function add[left (an integer) right (an integer)] (returns an integer: adds two numbers) {
+  left + right (return this)
+}
+
+print["add[1 2] is: "]
+println[add[1 2] (should be 3)]
+print["add[1.0 2.0] is: "]
+println[add[1.0 2.0] (should be 3.0)]
+
+function test[left (an integer)] (returns an integer: adds 1 to a number) {
+  left + 1 (return this)
+}
+
+print["test[1] is: "]
+println[test[1] (should be 2)]
+
+function foo[n (an integer)] {
+  "foo" (if n % 2 == 0 (call this cond)) (call this var)
+  "bar" (unless cond) (call this var)
+  var (return this)
+}
+
+print["foo[100] is: "]
+println[foo[100] (should be "foo")]
+print["foo[101] is: "]
+println[foo[101] (should be "bar")]
+
+function fibonacci[n (an integer)] (returns an integer) {
+  n (if n <= 1) (return this)
+  fibonacci[n - 1] + fibonacci[n - 2] (return this)
+}
+(: ideally these would show up in docs)
+(for example fib[20] (should be 6765))
+
+println[fibonacci[10] (should be 55)]
+
+println["begin loop test"]
+0 (call this i)
+{
+  println[i]
+  i + 1 (call this i)
+} (while i < 10)
+println["end loop test"]`;
+input.oninput(new Event('ignored'));
+</script>
+<script src="lang.js" defer></script>
