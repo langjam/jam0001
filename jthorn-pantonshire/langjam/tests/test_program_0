@@ -1,5 +1,5 @@
-//stores (10 != 11) or true in x then prints x
+//stores (10 != 11) or true in x, then foos, then prints x
 main
 
-//stores 20 in x
-baa
+//stores 20 in x, then prints x
+foo

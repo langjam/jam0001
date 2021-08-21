@@ -4,12 +4,15 @@ hws = _{ " " | "\t" }
 vws = _{ hws* ~ NEWLINE ~ hws* }
 
 //basic definitions
-digit = {'0'..'9'}
-alpha = {('a'..'z'|'A'..'Z')+}
-number = {digit+}
-alphanumeric = {(alpha|number)+}
-literal = {alpha | alpha ~ alphanumeric}
-string = {"\"" ~ literal ~ "\""}
+digit = { '0'..'9' }
+alpha = { ('a'..'z'|'A'..'Z')+ }
+number = { digit+ }
+alphanumeric = { (alpha | number | "_" | "-")+ }
+identAny = { alpha | alpha ~ alphanumeric }
+ident = { !((^"then" | ^"as") ~ (hws | NEWLINE | EOI)) ~ identAny }
+
+stringContents = { (!("\"") ~ ANY) }
+string = { "\"" ~ stringContents ~ "\"" }
 
 //expressions
 opNeq = { "!=" }
@@ -20,15 +23,15 @@ opLt  = { "<" }
 opLe  = { "<=" }
 opSub = { "-" }
 opAdd = { "+" }
-opOr  = { "or" | "||" }
+opOr  = { ^"or" | "||" }
 opDiv = { "/" }
 opMul = { "*" }
-opAnd = { "and" | "&&" }
-opNot = { "not" | "!" }
+opAnd = { ^"and" | "&&" }
+opNot = { ^"not" | "!" }
 opNeg = { "-" }
 
-litTrue  = { "true" }
-litFalse = { "false" }
+litTrue  = { ^"true" }
+litFalse = { ^"false" }
 
 expr  = { equality }
 equality    = { comparison ~ (hws* ~ (opNeq | opEq) ~ hws* ~ comparison )* }
@@ -36,22 +39,23 @@ comparison  = { termOr ~ (hws* ~ (opGt | opGe | opLt | opLe) ~ hws* ~ termOr )* 
 termOr      = { factorAnd ~ (hws* ~ (opSub | opAdd | opOr) ~ hws* ~ factorAnd )* }
 factorAnd   = { unary ~ (hws* ~ (opDiv | opMul | opAnd) ~ hws* ~ unary)? }
 unary       = { (opNot | opNeg) ~ hws* ~ unary | primary }
-primary     = { number | litTrue | litFalse | alphanumeric | string | "(" ~ hws* ~ expr ~ hws* ~ ")" }
+primary     = { number | litTrue | litFalse | ident | string | "(" ~ hws* ~ expr ~ hws* ~ ")" }
 
 //statements
-varStmt = {"stores" ~ hws+ ~ expr ~ hws+ ~ "in" ~ hws+ ~ literal}
-loopStmt = {"repeat" ~ hws+ ~ "(" ~ stmt ~ ")" ~ hws+ ~ number ~ hws+ ~ "times"}
-printStmt = {("prints" | "print") ~ hws+ ~ expr}
-listStmt = {literal | literal ~ "," ~ listStmt}
+varStmt = { ^"stores" ~ hws+ ~ expr ~ hws+ ~ ^"in" ~ hws+ ~ ident }
+loopStmt = { ^"repeat" ~ hws+ ~ "(" ~ stmt ~ ")" ~ hws+ ~ number ~ hws+ ~ ^"times" }
+// printStmt = { ("prints" | "print") ~ hws+ ~ expr }
+callStmt = { ident ~ (hws+ ~ expr ~ (hws* ~ "," ~ hws* ~ expr)*)? } //TODO
+listStmt = { ident | ident ~ "," ~ listStmt }
 argsStmt = {"takes" ~ hws+ ~ listStmt}
 condStmt = {"if" ~ hws+ ~ expr ~ hws+ ~ "then" ~ hws+ ~ stmt ~ hws+ ~ "else" ~ hws+ ~ stmt}
-stmt = {argsStmt | varStmt | loopStmt | printStmt | condStmt}
+stmt = { argsStmt | varStmt | loopStmt | condStmt | callStmt }
 //comment = { (stmt ~ hws* | literal ~ hws* )+ }
 comment = { stmt ~ ((hws | ",") ~ hws* ~ "then" ~ hws+ ~ stmt)* }
-commentStmt = { "//" ~ hws* ~ comment ~ vws+ ~ literal }
+commentStmt = { "//" ~ hws* ~ comment ~ vws+ ~ ident }
 semanticBody = {commentStmt ~ (vws+ ~ semanticBody)*}
 syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (("\n")*~mainStmt~("\n")*)* ~ "}"}
-mainStmt = {literal ~"<-"~ mainStmt | literal ~ "(" ~ mainStmt ~ ")"|literal}
+mainStmt = { ident ~"<-"~ mainStmt | ident ~ "(" ~ mainStmt ~ ")" | ident }
 program = {semanticBody ~ syntaxBody|semanticBody}
 
 

@@ -2,6 +2,7 @@ mod error;
 mod parser;
 mod value;
 mod interpreter;
+mod stdlib;
 
 use std::fs;
 use std::io::{self, BufRead, Write};

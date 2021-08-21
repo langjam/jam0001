@@ -39,7 +39,7 @@ pub enum Stmt {
     Args(ArgsStmt),
     Var(VarStmt),
     Loop(LoopStmt),
-    Print(PrintStmt),
+    Call(CallStmt),
     Cond(CondStmt),
 }
 
@@ -69,8 +69,10 @@ pub struct LoopStmt {
 }
 
 #[derive(Debug)]
-pub struct PrintStmt {
-    pub value: Expr,
+pub struct CallStmt {
+    pub span: Span,
+    pub function: String,
+    pub args: Vec<Expr>,
 }
 
 #[derive(Debug)]
@@ -152,7 +154,7 @@ fn parse_semantic_body(semantic_body: Pair) -> Vec<Function> {
         let function_span = Span::from(function_pair.as_span());
         let mut pairs = function_pair.into_inner();
         let statements = parse_comment(pairs.next().unwrap());
-        let function_name = pairs.next().unwrap().as_str().to_owned();
+        let function_name = pairs.next().unwrap().as_str().to_lowercase();
 
         Function {
             span: function_span,
@@ -190,11 +192,20 @@ fn parse_statement(pair: Pair) -> Stmt {
 
         Rule::loopStmt => todo!("loop statement"),
 
-        Rule::printStmt => {
+        Rule::callStmt => {
+            let span = pair.as_span().into();
             let mut pairs = pair.into_inner();
-            let expr = parse_expr(pairs.next().unwrap());
-            Stmt::Print(PrintStmt {
-                value: expr,
+            let function = pairs.next().unwrap().as_str().to_lowercase();
+            let function = match function.strip_suffix('s') {
+                Some(name) => name.to_owned(),
+                //TODO: return an error instead
+                None => panic!(r#"call to function "{}" must end with an s"#, function),
+            };
+            let args = pairs.map(parse_expr).collect::<Vec<_>>();
+            Stmt::Call(CallStmt {
+                span,
+                function,
+                args,
             })
         },
 
@@ -358,7 +369,7 @@ fn parse_expr(pair: Pair) -> Expr {
                 kind: ExprKind::Value(value::Value::String(pair.as_str().to_owned()))
             },
 
-            Rule::alphanumeric => Expr {
+            Rule::ident => Expr {
                 span,
                 kind: ExprKind::Variable(pair.as_str().to_owned())
             },

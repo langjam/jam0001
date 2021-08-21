@@ -9,6 +9,7 @@ pub struct RuntimeError {
 
 pub enum RuntimeErrorCause {
     MissingVariable,
+    MissingFunction,
     TypeError,
 }
 

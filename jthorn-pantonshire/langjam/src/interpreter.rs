@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use crate::error::{RuntimeErrorCause, RuntimeResult};
 use crate::value::Value;
 use crate::parser::{Span, Program, BinaryOp, UnaryOp, Expr, ExprKind, Function, Stmt};
+use crate::stdlib;
 
 pub struct Interpreter {
     functions: Store<Function>,
@@ -47,10 +48,11 @@ impl Interpreter {
             .get("main")
             .expect("no main function found");
 
-        self.exec_fn(main_function)
+        self.exec_fn(main_function, &[])
     }
 
-    pub fn exec_fn(&self, function: &Function) -> RuntimeResult<Value> {
+    //TODO: bind arguments to local variables
+    pub fn exec_fn(&self, function: &Function, args: &[Value]) -> RuntimeResult<Value> {
         let mut local = VariableStore::new();
         
         for stmt in &function.body {
@@ -64,9 +66,21 @@ impl Interpreter {
 
                 Stmt::Loop(loop_stmt) => todo!(),
 
-                Stmt::Print(print_stmt) => {
-                    let val = self.eval_expr(&local, &print_stmt.value)?;
-                    println!("{}", val);
+                Stmt::Call(call_stmt) => {
+                    let call_args = call_stmt.args
+                        .iter()
+                        .map(|expr| self.eval_expr(&local, expr))
+                        .collect::<RuntimeResult<Vec<_>>>()?;
+
+                    let call_out = if let Some(function) = self.functions.get(&call_stmt.function) {
+                        self.exec_fn(function, &call_args)?
+                    } else if let Some(out) = stdlib::call_std_fn(&call_stmt.function, &call_args) {
+                        out
+                    } else {
+                        return Err(RuntimeErrorCause::MissingFunction.error(call_stmt.span));
+                    };
+
+                    //TODO: do something with call_out
                 },
 
                 Stmt::Cond(cond_stmt) => todo!(),
