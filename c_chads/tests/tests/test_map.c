@@ -5,9 +5,9 @@ void test_map() {
     TEST_BEGIN;
     int val = 42;
     struct Map map = map_new(sizeof(int));
-    map_insert(&map, strview_from("hello"), &val);
+    map_add(&map, strview_from("hello"), &val);
     val = 0xC1A;
-    map_insert(&map, strview_from("world"), &val);
+    map_add(&map, strview_from("world"), &val);
 
     EXPECT(*(int*)map_get(&map, strview_from("hello")) == 42); 
     EXPECT(*(int*)map_get(&map, strview_from("world")) == 0xC1A); 

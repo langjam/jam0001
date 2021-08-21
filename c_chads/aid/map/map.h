@@ -8,7 +8,7 @@ struct Map {
 };
 
 struct Map map_new(usize el_size);
-void map_insert(struct Map *self, strview_t key, void *value);
+void map_add(struct Map *self, strview_t key, void *value);
 void* map_get(struct Map *self, strview_t key);
 void map_remove(struct Map *self, strview_t key);
 void map_drop(struct Map *self);
