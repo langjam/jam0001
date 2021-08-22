@@ -9,11 +9,12 @@ static struct Parser_State parser;
 struct {
     rune unmatched;
     string expected;
-    bool fail;
+    bool fail, panicking;
 } error_handling = {
     .expected = NULL,
     .unmatched = 0,
     .fail = false,
+    .panicking = false
 };
 
 struct Vec OF(strview_t) preceding_comments;
@@ -51,14 +52,30 @@ static void lineinfo(tok_t *token) {
 static pnode_t mkinval() {
     return (pnode_t) { .kind = PN_INVAL };
 }
+static tok_t eof(tok_t tok);
+
+static tok_t pull() {
+    tok_t tok = parser.current_token;
+    parser.current_token = lex_determine(&parser.lexer);
+    if (tok.tt == TT_INVALID) {
+        EH_MESSAGE("Invalid character: `%.*s`", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
+        lineinfo(&tok);
+        exit(1);
+    }
+    if (tok.tt == TT_EOF) {
+        eof(tok);
+    }
+    return tok;
+}
 
 static pnode_t inval() {
+    error_handling.panicking = true;
     EH_MESSAGE("Invalid expression");
     lineinfo(&parser.current_token);
+    pull();
     error_handling.fail = true;
     return mkinval();
 }
-
 static bool isinval(pnode_t node) {
     return node.kind == PN_INVAL;
 }
@@ -75,8 +92,6 @@ __attribute__((unused))
 static void ptok(tok_t tok) {
     printf("%s | %.*s\n", TT_NAMES[tok.tt], (int)tok.span.size, tok.span.from+parser.lexer.src);
 }
-
-
 
 static tok_t eof(tok_t tok) {
     EH_MESSAGE("Unexpected end of file");
@@ -96,33 +111,26 @@ static tok_t eof(tok_t tok) {
     exit(1);
 }
 
-static tok_t pull() {
-    tok_t tok = parser.current_token;
-    parser.current_token = lex_determine(&parser.lexer);
-    if (tok.tt == TT_INVALID) {
-        EH_MESSAGE("Invalid character: `%.*s`", (int) parser.current_token.span.size, parser.lexer.src+parser.current_token.span.from);
-        lineinfo(&tok);
-        exit(1);
-    }
-    if (tok.tt == TT_EOF) {
-        eof(tok);
-    }
-    return tok;
+
+
+static tok_t peek() {
+    return parser.current_token;
 }
 
-tok_t peek() {
-    return parser.current_token;
+static bool skipsemi() {
+    if (peek().tt == TT_SEMI) {
+        EH_MESSAGE("Extraneous semicolon."); 
+        error_handling.fail = true;
+        tok_t t = peek();
+        lineinfo(&t);
+        while (peek().tt == TT_SEMI) pull();   
+        return true;
+    }
+    return false;
 }
 
 bool check(const string against) {
     return spanstreqstr(parser.current_token.span, parser.lexer.src, against);
-}
-
-static void stray_panic(tok_t *tok) {
-    if (tok->tt == TT_EOF)
-        eof(*tok);
-    EH_MESSAGE("Stray `%.*s`", SPAN_PF(tok->span, parser.lexer.src));
-    lineinfo(tok);
 }
 
 static void stray(tok_t *tok) {
@@ -140,28 +148,16 @@ static void assert_tt(tok_t *tok, enum Token_Type tt) {
 }
 
 static void skip_tt(enum Token_Type tt) {
+    if (error_handling.panicking) return;
     tok_t tok = pull();
     if (tok.tt != tt) {
         stray(&tok);
     }
 }
 
-static void skip_tt_panic(const string shut) {
-    tok_t tok = peek();
-    if (tok.tt != TT_SEMI) {
-        error_handling.fail = true;
-        if (tok.tt != TT_INVALID)
-            stray_panic(&tok);
-        while (!(peek().tt == TT_SEMI || check(shut))) {
-            pull();
-        };
-    }
-    else 
-        pull();
-}
-
 __attribute__((unused))
 static void skip_v(const string v) {
+    if (error_handling.panicking) return;
     tok_t tok = pull();
     if (!spanstreqstr(tok.span, parser.lexer.src, v)) {
         stray(&tok);
@@ -178,8 +174,12 @@ static void pnode_checkfree(pnode_t *node) {
 }
 
 static void pnode_attach(pnode_t *left, pnode_t right) {
-    if (isinval(right)) pnode_checkfree(left);
-    if (isinval(*left)) return;
+    if (isinval(right)) {
+        pnode_checkfree(left);
+    }
+    if (isinval(*left))
+        return;
+
     vec_push(&left->children, &right);
 }
 
@@ -192,9 +192,6 @@ static pnode_t pnode_listing(pnode_kind_t kind) {
 }
 
 static pnode_t pnode_unary(pnode_kind_t kind, pnode_t left) {
-    if (isinval(left)) {
-        return mkinval();
-    }
     pnode_t node = {
         .kind = kind,
         .addressing = PA_UNARY,
@@ -205,11 +202,6 @@ static pnode_t pnode_unary(pnode_kind_t kind, pnode_t left) {
 }
 
 static pnode_t pnode_binary(pnode_kind_t kind, pnode_t left, pnode_t right) {
-    if (isinval(left) || isinval(right)) {
-        pnode_checkfree(&left);
-        pnode_checkfree(&right);
-        return mkinval();
-    }
     pnode_t node = {
         .kind = kind,
         .addressing = PA_BINARY,
@@ -221,12 +213,6 @@ static pnode_t pnode_binary(pnode_kind_t kind, pnode_t left, pnode_t right) {
 }
 
 static pnode_t pnode_ternary(pnode_kind_t kind, pnode_t cond, pnode_t left, pnode_t right) {
-    if (isinval(cond) || isinval(left) || isinval(right)) {
-        pnode_checkfree(&cond);
-        pnode_checkfree(&left);
-        pnode_checkfree(&right);
-        return mkinval();
-    }
     pnode_t node = {
         .kind = kind,
         .addressing = PA_TERNARY,
@@ -267,7 +253,7 @@ pnode_t *pnode_alt(pnode_t *of) {
         fprintf(stderr, "Internal error: Invalid addressing mode for ternary expression, %d", of->addressing);
         exit(1);
     }
-    return vec_get(&of->children, 1);
+    return vec_get(&of->children, 2);
 }
 
 pnode_t *pnode_left(pnode_t *of) {
@@ -301,19 +287,21 @@ static pnode_t delimited(pnode_kind_t kind, const string open, const string shut
     setexpect(NULL);
     rune delim = begindelim(*open);
     while (!check(shut)) {
-        pnode_t v = callback();
         add_comments();
+        pnode_t v = callback();
         pnode_attach(&node, v);
-        if (check(shut) && (!mustclose)) break;
-        if (isinval(v)) {
-            setexpect("Invalid expression");
-            skip_tt_panic(shut);
+        if (error_handling.panicking) {
+            while (!(peek().tt == TT_SEMI || check(shut))) pull();
+            error_handling.panicking = false;
         }
-        if (!autohandle)
+        if (check(shut) && (!mustclose)) break;
+        else if (!autohandle)
             if (!check(shut) || mustclose) { 
-                setexpect("Expected semicolon befor it");
-                skip_tt_panic(shut);
+                setexpect("Expected semicolon instead");
+                skip_tt(TT_SEMI);
+                setexpect(NULL);
             }
+        skipsemi();
     }
     setexpect(NULL);
     enddelim(delim);
@@ -388,16 +376,6 @@ static pnode_t most_important_expression() {
     return parse_expr(OPS_H);
 }
 
-/*
-static pnode_t maybe_assignment() {
-    pnode_t left = maybe_call();
-    if (peek().tt != TT_ASSIGN)
-        return left;
-    skip_tt(TT_ASSIGN);
-    pnode_t right = maybe_call();
-    return pnode_binary(PN_ASSIGN, left, right);
-}*/
-
 static pnode_t pulldeclaration() {
     return declaration(pull());
 }
@@ -415,37 +393,44 @@ static pnode_t statement() {
     else if (check("while")) {
         skip_v("while");
         rune delim = begindelim('(');
+        setexpect("(While requires condition wrapped in parentheses)");
         skip_v("(");
         pnode_t left = most_important_expression();
         skip_v(")");
+        setexpect(NULL);
         enddelim(delim);
-        return pnode_binary(PN_WHILE, left, statement());
+        pnode_t node = pnode_binary(PN_WHILE, left, statement());
+        return node;
     }
     else if (check("return")) {
         skip_v("return");
         pnode_t node = pnode_unary(PN_RETURN, most_important_expression());
-        skip_v(";");
+        skip_tt(TT_SEMI);
         return node;
     }
     else if (check("if")) {
         skip_v("if");
         rune delim = begindelim('(');
+        setexpect("(Ifs require condition wrapped in parentheses)");
         skip_v("(");
         pnode_t cond = most_important_expression();
         skip_v(")");
+        setexpect(NULL);
         enddelim(delim);
         pnode_t body = statement();
         if (check("else")) {
             skip_v("else");
-            return pnode_ternary(PN_IF, cond, body, statement());
+            pnode_t n = pnode_ternary(PN_IF, cond, body, statement());
+            return n;
         }
         else {
             return pnode_binary(PN_IF, cond, body);
         }
     }
     pnode_t node = most_important_expression();
-    setexpect("Expected semicolon before it");
+    setexpect("Expected semicolon instead");
     skip_tt(TT_SEMI);
+    setexpect(NULL);
     return node;
 }
 
@@ -505,6 +490,10 @@ static pnode_t value() {
         case TT_LBRACE:
             value_node = body();
             return value_node;
+        case TT_RPAREN:
+        case TT_RBRACKET:
+        case TT_RBRACE:
+            stray(&token);
         case TT_OPERATOR:
             if (
                 spanstreqstr(token.span, parser.lexer.src, "!") ||
@@ -515,9 +504,9 @@ static pnode_t value() {
                 value_node.data.unary.op = strview_span(token.span, parser.lexer.src);
                 return value_node;
             }
-        default: {}
+        default: 
+            return inval();
     }
-    return inval();
 }
 
 static pnode_t declaration(tok_t on) {
