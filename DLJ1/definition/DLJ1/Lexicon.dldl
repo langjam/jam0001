@@ -27,6 +27,13 @@ Terminal: DIVIDE   [/]
 Terminal: MULTI    [*]
 Terminal: ADD      [+]
 Terminal: MIN      [-]
+Terminal: AND      [&][&]
+Terminal: OR       [|][|]
+
+Terminal: RETURN Return
+Terminal: IF If
+Terminal: ELIF Elif
+Terminal: ELSE Else
 
 Terminal: VARNAME [a-zA-Z_]+[a-zA-Z0-9_]*
 Terminal: NUMBER  [0-9]+
