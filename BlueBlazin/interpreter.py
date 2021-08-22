@@ -35,6 +35,11 @@ class Fun:
         self.body = body
 
 
+class Return(Exception):
+    def __init__(self, value):
+        self.value = value
+
+
 class Interpreter:
     def __init__(self, ast):
         self.ast = ast
@@ -64,15 +69,19 @@ class Interpreter:
             case Ast.FUNCTION_DCLR:
                 self.function(stmt_or_dclr)
             case Ast.RETURN_STMT:
-                return self.expression(stmt_or_dclr["value"])
+                raise Return(self.expression(stmt_or_dclr["value"]))
             case _:
                 raise Exception(f"Internal Error {stmt_or_dclr}")
 
     def block(self, block):
         self.env = Env(self.env)
 
-        for stmt_or_dclr in block["body"]:
-            self.evaluate(stmt_or_dclr)
+        try:
+            for stmt_or_dclr in block["body"]:
+                self.evaluate(stmt_or_dclr)
+        except Return as e:
+            self.env = self.env.parent
+            raise e
 
         self.env = self.env.parent
 
@@ -84,15 +93,19 @@ class Interpreter:
     def if_stmt(self, expr):
         if self.expression(expr["test"]):
             self.evaluate(expr["consequent"])
-        else:
+        elif expr["alternative"] is not None:
             self.evaluate(expr["alternative"])
 
     def while_stmt(self, expr):
         self.env = Env(self.env)
 
-        while self.expression(expr["test"]):
-            for stmt_or_dclr in expr["body"]:
-                self.evaluate(stmt_or_dclr)
+        try:
+            while self.expression(expr["test"]):
+                for stmt_or_dclr in expr["body"]:
+                    self.evaluate(stmt_or_dclr)
+        except Return as e:
+            self.env = self.env.parent
+            raise e
 
         self.env = self.env.parent
 
@@ -152,15 +165,20 @@ class Interpreter:
             raise Exception(f"Runtime Error: incorrect number "
                             f"of arguments provided to function {function.name}")
 
-        self.env = Env(self.env)
-
         args = [self.expression(arg) for arg in expr["arguments"]]
+
+        self.env = Env(self.env)
 
         for param, arg in zip(function.params, args):
             self.env.set_value(param, arg)
 
-        for stmt_or_dclr in function.body:
-            return_value = self.evaluate(stmt_or_dclr)
+        return_value = None
+
+        try:
+            for stmt_or_dclr in function.body:
+                self.evaluate(stmt_or_dclr)
+        except Return as e:
+            return_value = e.value
 
         self.env = self.env.parent
         return return_value

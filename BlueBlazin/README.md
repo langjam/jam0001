@@ -1,6 +1,43 @@
-# Team Blue Blazin
+# Academia
+
+**Team:** Blue Blazin
+
+## Introduction
+
+Academia is a programming language designed primarily for reading rather than writing.
+
+Comments are first-class citizens in academia-lang. You can pass comments anywhere a value could go.
+
+However comments in academia are special. They are references to some computation. Generally these references are listed at the bottom.
+
+This is best explained via an example:
+
+```
+let pi = /* [1] the mathematical constant PI */
+
+/* [[1]] {{ 3.14159 }} */
+```
+
+Academics (as users of academia call themselves) generally begin writing well explained pseudocode using academia comments and once the approach has crystalized add references to implementation details.
+
+## Usage
+
+To run the academia interpreter, you'll need python 3.10 installed. You can download it from:
+https://www.python.org/downloads/release/python-3100rc1/
+
+Then to run a `.acad` file, use:
+
+```
+$ python3.10 main.py <filepath>
+```
+
+## Examples
+
+Some classic examples can be found in `fib.acad`, `helloworld.acad`, and `fizzbuzz.acad`.
 
 ## Grammar
+
+The grammar of academia is heavily inspired by Lox with the addition of academia's special comments and a dictionary as the single container type.
 
 ```
 Declaration :: FunctionDclr
