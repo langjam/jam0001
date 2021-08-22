@@ -121,8 +121,6 @@ static enum Token_Type lex_ident(struct Lexer_State *self) {
 }
  
 static enum Token_Type lex_num(struct Lexer_State *self) {
-    if (lex_is(self, '-')) TRY_SKIP(self, '-'); 
- 
     if (!(is_num(lex_peek(self)) || lex_peek(self) == '.')) return TT_INVALID;
 
     if (lex_peek(self) == '0') {
