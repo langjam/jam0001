@@ -6,7 +6,7 @@ interface StackProps {
 
 export function Stack(props: StackProps) {
     return (
-        <div>
+        <div style={{ textAlign: 'center'}}>
             <h1>Stack</h1>
         </div>
     )

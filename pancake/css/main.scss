@@ -1,6 +1,6 @@
 
 .app {
-    background-color: #E8AE68;
+    background-color: #504945;
     font-family: 'Helvetica', 'Arial', sans-serif;
     color: white;
     width: 100vw;
@@ -9,7 +9,8 @@
 
 .header {
     overflow: hidden;
-    background-color: #5E503F;
+    background-color: #282828;
+    box-shadow: 0px 5px 5px #3c3836;
     position: fixed; /* Set the navbar to fixed position */
     top: 0; /* Position the navbar at the top of the page */
     width: 100%; /* Full width */
@@ -17,16 +18,17 @@
 }
 
 .content {
-    padding-top: 128px;
+    padding-top: 148px;
 }
 
 .logo {
     padding: 8px;
+    padding-left: 32px;
     font-size: 32px;
 }
 
 button {
-    background-color: #E8AE68;
+    background-color: #d79921;
     color: white;
     font-size: 24px;
     border: none;
@@ -37,6 +39,6 @@ button {
 }
 
 button:hover {
-    background-color: #E5B680;
-    color: #5E503F;
+    background-color: #fabd2f;
+    color: #1d2021;
 }

@@ -1,19 +1,62 @@
+import AceEditor from "react-ace";
+
+import "ace-builds/src-noconflict/mode-python";
+import "ace-builds/src-noconflict/theme-gruvbox";
+import "ace-builds/src-noconflict/ext-language_tools";
+
 import { StateInfo } from "../interpreter";
 import { Runtime } from "../runtime";
+import { Ace } from "ace-builds";
 
 interface EditorProps {
     runtime: Runtime,
     state: StateInfo
 }
 
-export function Editor(props: EditorProps) {
+
+export function Editor({ runtime, state }: EditorProps) {
     // on initialization start out empty or whatever
     // use props.pageEvents.onCodeChanged to notify of code changes
     // use the other props when they change (useEffect/useMemo for that) to alter the editor highlights
 
     return (
-        <div>
+        <div style={{ textAlign: 'center'}}>
             <h1>Editor</h1>
+            <AceEditor
+                setOptions={{
+                    hScrollBarAlwaysVisible: true,
+                    showPrintMargin: false,
+                    enableBasicAutocompletion: true,
+                    enableSnippets: true,
+                    enableLiveAutocompletion: true
+                }}
+                onLoad={onLoad}
+                style={{ width: '100%' }}
+                mode="python"
+                theme="gruvbox"
+                onChange={(value, _e) => runtime.setCode(value)}
+                editorProps={{ $blockScrolling: true }}
+            />
         </div>
     )
+}
+
+const knownTokens: string[] = [
+    'write', 'read', 'str', 'num', 'flip', 'if', 'exit'
+]
+
+function onLoad(editor: Ace.Editor) {
+    const mode = editor.getSession().getMode();
+
+    mode.getCompletions = (_state: string, _session: Ace.EditSession, _pos: Ace.Point, _prefix: string) => {
+        return knownTokens.map((token) => {
+            const completion: Ace.Completion = {
+                value: token,
+                meta: "Keyword",
+                score: 1,
+                caption: token || ""
+            };
+            return completion;
+        })
+    }
 }
