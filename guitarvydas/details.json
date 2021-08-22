@@ -1,0 +1,53 @@
+{"diagram":"id1", "toplevelcomponent":"id4"}
+
+{
+  "children": ["process__A", "process__B" ],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id4",
+  "inputs": [],
+  "name":"top level",
+  "outputs": [],
+  "synccode":""
+}
+{
+  "children": ["c3" ],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id5",
+  "inputs": [],
+  "name":"process__A",
+  "outputs": [],
+  "synccode":""
+}
+{
+  "children": [],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id6",
+  "inputs": [],
+  "name":"c3",
+  "outputs": [],
+  "synccode":"~~echo hello~~echo ... from process A~~"
+}
+{
+  "children": ["c4" ],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id7",
+  "inputs": [],
+  "name":"process__B",
+  "outputs": [],
+  "synccode":""
+}
+{
+  "children": [],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id8",
+  "inputs": [],
+  "name":"c4",
+  "outputs": [],
+  "synccode":"~~echo ... from process B~~echo goodbye~~"
+}
+

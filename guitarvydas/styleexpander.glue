@@ -1,0 +1,22 @@
+Diagrams [@ds] = [[${ds}]]
+Diagram [k @a k2 graphmodel k3] = [[${k}${a}${k2}\n${graphmodel}\n${k3}\n]]
+Attribute [@an k s] = [[\ ${an}${k}${s}]]
+string [q1 @cs q2] = [[${q1}${cs}${q2}]]
+notDQ [c] = [[${c}]]
+encodedChar [c] = [[${c}]]
+
+GraphModel [k1 @as k2 root k3] = [[${k1}${as}${k2}${root}${k3}]]
+Root [k1 @cells k2] = [[${k1}${cells}${k2}]]
+Cell [c] = [[${c}]]
+CellWithoutContent [k1 @as k2] = [[${k1}${as}${k2}]]
+CellWithContent [k1 @as k2 @geometry k3] = [[${k1}${as}${k2}${geometry}${k3}]]
+Geometry [g] = [[${g}]]
+GeometryWithoutContent [k1 @as k2] = [[${k1}${as}${k2}]]
+GeometryWithContent [k1 @as k2 @ignore k3] = [[${k1}${as}${k2}${ignore}${k3}]]
+
+CellAttribute [a] = [[\ ${a}]]
+StyleAttribute [id k s] = [[\ ${expandStyle(s)}]]
+OtherCellAttribute [@an k s] = [[\ ${an}${k}${s}]]
+
+attributeValue [x] = [[${x}]]
+number [n] = [[${n}]]

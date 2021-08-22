@@ -1,0 +1,19 @@
+  Main [@toplevels @components] = [[${toplevels}\n\n${components}]]
+  TopLevelComponent [lb diag component rb] = [[${lb}${diag}${component}${rb}\n]]
+  Component [lb children connections diagram id inputs name outputs synccode rb] =
+    [[${lb}\n ${children}\n ${connections}\n ${diagram}\n ${id}\n ${inputs}\n ${name}\n ${outputs}\n ${synccode}\n${rb}\n]]
+
+      Pair [q1 name q2 colon str] = [[${q1}${name}${q2}${colon}${str}]]
+      ArrayPair [q1 name q2 colon lb @strs rb] = [[${q1}${name}${q2}${colon}${lb}${strs}${rb}]]
+      ObjectArrayPair [q1 name q2 colon lb @jscs rb] = [[${q1}${name}${q2}${colon}${lb}${jscs}${rb}]]
+      colon [c] = [[${c}]]
+      quote [c] = [[${c}]]
+      string [q1 @nqs q2] = [[${q1}${nqs}${q2}]]
+      notQuote [c] = [[${c}]]
+
+      JSONconnection [lb name source target rb] = [[${lb}${name}${source}${target}${rb}]]
+
+    ComponentPortPair [ q1 name q2 colon lb component port rb ] = 
+      [[${q1}${name}${q2}${colon}${lb}${component}${port}${rb}]]
+
+

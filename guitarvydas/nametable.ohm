@@ -1,0 +1,58 @@
+Tofb1{
+  Diagrams = Diagram+
+  Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
+  Attribute = NameAttribute | DiagramIDAttribute | OtherAttribute
+  NameAttribute = "name" "=" string
+  DiagramIDAttribute = "id" "=" string
+  OtherAttribute = alnum+ "=" attributeValue
+  string= "\"" notDQ* "\""
+  notDQ = ~"\"" any
+  attributeValue = number | string
+  number = digit+
+
+  GraphModel = "<mxGraphModel" Attribute+ ">" Root "</mxGraphModel>" 
+  Root = "<root>" Cell+ "</root>"
+  Cell = CellWithContent | CellWithoutContent
+  CellWithoutContent = "<mxCell" CellAttribute+ "/>"
+  CellWithContent = "<mxCell" CellAttribute+ ">" Geometry? "</mxCell>"	     
+  Geometry = GeometryWithoutContent | GeometryWithContent
+  GeometryWithoutContent = "<mxGeometry" GAttribute+ "/>"
+  GeometryWithContent = "<mxGeometry" GAttribute+ ">" ignore+ "</mxGeometry>"
+CellAttribute =     EllipseAttribute
+                  | TextAttribute 
+                  | KindAttribute 
+                  | ValueAttribute 
+		  | EdgeAttribute
+		  | VertexAttribute
+		  | SourceAttribute
+		  | TargetAttribute
+		  | IDAttribute
+		  | GreenAttribute
+		  | YellowAttribute
+		  | RedAttribute
+		  | OtherCellAttribute
+  EllipseAttribute = "kind" "=" quote "ellipse" quote
+  TextAttribute = "kind" "=" quote "text" quote
+  KindAttribute = "kind" "=" string
+  ValueAttribute = "value" "=" string
+  SourceAttribute = "source" "=" string
+  TargetAttribute = "target" "=" string
+  IDAttribute = "id" "=" string
+  EdgeAttribute = "edge" "=" quote "1" quote
+  VertexAttribute = "vertex" "=" quote "1" quote
+  RedAttribute = "fillColor" "=" quote "red" quote
+  GreenAttribute = "fillColor" "=" quote "green" quote
+  YellowAttribute = "fillColor" "=" quote "yellow" quote
+  OtherCellAttribute = alnum+ "=" attributeValue
+
+  GAttribute =   ASGAttribute
+               | RelativeGAttribute 
+               | OtherGAttribute 
+  ASGAttribute = "as" "=" string
+  RelativeGAttribute = "relative" "=" string
+  OtherGAttribute = alnum+ "=" attributeValue
+
+  quote = "\""
+
+  ignore = ~"</mxGeometry>" any
+}
