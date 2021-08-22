@@ -83,8 +83,6 @@ class ComstructExecutor:
             for arg in node.args:
                 processed_args.append(self.walkTree(arg, _env))
             if node_call == "internal":
-                print(node.func_name)
-
                 return self.walkTree(internals[node.func_name](processed_args), _env)
 
             for stmt_node in node_call.content:
@@ -131,20 +129,20 @@ class ComstructExecutor:
 
             classnode: StatementNode.ClassDefinitionNode = _env[node.class_name]
 
-            old_env = _env
-            env = {}
+            # old_env = _env.copy()
+            # env = {}
 
             for stmt_node in classnode.content:
                 if type(stmt_node) != StatementNode.VarAssignNode:
                     print("[EXEC] Tried to do something different than assigning a var inside a class.")
                     continue
-                self.walkTree(stmt_node, env)
+                self.walkTree(stmt_node, _env[uid])
 
-            new_env = env
-            env = old_env
-            env[uid] = new_env
+            # new_env = env.copy()
+            # env = old_env
+            # env[uid] = new_env
 
-            return StatementNode.LiterallyNode(ClassClass(uid, env))
+            return StatementNode.LiterallyNode(ClassClass(uid, _env[uid]))
 
         elif isinstance(node, StatementNode.ForLoopExecutorNode):
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
