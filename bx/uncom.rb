@@ -65,7 +65,7 @@ $uncom_words = {}
 ["quote?", [:any], lambda {|a| a.is_a?(UnQuote) }],
 ["comment?", [:any], lambda {|a| a.is_a?(UnComment) }],
 
-["puts", [:any], lambda {|a| puts a ; a }],
+["puts", [:any], lambda {|a| puts a }],
 
 ].each {|word|
 	$uncom_words[word[0]] = UnFunc.new(*word)
@@ -95,6 +95,10 @@ class UnComment
 	def inspect
 		@source[@start, @len].inspect
 	end
+
+	def to_s
+		@source[@start, @len].inspect
+	end
 end
 
 class UnQuote
@@ -104,22 +108,13 @@ class UnQuote
 		@len = len
 	end
 
-	def string
+	def to_s
 		@source[@start + 1, @len - 2]
 	end
 
 	def inspect
 		@source[@start, @len]
 	end
-end
-
-def do_words(words)
-	uncom = Uncom.new
-	words.split(" ").each do |word|
-		uncom.do_word word
-	end
-	# puts "-> " + uncom.data.inspect
-	uncom
 end
 
 # TODO:
@@ -260,10 +255,34 @@ class Uncom
 			return false
 		end
 
+		# found global -> do word
+		if @dict.first.member? word then
+			func.push @dict.first[word]
+			return try_apply_stacks()
+		# matches $global= -> make global
+		elsif word[0] == "$" and word[-1] == "=" then
+			@dict.first.merge! gen_variable_funcs(word[0..-2], @vars.first)
+			return do_word(word) # word we just made has to get pushed now
+		end
+
+		# found local -> do word
+		if @dict.last.member? word then
+			func.push @dict.last[word]
+			return try_apply_stacks()
+		elsif word.length > 1 and word[-1] == "=" then
+		# matches local= -> make local
+			@dict.last.merge! gen_variable_funcs(word[0..-2], @vars.last)
+			return do_word(word) # word we just made has to get pushed now
+		end
+
+		return do_word_special word
+	end
+
+	def do_word_special(word)
 		# TODO
 		# [ ] to push / pop local frames, make sure to raise error on underflow
 		# } to pop return stack, make sure to raise error on underflow
-		
+
 		# ( -> push data + func stacks
 		if word == "(" then
 			@data_stacks.push([])
@@ -284,26 +303,6 @@ class Uncom
 			data.pop(data.length)
 			func.pop(func.length)
 			return false # no funcs called
-		end
-
-		# found global -> do word
-		if @dict.first.member? word then
-			func.push @dict.first[word]
-			return try_apply_stacks()
-		# matches $global= -> make global
-		elsif word[0] == "$" and word[-1] == "=" then
-			@dict.first.merge! gen_variable_funcs(word[0..-2], @vars.first)
-			return do_word(word) # word we just made has to get pushed now
-		end
-
-		# found local -> do word
-		if @dict.last.member? word then
-			func.push @dict.last[word]
-			return try_apply_stacks()
-		elsif word.length > 1 and word[-1] == "=" then
-		# matches local= -> make local
-			@dict.last.merge! gen_variable_funcs(word[0..-2], @vars.last)
-			return do_word(word) # word we just made has to get pushed now
 		end
 
 		raise "word #{word} not found"
