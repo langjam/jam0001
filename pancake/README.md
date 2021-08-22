@@ -2,7 +2,7 @@
 
 The pancake programming language is a stack machine language with the following characteristics.
  * There are two instruction streams: commented and un-commented.
- * Users can conditionally (`flipif`) or unconditionally (`flip`) switch between them.
+ * Users can conditionally (`flip_if`) or unconditionally (`flip`) switch between them.
  * The execution continues from the beginning when it reaches the end.
 
 Try our demo [here](https://pancake-lang.github.io/)!
