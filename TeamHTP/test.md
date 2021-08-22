@@ -26,5 +26,5 @@ this is a paragraph
 )
 [TodoList]:: (
     parseError
-        this checkItem '**kick ass**'
+        this checkItem: '**kick ass**'
 )

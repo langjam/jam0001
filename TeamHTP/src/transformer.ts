@@ -59,7 +59,12 @@ function makeTransformer(context) {
         keypairs: sortKeypairs,
         keypair: ([key, value]: [string, string]) => [key.slice(0, -1), value],
         cascades: (cascades: string[]) => cascades,
-        binary: ([left, op, right]: [string, string, string]) => `${left}.${op}(${right})`,
+        binary: ([left, op, right]: [string, string, string]) => {
+            if (op[0] != '$') {
+                return `((${left}) ${op} (${right}))`
+            }
+            return `${left}.${op}(${right})`
+        },
         unary: ([left, op]: [string, string]) => `${left}.${op}()`,
         array: (array: string[]) => `[${array.join(', ')}]`,
         block: ([p, ...rest]: [Tree | string, ...string[]]) => {
@@ -79,7 +84,7 @@ function makeTransformer(context) {
         scalar: ([value]: [string]) => `(${value})`,
         kw: ([{value}]: [Token]) => value as string,
         number: ([{value}]: Token[]) => `(${parseFloat(value)})`,
-        op: ([{value}]: [Token]) => (value as string).split('').map(c => '$' + opNames[c]).join(''),
+        op: ([{value}]: [Token]) => ['**', '*', '/', '%', '+', '-', '<<', '>>', '>>>', '<', '<=', '>', '>=', '==', '!=', '===', '!===', '&', '^', '|', '&&', '||', '??',].includes(value) ? value as string : (value as string).split('').map(c => '$' + opNames[c]).join(''),
         param: ([{value}]: [Token]) => (value as string).substr(1),
         string: ([{value}]: [Token]) => value as string,
         symbol: ([{value}]: [Token]) => `Symbol('${value.substr(1)}')`,
