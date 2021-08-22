@@ -57,8 +57,14 @@ static struct Interpreter_Value* get_var(strview_t name) {
 
 static struct Interpreter_Value execute(struct Vec OF(struct Parser_Node*) *body) {
 
-    for (usize i = 0; i < body->size; i++)
-        intrp_run(vec_get(body, i));
+    for (usize i = 0; i < body->size; i++) {
+        bool should_return;
+
+        struct Interpreter_Value retval = intrp_run(vec_get(body, i), &should_return);
+
+        if (should_return)
+            return retval;
+    }
 
     return void_val();
 }
@@ -78,7 +84,7 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
 
             struct Vec params = vec_new(sizeof(struct Interpreter_Value));
             for (usize i = 0; i < args->size; i += 1) {
-                struct Interpreter_Value arg = intrp_run(vec_get(args, i));
+                struct Interpreter_Value arg = intrp_run(vec_get(args, i), NULL);
                 vec_push(&params, &arg);
             }
 
@@ -89,7 +95,7 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
         case IT_FUNC: {
             struct Vec* params = &pnode_left(func->data.func.ast)->children;
             for (usize i = 0; i < args->size; i++) {
-                struct Interpreter_Value arg = intrp_run(vec_get(args, i));
+                struct Interpreter_Value arg = intrp_run(vec_get(args, i), NULL);
                 struct Parser_Node* fdecl = vec_get(params, i);
                 map_add(&vars, fdecl->data.decl.name, &arg);
             }
@@ -128,7 +134,7 @@ static struct Interpreter_Value assign(struct Parser_Node* node) {
     } else
         dstname = dst->data.ident.val;
 
-    struct Interpreter_Value val = intrp_run(vec_get(&node->children, 1));
+    struct Interpreter_Value val = intrp_run(vec_get(&node->children, 1), NULL);
     struct Interpreter_Value *var = get_var(dstname);
     if (val.type != var->type && var->type != IT_VOID)
         printf("Spank Spank! Bad Programmer! Mismatched type\n");
@@ -136,7 +142,8 @@ static struct Interpreter_Value assign(struct Parser_Node* node) {
     return (*var = val);
 }
 
-struct Interpreter_Value intrp_run(struct Parser_Node* node) {
+struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return) {
+    if (should_return) *should_return = false;
     
     struct Interpreter_Value ret = void_val(); 
     switch (node->kind) {
@@ -148,6 +155,10 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node) {
         break;
         case PN_CALL:
             ret = call(node);                        
+        break;
+        case PN_RETURN:
+            ret = intrp_run(pnode_uvalue(node), NULL);
+            *should_return = true;
         break;
         case PN_DECL:
             declaration(node);
@@ -169,6 +180,52 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node) {
         break;
         case PN_IDENT: {
             ret = *get_var(node->data.ident.val);
+        } break;
+        case PN_OPERATOR: {
+
+            struct Interpreter_Value 
+                left = intrp_run(pnode_left(node), NULL),
+                right = intrp_run(pnode_right(node), NULL);
+            int* rp = &ret.data.intg.val;
+
+            ret.type = IT_INT;
+            if (node->data.op.op.view[1] != '=') {
+                int lv = left.data.intg.val, rv = right.data.intg.val;
+                switch (node->data.op.op.view[0]) {
+                case '+': *rp = lv + rv; break;
+                case '-': *rp = lv - rv; break;
+                case '*': *rp = lv * rv; break;
+                case '/': *rp = lv / rv; break;
+                case '%': *rp = lv % rv; break;
+
+                case '<': *rp = lv < rv; break;
+                case '>': *rp = lv > rv; break;
+                }
+            } else {
+                int *lv = &left.data.intg.val, *rv = &right.data.intg.val;
+                switch (node->data.op.op.view[0]) {
+                case '+': *rp = *lv += *rv; break;
+                case '-': *rp = *lv -= *rv; break;
+                case '*': *rp = *lv *= *rv; break;
+                case '/': *rp = *lv /= *rv; break;
+                case '%': *rp = *lv %= *rv; break;
+
+                case '>': *rp = *lv >= *rv; break;
+                case '<': *rp = *lv <= *rv; break;
+                case '=': *rp = *lv == *rv; break;
+                case '!': *rp = *lv != *rv; break;
+                }
+            }
+        } break;
+        case PN_UNARY: {
+
+            struct Interpreter_Value val = intrp_run(pnode_uvalue(node), NULL);
+
+            ret.type = IT_INT; 
+            switch (node->data.unary.op.view[0]) {
+                case '!': ret.data.intg.val = !val.data.intg.val; break;
+                case '-': ret.data.intg.val = -val.data.intg.val; break;
+            }
         } break;
         default:
         break;

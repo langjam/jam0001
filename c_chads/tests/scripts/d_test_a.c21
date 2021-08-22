@@ -1,0 +1,31 @@
+# Doigt's classical "Hand Pain and Copy Pasta" program
+main := proc () {
+
+    a := 2;
+    b := 53;
+
+    ac := a * b; # 106
+    ad := a / b; # .038 or 0
+    ae := a + b; # 55
+    af := a - b; # -51
+    ag := a % b; # 2
+    ah := a | b; # 55
+    ai := a & b; # 0
+    aj := a ^ b; # 55
+    ak := a << b; # 18014398509481984
+    al := a >> b; # 0
+
+    bc := b * a; # 10
+    bd := b / a; # 26.5 or 26
+    be := b + a; # 55
+    bf := b - a; # 51
+    bg := b % a; # 1
+    bh := b | a; # 55
+    bi := b & a; # 0
+    bj := b ^ a; # 55
+    bk := b << a; # 212
+    bl := b >> a; # 13
+
+    print(a);print(ac);print(ad);print(ae);print(af);print(ag);print(ah);print(ai);print(aj);print(ak);print(al);
+    print(b);print(bc);print(bd);print(be);print(bf);print(bg);print(bh);print(bi);print(bj);print(bk);print(bl);
+};

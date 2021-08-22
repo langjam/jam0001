@@ -1,0 +1,33 @@
+# Doigt's classical "Distance Calculator", this one is a more primitive version but whatever...
+main := proc () {
+
+    x1 := 3;
+    y1 := 5;
+    x2 := 1;
+    y2 := 6;
+
+    square := proc (a : number) { return a * a; };
+
+    square_root := proc (a : number) {
+
+        if (!a || a == 1) { return a; }
+
+        start := 1;
+        end := 2147483647;
+
+        while (start + 1 < end) {
+
+            middle := start + (end - start) / 2;
+            a_split = a / middle;
+
+            if (a_split == middle) { return middle; }
+            else if (middle > a_split) { end = middle; }
+            else { start = middle; }
+        }
+
+        return start;
+    };
+
+    result = square_root(square(x2 - x1) - square(y2 - y1));
+    print(result);
+};

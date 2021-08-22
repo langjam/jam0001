@@ -37,5 +37,5 @@ struct Interpreter_State {
 
 void intrp_init();
 void intrp_deinit();
-struct Interpreter_Value intrp_run(struct Parser_Node*);
+struct Interpreter_Value intrp_run(struct Parser_Node*, bool* should_return);
 struct Interpreter_Value intrp_main();
