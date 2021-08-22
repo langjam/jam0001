@@ -1,7 +1,8 @@
 import { Interpreter, Result, StateInfo } from './interpreter';
 
 type Mode = 
-    | { type: 'Stopped' }
+    | { type: 'Idle' }
+    | { type: 'Compile', code: string }
     | { type: 'Error' }
     | { type: 'RunUnbounded' }
     | { type: 'RunForN', n: number };
@@ -10,12 +11,13 @@ export class Runtime {
     // Whether a run loop is currently going
     running: boolean;
     // The current mode of the runtime
-    mode: Mode = { type: 'Stopped' };
+    mode: Mode = { type: 'Idle' };
     delaySeconds: number = 0.5;
     interpreter: Interpreter;
     stateListener: (s: StateInfo | null) => void;
     resultListener: (r: Result) => void;
-    newCode: string | null = null;
+    
+    lastCode: string;
 
     constructor(
         ports: any,
@@ -31,8 +33,14 @@ export class Runtime {
         this.delaySeconds = delaySeconds;
     }
 
+    reset() {
+        this.mode = { type: 'Compile', code: this.lastCode };
+        this.runLoop();
+    }
+
     setCode(code: string) {
-        this.newCode = code;
+        this.mode = { type: 'Compile', code };
+        this.lastCode = code;
         this.runLoop();
     }
 
@@ -58,33 +66,37 @@ export class Runtime {
     }
 
     stop() {
-        this.mode = { type: 'Stopped' };
+        this.mode = { type: 'Idle' };
     }
 
     async runLoop() {
         if (this.running) {
+            console.log('Loop already running');
             return;
         }
         this.running = true;
 
-        if (this.newCode !== null) {
+        console.log('Checking for compile');
+        if (this.mode.type === 'Compile') {
             console.log('New code');
-            const result = await this.interpreter.setCode(this.newCode);
+            const result = await this.interpreter.setCode(this.mode.code);
+            this.stateListener(null);
             if (!result.successful) {
                 console.log('Compilation Error')
                 this.mode = { type: 'Error' };
             }
             else {
-                if (this.mode.type === 'Error') {
-                    this.mode = { type: 'Stopped' };
-                }
+                console.log('Compilation Successful')
+                this.mode = { type: 'Idle' };
             }
             console.log(result);
             this.resultListener(result);
-            this.newCode = null;
+            this.running = false;
+            return;
         }
 
-        while (this.mode.type !== 'Stopped' && this.mode.type !== 'Error') {
+        console.log('Checking for steps');
+        while (this.mode.type === 'RunUnbounded' || this.mode.type === 'RunForN') {
             console.log(this.mode);
             console.log('Performing step');
             const newState = await this.interpreter.step();
