@@ -13,13 +13,11 @@ impl CliRunner {
     }
 
     pub fn run(&self, mut vm: Data) {
-        while vm.train_count().unwrap() > 0 {
-            vm.do_current_step(self).expect("failed");
-
-            let mut input_text = String::new();
-            io::stdin()
-                .read_line(&mut input_text)
-                .expect("failed to read from stdin");
+        loop {
+            log::debug!("Next iteration!");
+            if !vm.do_current_step(self).expect("failed") {
+                break
+            }
         }
     }
 }
@@ -28,6 +26,7 @@ impl Communicator for CliRunner {
     fn ask_for_input(&self) -> Result<Vec<i64>, train::interface::CommunicatorError> {
         loop {
             let mut input_text = String::new();
+            log::info!("INPUT: ");
             io::stdin()
                 .read_line(&mut input_text)
                 .expect("failed to read from stdin");
@@ -56,7 +55,7 @@ impl Communicator for CliRunner {
     }
 
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), train::interface::CommunicatorError> {
-        log::info!("simulation says: train {} moved from ({} track {}) to ({} track {})", train.identifier, from_station.name, start_track, to_station.name, end_track);
+        log::debug!("simulation says: train {} moved from ({} track {}) to ({} track {})", train.identifier, from_station.name, start_track, to_station.name, end_track);
         Ok(())
     }
 }

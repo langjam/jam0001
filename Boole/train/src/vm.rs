@@ -104,8 +104,9 @@ impl Data {
         Ok(x)
     }
 
-    pub fn do_current_step(&mut self, interface: &dyn Communicator) -> Result<(), VMError> {
+    pub fn do_current_step(&mut self, interface: &dyn Communicator) -> Result<bool, VMError> {
         let mut targets = vec![];
+        let mut did_any_work = false;
         for (_, station_arc) in self.stations.iter() {
             let mut station = station_arc.lock()?;
             let mut did_work = false;
@@ -368,6 +369,7 @@ impl Data {
             if station.operation != Operation::Delete
                 && station.operation != Operation::SwitchGteZero
                 && station.operation != Operation::SwitchEqZero
+                && station.operation != Operation::SwitchEmpty
                 && did_work
             {
                 {
@@ -405,9 +407,10 @@ impl Data {
                     .unwrap_or(());
             }
             station.trains[target.track].push_back(train);
+            did_any_work = true;
         }
 
-        Ok(())
+        Ok(did_any_work)
     }
 }
 

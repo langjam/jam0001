@@ -1,0 +1,29 @@
+[LOCOMOTIVE]
+start at incrementeradd track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 0
+
+[LOCOMOTIVE]
+start at incrementeradd track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 1
+
+{incrementeradd}
+operation: add
+track 1: go to incrementerdup track 1
+track 2: go to incrementeradd track 2
+
+{incrementerdup}
+operation: duplicate
+track 1: go to incrementeradd track 1
+track 2: go to printnum track 1
+
+
+{printnum}
+operation: print number
+track 1: go to yeet track 1
+
+{yeet}
+operation: delete
