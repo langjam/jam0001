@@ -69,8 +69,10 @@ let locomotiveAccent1 = {}
 let stationForeground;
 let stationBackground;
 let stopper;
+let cloud;
 let stationTypeImages = {}
 let lineLookup = new Map();
+
 
 
 function preloadTrain() {
@@ -86,6 +88,7 @@ function preloadTrain() {
     stationBackground = loadImage("tiles/station_bottom.png")
     stationForeground = loadImage("tiles/station_top.png")
     stopper = loadImage("tiles/stopper.png")
+    cloud = loadImage("tiles/cloud.png");
 
     for (const i in STATION_TYPE) {
         const station = STATION_TYPE[i];
@@ -166,6 +169,46 @@ class Grid {
     }
 }
 
+function getRandom(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+
+class Cloud {
+    location
+    size
+    fadespeed
+    trajectory
+    opacity
+
+    constructor(location) {
+        this.location = location;
+
+        this.size = getRandom(0.5, 0.8);
+        const trajx = getRandom(-2, 2);
+        const trajy = getRandom(-2, 2);
+        this.fadespeed = getRandom(0.1, 0.2);
+
+        this.trajectory = createVector(trajx, trajy);
+        this.opacity = 0.7;
+    }
+
+    draw() {
+        this.location.x += this.trajectory.x * TRAIN_SPEED;
+        this.location.y += this.trajectory.y * TRAIN_SPEED;
+        this.opacity -= this.fadespeed * TRAIN_SPEED;
+        if (this.opacity <= 0) {
+            return false;
+        }
+        push()
+        translate(this.location.x, this.location.y);
+        tint(255, this.opacity * 255);
+        image(cloud, 0, 0, TILE_SIZE * this.size, TILE_SIZE * this.size);
+        pop()
+        return true;
+    }
+}
+
 class Train {
     location
     accent
@@ -189,6 +232,9 @@ class Train {
         this.animation_count = 0;
         this.traveling_to = null;
         this.traveling_from = null;
+
+        this.clouds = []
+        this.ticks_since_last_cloud = 0;
     }
 
     travelAlongPath(path) {
@@ -243,8 +289,6 @@ class Train {
         }
 
         push()
-
-
         translate(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE)
 
         translate(TILE_SIZE / 2, TILE_SIZE / 2);
@@ -261,7 +305,23 @@ class Train {
         image(locomotiveAccent[this.accent], 0, 0, TILE_SIZE, TILE_SIZE)
         image(locomotiveAccent1[this.accent1], 0, 0, TILE_SIZE, TILE_SIZE)
         image(locomotiveForeground, 0, 0, TILE_SIZE, TILE_SIZE)
+        pop()
 
+        push()
+        if (this.path !== null) {
+            this.ticks_since_last_cloud += 1;
+            if (this.ticks_since_last_cloud > 5) {
+                this.ticks_since_last_cloud = 0;
+                this.clouds.push(new Cloud(createVector(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE)));
+            }
+        }
+        const new_clouds = []
+        for (const cloud of this.clouds) {
+            if (cloud.draw()) {
+                new_clouds.push(cloud);
+            }
+        }
+        this.clouds = new_clouds;
         pop()
     }
 }
