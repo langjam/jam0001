@@ -14,6 +14,8 @@ In fact, this entire `README.md` file is a Hello World example. You can run this
 
 **How it works**
 
+A more comprehensive explanation can be found on the [documentation page](documentation.md).
+
 All markdown text is a comment unless otherwise stated. The top-level header (i.e. the `#` header at the top) is the title of the program. Classes are defined by the existence of 2nd-level headers (i.e. the `##` headers). Methods are defined by 3rd-level headers (i.e. `###` prefixed headers). When full-block code snippet appear, the header they are listed under determines where they belong.
 
 - Code snippets directly below the main header will be included as the initial execution, kind of like a `main()` function in most languages.
