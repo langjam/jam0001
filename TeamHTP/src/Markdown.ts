@@ -12,8 +12,9 @@ function mdToMdast(src: string): Root {
     })
 }
 
-function mdastToMd(content: Content | Root): string {
-    return toMarkdown(content, {extensions: [gfmToMarkdown()]})
+function mdastToMd(content: Content | Root, stripTrailingNewline = false): string {
+    const md = toMarkdown(content, {extensions: [gfmToMarkdown()]})
+    return md.substr(0, md.length - (stripTrailingNewline ? 1 : 0))
 }
 
 function wrappedElementToMd(content: Base): string {
