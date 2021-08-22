@@ -4,7 +4,7 @@ use std::sync::{Arc, MutexGuard, PoisonError};
 use tokio::sync::Mutex;
 
 use crate::ast::{Program, Station, Train, SecondClassPassenger};
-use crate::interface::Communicator;
+use crate::interface::{Communicator, CommunicatorError};
 use crate::operations::Operation;
 
 #[derive(Debug)]
@@ -17,6 +17,12 @@ pub enum VMError {
 impl<T> From<PoisonError<MutexGuard<'_, T>>> for VMError {
     fn from(_: PoisonError<MutexGuard<T>>) -> Self {
         Self::UnlockError
+    }
+}
+
+impl From<CommunicatorError> for VMError {
+    fn from(_: CommunicatorError) -> Self {
+        Self::ConnectionClosed
     }
 }
 
@@ -366,9 +372,9 @@ impl Data {
                 Operation::Delete => {
                     let st = &mut station.trains[0];
                     while !st.is_empty() {
-                        let pop = st.pop_front().unwrap();
+                        let pop = st.pop_front().ok_or(VMError::UnlockError)?;
                         let train = pop.lock().await;
-                        interface.delete_train(train.train.clone()).unwrap_or(());
+                        interface.delete_train(train.train.clone())?;
                     }
                     did_work = true;
                 }
@@ -469,7 +475,7 @@ mod tests {
             Ok(())
         }
 
-        fn delete_train(&self, train: Train) -> Result<(), CommunicatorError> {
+        fn delete_train(&self, _train: Train) -> Result<(), CommunicatorError> {
             Ok(())
         }
     }
