@@ -1,0 +1,13 @@
+# It is first comment of `x`.
+# It is second comment of `x`.
+var x;
+# `cx` is comment of `x`.
+var cx = commentof x;
+cx = cx + "\nIt is third comment of `x`.";
+
+print("-----");
+print(cx);
+print("-----");
+print(commentof x);
+print("-----");
+print("-----");
