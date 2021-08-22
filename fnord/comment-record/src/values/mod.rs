@@ -1,3 +1,5 @@
+use crate::types::ResolvedType;
+
 #[derive(Debug, Clone)]
 pub enum Value {
     Unit,
@@ -5,6 +7,39 @@ pub enum Value {
     Text(String),
     Comment(CommentValue),
     Struct(StructValue),
+}
+
+impl Value {
+    pub fn get_ty(&self) -> ResolvedType {
+        match self {
+            Value::Unit => ResolvedType::Unit,
+            Value::Number(_) => ResolvedType::Number,
+            Value::Text(_) => ResolvedType::Text,
+            Value::Comment(c) => {
+                if let Value::Struct(s) = &c.record {
+                    ResolvedType::Comment(s.get_ty())
+                }
+                else {
+                    panic!("comment record should be a struct");
+                }
+            }
+            Value::Struct(s) => ResolvedType::Struct(s.get_ty()),
+        }
+    }
+
+    pub fn add(&self, other: &Value) -> Value {
+        match (self, other) {
+            (Value::Unit, Value::Unit) => Value::Unit,
+            (Value::Number(l), Value::Number(r)) => Value::Number(l + r),
+            (Value::Text(l), Value::Text(r)) => {
+                let mut t = String::new();
+                t.push_str(l);
+                t.push_str(r);
+                Value::Text(t)
+            }
+            _ => panic!("typecheck error!"),
+        }
+    }
 }
 
 impl std::fmt::Display for Value {
@@ -82,6 +117,12 @@ impl From<CommentValueData> for CommentValue {
 
 #[derive(Debug, Clone)]
 pub struct StructValue(std::rc::Rc<StructValueData>);
+
+impl StructValue {
+    fn get_ty(&self) -> crate::types::StructType {
+        todo!("get struct type?!?");
+    }
+}
 
 impl std::ops::Deref for StructValue {
     type Target = StructValueData;

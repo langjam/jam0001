@@ -207,7 +207,7 @@ pub fn parse_value(input: &str) -> IResult<&str, ValueAst> {
         reference,
     ))(input)?;
 
-    let mut access_following = ws::<_, _, ()>(one_of(".!"));
+    let mut access_following = ws::<_, _, ()>(one_of(".!+"));
     let mut parse_field_access = preceded(
         ws(char('.')),
         identifier,
@@ -217,6 +217,11 @@ pub fn parse_value(input: &str) -> IResult<&str, ValueAst> {
         identifier,
     );
     let mut parse_comment_get = ws::<_, _, ()>(tag("!!"));
+
+    let mut parse_add = preceded(
+        ws(char('+')),
+        parse_value,
+    );
 
     let mut prior = first;
 
@@ -239,6 +244,12 @@ pub fn parse_value(input: &str) -> IResult<&str, ValueAst> {
                     ValueAst::FieldAccess(Box::new(prior.1), second.1.to_string()),
                 );
             }
+        }
+        else if let Ok(following) = parse_add(prior.0) {
+            return Ok((
+                following.0,
+                ValueAst::Add(Box::new(prior.1), Box::new(following.1)),
+            ));
         }
         else {
             let third = parse_comment_access(prior.0)?;
@@ -461,6 +472,20 @@ mod test {
                 assert_eq!(field, "bar");
             },
             _ => assert!(false, "invalid result type {:?}", res),
+        }
+    }
+
+    #[test]
+    fn adds() {
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("2 + \"blue\"").expect("parse").1;
+        match res {
+            ValueAst::Add(left, right) => {
+                assert!(matches!(*left, ValueAst::Number(2)));
+                assert!(matches!(*right, ValueAst::Text(_)));
+            }
+            _ => assert!(false, "invalid result type: {:?}", res),
         }
     }
 

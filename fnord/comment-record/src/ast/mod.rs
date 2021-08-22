@@ -88,6 +88,7 @@ pub enum ValueAst {
     FieldAccess(Box<ValueAst>, String),
     CommentGet(Box<ValueAst>),
     FieldCommentGet(Box<ValueAst>, String),
+    Add(Box<ValueAst>, Box<ValueAst>),
     // TODO: expressions?
 }
 

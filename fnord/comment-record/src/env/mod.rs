@@ -249,6 +249,19 @@ impl Env {
                     }
                 }
             }
+            ValueAst::Add(left, right) => {
+                let left = self.evaluate(left)?;
+                let right = self.evaluate(right)?;
+
+                let left_ty = left.get_ty();
+                let right_ty = right.get_ty();
+
+                if !left_ty.is_compatible_with(&right_ty) {
+                    return Err("incompatible value types".to_string());
+                }
+
+                Ok(left.add(&right))
+            }
         }
     }
 }

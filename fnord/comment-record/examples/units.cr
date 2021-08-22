@@ -17,7 +17,12 @@ struct Outputs {
     speed: Number,
 };
 
+inputs = Inputs {
+    time: 42,
+    distance: 3,
+};
+
 result = Outputs {
     # n.b. in a future version this could be calculated
-    speed: 42,
+    speed: inputs.time + inputs.distance,
 };

@@ -21,5 +21,5 @@ assumptions = {
 results = {
     # The total number of cats in Berlin.
     # UNCERTAINTY: -2%/+1%
-    total_cats: 152,
+    total_cats: assumptions.population + assumptions.cat_owners + assumptions.cats_per_owner,
 };

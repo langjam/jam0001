@@ -5,8 +5,19 @@ pub enum ResolvedType {
     Unit,
     Number,
     Text,
-    //Comment(StructType),
+    Comment(StructType),
     Struct(StructType),
+}
+
+impl ResolvedType {
+    pub fn is_compatible_with(&self, other: &ResolvedType) -> bool {
+        match (self, other) {
+            (ResolvedType::Unit, ResolvedType::Unit) => true,
+            (ResolvedType::Number, ResolvedType::Number) => true,
+            (ResolvedType::Text, ResolvedType::Text) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
