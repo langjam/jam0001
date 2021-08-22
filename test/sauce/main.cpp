@@ -333,6 +333,11 @@ void initialize_base(Context& context)
     scope.set("gt", { NativeFunctionType { lang$fold_op<Greater>, { "native comparison greater_than operation" } } });
     scope.set("eq", { NativeFunctionType { lang$fold_op<Equal>, { "native comparison equality operation" } } });
     scope.set("collapse", { NativeFunctionType { lang$fold_op<Flat>, { "native probability collapse flatten operation" } } });
+
+    // types
+    scope.set("int", { create<Type>(NativeType::Int) });
+    scope.set("string", { create<Type>(NativeType::String) });
+    scope.set("any", { create<Type>(NativeType::Any) });
 }
 
 int main(int argc, char** argv)

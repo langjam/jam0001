@@ -100,3 +100,9 @@ may use the `collapse` function to randomly select an element of the set.
 | `loop` | `loop(init step stop)` | applies `step` until `stop(accumulator)` is true | `native loop flow operation` |
 | `is` | `is(value string)` | checks whether `value` would be selected by a comment mention of the value of `string` | `native comment query operation` |
 | `collapse` | `collapse(value)` | selects a random member of the CRS in `value` | `native collapse flatten operation` |
+
+## Standard types
+| name | meaning |
+| `int` | 32-bit signed integer |
+| `string` | arbitrary-length string |
+| `any` | any type, standard or user-defined |

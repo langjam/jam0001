@@ -44,6 +44,7 @@ print(<string>.length);
 
 print(<number>.negated);
 
+// templated types!
 let Vec3 = { |T|: res
     // 3D vector of uniform type T
     let res = record {
@@ -51,11 +52,16 @@ let Vec3 = { |T|: res
     };
 };
 
-let any = record { x };
+// (1 test 3)
+print(Vec3(any)(1 "test" 3));
 
-print(Vec3(any)(1 "test" 3).x);
+// (1 <empty> 3)
+print(Vec3(int)(1 "test" 3));
 
+// 1
 print(is(Vec3 "vector uniform"));
+
+// 0
 print(is(Vec3 "vector uniform 2D"));
 
 let step = { |a|: b let b = add(a 1); };
