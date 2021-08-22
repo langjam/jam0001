@@ -56,6 +56,27 @@ class Parser:
         params = self.params()
         body = self.block()
 
+        return {"type": Ast.FUNCTION, "name": name, "params": params, "body": body, "line": line}
+
+    def params(self):
+        params = []
+        self.expect(TokenType.PUNCTUATOR, "(")
+
+        token = self.peek()
+        while True:
+            match token:
+                case {"type": TokenType.PUNCTUATOR, "value": ")"} | {"type": TokenType.EOF}:
+                    break
+                case _:
+                    params.append(self.identifier())
+                    token = self.peek()
+                    if token["type"] != TokenType.PUNCTUATOR or token["value"] != ")":
+                        self.expect(TokenType.PUNCTUATOR, ",")
+
+        self.expect(TokenType.PUNCTUATOR, ")")
+
+        return params
+
     def let_dclr(self):
         line = self.advance()["line"]
         name = self.expect(TokenType.IDENTIFIER)["value"]
