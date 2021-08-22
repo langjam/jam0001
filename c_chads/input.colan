@@ -1,6 +1,6 @@
 # decl test
 # rstrst ^2
-main := proc () int {
-    print("srtrst");
-    return 42;
+main := proc (a : int) void {
+    x := 2 ^ b && 3.0 + 0xdeadBEEf - 0b10101;
+    return 0666;
 };

@@ -16,6 +16,14 @@ enum Parser_Node_Addressing {
     PA_ENDPOINT
 };
 
+enum Parser_Number_Kind {
+    PNM_HEX,
+    PNM_BIN,
+    PNM_OCT,
+    PNM_INT,
+    PNM_FLT
+};
+
 enum Parser_Node_Kind {
     PN_INVAL,    // ENDPOINT, USED INTERNALLY BY PARSER DONT TOUCH
     PN_RETURN,   // UNARY
@@ -54,6 +62,7 @@ struct Parser_Node {
             strview_t val; 
         } string;
         struct {
+            enum Parser_Number_Kind kind;
             strview_t val; 
         } number;
         struct {

@@ -78,7 +78,7 @@ void print_ast(struct Parser_Node *node, usize depth) {
             printf("String(%.*s)\n", (int)node->data.string.val.size, node->data.string.val.view);
             break;
         case PN_NUMBER:
-            printf("Number(%.*s)\n", (int)node->data.number.val.size, node->data.number.val.view);
+            printf("Number@%d(%.*s)\n", node->data.number.kind, (int)node->data.number.val.size, node->data.number.val.view);
             break;
         case PN_IDENT:
             printf("Ident(%.*s)\n", (int)node->data.ident.val.size, node->data.ident.val.view);
