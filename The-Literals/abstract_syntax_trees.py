@@ -108,6 +108,18 @@ class SetStmt(Stmt):
         defined_variables[self.target] = self.value
 
 
+class CallStmt(Stmt):
+    def __init__(self, func_name, args, postfix_assignment=None):
+        self.func_name = func_name
+        self.args = args
+        self.postfix_assignment = postfix_assignment
+
+    def __repr__(self):
+        if self.postfix_assignment:
+            return f"CALL {self.func_name} WITH {self.args} AND CALL IT {self.postfix_assignment}"
+        else:
+            return f"CALL {self.func_name} WITH {self.args}"
+
 class Stmts:
     def __init__(self, stmt_list):
         self.stmt_list = stmt_list
