@@ -2,17 +2,25 @@ import { inspect } from "util"
 import * as p from "./parserCombinator"
 
 const sourceFile = `
-foo($bar):
-  # First, we double $bar
-  $newBar = $bar
+verboseDouble($input):
+  # Ok, we need to double $input.
+  # We're going to define an accumulator, named acc, and set it to 0.
+  $acc = 0
+  # Now we're going to enter a loop:
   repeat:
-    if $newBar == $bar * 2:
+    # Are we there yet? acc is $acc.
+    if $acc == $input * 2:
+      # $acc is $input * 2!
       break
-    $bar = $bar + 1
-  $bar = $newBar
-  return $bar
+    else:
+      # Nope, $acc is not $input * 2.
+      # We'll add one to acc and try again.
+      $acc = $acc + 1
+  # We did it! acc is $acc, which is $input * 2.
+  return $acc
 
-return foo($input)
+# What's 5 * 2?
+return verboseDouble(5)
 `
 
 function run(text: string){
@@ -24,7 +32,176 @@ function run(text: string){
 
   const parseExpression = _parseExpression()
 
-  return lines.map(parseLine)
+  console.log(toString(executeFunc(
+    -1,
+    { kind: "func", args: [], name: "_main", body: lines.map(parseLine) },
+    Object.create(null),
+    Object.create(null),
+    [],
+  )))
+
+  type Scope = Record<string, { value: unknown } | undefined>
+  type FuncScope = Record<string, ((indentLevel: number, args: unknown[]) => unknown) | undefined>
+
+  function executeFunc(
+    indentLevel: number,
+    func: Statement & {kind: "func"},
+    scope: Scope,
+    funcScope: FuncScope,
+    params: unknown[],
+  ){
+    scope = Object.create(scope)
+    funcScope = Object.create(funcScope)
+    function populateFuncScope(statements: Statement[]){
+      for(const statement of statements)
+        if(statement.kind === "func")
+          funcScope[statement.name] = (i, a) => executeFunc(i, statement, scope, funcScope, a)
+        else if("body" in statement)
+          populateFuncScope(statement.body)
+    }
+    populateFuncScope(func.body)
+    for(const [i, arg] of func.args.entries())
+      scope[arg] = { value: params[i] }
+    let stack: [Statement[], number, boolean][] = [[func.body, 0, false]]
+    main: while(stack.length) {
+      let [statements, index, repeat] = stack.pop()!
+      if(index >= statements.length) {
+        if(repeat) stack.push([statements, 0, true])
+        continue
+      }
+      const statement = statements[index]
+      if(statement.kind === "break") {
+        if(repeat) continue
+        while(true) {
+          if(!stack.length)
+            throw new Error("Nothing to break from")
+          if(stack.pop()![2])
+            continue main
+        }
+      }
+      if(statement.kind === "continue") {
+        if(repeat) {
+          stack.push([statements, 0, true])
+          continue
+        }
+        while(true) {
+          if(!stack.length)
+            throw new Error("Nothing to continue")
+          let top = stack.pop()!
+          if(top[2]) {
+            stack.push([top[0], 0, true])
+            continue main
+          }
+        }
+      }
+      if(statement.kind === "if") {
+        let endIndex = index + 1
+        let others: (Statement & {kind: "else" | "elseif"})[] = []
+        while(statements[endIndex].kind === "else" || statements[endIndex].kind === "elseif") {
+          others.push(statements[endIndex] as never)
+          if(statements[endIndex++].kind === "else")
+            break
+        }
+        stack.push([statements, endIndex, repeat])
+        if(isTruthy(executeExpression(statement.condition)))
+          stack.push([statement.body, 0, false])
+        else
+          for(const other of others)
+            if(other.kind === "else" || isTruthy(executeExpression(other.condition))) {
+              stack.push([other.body, 0, false])
+              continue main
+            }
+        continue
+      }
+      stack.push([statements, index + 1, repeat])
+      if(statement.kind === "return")
+        return executeExpression(statement.value)
+      if(statement.kind === "repeat") {
+        stack.push([statement.body, 0, true])
+        continue
+      }
+      if(statement.kind === "else" || statement.kind === "elseif")
+        throw new Error("Nothing to else")
+      if(statement.kind === "func")
+        continue
+      if(statement.kind === "assignment")
+        (scope[statement.name] ??= { value: null }).value = executeExpression(statement.value)
+      if(statement.kind === "comment")
+        console.error(
+          indent.repeat(indentLevel + stack.length)
+          + statement.text.map(x => x[0] === "$" ? dbg(scope[x]?.value ?? null) : x).join(""),
+        )
+
+    }
+    return null
+
+    function executeExpression(expression: Expression): unknown{
+      if(expression.kind === "literal")
+        return expression.value
+      if(expression.kind === "array")
+        return expression.values.map(executeExpression)
+      if(expression.kind === "variable")
+        return scope[expression.name]?.value ?? null
+      if(expression.kind === "call") {
+        const func = funcScope[expression.name]
+        if(!func) throw new Error("Undefined func " + expression.name)
+        return func(indentLevel + stack.length, expression.args.map(executeExpression))
+      }
+      if(expression.kind === "unaryOp") {
+        const arg = executeExpression(expression.arg)
+        if(expression.op === "!")
+          return !isTruthy(arg)
+        else
+          return -toNum(arg)
+      }
+      if(expression.kind === "binaryOp") {
+        const a = () => executeExpression(expression.args[0])
+        const b = () => executeExpression(expression.args[1])
+        if(expression.op === "==")
+          return eq(a(), b())
+        if(expression.op === "!=")
+          return !eq(a(), b())
+        if(expression.op === "&&")
+          return isTruthy(a()) && isTruthy(b())
+        if(expression.op === "||")
+          return isTruthy(a()) || isTruthy(b())
+        if(expression.op === "%")
+          return toNum(a()) % toNum(b())
+        if(expression.op === "+")
+          return toNum(a()) + toNum(b())
+        if(expression.op === "-")
+          return toNum(a()) - toNum(b())
+        if(expression.op === "*")
+          return toNum(a()) * toNum(b())
+        if(expression.op === "/")
+          return toNum(a()) / toNum(b())
+        const x: never = expression.op
+        return x
+      }
+      const x: never = expression
+      return x
+    }
+  }
+
+  function eq(a: unknown, b: unknown){
+    return a === b
+  }
+
+  function isTruthy(value: unknown){
+    return !!value
+  }
+
+  function dbg(value: unknown){
+    return value + ""
+  }
+
+  function toString(value: unknown){
+    return value + ""
+  }
+
+  function toNum(value: unknown){
+    return +(value as never)
+  }
 
   type Statement =
     | { kind: "comment", text: string[] }
@@ -46,7 +223,7 @@ function run(text: string){
     if((m = text.match(/^(else )?if (.+):$/)))
       return { kind: m[1] ? "elseif" : "if", condition: parseExpression(m[2]), body }
     if((m = text.match(/^(\w+)\(\s*((?:\$\w+\s*,\s*)*(?:\$\w+\s*,?))?\s*\):$/)))
-      return { kind: "func", name: m[1], args: m[2].split(/\s*,\s*/).filter(x => x).map(x => x.slice(1)), body }
+      return { kind: "func", name: m[1], args: m[2].split(/\s*,\s*/).filter(x => x), body }
     if(body.length)
       throw new Error("Unexpected indentation on line " + JSON.stringify(text))
     if((m = text.match(/^#\s*(.*)$/)))
@@ -55,7 +232,7 @@ function run(text: string){
       return { kind: "return", value: parseExpression(m[1] || "null") }
     if(text === "continue" || text === "break")
       return { kind: text }
-    if((m = text.match(/^\$(\w+)\s*=\s*(.+)$/)))
+    if((m = text.match(/^(\$\w+)\s*=\s*(.+)$/)))
       return { kind: "assignment", name: m[1], value: parseExpression(m[2]) }
     throw new Error("Invalid statement")
   }
@@ -66,6 +243,7 @@ function run(text: string){
     | { kind: "unaryOp", op: "0-" | "!", arg: Expression }
     | { kind: "binaryOp", op: "+" | "-" | "*" | "/" | "%" | "&&" | "||" | "==" | "!=", args: [Expression, Expression] }
     | { kind: "call", name: string, args: Expression[] }
+    | { kind: "array", values: Expression[] }
   function _parseExpression(){
     const numberLiteral = p.map(p.regex(/\d+|\d+.\d*|\d*.\d+/), (x): Expression => (
       { kind: "literal", value: +x }
@@ -73,9 +251,13 @@ function run(text: string){
     const stringLiteral = p.map(p.regex(/(["'`])((?:[^\\\n]|\\.)+?)\1/), (x): Expression => (
       { kind: "literal", value: x[2].replace(/\\./g, x => x === "\\n" ? "\n" : x[1]) }
     ))
-    const variable = p.map(p.regex(/\$(\w+)/), (x): Expression => (
-      { kind: "variable", name: x[1] }
+    const variable = p.map(p.regex(/\$\w+/), (x): Expression => (
+      { kind: "variable", name: x[0] }
     ))
+    const exprs = p.optional(p.map(p.concat(
+      p.multiple(p.suffix(() => expr, p.string(","))),
+      p.suffix(() => expr, p.optional(p.string(","), null)),
+    ), x => [...x[0], x[1]]), [])
     const val = p.ws(p.or(
       numberLiteral,
       stringLiteral,
@@ -85,21 +267,27 @@ function run(text: string){
         p.regex(/\w+/),
         p.surround(
           p.string("("),
-          p.optional(p.concat(
-            p.multiple(p.suffix(() => expr, p.string(","))),
-            p.suffix(() => expr, p.optional(p.string(","), null)),
-          ), null),
+          exprs,
           p.string(")"),
         ),
       ), (x): Expression => (
-        { kind: "call", name: x[0][0], args: x[1] ? [...x[1][0], x[1][1]] : [] }
+        { kind: "call", name: x[0][0], args: x[1] }
       )),
+      p.map(
+        p.surround(
+          p.string("["),
+          exprs,
+          p.string("]"),
+        ),
+        (x): Expression => (
+          { kind: "array", values: x }
+        ),
+      ),
     ))
     const op = p.ws(p.or(...(["+", "-", "*", "/", "%", "&&", "||", "==", "!=", "!"] as const).map(x => p.string(x))))
     const expr: p.Parser<Expression> = p.map(
       p.multiple(p.or(val, op)),
       input => {
-        console.log(input)
         let outputQueue = []
         let opStack = []
         let op = false
@@ -178,5 +366,5 @@ function run(text: string){
   }
 }
 
-console.log(inspect(run(sourceFile), { depth: null, colors: true }))
+run(sourceFile)
 
