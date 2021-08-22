@@ -123,7 +123,7 @@ function parse(toks) {
     if (pos < toks.length && toks[pos].type === type) {
       pos += 1;
       // to make it conceptually simpler, we'll be using a lot of tokens directly in the parser
-      return toks[pos - 1];
+      return { ...toks[pos - 1], start: pos - 1, end: pos };
     } else {
     	return null;
     }
@@ -140,21 +140,22 @@ function parse(toks) {
     const start = pos;
     const name = eatType('identifier');
     if (!name) { pos = start; return; }
-    return { ...name, syntaxType: 'type' };
+    return { type: 'type', name: name, syntaxType: 'type' };
     // todo: generics e.g. (an array of integers)
   }
   function argumentDeclarations() {
     const start = pos;
+    let error = null;
     if (!eat('[')) { pos = start; return; }
     const args = [];
     while (true) {
       const name = eatType('identifier');
       if (!name) { break; }
       const dirs = directives();
-      args.push({ ...name, directives: dirs });
+      args.push({ ...name, syntaxType: 'function_parameter', directives: dirs, end: pos });
     }
-    if (!eat(']')) { pos = start; return; }
-    return { type: 'argument_declarations', arguments: args, start: start, end: pos };
+    if (!eat(']')) { error = 'expected <code>]</code>'; }
+    return { type: 'argument_declarations', arguments: args, start: start, end: pos, error: error };
   }
   function arguments_() {
     const start = pos;
@@ -162,10 +163,8 @@ function parse(toks) {
     if (!eat('[')) { pos = start; return; }
     const args = [];
     let expr;
-    while ((expr = expression())) {
-      args.push(expr);
-    }
-    if (!eat(']')) { error = 'we couldn\'t find the closing `]` for the `[` at ' + toks[start].start; }
+    while ((expr = expression())) { args.push(expr); }
+    if (!eat(']')) { error = 'expected <code>]</code>'; }
     return { type: 'arguments', arguments: args, error: error, start: start, end: pos };
   }
   function simpleExpression() {
@@ -174,7 +173,7 @@ function parse(toks) {
     const literal = eatType('string') || eatType('integer') || eatType('decimal') || eatType('boolean') || eatType('null');
     if (literal) {
       // const directives_ = directives();
-      return { ...literal, start: start, end: pos };
+      return literal;
     } else {
       // todo: destructure maybe idk
       let expr = eatType('identifier');
@@ -184,14 +183,14 @@ function parse(toks) {
             let property = eatType('identifier');
             // todo: parse successfully but error on node?
             let error;
-            if (!property) { error = 'property name goes after `.`, not `' + toks[pos].type + '(' + toks[pos].value + ')`'; }
+            if (!property) { error = 'expected property name'; }
             // rename type to `property` mostly for highlighting purposes
             expr = { type: 'access', target: expr, property: { ...property, syntaxType: 'property' } };
           } else {
             // [] is both array/dict access and call
             const args = arguments_();
             if (!args) { break; }
-            expr = { type: 'call', target: expr.type === 'identifier' ? { ...expr, syntaxType: 'function' } : expr, arguments: args };
+            expr = { type: 'function_call', target: expr.type === 'identifier' ? { ...expr, syntaxType: 'function' } : expr, arguments: args };
           }
         }
         return { ...expr, start: start, end: pos };
@@ -212,11 +211,11 @@ function parse(toks) {
     function handleOp(op) {
       if (isPrefix[op.value]) {
         const operand = exprs.pop();
-        exprs.push({ type: 'prefix', value: op.value, operand: operand, start: operand.start, end: operand.end });
+        exprs.push({ type: 'prefix', operator: op, operand: operand, start: operand.start, end: operand.end });
       } else {
         const right = exprs.pop();
         const left = exprs.pop();
-        exprs.push({ type: 'infix', value: op.value, left: left, right: right, start: left.start, end: right.end });
+        exprs.push({ type: 'infix', operator: op, left: left, right: right, start: left.start, end: right.end });
       }
     }
     while (true) {
@@ -255,7 +254,8 @@ function parse(toks) {
     if (directives_.length) { exprs[exprs.length - 1].directives = directives_; }
     // todo: if there are exprs or ops remaining, error?
     // todo: handle directives?
-    return exprs[0];
+    // return exprs[0];
+    return exprs[0] ? { ...exprs[0], end: pos } : null;
   }
   function firstClassComment() {
     const start = pos;
@@ -272,7 +272,7 @@ function parse(toks) {
         directiveType = directive.value;
         const expr = expression();
         value = { condition: expr };
-        if (!expr) { error = 'directive `' + directive.value + '` is missing a condition'; break; }
+        if (!expr) { error = 'expected condition'; break; }
         break;
       }
       case 'of': {
@@ -305,7 +305,7 @@ function parse(toks) {
         directiveType = 'type';
         const type_ = type();
         if (!type_) { error = 'you need to specify a type when using the directive `' + directive.value + '`'; }
-        value = { type: type_ };
+        value = { valueType: type_ };
         break;
       }
       case 'for': {
@@ -338,7 +338,7 @@ function parse(toks) {
           case 'a': case 'an': {
             const type_ = type();
             if (!type_) { error = 'you need to specify a type when using the directive `' + directive.value + '`'; }
-            value = { type: type_ };
+            value = { returnType: type_ };
             break;
           }
           default: {
@@ -440,14 +440,16 @@ function parse(toks) {
     // naturally, directives don't have their own directives
     return { type: 'directive', directive: directiveType, ...value, comment: comment.length ? comment.join(' ') : null, start: start, end: pos, error: error || null, directives: [] };
   }
-	function statements() {
+  function statements() {
     const start = pos;
     let error = null;
+    const dirs = [];
     let comment;
     while ((comment = firstClassComment())) {
       // it's a directive.
       if (comment.directive) { error = 'directives can\'t come before expressions in blocks'; }
       // else skip
+      dirs.push(comment);
     }
   	const statements = [];
     let current;
@@ -457,15 +459,15 @@ function parse(toks) {
     	statements.push(current);
     }
     // no directives - trailing directive would just be associated with the last statement
-    return { type: 'statements', statements: statements, start: start, end: pos, directives: [], error: error };
+    return { type: 'statements', statements: statements, start: start, end: pos, directives: dirs, error: error };
   }
   function block() {
     const start = pos;
     let errors = [];
     if (!eat('{')) { pos = start; return; }
   	const result = statements();
-    if (!result) { errors.push('missing statements (this shouldn\'t be possible)'); }
-    if (!eat('}')) { errors.push('missing closing brace'); }
+    if (!result) { errors.push('expected statements (this shouldn\'t be possible)'); }
+    if (!eat('}')) { errors.push('expected <code>}</code>'); }
     const dirs = directives();
     return { type: 'block', statements: result, start: start, end: pos, directives: dirs, error: errors.length ? errors.join(', ') : null };
   }
@@ -474,20 +476,18 @@ function parse(toks) {
     let errors = [];
     if (!eat('function')) { pos = start; return; }
     const name = eatType('identifier');
-    if (!name) { errors.push('function has no name'); }
+    if (!name) { errors.push('expected function name'); }
     const args = argumentDeclarations();
-    if (!args) { errors.push('function has no inputs'); }
+    if (!args) { errors.push('expected function input list (<code>[first second]</code>)'); }
     const dirs = directives();
     const body = block();
-    if (!body) { errors.push('function has no body'); }
+    if (!body) { errors.push('expected function body (a block)'); }
     dirs.push(...directives());
-    return { type: 'function', name: name, arguments: args, body: body, start: start, end: pos, error: errors.length ? errors.join(', ') : null, directives: directives };
+    return { type: 'function_definition', functionKeyword: { type: 'identifier', syntaxType: 'keyword', start: start, end: start + 1 }, name: { ...name, syntaxType: 'function' }, arguments: args, body: body, start: start, end: pos, error: errors.length ? errors.join(', ') : null, directives: dirs };
   }
  
   return statements();
 }
-
-function q(obj) { console.log(obj); return obj; }
 
 // ok break isn't too natural language-y. might need to rename this
 const $BREAK = Symbol('BREAK');
@@ -616,6 +616,10 @@ function applyDirectives(directives, fn) {
         }
         break;
       }
+      case 'return_type': {
+        // impl
+        break;
+      }
       case null: {
         // do nothing
         break;
@@ -668,7 +672,7 @@ function functionize(node) {
     }
     case 'infix': { // { left: expression, right: expression }
       const leftFn = functionize(node.left), rightFn = functionize(node.right);
-      switch (node.value) {
+      switch (node.operator.value) {
         case '+': { fn = (scope) => leftFn(scope) + rightFn(scope); break; }
         case '-': { fn = (scope) => leftFn(scope) - rightFn(scope); break; }
         case '*': { fn = (scope) => leftFn(scope) * rightFn(scope); break; }
@@ -683,16 +687,16 @@ function functionize(node) {
         case '<=': { fn = (scope) => leftFn(scope) <= rightFn(scope); break; }
         case '>': { fn = (scope) => leftFn(scope) > rightFn(scope); break; }
         case '>=': { fn = (scope) => leftFn(scope) >= rightFn(scope); break; }
-        default: throw new Error('unrecognized in operator ' + node.value);
+        default: throw new Error('unrecognized in operator ' + node.operator.value);
       }
       break;
     }
     case 'prefix': { // { operand: expression }
       // TODO: naming
       const operandFn = functionize(node.operand);
-      switch (node.value) {
+      switch (node.operator.value) {
         case '!': { fn = (scope) => !operandFn(scope); break; }
-        default: throw new Error('unrecognized prefix operator ' + node.value);
+        default: throw new Error('unrecognized prefix operator ' + node.operator.value);
       }
       break;
     }
@@ -716,7 +720,7 @@ function functionize(node) {
       fn = (scope) => argFns.map((fn) => fn(scope));
       break;
     }
-    case 'call': { // { target: expression, arguments: expression[] }
+    case 'function_call': { // { target: expression, arguments: expression[] }
       const [targetFn, argsFn] = [node.target, node.arguments].map(functionize);
       fn = (scope) => targetFn(scope)(...argsFn(scope));
       break;
@@ -742,7 +746,7 @@ function functionize(node) {
       fn = functionize(node.statements);
       break;
     }
-    case 'function': { // { arguments: identifier[], body: block }
+    case 'function_definition': { // { arguments: identifier[], body: block }
       // todo: we don't execute args but we should still use the directives to typecheck
       // const argFns = node.args.map(functionize);
       const bodyFn = functionize(node.body);

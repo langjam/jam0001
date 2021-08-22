@@ -3,11 +3,13 @@
 <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==">
 <h2>input</h2>
 <textarea id="input"></textarea><br>
+<h2>highlighted</h2>
 <pre id="highlight"></pre>
 <h2>errors</h2>
 <textarea id="errors" readonly></textarea>
 <h2>output</h2>
 <textarea id="output" readonly></textarea>
+<div id="tooltip"></div>
 <style>
 body, textarea, input {
   background-color: #222;
@@ -25,15 +27,53 @@ textarea {
   font-family: monospace;
 }
 
-:root {
-  --comment: #727072;
-  --string: #ffd866;
-  --integer: #ab9df2;
-  --decimal: #ab9df2;
-  --boolean: #ab9df2;
-  --null: #ab9df2;
-  --property: #a9dc76;
+#tooltip {
+  display: none;
+  max-width: 30em;
+  position: fixed;
+  background: #444;
 }
+
+:root {
+  --identifier: white;
+  --comment: #727072;
+  --directive: var(--comment);
+  --directive_style: normal;
+  --string: #ffd866;
+  --constant: #ab9df2;
+  --integer: var(--constant);
+  --decimal: var(--constant);
+  --boolean: var(--constant);
+  --null: var(--constant);
+  --keyword: #ff6188;
+  --operator: var(--keyword);
+  --property: #a9dc76;
+  --function: #a9dc76;
+  --function_definition: #a9dc76;
+  --function_parameter: #fc9867;
+  --function_parameter_style: italic;
+  --error: #662222;
+  --type: #78dce8;
+  --type_style: italic;
+}
+
+.type { color: var(--type); font-style: var(--type_style); }
+.comment { color: var(--comment); }
+.directive { color: var(--directive); font-style: var(--directive_style); }
+.identifier { color: var(--identifier); }
+.string { color: var(--string); }
+.integer { color: var(--integer); }
+.decimal { color: var(--decimal); }
+.boolean { color: var(--boolean); }
+.null { color: var(--null); }
+.property { color: var(--property); }
+.function { color: var(--function); }
+.function_parameter { color: var(--function_parameter); font-style: var(--function_parameter_style); }
+.keyword { color: var(--keyword); }
+.operator { color: var(--operator); }
+
+.error { background: var(--error); }
+
 </style>
 <script>
 ///<reference lib="es2020" />
@@ -48,6 +88,7 @@ const input = document.getElementById('input');
 // @ts-ignore
 const output = document.getElementById('output');
 const highlight = document.getElementById('highlight');
+const tooltip = document.getElementById('tooltip');
 // notes
 // we skip various steps like typechecking and semantic analysis (no break outside of loops)
 
@@ -81,12 +122,57 @@ function prettyPrintNode(node, toks, padding='', name='') {
   return result;
 }
 
+function openTooltip(el, html) {
+  tooltip.innerHTML = html;
+  const rect = el.getBoundingClientRect();
+  tooltip.style.left = rect.left + 'px';
+  tooltip.style.top = 'calc(' + rect.top + 'px + 1em)';
+  tooltip.style.display = 'block';
+}
+
+function closeTooltip() {
+  tooltip.style.display = null;
+}
+
 function highlightInto(code, toks, node, element) {
   // todo
   // also todo: associate ast/cst with function, associate element with ast/cst node
   // add node type & node syntax type (if it exists) to class name
 
   // element.innerText = prettyPrintNode(node, toks);
+  function displayNode(node, start, end) {
+    const span = document.createElement('span');
+    if ('type' in node) {
+      span.classList.add(node.type);
+    }
+    if ('syntaxType' in node) { span.classList.add(node.syntaxType); }
+    // TODO: 
+    if (node && node.error) {
+      // todo: add tooltip
+      span.classList.add('error');
+      span.onmouseover = () => {
+        openTooltip(span, node.error);
+      };
+      span.onmouseout = () => {
+        closeTooltip();
+      }
+    }
+    const children = Object.values(node).filter((v) => typeof v === 'object' && v !== null && ((Array.isArray(v) && v.length !== 0) || 'start' in v))
+      // @ts-ignore
+      .map((v) => Array.isArray(v) ? ((arr) => { arr.start = arr[0].start; arr.end = arr[arr.length - 1].end; return arr; })([...v]) : v)
+      .sort((a, b) => a.start > b.start ? 1 : a.start < b.start ? -1 : a.end - b.end);
+    let pos = start;
+    for (const child of children) {
+      // todo: fix whitespace
+      span.appendChild(document.createTextNode(code.slice(pos, toks[child.start].start)));
+      span.appendChild(displayNode(child, toks[child.start].start, toks[child.end - 1].end));
+      pos = toks[child.end - 1].end;
+    }
+    span.appendChild(document.createTextNode(code.slice(children.length !== 0 ? toks[children[children.length - 1].end - 1].end : start, end)));
+    return span;
+  }
+  while (element.firstChild) { element.removeChild(element.firstChild); }
+  element.appendChild(displayNode(node, 0, code.length));
 }
 
 function didError(node) {
@@ -109,9 +195,12 @@ input.oninput = debounce(() => {
   output.value = '';
   errors.value = '';
   try {
+    // @ts-ignore
     const toks = lex(input.value);
+    // @ts-ignore
     const ast = parse(toks);
     highlightInto(input.value, toks, ast, highlight);
+    // @ts-ignore
     functionize(ast)(BUILTINS_SCOPE);
   } catch(e) {
     // errors.value = e;
@@ -180,7 +269,7 @@ println["begin loop test"]
   println[i]
   i + 1 (call this i)
 } (while i < 10)
-println["end loop test"]`;
+println[id["end loop test"`;
 let handle = setInterval(() => {
   if (!('lex' in window)) { return; }
   clearInterval(handle);
