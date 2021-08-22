@@ -45,13 +45,22 @@ impl fmt::Display for Exp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Exp::String(s) => write!(f, "{}", s),
-            Exp::Integer(i) => todo!(),
+            Exp::Integer(i) => write!(f, "{}", i),
             Exp::Float(float) => write!(f, "{}", float),
-            Exp::Boolean(b) => todo!(),
-            Exp::Datetime(dt) => todo!(),
-            Exp::Array(a) => todo!(),
-            Exp::Table(t) => todo!(),
-            Exp::Fn(f) => todo!(),
+            Exp::Boolean(b) => write!(f, "{}", b),
+            Exp::Datetime(dt) => write!(f, "{}", dt),
+            Exp::Array(a) => {
+                write!(f, "(")?;
+
+                // yeah this has an extra , at the end idk for now
+                for v in a {
+                    write!(f, "{}, ", v)?;
+                }
+
+                write!(f, ")")
+            }
+            Exp::Table(_t) => write!(f, "[table]"),
+            Exp::Fn(_func) => write!(f, "[func]"),
         }
     }
 }
@@ -84,7 +93,7 @@ fn main() {
     let toml = fs::read_to_string(path).expect("Could not read the file");
     let value = toml.parse::<Value>().unwrap();
 
-    let program = Exp::from(value["main"].clone());
+    let program = Exp::from(value.get("main").expect("you have to have a table with the 'main' key").clone());
 
     let mut env = Env::default();
 
@@ -110,6 +119,11 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
             panic!("can't find a function '{}'", values[0]);
 
         }
-        _ => todo!(),
+        Exp::Integer(_) => exp.clone(),
+        Exp::Float(_) => exp.clone(),
+        Exp::Boolean(_) => exp.clone(),
+        Exp::Datetime(_) => exp.clone(),
+        Exp::Table(_) => exp.clone(),
+        Exp::Fn(_) => panic!("what the eff is this"),
     }
 }
