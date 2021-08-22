@@ -5,7 +5,7 @@ In Liner, any comment that contains valid Liner code can modify the program by m
 
 ## Build instructions
 
-1. Obtain a nightly Rust compiler [`rustup.rs`](https://rustup.rs/). Note: if your default rustc is stable, prefix each cargo command with `+nightly` or [switch to nightly by default](https://stackoverflow.com/a/58228429).
+1. Obtain a nightly Rust compiler using [`rustup.rs`](https://rustup.rs/). Note: if your default rustc is stable, prefix each cargo command with `+nightly` or [switch to nightly by default](https://stackoverflow.com/a/58228429).
 2. Build the project and run the tests with `cargo test`.
 3. Read the next section and run the sample programs using `cargo run --release -- <file.ln>`. For example, to run readme.lm, execute:
 
