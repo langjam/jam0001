@@ -1,0 +1,110 @@
+// memory_size is 100
+// one is 1
+// calloc is not here this is big
+one.memory_size // memory is calloc
+// data_ptr is 0
+// zero is 0
+
+// inc is not here
+// dec is not here
+// add is not here this is big
+// storeb is not here this is big
+// deref is not here
+// sizeptr is not here
+// readfile is not here
+// not is not here
+// equal is not here this is big
+// equalchar is not here this is big
+
+// getchar is not here
+// putchar is not here
+// puts is not here
+
+// left is '<'
+// right is '>'
+// up is '+'
+// down is '-'
+// lstart is '['
+// lend is ']'
+// in is ','
+// out is '.'
+
+// inc_data is with unused
+memory.data_ptr // still in inc_data oft is add
+(oft.). // still in inc_data data is deref then inc
+oft.data // still in inc_data yeet is storeb
+
+// dec_data is with unused
+memory.data_ptr // still in dec_data oft is add
+(oft.). // still in dec_data data is deref then dec
+oft.data // still in dec_data yeet is storeb
+
+// inc_ptr is with v
+v. // still in inc_ptr return is inc
+// dec_ptr is with v
+v. // still in dec_ptr return is dec
+
+(memory.data_ptr).(unused.) // parse_in is with unused add then getchar then storeb
+(memory.data_ptr).. // parse_out is with unused add then deref then putchar
+
+* readfile(*(argv + sizeof(char*)))
+(argv.(zero.)).. // program is sizeptr then add then deref then readfile
+
+program // ip is
+
+// parse_lstart is with new_ip
+(memory.data_ptr)..zero // still in parse_lstart eq is add then deref then equalchar
+eq. // still in parse_lstart eq is not
+new_ip // still in parse_lstart if eq return is
+// still in parse_lstart lbcounter is 0
+
+// still in parse_lstart loop_start1 is 62
+new_ip. // still in parse_lstart val is deref
+val.lstart // still in parse_lstart eq is equalchar
+lbcounter. // still in parse_lstart if eq lbcounter is inc
+val.lend // still in parse_lstart eq is equalchar
+// eq is 0
+lbcounter. // still in parse_lstart if eq lbcounter is dec
+lbcounter.zero // still in parse_lstart eq is equal
+new_ip // still in parse_lstart if eq return is
+new_ip. // still in parse_lstart new_ip is inc
+loop_start1 // still in parse_lstart goto is
+
+// parse_lend is with new_ip
+// still in parse_lend rbcounter is 0
+
+// still in parse_lend loop_start2 is 77
+new_ip. // still in parse_lend val is deref
+val.lend // still in parse_lend eq is equalchar
+rbcounter. // still in parse_lend if eq rbcounter is inc
+val.lstart // still in parse_lend eq is equalchar
+rbcounter. // still in parse_lend if eq rbcounter is dec
+rbcounter.zero // still in parse_lend if eq eq is equal
+new_ip. // still in parse_lend new_ip is dec
+new_ip // still in parse_lend if eq return is
+loop_start2 // still in parse_lend goto is
+
+// loop is 88
+ip.. // cond is deref then not
+zero // if cond return is
+ip. // inst is deref
+
+inst.left // eq is equalchar
+data_ptr. // if eq data_ptr is dec_ptr
+inst.right // eq is equalchar
+data_ptr. // if eq data_ptr is inc_ptr
+inst.up // eq is equalchar
+ip. // if eq yeet is inc_data
+inst.down // eq is equalchar
+ip. // if eq yeet is dec_data
+inst.lstart // eq is equalchar
+ip. // if eq ip is parse_lstart
+inst.lend // eq is equalchar
+ip. // if eq ip is parse_lend
+inst.in // eq is equalchar
+ip. // if eq yeet is parse_in
+inst.out // eq is equalchar
+ip. // if eq yeet is parse_out
+
+ip. // ip is inc
+loop // goto is
