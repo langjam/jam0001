@@ -36,5 +36,5 @@ main := proc () void {
         print((((celsius - 1) * .2 + celsius) + ((celsius - 300) * .04) / 5));
 
         celsius = celsius + 10;
-    };
+    }
 };

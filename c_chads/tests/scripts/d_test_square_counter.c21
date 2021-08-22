@@ -10,5 +10,5 @@ main := proc () void {
         print(a);
         a = a + b;
         b = b + 2;
-    };
+    }
 };

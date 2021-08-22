@@ -1,14 +1,17 @@
 #include "parser.h"
 #include <stdio.h>
+#include <stdlib.h>
 typedef struct Parser_Node pnode_t;
 typedef struct Parser_State pstate_t;
 typedef struct Token tok_t;
 typedef enum Parser_Node_Kind pnode_kind_t;
 
 static struct Parser_State parser;
+
 struct {
     rune unmatched;
     string expected;
+    usize delimpos;
     bool fail, panicking;
 } error_handling = {
     .expected = NULL,
@@ -24,7 +27,6 @@ static void add_comments() {
     struct Span spn = lex_get_comment(&parser.lexer);
     while (!(spn.from == 0 && spn.size == 0)) {
         strview_t view = strview_span(spn, parser.lexer.src);
-        printf("Adding comment %.*s\n", (int)view.size, view.view);
         vec_push(&preceding_comments, &view);
         spn = lex_get_comment(&parser.lexer);
     }
@@ -117,13 +119,16 @@ static tok_t peek() {
     return parser.current_token;
 }
 
-static bool skipsemi() {
-    if (peek().tt == TT_SEMI) {
-        EH_MESSAGE("Extraneous semicolon."); 
+static bool skipdelim(enum Token_Type tt) {
+    if (peek().tt == tt) {
+        if (tt == TT_COMMA)
+            EH_MESSAGE("Extraneous comma."); 
+        if (tt == TT_SEMI)
+            EH_MESSAGE("Extraneous semicolon."); 
         error_handling.fail = true;
         tok_t t = peek();
         lineinfo(&t);
-        while (peek().tt == TT_SEMI) pull();   
+        while (peek().tt == tt) pull();   
         return true;
     }
     return false;
@@ -147,12 +152,13 @@ static void assert_tt(tok_t *tok, enum Token_Type tt) {
     }
 }
 
-static void skip_tt(enum Token_Type tt) {
-    if (error_handling.panicking) return;
+static bool skip_tt(enum Token_Type tt) {
+    if (error_handling.panicking) return true;
     tok_t tok = pull();
     if (tok.tt != tt) {
         stray(&tok);
     }
+    return false;
 }
 
 __attribute__((unused))
@@ -279,7 +285,7 @@ static pnode_t pnode_endpoint(pnode_kind_t kind) {
     };
 }
 
-static pnode_t delimited(pnode_kind_t kind, const string open, const string shut, bool mustclose, bool autohandle, pnode_t callback()) {
+static pnode_t delimited(pnode_kind_t kind, const string open, enum Token_Type between, const string shut, bool mustclose, bool autohandle, pnode_t callback()) {
     if (kind == PN_TYPELIST) 
         setexpect("Did you mean to create a parameter list?");
     pnode_t node = pnode_listing(kind);
@@ -291,17 +297,27 @@ static pnode_t delimited(pnode_kind_t kind, const string open, const string shut
         pnode_t v = callback();
         pnode_attach(&node, v);
         if (error_handling.panicking) {
-            while (!(peek().tt == TT_SEMI || check(shut))) pull();
+            usize depth = 0;
+            while (true) {
+                if (depth == 0 && check(shut)) break;
+                if (peek().tt == between) break;
+                if (check(open)) depth += 1;
+                if (check(shut)) depth -= 1;
+                pull();
+            }
             error_handling.panicking = false;
         }
         if (check(shut) && (!mustclose)) break;
         else if (!autohandle)
             if (!check(shut) || mustclose) { 
-                setexpect("Expected semicolon instead");
-                skip_tt(TT_SEMI);
+                if (between == TT_COMMA)
+                    setexpect("Expected comma instead");
+                else if (between == TT_SEMI)
+                    setexpect("Expected semicolon instead");
+                skip_tt(between);
                 setexpect(NULL);
             }
-        skipsemi();
+        skipdelim(between);
     }
     setexpect(NULL);
     enddelim(delim);
@@ -316,17 +332,30 @@ static pnode_t maybe_call() {
     pnode_t left = value();
     if (!check("("))
         return left;
-    return pnode_binary(PN_CALL, left, delimited(PN_PARAMS, "(", ")", false, false, most_important_expression));
+    return pnode_binary(PN_CALL, left, delimited(PN_PARAMS, "(", TT_COMMA, ")", false, false, most_important_expression));
 }
 
 static pnode_t declaration(tok_t on);
 
-static strview_t typedecl() {
+static struct Parser_Type typedecl() {
+    struct Vec OF(usize) depths = vec_new(sizeof(usize));
+    while (peek().tt == TT_INTEGER || peek().tt == TT_DEF) {
+        usize siz = 0;
+        if (peek().tt == TT_INTEGER) {
+            tok_t t = pull();
+            siz = (usize)strtol((const char *)(t.span.from+parser.lexer.src), NULL, 10);
+        }
+        vec_push(&depths, &siz);
+        skip_tt(TT_DEF);
+    }
     setexpect("Expected type name");
     tok_t token = pull();
     assert_tt(&token, TT_IDENT);
     setexpect(NULL);
-    return strview_span(token.span, parser.lexer.src);
+    return (struct Parser_Type) {
+        .name = strview_span(token.span, parser.lexer.src),
+        .depths = depths
+    };
 }
 
 #define OPS_W 4
@@ -383,7 +412,7 @@ static pnode_t pulldeclaration() {
 static pnode_t statement();
 
 static pnode_t body() {
-    return delimited(PN_BODY, "{", "}", true, true, statement);
+    return delimited(PN_BODY, "{", TT_SEMI, "}", true, true, statement);
 }
 
 static pnode_t statement() {
@@ -434,6 +463,15 @@ static pnode_t statement() {
     return node;
 }
 
+static pnode_t initializer() {
+    tok_t field = pull();
+    assert_tt(&field, TT_IDENT);
+    skip_tt(TT_DEF);
+    pnode_t node = pnode_unary(PN_INIT, most_important_expression());
+    node.data.init.name = strview_span(field.span, parser.lexer.src);
+    return node;
+}
+
 static pnode_t value() {
     tok_t token = peek();
     pnode_t value_node;
@@ -444,6 +482,9 @@ static pnode_t value() {
             value_node = pnode_endpoint(PN_STRING);
             value_node.data.string.val = strview_span(token.span, parser.lexer.src);
             return value_node;
+        case TT_DEF:
+            skip_tt(TT_DEF);
+            return delimited(PN_LIST, "{", TT_COMMA, "}", false, false, most_important_expression);
         case TT_HEXADECIMAL:
             kind = PNM_HEX; goto meat;
         case TT_BINARY:
@@ -471,10 +512,20 @@ static pnode_t value() {
                 return value_node;
             }
         }
+        case TT_NEW:{ 
+            pull();
+            struct Parser_Type type = typedecl();
+            value_node = delimited(PN_NEW, "{", TT_COMMA, "}", false, false, initializer);
+            value_node.data.newinst.type = type;
+            return value_node;
+        }
+        case TT_STRUCT:
+            pull();
+            return delimited(PN_STRUCT, "{", TT_COMMA, "}", false, false, pulldeclaration);
         case TT_PROC:
             pull();
-            pnode_t left = delimited(PN_TYPELIST, "(", ")", false, false, pulldeclaration);
-            strview_t returntype = typedecl();
+            pnode_t left = delimited(PN_TYPELIST, "(", TT_COMMA, ")", false, false, pulldeclaration);
+            struct Parser_Type returntype = typedecl();
             value_node = pnode_binary(
                 PN_PROC, 
                 left,
@@ -483,7 +534,7 @@ static pnode_t value() {
             value_node.data.proc.return_type = returntype;
             return value_node;
         case TT_LPAREN:
-            skip_tt(TT_LPAREN);
+            if (skip_tt(TT_LPAREN)) return inval();
             value_node = most_important_expression();
             skip_tt(TT_RPAREN);
             return value_node;
@@ -516,8 +567,12 @@ static pnode_t declaration(tok_t on) {
     setexpect(NULL);
     pnode_t decl_node = pnode_endpoint(PN_DECL);
     decl_node.data.decl.name = strview_span(on.span, parser.lexer.src);
-    decl_node.data.decl.type = strview_from("_");
+    decl_node.data.decl.type = (struct Parser_Type) {
+        .name = strview_from("_"),
+        .depths = vec_new(sizeof(usize))
+    };
     if (!check("=")) {
+        vec_drop(&decl_node.data.decl.type.depths);
         decl_node.data.decl.type = typedecl();
     }
     decl_node.data.decl.annotations = leak_comments();
