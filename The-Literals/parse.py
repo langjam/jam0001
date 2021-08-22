@@ -151,6 +151,10 @@ class Parser:
         return Stmts(stmts)
 
     def parse_stmt(self):
+        token, value = self.peek_lexeme()
+        if token == Token.IF_KEYWORD:
+            self.advance()
+            return self.parse_if_stmt()
         contents = self.parse_stmt_contents()
         token, value = self.peek_lexeme()
         contains_done = False
@@ -165,9 +169,6 @@ class Parser:
         if token == Token.SETVAR:
             self.advance()
             return self.parse_set_stmt()
-        elif token == Token.IF_KEYWORD:
-            self.advance()
-            return self.parse_if_stmt()
         elif token == Token.IDENTIFIER_WORD:
             return self.parse_func_call()
 
@@ -192,7 +193,14 @@ class Parser:
         condition = self.parse_expr()
         self.expect(Token.THEN)
         stmt = self.parse_stmt_contents()
-        return IfStmt(condition, stmt)
+        token, value = self.peek_lexeme()
+        contains_done = False
+        if token == Token.LEAVE_FUNC:
+            self.advance()
+            contains_done = True
+        self.expect(Token.DOT)
+        if_stmt = IfStmt(condition, stmt, contains_done)
+        return Stmt(if_stmt)
 
     def parse_func_call(self):
         return self.parse_call_body()
@@ -256,7 +264,7 @@ class Parser:
         token, value = self.peek_lexeme()
         if token == Token.NUMBER:
             operand_token, operand_value = self.expect(Token.NUMBER)
-            return Number(operand_value)
+            return Number(int(operand_value))
         elif token == Token.IDENTIFIER_WORD:
             varname = self.parse_identifier()
             return Variable(varname)
@@ -473,55 +481,55 @@ if __name__ == "__main__":
 
         return generator().__next__
 
-    parser = Parser(program())
-    parser.parse()
+    # parser = Parser(program())
+    # parser.parse()
 
-    parser = Parser(program(set_var_to_constant))
-    parser.parse()
+    # parser = Parser(program(set_var_to_constant))
+    # parser.parse()
 
-    parser = Parser(program(set_var_to_var))
-    parser.parse()
+    # parser = Parser(program(set_var_to_var))
+    # parser.parse()
 
-    parser = Parser(program(set_var_to_var_binop))
-    parser.parse()
+    # parser = Parser(program(set_var_to_var_binop))
+    # parser.parse()
 
-    parser = Parser(program(if_stmt_compare_constants))
-    parser.parse()
+    # parser = Parser(program(if_stmt_compare_constants))
+    # parser.parse()
 
-    parser = Parser(program(if_stmt_compare_variable_and_constant))
-    parser.parse()
+    # parser = Parser(program(if_stmt_compare_variable_and_constant))
+    # parser.parse()
 
-    parser = Parser(program(if_stmt_compare_variable_and_variable))
-    parser.parse()
+    # parser = Parser(program(if_stmt_compare_variable_and_variable))
+    # parser.parse()
 
-    parser = Parser(program(if_stmt_compare_constants_and_leave))
-    parser.parse()
+    # parser = Parser(program(if_stmt_compare_constants_and_leave))
+    # parser.parse()
 
-    parser = Parser(
-        program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
-    )
-    parser.parse()
+    # parser = Parser(
+    #     program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
+    # )
+    # parser.parse()
 
-    parser = Parser(program(function_no_params_no_return))
-    parser.parse()
+    # parser = Parser(program(function_no_params_no_return))
+    # parser.parse()
 
-    parser = Parser(program(function_params_no_return))
-    parser.parse()
+    # parser = Parser(program(function_params_no_return))
+    # parser.parse()
 
-    parser = Parser(program(function_params_and_return))
-    parser.parse()
+    # parser = Parser(program(function_params_and_return))
+    # parser.parse()
 
-    parser = Parser(program(code, set_var_to_constant))
-    parser.parse()
+    # parser = Parser(program(code, set_var_to_constant))
+    # parser.parse()
 
-    parser = Parser(program(function_call_no_params_no_result))
-    parser.parse()
+    # parser = Parser(program(function_call_no_params_no_result))
+    # parser.parse()
 
-    parser = Parser(program(function_call_no_params_with_result))
-    parser.parse()
+    # parser = Parser(program(function_call_no_params_with_result))
+    # parser.parse()
 
-    parser = Parser(program(function_call_with_params_and_result))
-    parser.parse()
+    # parser = Parser(program(function_call_with_params_and_result))
+    # parser.parse()
 
     input_file = "samples/fib.comment"
     with open(input_file, "r") as f:

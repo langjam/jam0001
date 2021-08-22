@@ -6,7 +6,7 @@ This is a sample .comment program. This line, ironically, is ignored because it 
  * @param n
  * @return fib
  */
-// If n is 0 then set fib to 1 and we're done.
+// If n is 0 then set fib to 0 and we're done.
 // If n is 1 then set fib to 1 and we're done.
 // Calculate the nth fibonacci number with n as n - 1 and call it x.
 // Calculate the nth fibonacci number with n as n - 2 and call it y.
