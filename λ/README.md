@@ -85,13 +85,52 @@ r.z <- 4; {- "You can even add new fields to an existing record!"; -}
 
 `boros`  comments are delimited by `{-` and `-}`. Currently, there's no support for line comments or nested comments.
 
-In `boros`, comments *are interpreted as part of the source code*.
+In `boros`, comments *are interpreted as part of the source code*. (Can't get more first-class than that, right?)
 
 Furthermore, `boros` scripts have access to a value called `comments`, which contains the list of all comments in the source file.
 
 The script can modify this list, and when the script finishes, the comments *are replaced with the new values from the `comments` list*, and *the script is re-run*. This continues until either the script stops modifying the comments, or calls the `halt ()` function.
 
 A good example of this can be found in the [Fibonacci](Examples/Fibonacci.brs) example.
+
+### Other bits of syntax
+
+#### Custom operators
+
+```haskell
+{- "Save division"; -}
+let (/?) a b =
+  if b == 0 then
+    0
+  else
+    a / b
+in
+2 /? 0
+```
+
+#### Lambda expressions
+
+```haskell
+let add = x y -> x + y
+in add 2 3
+
+{- "Same as the following:"; -}
+let add x y = x + y
+in add 2 3
+
+let add = (+)
+in add 2 3
+```
+
+#### Sequencing with `;`
+
+`a; b` will evaluate `a` and ignore its result, then evaluate and return `b`. This can be used to sequence (usually side-effectul) expressions.
+
+```haskell
+print 3;
+a.[0].x <- 2;
+factorial 100
+```
 
 ### Types and Exceptions
 
