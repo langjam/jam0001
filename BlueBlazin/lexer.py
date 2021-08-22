@@ -8,6 +8,9 @@ class TokenType(Enum):
     NUMBER = 3
     COMMENT = 4
     EOF = 5
+    BOOLEAN = 6
+    STRING = 7
+    NULL = 8
 
 
 class Lexer:
@@ -36,7 +39,9 @@ class Lexer:
                     yield self.scan_number()
                 case "+" | "-" | "*" | "!" \
                          | ">" | "<" | "(" \
-                         | ")" | "{" | "=" | ";":
+                         | ")" | "{" | "=" \
+                         | ";" | ":" | "[" \
+                         | "]" | ",":
                     yield self.token(self.line, TokenType.PUNCTUATOR, self.advance())
                 case "}":
                     if self.peek(1) == "}" and self.in_reference:
@@ -119,6 +124,10 @@ class Lexer:
 
         if self.is_keyword(ident):
             return self.token(line, TokenType.KEYWORD, ident)
+        elif ident == "true" or ident == "false":
+            return self.token(line, TokenType.BOOLEAN, ident == "true")
+        elif ident == "null":
+            return self.token(line, TokenType.NULL, None)
         else:
             return self.token(line, TokenType.IDENTIFIER, ident)
 

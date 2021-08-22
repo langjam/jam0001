@@ -1,11 +1,22 @@
 from collections import deque
 from .lexer import Lexer, TokenType
-from enum import Enum
+from enum import Enum, auto
 
 
 class Ast(Enum):
-    SCRIPT = 0
-    LET_DCLR = 1
+    SCRIPT = auto()
+    LET_DCLR = auto()
+    RETURN_STMT = auto()
+    BLOCK = auto()
+    EXPR_STMT = auto()
+    IDENTIFIER = auto()
+    ASSIGNMENT = auto()
+    BINARY = auto()
+    UNARY = auto()
+    BOOLEAN = auto()
+    STRING = auto()
+    NULL = auto()
+    NUMBER = auto()
 
 
 class Parser:
@@ -20,7 +31,7 @@ class Parser:
         while self.peek()["type"] != TokenType.EOF:
             body.append(self.dclr())
 
-        return {"type": Ast.SCRIPT, "body": body}
+        return {"type": Ast.SCRIPT, "body": body, "line": 0}
 
     def dclr(self):
         token = self.peek()
@@ -46,7 +57,7 @@ class Parser:
             self.advance()
             value = self.expr()
 
-        return {"type": Ast.LET_DCLR, "name": name, "value": value}
+        return {"type": Ast.LET_DCLR, "name": name, "value": value, "line": line}
 
     def stmt(self):
         token = self.peek()
@@ -76,11 +87,219 @@ class Parser:
     def return_stmt(self):
         line = self.advance()["line"]
 
+        if not self.in_function:
+            raise Exception(f"Illegal return on line: {line}")
+
+        value = None
+        match self.peek():
+            case {"type": TokenType.PUNCTUATOR, "value": ";"}:
+                value = self.expr()
+
+        self.expect_semicolon()
+
+        return {"type": Ast.RETURN_STMT, "value": value, "line": line}
+
     def block(self):
         line = self.advance()["line"]
+        self.advance()
+        body = []
+        token = self.peek()
+        while True:
+            match token:
+                case {"type": TokenType.PUNCTUATOR, "value": "}"} | {"type": TokenType.EOF}:
+                    break
+                case _:
+                    body.append(self.dclr())
+
+        self.expect(TokenType.PUNCTUATOR, "}")
+        return {"type": Ast.BLOCK, "body": body, "line": line}
 
     def expr_stmt(self):
         line = self.advance()["line"]
+        expression = self.expression()
+        return {"type": Ast.EXPR_STMT, "expression": expression, "line": line}
+
+    def expression(self):
+        expr = self.logic_or()
+
+        token = self.peek()
+        if expr["type"] == Ast.IDENTIFIER \
+                and (token["type"] == TokenType.PUNCTUATOR and token["value"] == "="):
+            self.advance()
+            value = self.expression()
+            return {"type": Ast.ASSIGNMENT, "id": expr, "value": value, "line": expr["line"]}
+
+        return expr
+
+    def logic_or(self):
+        expr = self.logic_and()
+
+        token = self.peek()
+        while token["type"] == TokenType.KEYWORD and token["value"] == "or":
+            self.advance()
+            rhs = self.logic_and()
+            expr = {"type": Ast.BINARY,
+                    "operator": "or",
+                    "left": expr,
+                    "right": rhs,
+                    "line": expr["line"]}
+            token = self.peek()
+
+        return expr
+
+    def logic_and(self):
+        expr = self.equality()
+
+        token = self.peek()
+        while token["type"] == TokenType.KEYWORD and token["value"] == "and":
+            self.advance()
+            rhs = self.equality()
+            expr = {"type": Ast.BINARY,
+                    "operator": "and",
+                    "left": expr,
+                    "right": rhs,
+                    "line": expr["line"]}
+            token = self.peek()
+
+        return expr
+
+    def equality(self):
+        expr = self.comparison()
+        token = self.peek()
+        while True:
+            match token:
+                case {"type": TokenType.PUNCTUATOR, "value": "!="} | {"type": TokenType.PUNCTUATOR, "value": "=="}:
+                    self.advance()
+                    rhs = self.comparison()
+                    expr = {"type": Ast.BINARY,
+                            "operator": token["value"],
+                            "left": expr,
+                            "right": rhs,
+                            "line": expr["line"]}
+                    token = self.peek()
+                case _:
+                    break
+        return expr
+
+    def comparison(self):
+        expr = self.term()
+        token = self.peek()
+        while True:
+            match token:
+                case {"type": TokenType.PUNCTUATOR, "value": ">"} \
+                        | {"type": TokenType.PUNCTUATOR, "value": ">="} \
+                        | {"type": TokenType.PUNCTUATOR, "value": "<"} \
+                        | {"type": TokenType.PUNCTUATOR, "value": "<="}:
+                    self.advance()
+                    rhs = self.term()
+                    expr = {"type": Ast.BINARY,
+                            "operator": token["value"],
+                            "left": expr,
+                            "right": rhs,
+                            "line": expr["line"]}
+                    token = self.peek()
+                case _:
+                    break
+        return expr
+
+    def term(self):
+        expr = self.factor()
+        token = self.peek()
+        while True:
+            match token:
+                case {"type": TokenType.PUNCTUATOR, "value": "-"} | {"type": TokenType.PUNCTUATOR, "value": "+"}:
+                    self.advance()
+                    rhs = self.factor()
+                    expr = {"type": Ast.BINARY,
+                            "operator": token["value"],
+                            "left": expr,
+                            "right": rhs,
+                            "line": expr["line"]}
+                    token = self.peek()
+                case _:
+                    break
+        return expr
+
+    def factor(self):
+        expr = self.unary()
+        token = self.peek()
+        while True:
+            match token:
+                case {"type": TokenType.PUNCTUATOR, "value": "*"} | {"type": TokenType.PUNCTUATOR, "value": "/"}:
+                    self.advance()
+                    rhs = self.unary()
+                    expr = {"type": Ast.BINARY,
+                            "operator": token["value"],
+                            "left": expr,
+                            "right": rhs,
+                            "line": expr["line"]}
+                    token = self.peek()
+                case _:
+                    break
+        return expr
+
+    def unary(self):
+        token = self.peek()
+
+        match token:
+            case {"type": TokenType.PUNCTUATOR, "value": "!"} | {"type": TokenType.PUNCTUATOR, "value": "-"}:
+                argument = self.unary()
+                return {"type": Ast.UNARY, "argument": argument, "line": token["line"]}
+            case _:
+                return self.call()
+
+    def call(self):
+        expr = self.primary()
+
+        token = self.peek()
+        while True:
+            match token:
+                case {"type": TokenType.PUNCTUATOR, "value": "("}:
+                    # TODO
+                    token = self.peek()
+                case _:
+                    return expr
+
+    def primary(self):
+        token = self.advance()
+        match token:
+            case {"type": TokenType.BOOLEAN}:
+                return {"type": Ast.BOOLEAN, "value": token["value"], "line": token["line"]}
+            case {"type": TokenType.NULL}:
+                return {"type": Ast.NULL, "value": None, "line": token["line"]}
+            case {"type": TokenType.NUMBER}:
+                return {"type": Ast.NUMBER, "value": token["value"], "line": token["line"]}
+            case {"type": TokenType.STRING}:
+                return {"type": Ast.STRING, "value": token["value"], "line": token["line"]}
+            case {"type": TokenType.PUNCTUATOR, "value": "("}:
+                expr = self.expression()
+                self.expect(TokenType.PUNCTUATOR, ")")
+                return expr
+            case {"type": TokenType.PUNCTUATOR, "value": "{"}:
+                return self.dictionary()
+            case {"type": TokenType.IDENTIFIER, "value": value}:
+                return {"type": Ast.IDENTIFIER, "value": value, "line": token["line"]}
+            case _:
+                raise Exception(
+                    f"Unidentified token: {token['value']} on line: {token['line']}")
+
+    def dictionary(self):
+        token = self.peek()
+        items = []
+
+        while True:
+            match token:
+                case {"type": TokenType.PUNCTUATOR, "value": "}"}:
+                    break
+                case {"type": TokenType.NUMBER, "value": value}:
+                    key = {"type": Ast.NUMBER,
+                           "value": value, "line": token['line']}
+                    self.expect(TokenType.PUNCTUATOR, ":")
+                    value = self.expression()
+                    items.append((key, value))
+                    token = self.peek()
+                    if token["type"] != TokenType.PUNCTUATOR or token["value"] != "}":
+                        self.expect(TokenType.PUNCTUATOR, ",")
 
     def peek(self):
         token = next(self.lexer)

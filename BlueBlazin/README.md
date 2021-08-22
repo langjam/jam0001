@@ -31,14 +31,14 @@ expressionOrComment :: assignment | comment
 assignment :: IDENTIFIER "=" assignment
 | logic_or
 
-logic_or :: logic_and ( "or" logic_and )_
-logic_and :: equality ( "and" equality )_
-equality :: comparison ( ( "!=" | "==" ) comparison )_
-comparison :: term ( ( ">" | ">=" | "<" | "<=" ) term )_
-term :: factor ( ( "-" | "+" ) factor )_
-factor :: unary ( ( "/" | "_" ) unary )_
+logic_or :: logic_and ( "or" logic_and )*
+logic_and :: equality ( "and" equality )*
+equality :: comparison ( ( "!=" | "==" ) comparison )*
+comparison :: term ( ( ">" | ">=" | "<" | "<=" ) term )*
+term :: factor ( ( "-" | "+" ) factor )*
+factor :: unary ( ( "/" | "_" ) unary )*
 unary :: ( "!" | "-" ) unary | call
-call :: primary ( "(" arguments? ")" )_
+call :: primary ( "(" arguments? ")" )*
 primary :: "true" | "false" | "null" | NUMBER
          | STRING | IDENTIFIER
          | "(" expressionOrComment ")"
