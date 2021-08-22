@@ -1,5 +1,6 @@
-fn super_plus (a: Int, b: Int) -> Int {
-    plus ( plus ( a , b ) , 1)
+fn super_plus(a: Int, b: Int) -> Int {
+    /* adding one more to `plus (a, b)`, since you're such a good customer */
+    plus (plus (a , b) , 1)
 }
 
-(| a : Int | super_plus ( /*a is `a`*/ a , 1 ) ) ( 18 )
+(|a : Int| super_plus (/*a is `a`*/ a, 1))( 18 )

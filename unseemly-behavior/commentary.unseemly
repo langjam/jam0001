@@ -12,6 +12,7 @@ extend_syntax
     #    [,{DefaultSeparator},
     #     word := (/(\p{Letter}(?:\p{Letter}|\p{Number}|[_?])*)/) ]) ;
 
+    DefaultToken ::= /\s*([|:;,(){}=]|->|capture_language)/ ;
 
     Expr ::= alt[
         #### lambda ####
@@ -38,7 +39,7 @@ extend_syntax
 
         #### function definition ####
         forall I0 O T . '{[
-            lit ,{DefaultToken}, = 'fn'
+            lit ,{DefaultWord}, = 'fn'
             fn_name := ( ,{Pat< [I0 -> O] >}, )
             lit ,{DefaultToken}, = '('
             arg_name0 := ( ,{Pat<I0>}, )  lit ,{DefaultToken}, = ':'  arg_type0 := ( ,{Type<I0>}, )
@@ -46,7 +47,8 @@ extend_syntax
             lit ,{DefaultToken}, = '->'
             ret_type := ( ,{Type<O>}, )
             lit ,{DefaultToken}, = '{'
-            fn_body := ( ,{Expr<O>}, <-- arg_name0 = arg_type0 )
+            fn_body := ( ,{Expr<O>}, <-- [arg_name0 = arg_type0
+                                          o> fn_name = [ arg_type0 -> ret_type ] ] )
             lit ,{DefaultToken}, = '}'
 
             body := ( ,{ Expr<T> }, <-- fn_name = [ arg_type0 -> ret_type ]  )
@@ -61,7 +63,7 @@ extend_syntax
             ]'
         }.
         forall I0 I1 O T . '{[
-            lit ,{DefaultToken}, = 'fn'
+            lit ,{DefaultWord}, = 'fn'
             fn_name := ( ,{Pat< [I0 I1 -> O] >}, )
             lit ,{DefaultToken}, = '('
             arg_name0 := ( ,{Pat<I0>}, )  lit ,{DefaultToken}, = ':'  arg_type0 := ( ,{Type<I0>}, )
@@ -71,7 +73,8 @@ extend_syntax
             lit ,{DefaultToken}, = '->'
             ret_type := ( ,{Type<O>}, )
             lit ,{DefaultToken}, = '{'
-            fn_body := ( ,{Expr<O>}, <-- [arg_name0 = arg_type0 o> arg_name1 = arg_type1] )
+            fn_body := ( ,{Expr<O>}, <-- [[arg_name0 = arg_type0 o> arg_name1 = arg_type1]
+                                          o> fn_name = [ arg_type0 arg_type1 -> ret_type ]])
             lit ,{DefaultToken}, = '}'
 
             body := ( ,{ Expr<T> }, <-- fn_name = [ arg_type0 arg_type1 -> ret_type ]  )
@@ -98,10 +101,21 @@ extend_syntax
                 lit ,{ DefaultToken }, = ';'
             ] *
             body := ( ,{ Expr<T> }, <-- ...[pat = val]... )
-        ] }' let_macro -> .{
+        ] }' let -> .{
             '[Expr |
                 match **[...[,val, >> ,[val], ]... ]**
                     { **[...[,pat, >> ,[pat],]... ]** => ,[body], } ]'
+        }.
+
+        #### if ####
+        forall T S . '{ [
+            lit ,{ DefaultWord }, = 'if'
+            cond := ( ,{ Expr<Bool> }, )
+            lit ,{ DefaultToken }, = '{'  yes := ( ,{ Expr<T> }, )  lit ,{ DefaultToken }, = '}'
+            lit ,{ DefaultWord }, = 'else'
+            lit ,{ DefaultToken }, = '{'  no := ( ,{ Expr<T> }, )  lit ,{ DefaultToken }, = '}'
+        ] }' if -> .{
+            '[Expr | if ,[cond], then ,[yes], else ,[no], ]'
         }.
 
         #### comment ####
@@ -112,30 +126,38 @@ extend_syntax
             [
                 /(`)/
                 comment_expr := ( ,{Expr<C>}, )
-                ,{DefaultSeparator}, #foo
+                ,{DefaultSeparator},
                 /(`)/
-                /([^`*]*)/
             ] *
             post_text := ( /([^`*]*)/ )
             /(\*\/)/
             ,{DefaultSeparator},
             body := ( ,{Expr<T>}, )
         ] }' comment_annotate -> .{
-            '[Expr|
-                -{
-                    (write_file "/dev/stdout"
-                        (join s[
-                            "/*"
-                            ,[(prefab (ident_to_string pre_text))],
-                            (join s[ ...[,comment_expr, >>
-                                (anything_to_string ,[comment_expr],)]... ]s "")
-                            ,[(prefab (ident_to_string post_text))],
-                            "*/
+            match unfold (env_var "COMMENTARY_SEARCH") {
+                +[Some needle]+ =>
+                    if (or (contains? (ident_to_string pre_text) needle)
+                        (contains? (ident_to_string post_text) needle)) then
+                        '[Expr|
+                            -{
+                                (write_file "/dev/stdout"
+                                    (join s[
+                                        "/*"
+                                        ,[(prefab (ident_to_string pre_text))],
+                                        (join s[ ...[,comment_expr, >>
+                                            (anything_to_string ,[comment_expr],)]... ]s "")
+                                        ,[(prefab (ident_to_string post_text))],
+                                        "*/
 "
-                        ]s "")) ;
-                    ,[body],
-                }-
-            ]'
+                                    ]s "")) ;
+                                ,[body],
+                            }-
+                        ]'
+                        else
+                        '[Expr| ,[body],]'
+                +[None]+ => '[Expr| ,[body],]'
+            }
+
         }.
 
     ]alt or{
@@ -170,6 +192,16 @@ extend_syntax
                                             (minus digit (plus (times ten four) eight)))) ;
                     (prefab (value number))
                 }-
+            }.
+
+            #### string literals ####
+            forall . '{
+                string_lit := (pick tok in [,{DefaultSeparator}, tok := (/"((?:[^"\\]|\\"|\\\\)*)"/) ])
+            }' string_literal -> .{
+                # Undo the escaping:
+                (prefab (replace
+                    (replace (ident_to_string string_lit) "\\\"" "\"")
+                    "\\\\" "\\"))
             }.
 
             #### function application ####

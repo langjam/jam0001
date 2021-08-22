@@ -133,4 +133,19 @@ extend_syntax
             }-
         }. ;
 in
+extend_syntax
+  Expr ::=also forall T . '{
+      [
+          lit ,{ DefaultToken }, = 'if'
+          cond := ( ,{ Expr< Bool > }, )
+          lit ,{ DefaultToken }, = 'then'
+          then_e := ( ,{ Expr< T > }, )
+          lit ,{ DefaultToken }, = 'else'
+          else_e := ( ,{ Expr< T > }, )
+      ]
+  }' conditional -> .{
+      '[Expr | match ,[cond], {
+                +[True]+ => ,[then_e],
+                +[False]+ => ,[else_e], } ]' }. ;
+in
 capture_language
