@@ -1,6 +1,6 @@
 (**
   {1 The glorious KerLang Compiler}
-  
+
   also known as the glorious Ker-Lann Compiler but who cares ?
 *)
 
@@ -20,8 +20,8 @@ let parse_file f =
   with
   | Kerlang.Kl_parser.Eof -> List.rev !blocks
   | Kerlang.Kl_parser.SyntaxError msg ->
-    Printf.eprintf "\x1b[1;31msyntax error\x1b[0m (%a) : %s\n" print_position lexbuf msg;
-    exit 1
+    let pos = lexbuf.Lexing.lex_curr_p in
+    print_syntax_error pos msg
 
 let usage_msg = Sys.argv.(0) ^ " [-verbose] <file1> -o <output>"
 

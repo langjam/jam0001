@@ -107,14 +107,14 @@ let rec parse_statement (comment : tok list) : cconstraint =
   | [] -> Nothing
   | t::q ->
     match string_of_tok t with
-    | "takes" ->
+    | "take" | "takes" ->
       begin match q with
         | Int (_, n)::_ -> Takes n
         | _ -> failwith "expected number of arguments"
       end
     | "let" -> let a, b = look_for "be" q in Let (string_of_comment a, f b)
-    | "returns" -> Returns (f q)
-    | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
+    | "return" | "returns" -> Returns (f q)
+    | "use" | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
     | _ -> parse_statement q
 
 let generate_function (Spec (_, name, comment)) =
