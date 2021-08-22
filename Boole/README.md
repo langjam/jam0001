@@ -156,6 +156,18 @@ For the secondary color:
 * {color} line
 * {color} detail
 
+The acceptable colors are:
+* light red
+* dark blue
+* dark red
+* light blue
+* dark green
+* light green
+* water blue
+* brown
+* yellow
+* orange
+
 For the length:
 * long
 * big
