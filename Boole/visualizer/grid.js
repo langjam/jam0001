@@ -312,7 +312,7 @@ class Train {
         push()
         if (this.path !== null) {
             this.ticks_since_last_cloud += 1;
-            if (this.ticks_since_last_cloud > 5) {
+            if (this.ticks_since_last_cloud > 2) {
                 this.ticks_since_last_cloud = 0;
                 this.clouds.push(new Cloud(createVector(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE)));
             }

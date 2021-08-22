@@ -61,4 +61,8 @@ impl Communicator for CliRunner {
         log::debug!("simulation says: train {} moved from ({} track {}) to ({} track {})", train.identifier, from_station.name, start_track, to_station.name, end_track);
         Ok(())
     }
+
+    fn delete_train(&self, train: Train) -> Result<(), CommunicatorError> {
+        Ok(())
+    }
 }
