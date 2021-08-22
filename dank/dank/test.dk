@@ -26,3 +26,8 @@ print 1 + 1;
 print -4838;
 
 print !0;
+
+
+
+let callable = { __call__: fn(){} };
+callable();

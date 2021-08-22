@@ -293,7 +293,13 @@ impl<'a, 'b> Evaluator<'a, 'b> {
 
                 (func.func)(args)
             }
-            Value::Obj(_) => todo!(),
+            Value::Obj(_) => match self.get_prop(callee, "__call__".into()) {
+                Ok(method) => self.call(&method, args),
+                Err(_) => Err(EvalError::NotCallable(format!(
+                    "Object {} is missing the __call__ property so it cannot be called",
+                    callee
+                ))),
+            },
             Value::Num(_) | Value::Bool(_) | Value::Null | Value::Str(_) => Err(
                 EvalError::NotCallable(format!("`{}` is not a callable object.", callee)),
             ),
