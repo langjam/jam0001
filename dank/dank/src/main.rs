@@ -21,8 +21,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let source = std::fs::read_to_string(&opts.input)?;
     let arena = bumpalo::Bump::default();
 
+    let mut files = codespan_reporting::files::SimpleFiles::new();
+    let file_id = files.add(&opts.input, &source);
+    let config = codespan_reporting::term::Config::default();
+
     // TODO: report the error properly
-    let mut ast = grammar::file(&source)?;
+    let mut ast = match grammar::file(&source) {
+        Ok(ast) => ast,
+        Err(e) => {
+            use codespan_reporting::diagnostic::{Diagnostic, Label};
+            use codespan_reporting::term::termcolor::*;
+
+            let span = e.location.offset
+                ..source[e.location.offset..]
+                    .find('\n')
+                    .unwrap_or_else(|| source.len() - 1)
+                    + 1;
+
+            let diagnostic = Diagnostic::error()
+                .with_message("A parse error has occurred")
+                .with_labels(vec![
+                    Label::primary(file_id, span).with_message(format!("expected {}", e.expected))
+                ]);
+            return codespan_reporting::term::emit(
+                &mut StandardStream::stderr(ColorChoice::Auto).lock(),
+                &config,
+                &files,
+                &diagnostic,
+            )
+            .map_err(|e| Box::from(e.to_string()));
+        }
+    };
 
     if opts.print_ast {
         println!("{}", ast.ast_to_str());
@@ -83,7 +112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match eval.eval(&mut ast) {
         Ok(()) => (),
         Err(e) => {
-            eprintln!("{:?}", e);
+            eprintln!("ERROR: An eval error has occurred:\n{:?}", e);
         }
     }
 

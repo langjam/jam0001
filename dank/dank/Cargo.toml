@@ -20,6 +20,7 @@ clap = "3.0.0-beta.4"
 bumpalo = "3.7.0"
 enum-kinds = "0.5.1"
 dynfmt = { version = "0.1.5", features = ["curly"] }
+codespan-reporting = "0.11.1"
 
 [dev-dependencies]
 pretty_assertions = "0.7.2"
