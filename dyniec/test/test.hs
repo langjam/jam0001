@@ -68,6 +68,8 @@ moduleParserTests =
             parser "x = 3" @?= Right (Module [("x", ExNum 3)])
         , testCase "Parses multiple declarations" $
             parser "x = 3;y = 5 " @?= Right (Module [("x", ExNum 3), ("y", ExNum 5)])
+        , testCase "Parses multiple declarations with trailing whitespace" $
+            parser "x = 3;y = 5\n\n\n\n\n    " @?= Right (Module [("x", ExNum 3), ("y", ExNum 5)])
         ]
   where
     parser = parse moduleParser "testfile"

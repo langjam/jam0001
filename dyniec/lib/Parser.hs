@@ -118,7 +118,11 @@ typeParser = do
             <|> return t
 
 moduleParser :: Parser Module
-moduleParser = Module <$> declarationParser `sepBy` string ";"
+moduleParser = do
+    declarations <- declarationParser `sepBy` string ";"
+    spaces
+    eof
+    return $ Module declarations
   where
     declarationParser :: Parser (T.Text, Expr)
     declarationParser = do
@@ -129,3 +133,6 @@ moduleParser = Module <$> declarationParser `sepBy` string ";"
         spaces
         e <- exprParser
         return (name, e)
+
+fileParser :: SourceName -> Text -> Either ParseError Module
+fileParser = parse moduleParser
