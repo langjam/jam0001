@@ -31,14 +31,15 @@ class ComstructLexer(Lexer):
         "FUNCSEP",  # .
     }
 
-    ignore = " \t\n"
+    ignore = " \t"
+    ignore_newline = r"\n+"
     ignore_comment = r"\\\\.*"
 
     FUNCDESC = r'/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/'
     FUNCSEP = r'\.'
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
-    PLUS = r'\+'
     STRING = r'"[^\"^\n]+"|""'
+    PLUS = r'\+'
     MINUS = r'-'
     MULTIPLY = r'\*'
     DIVIDE = r'/'
@@ -64,13 +65,13 @@ class ComstructLexer(Lexer):
         t.value = int(t.value)
         return t
 
-    def NEWSTMT(self, t):
-        self.lineno += len(t.value)
-        return t
-
     def STRING(self, t):
         t.value = t.value[1:-1]
         return t
+
+    @_(r'\n+')
+    def ignore_newline(self, t):
+        self.lineno += len(t.value)
 
     # noinspection PyUnresolvedReferences
     def FUNCDESC(self, t):
