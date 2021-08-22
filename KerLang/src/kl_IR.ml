@@ -42,7 +42,7 @@ and eval_op (self : ast option) ftable = function
   | MUL -> (function [x; y] -> x * y | _ -> Kl_errors.dev_error "MUL : wrong number of args")
   | DIV -> (function [x; y] -> x / y | _ -> Kl_errors.dev_error "DIV : wrong number of args")
   | FUN fname -> (fun args ->
-      let body = List.assoc fname ftable in
+      let body = flookup fname ftable in
       eval ~self:(Some body) args ftable body)
   | SELF ->
     match self with
