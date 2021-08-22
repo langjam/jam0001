@@ -8,10 +8,10 @@ Done
 - [x] clean up REPL visuals
 - [x] ADT instance printing
 - [x] rich comment printing
+- [x] embedded comment printing
 
 High priority
 
-- [ ] embedded comment printing
 - [ ] expression embedding in comments
 - [ ] example files/walkthrough
 - [ ] error reporting in console

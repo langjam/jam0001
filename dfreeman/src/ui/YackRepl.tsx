@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { createContext, RefObject, useContext, useEffect, useRef } from 'react';
 import type { Ace } from 'ace-builds';
 import { CommentValue, Evaluator, Value, VoidValue } from '../evaluator';
 import { YackEditor, YackMode } from './YackEditor';
@@ -13,79 +13,87 @@ export type ReplMessage =
   | { kind: 'out'; value: Value }
   | { kind: 'error'; message: string };
 
-export const YackRepl: React.FC<{
-  evaluator: Evaluator;
-  messages: Array<ReplMessage>;
-  pushMessage: (message: ReplMessage) => void;
-}> = ({ evaluator, messages, pushMessage }) => {
+export type PushMessage = (message: ReplMessage) => void;
+
+const MessageContext = createContext<PushMessage>(() => {});
+
+export const YackRepl = React.forwardRef<
+  HTMLDivElement,
+  {
+    evaluator: Evaluator;
+    messages: Array<ReplMessage>;
+    pushMessage: PushMessage;
+  }
+>(({ evaluator, messages, pushMessage }, ref) => {
   let editor = useRef<Ace.Editor>();
-  let scrollContainer = useRef<HTMLDivElement>(null);
 
   return (
-    <div
-      style={{ overflow: 'auto', display: 'flex', flexFlow: 'column', flex: 1 }}
-      ref={scrollContainer}
-    >
-      <div style={{ marginTop: '-1px' }}>
-        {messages.map((value, index) => (
-          <div key={index}>
-            <ReplRow message={value} />
-          </div>
-        ))}
-      </div>
-      <div
-        style={{ display: 'flex', flexFlow: 'row', paddingTop: '3px', borderTop: '1px solid #444' }}
-      >
-        <Marker kind="keyword" content="❯" />
-        <YackEditor
-          minLines={1}
-          maxLines={10}
-          showGutter={false}
-          onLoad={(e) => (editor.current = e)}
-          style={{ flex: 1, marginTop: '2px', maxHeight: '200px' }}
-          commands={[
-            {
-              bindKey: { win: 'Enter', mac: 'Enter' },
-              name: 'submit',
-              exec(editor) {
-                let source = editor.getValue();
-                let pushedSource = false;
-                try {
-                  let ast = parser.parse(source)!;
-                  pushMessage({ kind: 'in', text: source });
-                  pushedSource = true;
-
-                  if (ast.kind === 'expression') {
-                    pushMessage({ kind: 'out', value: evaluator.evaluate(ast.value) });
-                  } else {
-                    evaluator.execute(ast.value);
-                    pushMessage({ kind: 'out', value: new VoidValue() });
-                  }
-                  editor.setValue('');
-                } catch (error) {
-                  if (error instanceof ParseError && error.found.kind === '<EOF>') {
-                    editor.insert('\n');
-                    return;
-                  }
-
-                  if (!pushedSource) {
+    <MessageContext.Provider value={pushMessage}>
+      <div style={{ overflow: 'auto', display: 'flex', flexFlow: 'column', flex: 1 }} ref={ref}>
+        <div style={{ marginTop: '-1px' }}>
+          {messages.map((value, index) => (
+            <div key={index}>
+              <ReplRow message={value} />
+            </div>
+          ))}
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            flexFlow: 'row',
+            paddingTop: '3px',
+            borderTop: '1px solid #444',
+          }}
+        >
+          <Marker kind="keyword" content="❯" />
+          <YackEditor
+            minLines={1}
+            maxLines={10}
+            showGutter={false}
+            onLoad={(e) => (editor.current = e)}
+            style={{ flex: 1, marginTop: '2px', maxHeight: '200px' }}
+            commands={[
+              {
+                bindKey: { win: 'Enter', mac: 'Enter' },
+                name: 'submit',
+                exec(editor) {
+                  let source = editor.getValue();
+                  let pushedSource = false;
+                  try {
+                    let ast = parser.parse(source)!;
                     pushMessage({ kind: 'in', text: source });
+                    pushedSource = true;
+
+                    if (ast.kind === 'expression') {
+                      pushMessage({ kind: 'out', value: evaluator.evaluate(ast.value) });
+                    } else {
+                      evaluator.execute(ast.value);
+                      pushMessage({ kind: 'out', value: new VoidValue() });
+                    }
+                    editor.setValue('');
+                  } catch (error) {
+                    if (error instanceof ParseError && error.found.kind === '<EOF>') {
+                      editor.insert('\n');
+                      return;
+                    }
+
+                    if (!pushedSource) {
+                      pushMessage({ kind: 'in', text: source });
+                    }
+
+                    pushMessage({ kind: 'error', message: error.message });
+                    editor.setValue('');
                   }
-
-                  pushMessage({ kind: 'error', message: error.message });
-                  editor.setValue('');
-                }
-
-                scrollContainer.current?.scrollTo(0, 999999999);
+                },
               },
-            },
-          ]}
-        />
+            ]}
+          />
+        </div>
+        <div style={{ flex: 1 }} onClick={() => editor?.current?.focus()}></div>
       </div>
-      <div style={{ flex: 1 }} onClick={() => editor?.current?.focus()}></div>
-    </div>
+    </MessageContext.Provider>
   );
-};
+});
 
 const Marker: React.FC<{ kind: string; content: string }> = ({ kind, content }) => {
   return (
@@ -157,6 +165,8 @@ const YackLoggedValue: React.FC<{ value: Value }> = ({ value, ...props }) => {
 };
 
 const YackValue: React.FC<{ value: Value }> = ({ value, ...props }) => {
+  const pushMessage = useContext(MessageContext);
+
   if (value.kind === 'Boolean' || value.kind === 'Number') {
     return <YackCode source={String(value.value)} {...props} />;
   } else if (value.kind === 'Void') {
@@ -164,7 +174,19 @@ const YackValue: React.FC<{ value: Value }> = ({ value, ...props }) => {
   } else if (value.kind === 'NativeFunction' || value.kind === 'Function') {
     return <YackCode source={`fun ${value.name}(${value.params.join(', ')})`} {...props} />;
   } else if (value.kind === 'Comment') {
-    return <span {...props}>(Comment)</span>;
+    return (
+      <YackCode
+        source={`${value.name}#`}
+        style={{
+          cursor: 'pointer',
+          border: '1px solid #444',
+          borderRadius: '2px',
+          backgroundColor: '#444',
+        }}
+        onClick={() => pushMessage({ kind: 'log', value })}
+        {...props}
+      />
+    );
   } else if (value.kind === 'ADTInstance') {
     return (
       <span {...props}>
@@ -184,10 +206,11 @@ const YackValue: React.FC<{ value: Value }> = ({ value, ...props }) => {
   unreachable(value);
 };
 
-const YackCode: React.FC<{ source: string; style?: React.CSSProperties }> = ({
-  source,
-  ...props
-}) => {
+const YackCode: React.FC<{
+  source: string;
+  style?: React.CSSProperties;
+  onClick?: React.MouseEventHandler;
+}> = ({ source, ...props }) => {
   let state: string | undefined;
   let lineTokens = source.split('\n').map((line) => {
     let result = YackMode.$tokenizer.getLineTokens(line, state);
@@ -255,14 +278,24 @@ const YackCommentExample: React.FC<{ comment: CommentValue; example: ExampleSegm
   comment,
   ...props
 }) => {
+  let pushMessage = useContext(MessageContext);
+  let fullName = `${comment.name}#${example.name}`;
+
   return (
-    <div {...props} style={{ marginTop: '1em' }}>
+    <div
+      {...props}
+      style={{ marginTop: '1em', cursor: 'pointer' }}
+      onClick={() => {
+        pushMessage({ kind: 'in', text: fullName });
+        pushMessage({ kind: 'out', value: comment.examples.get(example.name)!.force() });
+      }}
+    >
       <div style={{ display: 'flex' }}>
         <div
           className="ace-tomorrow-night-eighties"
           style={{ borderTopLeftRadius: '4px', borderTopRightRadius: '4px', padding: '.5em 1em 0' }}
         >
-          <YackCode source={`${comment.name}#${example.name}`} />
+          <YackCode source={fullName} />
         </div>
       </div>
       <div

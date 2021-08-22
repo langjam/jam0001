@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { render } from 'react-dom';
 import { stripIndent } from 'common-tags';
 import debounce from 'lodash.debounce';
@@ -66,10 +66,17 @@ const Playground: React.FC = () => {
     end
 
     ###
-    A list represents some things.
+    A list represents an ordered collection of items.
+
+    Since Yack is completely dynamically typed, lists can be
+    pretty free-form. They don't need to contain a single type
+    of value, and in fact they don't even need to include a
+    terminating {Nil()} value.
 
     @example#oneTwoThree
-      Cons(1, Cons(2, Cons(3, Nil())))
+      Cons(1,
+        Cons(2,
+          Cons(3, Nil())))
     @end
     ###
     data List = Nil() | Cons(head, tail)
@@ -104,9 +111,11 @@ const Playground: React.FC = () => {
     [evaluator]
   );
 
-  useEffect(() => doUpdateSource(source), []);
-
   let updateSource = useMemo(() => debounce(doUpdateSource, 250), []);
+  let scrollContainer = useRef<HTMLDivElement>(null);
+
+  useEffect(() => doUpdateSource(source), []);
+  useEffect(() => scrollContainer.current?.scrollTo(0, 999999999), [messages.length]);
 
   return (
     <div
@@ -123,7 +132,12 @@ const Playground: React.FC = () => {
         <YackEditor value={source} onChange={updateSource} />
       </Pane>
       <Pane flex="1">
-        <YackRepl evaluator={evaluator} messages={messages} pushMessage={pushMessage} />
+        <YackRepl
+          evaluator={evaluator}
+          messages={messages}
+          pushMessage={pushMessage}
+          ref={scrollContainer}
+        />
       </Pane>
     </div>
   );
