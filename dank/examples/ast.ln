@@ -1,0 +1,70 @@
+// fn rename(name) {
+//     AST.name = name;
+// }
+
+// dbg(AST.name);
+let x = 5;
+
+// AST.initializer = fmt("{} + 7", AST.initializer.code);
+// AST.name = "z";
+// dbg(AST.code);
+let y = 5;
+print z;
+
+// please rename this to "func".
+fn test(a, b, c) {
+    // AST.value.op = "*";
+    // AST.value.left.op = "*";
+    // dbg(AST.code);
+    return a + b + c;
+}
+
+print func(2, 2, 2);
+
+
+fn traverse(root) {
+    if !root { return; }
+
+    print root.val;
+    traverse(root.left);
+    traverse(root.right);
+}
+
+let tree = {
+    val: 5,
+    left: { val: 7, right: null, left: null  },
+    right: {
+        val: 3,
+        left: { val: 4, left: null, right: null },
+        right: { val: 2, left: null, right: null }
+    }
+};
+
+traverse(tree);
+
+// // The following removes the statement from the ast.
+// AST.__stmt__ = null;
+{
+    print 1;
+    print 2;
+    print 3;
+}
+
+
+// // Change the last print argument to hello
+// AST[AST.length - 1] = "'hello'";
+print 1, 2, 3;
+
+
+let x = 2;
+let y = 2;
+
+// // Fix the wrong if branch so that the correct output is printed.
+// AST[0].condition.op = "==";
+if x != y {
+    print "x is y";
+} else if x < y {
+    print "x is less than y";
+} else {
+    print "y is less than x";
+}
