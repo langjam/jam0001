@@ -1,0 +1,25 @@
+{
+  "name": "djs",
+  "version": "1.0.0",
+  "description": "Interpreter to a language similar to javascript playing sounds using comments",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tanguy-a/jam0001.git"
+  },
+  "keywords": [
+    "javascript",
+    "language",
+    "interpreter",
+    "music"
+  ],
+  "author": "tanguy-a",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tanguy-a/jam0001/issues"
+  },
+  "homepage": "https://github.com/tanguy-a/jam0001#readme"
+}
