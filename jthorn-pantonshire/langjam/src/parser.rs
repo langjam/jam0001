@@ -45,7 +45,6 @@ pub struct Function {
 
 #[derive(Debug)]
 pub enum Stmt {
-    Args(ArgsStmt),
     Var(VarStmt),
     Loop(LoopStmt),
     Call(CallStmt),
@@ -472,7 +471,7 @@ fn parse_expr(pair: Pair) -> Expr {
 
             Rule::string => Expr {
                 span,
-                kind: ExprKind::Value(value::Value::String(pair.as_str().to_owned()))
+                kind: ExprKind::Value(value::Value::String(pair.as_str().strip_prefix("\"").unwrap().strip_suffix("\"").unwrap().to_owned()))
             },
 
             Rule::list => parse_list(pair),

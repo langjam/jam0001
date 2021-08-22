@@ -46,7 +46,7 @@ primary     = { number | litTrue | litFalse | list | ident | string | "(" ~ sep*
 list        = { "list" ~ sep* ~ "[" ~ sep* ~ (expr ~ (sep* ~ "," ~ sep* ~ expr)*)?  ~ sep* ~ "]"}
 
 //statements
-varStmt = { ^"stores" ~ sep+ ~ expr ~ sep+ ~ ^"in" ~ sep+ ~ ident }
+varStmt = { (^"stores" | ^"storing") ~ sep+ ~ expr ~ sep+ ~ ^"in" ~ sep+ ~ ident }
 loopStmt = { ^"repeatedly" ~ sep+ ~ "(" ~ sep* ~ comment ~ sep* ~ ")" ~ sep+ ~ expr ~ sep+ ~ ^"times" }
 callStmt = { ident ~ (sep+ ~ callArgs)? ~ (("," | sep) ~ sep* ~ callStore)? }
 callArgs = { expr ~ (sep* ~ "," ~ sep* ~ expr)* }
@@ -56,12 +56,12 @@ consStmt = { ^"constant" ~ sep+ ~ ident ~ sep+ ~ ^"is" ~ sep+ ~ expr}
 returnStmt = { (^"outputs" | ^"returns") ~ sep+ ~ expr }
 stmt = { (varStmt | loopStmt | condStmt | consStmt | returnStmt | callStmt)}
 comment = { stmt ~ ((sep | ",") ~ sep* ~ "then" ~ sep+ ~ stmt)* }
-commentStmt = { "//" ~ sep* ~ (fnIntro ~ sep+)? ~ comment ~ vws+ ~ ^"function" ~ hws+ ~ ident ~ hws* ~ "(" ~ hws* ~ (ident ~ (hws* ~ "," ~ hws* ~ ident)*)? ~ hws* ~ ")" ~ (hws* ~ dummyBlock)? }
+commentStmt = { "//" ~ sep* ~ (fnIntro ~ sep+)? ~ comment ~ vws+ ~ (^"function"| ^"#") ~ hws+ ~ ident ~ hws* ~ "(" ~ hws* ~ (ident ~ (hws* ~ "," ~ hws* ~ ident)*)? ~ hws* ~ ")" ~ (hws* ~ dummyBlock)? }
 semanticBody = {commentStmt ~ (vws+ ~ semanticBody)*}
 syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (("\n")*~mainStmt~("\n")*)* ~ "}"}
 mainStmt = { ident ~"<-"~ mainStmt | ident ~ "(" ~ mainStmt ~ ")" | ident }
 program = { vws* ~ semanticBody ~ vws* ~ EOI }
 
-fnIntro = _{ (^"a" ~ sep+ ~ ^"function" ~ sep+ ~ ^"which") | (^"this" ~ sep+ ~ ^"function") }
+fnIntro = _{ (^"a" ~ sep+ ~ (^"function"| ^"#") ~ sep+ ~ ^"which") | (^"this" ~ sep+ ~ (^"function"| ^"#")) }
 
 dummyBlock = _{ "{" ~ (dummyBlock | !("}") ~ ANY)* ~ "}" }

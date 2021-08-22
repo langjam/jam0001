@@ -1,6 +1,4 @@
 use std::fmt;
-use std::fs::File;
-use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -10,7 +8,6 @@ pub enum Value {
     String(String),
     List(Vec<Value>),
     Function(String),
-    // File(Rc<File>),
 }
 
 impl Value {

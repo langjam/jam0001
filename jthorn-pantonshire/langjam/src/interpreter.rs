@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::cell::RefCell;
 
 use crate::error::{RuntimeErrorCause, RuntimeResult};
 use crate::value::Value;
@@ -8,7 +7,6 @@ use crate::stdlib;
 
 pub struct Interpreter {
     functions: HashMap<String, Function>,
-    global: RefCell<Store>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -49,7 +47,6 @@ impl Interpreter {
 
         Self {
             functions,
-            global: RefCell::new(Store::new()),
         }
     }
 
@@ -79,8 +76,6 @@ impl Interpreter {
 
     fn eval_stmt(&self, local: &mut Store, stmt: &Stmt) -> RuntimeResult<Option<Value>> {
         match stmt {
-            Stmt::Args(args_stmt) => todo!(),
-
             Stmt::Var(var_stmt) => {
                 let val = self.eval_expr(&local, &var_stmt.value)?;
                 local.store(var_stmt.variable.clone(), val, Mutability::Mutable)
