@@ -57,7 +57,7 @@ contain operations and are delimited, forming clear scopes.
 
 Execution is linear, starting from the top and going down. When encountering a function, the program counter skips until its end. When calling a function, the program counter jumps to its start, and upon completion continues after the last executed line. (Really, these "functions" are more like labels without fallthrough.) Some operations may also cause the program counter to skip forward an instruction.
 
-Everything in `// TODO: fix` is a value -- a 64-bit integer. These are accessed through a global stack, as well as a variable mapping from names to values:
+Everything in `// TODO: fix` is a value -- a 64-bit unsigned integer. These are accessed through a global stack, as well as a variable mapping from names to values:
 
 * The stack is at the center of most operations. It's unchanged when changing scopes.
 * The variable mapping is scope-dependent. Each function scope has its own set of variables accessible through it. Variables must also consist only of the ASCII alphabet (a-z, A-Z).
@@ -68,7 +68,7 @@ There is also a condition flag, which is read from and written to by certain ope
 
 ## Operations
 
-*`// TODO: fix` has many different ways to spell out an operation. For brevity's sake, only samples will be shown here, rest listed in `DOCUMENTATION.md`. Please note that the file auto-generated from the grammar, and may thus be partially incorrect or incomplete.*
+*`// TODO: fix` has many different ways to spell out an operation. For brevity's sake, only samples will be shown here, rest listed in `DOCUMENTATION.md`. Please note that the file is auto-generated from the grammar, and may thus be partially incorrect or incomplete.*
 
 Each operation below is shown alongside an example of how it's used. **Do note that you have a *lot* of freedom in how you express each operation!**
 
