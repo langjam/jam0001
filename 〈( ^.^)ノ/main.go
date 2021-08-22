@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"time"
 	"log"
+	"time"
 
 	"io/ioutil"
 	"math/rand"
@@ -30,8 +30,11 @@ func main() {
 	fmt.Println(toks)
 
 	// run parser
-	nodes, comments := parser.GenerateAst(toks)
+	nodes, comments, err := parser.GenerateAst(toks)
 	shared.Node{IsExpression: true, Children: nodes}.Print("")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// run evaluator
 	evaluator.RunEvaluator(nodes, comments)
