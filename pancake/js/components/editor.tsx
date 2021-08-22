@@ -68,7 +68,10 @@ function onLoad(editor: Ace.Editor) {
 const defaultValue = `\
 1
 # 3
-flip
+2
+3
+<
+flip_if
 4
 5
 # 2
