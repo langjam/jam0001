@@ -226,10 +226,10 @@ class Train {
     traveling_to
     traveling_from
 
-    constructor(location, accent, accent1, direction, identifier) {
+    constructor(location, prim, sec, direction, identifier) {
         this.location = location;
-        this.accent = accent;
-        this.accent1 = accent1;
+        this.accent = sec;
+        this.accent1 = prim;
         this.direction = direction;
         this.path = null;
         this.identifier = identifier;
