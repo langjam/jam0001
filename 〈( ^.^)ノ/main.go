@@ -15,21 +15,44 @@ import (
 	"github.com/grossamos/jam0001/shared"
 )
 
+func help() {
+	fmt.Println(
+`smile - an esoteric programming language made for langjam
+Usage: smile [ file ] [ flags ]
+	--help, -h: show this help and exit
+	--debug, -d: show info for debugging the interpretor (ast, tokens)`)
+
+	os.Exit(0)
+}
+
 func main() {
 	rand.Seed(time.Now().Unix())
 	debugMode := false
+	file := ""
 
 	// do initial checks
 	if len(os.Args) == 1 {
-		fmt.Println("Please provide a file to run")
-		return
+		help()
 	}
-	if len(os.Args) > 2 && contains(os.Args, "--debug") {
-		debugMode = true
+
+	for i:=1; i < len(os.Args); i++ {
+		switch os.Args[i] {
+		case "--debug", "-d":
+			debugMode = true
+		case "--help", "-h":
+			help()
+		default:
+			if file == "" {
+				file = os.Args[i]
+			} else {
+				fmt.Println("Incorrect flags.")
+				return
+			}
+		}
 	}
 
 	// load test code from disk
-	dat, err := ioutil.ReadFile(os.Args[1])
+	dat, err := ioutil.ReadFile(file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,13 +81,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
