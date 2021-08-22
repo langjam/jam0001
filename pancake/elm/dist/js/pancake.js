@@ -3331,8 +3331,8 @@ var $author$project$Language$Core$lt = function (args) {
 				A2($elm$core$Array$get, id, args)));
 	};
 	var result = _Utils_cmp(
-		_int(0),
-		_int(1)) < 0;
+		_int(1),
+		_int(0)) < 0;
 	return result ? $elm$core$Maybe$Just(
 		$author$project$Language$Core$Int(1)) : $elm$core$Maybe$Just(
 		$author$project$Language$Core$Int(0));
@@ -3347,7 +3347,7 @@ var $author$project$Language$Core$sub = function (args) {
 	};
 	return $elm$core$Maybe$Just(
 		$author$project$Language$Core$Int(
-			_int(0) - _int(1)));
+			_int(1) - _int(0)));
 };
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
