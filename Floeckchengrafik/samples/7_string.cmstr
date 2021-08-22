@@ -24,3 +24,5 @@ out("String without , World!:" : string_removesuffix(h : ", World!"))?
 out("String saying Bye instead of Hello: " : string_replace(h : "Hello" : "Bye"))?
 
 out("String splitted by ,:" : string_split(h : ","))?
+
+out("String contains Hello: " : string_contains(h : "Hello"))?
