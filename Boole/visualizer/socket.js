@@ -103,6 +103,11 @@ function startSocket() {
 
 
                     console.log("length: ", length)
+                    const messages = []
+                    for (fcp of message["train"]["first_class_passengers"]) {
+                        messages.push(fcp.name + ": " + fcp.data);
+                    }
+
 
                     if (!grid.hasTrain(train_identifier)) {
                         grid.addTrain(new Train(
@@ -111,7 +116,8 @@ function startSocket() {
                             sec_color,
                             direction,
                             train_identifier,
-                            length
+                            messages,
+                            length,
                         ))
                     }
 
