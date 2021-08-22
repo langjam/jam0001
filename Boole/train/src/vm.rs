@@ -223,7 +223,7 @@ impl Data {
                 }
                 Operation::Duplicate => {
                     if let Some(x) = station.trains[0].front().cloned() {
-                        let train = x.lock()?;
+                        let train = x.lock().await;
                         let mut t2 = train.clone();
                         t2.train.identifier = rand::random();
                         station.trains[1].push_back(Arc::new(Mutex::new(t2)));

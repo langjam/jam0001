@@ -13,9 +13,9 @@ pub enum CommunicatorError {
     FromUTF8Error(#[from] FromUtf8Error)
 }
 
-
-pub trait Communicator {
-    fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError>;
+#[async_trait::async_trait]
+pub trait Communicator: Send + Sync {
+    async fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError>;
     fn print(&self, station: Station, data: Vec<i64>) -> Result<(), CommunicatorError>;
     fn print_char(&self, station: Station, data: Vec<i64>) -> Result<(), CommunicatorError>;
     fn move_train(&self, from_station:Station, to_station:Station, train:Train, start_track:usize, end_track:usize) -> Result<(), CommunicatorError>;
