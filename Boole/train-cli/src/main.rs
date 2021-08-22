@@ -13,7 +13,7 @@ use crate::frontend::cli::CliRunner;
 #[tokio::main(flavor = "multi_thread", worker_threads = 5)]
 async fn main() {
     pretty_env_logger::env_logger::builder()
-        .filter_level(log::LevelFilter::Debug)
+        .filter_level(log::LevelFilter::Info)
         .init();
 
 

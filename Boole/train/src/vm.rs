@@ -2,7 +2,7 @@ use std::collections::{HashMap, VecDeque};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use crate::ast::{Program, Station, Train};
+use crate::ast::{Program, Station, Train, SecondClassPassenger};
 use crate::interface::Communicator;
 use crate::operations::Operation;
 
@@ -104,8 +104,9 @@ impl Data {
         Ok(x)
     }
 
-    pub fn do_current_step(&mut self, interface: &dyn Communicator) -> Result<(), VMError> {
+    pub fn do_current_step(&mut self, interface: &dyn Communicator) -> Result<bool, VMError> {
         let mut targets = vec![];
+        let mut did_any_work = false;
         for (_, station_arc) in self.stations.iter() {
             let mut station = station_arc.lock()?;
             let mut did_work = false;
@@ -149,8 +150,9 @@ impl Data {
                     if let Some(x) = station.trains[0].front() {
                         let mut t = x.lock()?;
                         if let Ok(other) = interface.ask_for_input() {
-                            for (x, y) in t.train.second_class_passengers.iter_mut().zip(other) {
-                                x.data = y;
+                            for num in other {
+                                t.train.second_class_passengers.push(SecondClassPassenger{ name: String::from("input"), data: num });
+                                t.train.second_class_passengers.rotate_right(1);
                             }
                             did_work = true;
                         } else {
@@ -367,6 +369,7 @@ impl Data {
             if station.operation != Operation::Delete
                 && station.operation != Operation::SwitchGteZero
                 && station.operation != Operation::SwitchEqZero
+                && station.operation != Operation::SwitchEmpty
                 && did_work
             {
                 {
@@ -404,9 +407,10 @@ impl Data {
                     .unwrap_or(());
             }
             station.trains[target.track].push_back(train);
+            did_any_work = true;
         }
 
-        Ok(())
+        Ok(did_any_work)
     }
 }
 

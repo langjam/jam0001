@@ -13,13 +13,11 @@ impl CliRunner {
     }
 
     pub fn run(&self, mut vm: Data) {
-        while vm.train_count().unwrap() > 0 {
-            vm.do_current_step(self).expect("failed");
-
-            let mut input_text = String::new();
-            io::stdin()
-                .read_line(&mut input_text)
-                .expect("failed to read from stdin");
+        loop {
+            log::debug!("Next iteration!");
+            if !vm.do_current_step(self).expect("failed") {
+                break
+            }
         }
     }
 }
@@ -28,6 +26,7 @@ impl Communicator for CliRunner {
     fn ask_for_input(&self) -> Result<Vec<i64>, train::interface::CommunicatorError> {
         loop {
             let mut input_text = String::new();
+            log::info!("INPUT: ");
             io::stdin()
                 .read_line(&mut input_text)
                 .expect("failed to read from stdin");
@@ -45,13 +44,13 @@ impl Communicator for CliRunner {
     }
 
     fn print(&self, data: Vec<i64>) -> Result<(), train::interface::CommunicatorError> {
-        log::info!("simulation says: {:?}", data);
+        log::info!("OUTPUT: {:?}", data);
         Ok(())
     }
 
     fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
         let char_data = data.iter().map(|x| (x&0xFF) as u8).collect();
-        log::info!("simulation says: {}", String::from_utf8(char_data)?);
+        log::info!("OUTPUT: {}", String::from_utf8(char_data)?);
         Ok(())
     }
 
