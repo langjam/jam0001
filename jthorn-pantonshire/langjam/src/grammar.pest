@@ -1,0 +1,67 @@
+//Horizontal whitespace
+hws = _{ " " | "\t" }
+//Vertical whitespace
+vws = _{ hws* ~ NEWLINE ~ hws* }
+//Separator between tokens inside of a comment
+sep = _{ hws | hws* ~ NEWLINE ~ hws* ~ "//" ~ hws* }
+
+//basic definitions
+digit = { '0'..'9' }
+alpha = { 'a'..'z' | 'A'..'Z' }
+number = { digit+ }
+alphanumeric = { alpha ~ (alpha | digit | "_" | "-")* }
+reserved = { ^"then" | ^"as" | ^"storing" | ^"if" | ^"else" | ^"otherwise" | ^"do" | ^"does"}
+ident = { !(reserved ~ (hws | NEWLINE | EOI)) ~ alphanumeric }
+
+stringContents = { (!("\"") ~ ANY)* }
+string = { "\"" ~ stringContents ~ "\"" }
+
+//expressions
+opNeq = { "!=" }
+opEq  = { "==" }
+opGt  = { ">" }
+opGe  = { ">=" }
+opLt  = { "<" }
+opLe  = { "<=" }
+opSub = { "-" }
+opAdd = { "+" }
+opOr  = { ^"or" | "||" }
+opDiv = { "/" }
+opMul = { "*" }
+opAnd = { ^"and" | "&&" }
+opNot = { ^"not" | "!" }
+opNeg = { "-" }
+
+litTrue  = { ^"true" }
+litFalse = { ^"false" }
+
+
+expr        = { equality }
+equality    = { comparison ~ (sep* ~ (opNeq | opEq) ~ sep* ~ comparison )* }
+comparison  = { termOr ~ (sep* ~ (opGt | opGe | opLt | opLe) ~ sep* ~ termOr )* }
+termOr      = { factorAnd ~ (sep* ~ (opSub | opAdd | opOr) ~ sep* ~ factorAnd )* }
+factorAnd   = { unary ~ (sep* ~ (opDiv | opMul | opAnd) ~ sep* ~ unary)? }
+unary       = { (opNot | opNeg) ~ sep* ~ unary | primary }
+primary     = { number | litTrue | litFalse | list | ident | string | "(" ~ sep* ~ expr ~ sep* ~ ")" }
+list        = { "list" ~ sep* ~ "[" ~ sep* ~ (expr ~ (sep* ~ "," ~ sep* ~ expr)*)?  ~ sep* ~ "]"}
+
+//statements
+varStmt = { (^"stores" | ^"storing") ~ sep+ ~ expr ~ sep+ ~ ^"in" ~ sep+ ~ ident }
+loopStmt = { ^"repeatedly" ~ sep+ ~ "(" ~ sep* ~ comment ~ sep* ~ ")" ~ sep+ ~ expr ~ sep+ ~ ^"times" }
+callStmt = { ident ~ (sep+ ~ callArgs)? ~ (("," | sep) ~ sep* ~ callStore)? }
+callArgs = { expr ~ (sep* ~ "," ~ sep* ~ expr)* }
+callStore = { ^"storing" ~ sep+ ~ ^"the" ~ sep+ ~ (^"output" | ^"result") ~ sep+ ~ ^"in" ~ sep+ ~ ident }
+condStmt = { ^"if" ~ sep+ ~ expr ~ (sep | ",") ~ sep* ~ (^"does" ~ sep+)? ~ comment ~ (sep | ",") ~ sep* ~ (^"else" | ^"otherwise") ~ sep+ ~ comment}
+consStmt = { ^"constant" ~ sep+ ~ ident ~ sep+ ~ ^"is" ~ sep+ ~ expr}
+returnStmt = { (^"outputs" | ^"returns") ~ sep+ ~ expr }
+stmt = { (varStmt | loopStmt | condStmt | consStmt | returnStmt | callStmt)}
+comment = { stmt ~ ((sep | ",") ~ sep* ~ "then" ~ sep+ ~ stmt)* }
+commentStmt = { "//" ~ sep* ~ (fnIntro ~ sep+)? ~ comment ~ vws+ ~ (^"function"| ^"#") ~ hws+ ~ ident ~ hws* ~ "(" ~ hws* ~ (ident ~ (hws* ~ "," ~ hws* ~ ident)*)? ~ hws* ~ ")" ~ (hws* ~ dummyBlock)? }
+semanticBody = {commentStmt ~ (vws+ ~ semanticBody)*}
+syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (("\n")*~mainStmt~("\n")*)* ~ "}"}
+mainStmt = { ident ~"<-"~ mainStmt | ident ~ "(" ~ mainStmt ~ ")" | ident }
+program = { vws* ~ semanticBody ~ vws* ~ EOI }
+
+fnIntro = _{ (^"a" ~ sep+ ~ (^"function"| ^"#") ~ sep+ ~ ^"which") | (^"this" ~ sep+ ~ (^"function"| ^"#")) }
+
+dummyBlock = _{ "{" ~ (dummyBlock | !("}") ~ ANY)* ~ "}" }
