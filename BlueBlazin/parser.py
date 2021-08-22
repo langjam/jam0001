@@ -24,6 +24,7 @@ class Ast(Enum):
     WHILE_STMT = auto()
     FUNCTION_DCLR = auto()
     PRINT_STMT = auto()
+    MEMBER_ASSIGNMENT = auto()
 
 
 class Parser:
@@ -192,8 +193,12 @@ class Parser:
                 and (token["type"] == TokenType.PUNCTUATOR and token["value"] == "="):
             self.advance()
             value = self.expression()
-            return {"type": Ast.ASSIGNMENT, "name": expr, "value": value, "line": expr["line"]}
-
+            return {"type": Ast.ASSIGNMENT, "name": expr["value"], "value": value, "line": expr["line"]}
+        elif expr["type"] == Ast.MEMBER \
+                and (token["type"] == TokenType.PUNCTUATOR and token["value"] == "="):
+            self.advance()
+            value = self.expression()
+            return {"type": Ast.MEMBER_ASSIGNMENT, "dictionary": expr["dictionary"], "key": expr["key"], "value": value, "line": expr["line"]}
         return expr
 
     def logic_or(self):
@@ -294,7 +299,9 @@ class Parser:
         token = self.peek()
         while True:
             match token:
-                case {"type": TokenType.PUNCTUATOR, "value": "*"} | {"type": TokenType.PUNCTUATOR, "value": "/"}:
+                case {"type": TokenType.PUNCTUATOR, "value": "*"} \
+                        | {"type": TokenType.PUNCTUATOR, "value": "/"} \
+                        | {"type": TokenType.PUNCTUATOR, "value": "%"}:
                     self.advance()
                     rhs = self.unary()
                     expr = {"type": Ast.BINARY,
@@ -336,8 +343,10 @@ class Parser:
                     token = self.advance()
                     match token:
                         case {"type": TokenType.NUMBER} | {"type": TokenType.STRING}:
-                            expr = {"type": Ast.MEMBER, "dictionary": expr,
-                                    "key": token, "line": line}
+                            expr = {"type": Ast.MEMBER,
+                                    "dictionary": expr,
+                                    "key": token["value"],
+                                    "line": line}
                         case _:
                             raise Exception(f"Illegal key. Expected "
                                             f"Number or String on line: {token['line']}")

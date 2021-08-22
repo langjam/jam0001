@@ -21,7 +21,7 @@ class Env:
         env = self
         while env is not None:
             if key in env.table:
-                env[key] = value
+                env.table[key] = value
                 return
             env = env.parent
         raise Exception(f"Runtime Error: {key} not found")
@@ -56,9 +56,7 @@ class Interpreter:
                 value = self.expression(stmt_or_dclr["value"])
                 self.env.set_value(key, value)
             case Ast.BLOCK_STMT:
-                self.env = Env(self.env)
-                self.evaluate(stmt_or_dclr["body"])
-                self.env = self.env.parent
+                self.block(stmt_or_dclr)
             case Ast.IF_STMT:
                 self.if_stmt(stmt_or_dclr)
             case Ast.WHILE_STMT:
@@ -69,6 +67,14 @@ class Interpreter:
                 return self.expression(stmt_or_dclr["value"])
             case _:
                 raise Exception(f"Internal Error {stmt_or_dclr}")
+
+    def block(self, block):
+        self.env = Env(self.env)
+
+        for stmt_or_dclr in block["body"]:
+            self.evaluate(stmt_or_dclr)
+
+        self.env = self.env.parent
 
     def function(self, expr):
         name = expr["name"]
@@ -105,14 +111,24 @@ class Interpreter:
             case Ast.CALL:
                 return self.call(expr)
             case Ast.ASSIGNMENT:
-                key = self.expression(expr["name"])
+                key = expr["name"]
                 value = self.expression(expr["value"])
                 self.env.assign_value(key, value)
+                return value
+            case Ast.MEMBER_ASSIGNMENT:
+                key = expr["key"]
+                dictionary = self.expression(expr["dictionary"])
+                if not isinstance(dictionary, dict):
+                    raise Exception(
+                        f"Runtime Error: object is not a dictionary")
+                value = self.expression(expr["value"])
+                dictionary[key] = value
                 return value
             case Ast.MEMBER:
                 dictionary = self.expression(expr["dictionary"])
                 if not isinstance(dictionary, dict):
-                    raise Exception(f"Runtime Error: object not a dictionary")
+                    raise Exception(
+                        f"Runtime Error: object is not a dictionary")
 
                 key = self.expression(expr["key"])
                 return dictionary.get(key, None)
@@ -182,5 +198,7 @@ class Interpreter:
                 return lhs and rhs
             case "or":
                 return lhs or rhs
+            case "%":
+                return lhs % rhs
             case _:
                 raise Exception("Internal Error")

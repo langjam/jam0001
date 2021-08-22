@@ -39,11 +39,11 @@ class Lexer:
                     yield self.scan_number()
                 case "\"":
                     yield self.scan_string()
-                case "+" | "-" | "*" | "!" \
-                         | ">" | "<" | "(" \
-                         | ")" | "{" | "=" \
+                case "+" | "-" | "*" \
+                         | "(" \
+                         | ")" | "{" \
                          | ";" | ":" | "[" \
-                         | "]" | ",":
+                         | "]" | "," | "%":
                     yield self.token(self.line, TokenType.PUNCTUATOR, self.advance())
                 case "}":
                     if self.peek(1) == "}" and self.in_reference:
@@ -51,8 +51,12 @@ class Lexer:
                         return
 
                     yield self.token(self.line, TokenType.PUNCTUATOR, self.advance())
-                case "!=" | "==" | ">=" | "<=":
-                    yield self.token(self.line, TokenType.PUNCTUATOR, self.advance(2))
+                case "!" | "=" | ">" | "<":
+                    match self.peek() + self.peek(1):
+                        case "!=" | "==" | ">=" | "<=":
+                            yield self.token(self.line, TokenType.PUNCTUATOR, self.advance(2))
+                        case _:
+                            yield self.token(self.line, TokenType.PUNCTUATOR, self.advance())
                 case "/":
                     if self.peek(1) == "*":
                         yield from self.scan_comment()
