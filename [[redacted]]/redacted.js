@@ -315,6 +315,7 @@ function pprint_ast(ast, ident_size=2, ident_char=' ') {
 			result += '\n'
 			for (const key in node) {
 				if (key === 'kind' || key === 'children') continue
+				if (node[key] === undefined || node[key] === null) continue
 				result += pad_for(level + 1)
 				       + key
 				       + ' = '
