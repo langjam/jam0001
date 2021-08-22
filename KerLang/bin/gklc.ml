@@ -47,4 +47,4 @@ let () =
     |> Kerlang.Kl_codegen.emit_kl_ir
     |> fun x ->
       Kerlang.Kl_codegen.print_info x;
-      Kerlang.Kl_codegen.synthetize (open_out !output_file) x
+      Kerlang.Kl_codegen.ML_Realizer.realize (open_out !output_file) x
