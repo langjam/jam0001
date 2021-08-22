@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "parser.h"
+#include "interpreter.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -191,10 +192,7 @@ int main(int argc, char **argv) {
         print_help();
         return 1;
     }
-    for (struct Node **node = parse(stream_base); *node; ++node) {
-        print_node(*node);
-        printf("\n");
-    }
+    interpret(parse(stream_base));
     if (do_free)
         free(stream_base);
     return 0;
