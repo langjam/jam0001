@@ -8,17 +8,30 @@ pub enum Value {
     Bool(bool),
     Int(i64),
     String(String),
+    List(Vec<Value>),
     Function(String),
     // File(Rc<File>),
 }
 
 impl Value {
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            Value::Void => "void",
+            Value::Bool(_) => "bool",
+            Value::Int(_) => "int",
+            Value::String(_) => "string",
+            Value::List(_) => "list",
+            Value::Function(_) => "function",
+        }
+    }
+
     fn coerce_string(&self) -> Option<String> {
         match self {
             Value::Void => Some("".into()),
             Value::Bool(val) => Some(format!("{}", val)),
             Value::Int(val) => Some(format!("{}", val)),
             Value::String(val) => Some(val.clone()),
+            Value::List(_) => None,
             Value::Function(_) => None,
             // Value::File(_) => None,
         }
@@ -30,6 +43,7 @@ impl Value {
             Value::Bool(val) => Some(if *val { 1 } else { 0 }),
             Value::Int(val) => Some(*val),
             Value::String(val) => val.parse().ok(),
+            Value::List(_) => None,
             Value::Function(_) => None,
             // Value::File(_) => None,
         }
@@ -43,6 +57,7 @@ impl fmt::Display for Value {
             Value::Bool(val) => write!(f, "{}", val),
             Value::Int(val) => write!(f, "{}", val),
             Value::String(val) => write!(f, "{}", val),
+            Value::List(vals) => write!(f, "[{}]", vals.iter().fold(String::new(), |acc, val| acc + &val.to_string() + ",")),
             Value::Function(val) => write!(f, "function[{}]", val),
             // Value::File(val) => write!(f, "{:?}", val),
         }
@@ -55,6 +70,8 @@ impl PartialEq for Value {
             (Self::Bool(lhs), Self::Bool(rhs)) => lhs == rhs,
             (Self::Int(lhs), Self::Int(rhs)) => lhs == rhs,
             (Self::String(lhs), Self::String(rhs)) => lhs == rhs,
+            (Self::List(lhs), Self::List(rhs)) =>
+                lhs.len() == rhs.len() && lhs.iter().zip(rhs.iter()).all(|(l, r)| l == r),
             // (Self::File(lhs), Self::File(rhs)) => Rc::ptr_eq(lhs, rhs),
 
             (Self::String(val), other) | (other, Self::String(val)) => match other.coerce_string() {

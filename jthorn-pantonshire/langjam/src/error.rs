@@ -8,10 +8,11 @@ pub struct RuntimeError {
 }
 
 pub enum RuntimeErrorCause {
-    MissingVariable,
-    MissingFunction,
-    TypeError,
-    Immutable,
+    MissingVariable(String),
+    MissingFunction(String),
+    TypeError(String),
+    Immutable(String),
+    OutOfBoundsError(String),
 }
 
 impl RuntimeError {
@@ -25,9 +26,6 @@ impl RuntimeError {
 
 impl RuntimeErrorCause {
     pub const fn error(self, span: Span) -> RuntimeError {
-        RuntimeError {
-            span,
-            cause: self,
-        }
+        RuntimeError::new(span, self)
     }
 }

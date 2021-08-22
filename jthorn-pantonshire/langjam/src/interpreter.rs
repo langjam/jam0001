@@ -29,9 +29,9 @@ impl Store {
         self.0.get(name)
     }
 
-    pub fn store(&mut self, name: String, val: Value, mutability: Mutability) -> Result<(), ()> {
+    pub fn store(&mut self, name: String, val: Value, mutability: Mutability) -> Result<(), RuntimeErrorCause> {
         if let Some((_, Mutability::Immutable)) = self.0.get(&name) {
-            Err(())
+            Err(RuntimeErrorCause::Immutable(format!("cannot mutate immutable variable {}", name)))
         } else {
             self.0.insert(name, (val, mutability));
             Ok(())
@@ -84,18 +84,21 @@ impl Interpreter {
             Stmt::Var(var_stmt) => {
                 let val = self.eval_expr(&local, &var_stmt.value)?;
                 local.store(var_stmt.variable.clone(), val, Mutability::Mutable)
-                    .map_err(|_| RuntimeErrorCause::Immutable.error(var_stmt.value.span))?;
+                    .map_err(|err| err.error(var_stmt.value.span))?;
             },
 
             Stmt::Loop(loop_stmt) => {
                 let iter = match self.eval_expr(local, &loop_stmt.loops)? {
                     Value::Int(loops) => loops,
-                    _ => return Err(RuntimeErrorCause::TypeError.error(loop_stmt.loops.span)),
+                    v => return Err(RuntimeErrorCause::TypeError(format!("cannot use {} as number of loops", v.type_name()))
+                        .error(loop_stmt.loops.span)),
                 };
 
                 for _ in 0..iter {
                     for stmt in &loop_stmt.stmts {
-                        self.eval_stmt(local, stmt)?;
+                        if let Some(ret) = self.eval_stmt(local, stmt)? {
+                            return Ok(Some(ret));
+                        }
                     }
                 }
             },
@@ -110,7 +113,8 @@ impl Interpreter {
                     .get(&call_stmt.function)
                     .map(|(val, _)| match val {
                         Value::Function(name) => Ok(name),
-                        _ => Err(RuntimeErrorCause::TypeError.error(call_stmt.span))
+                        _ => Err(RuntimeErrorCause::TypeError(format!("cannot call {} which is not a function", call_stmt.function))
+                            .error(call_stmt.span))
                     })
                     .transpose()?
                     .unwrap_or(&call_stmt.function);
@@ -118,29 +122,35 @@ impl Interpreter {
                 let call_out = if let Some(function) = self.functions.get(function_name) {
                     self.exec_fn(function, call_args)?
                 } else if let Some(out) = stdlib::call_std_fn(function_name, &call_args) {
-                    out
+                    out.map_err(|err| err.error(call_stmt.span))?
                 } else {
-                    return Err(RuntimeErrorCause::MissingFunction.error(call_stmt.span));
+                    return Err(RuntimeErrorCause::MissingFunction(format!("no function called {} found", call_stmt.function))
+                        .error(call_stmt.span));
                 };
 
                 let store = call_stmt.store.as_deref().unwrap_or("it");
 
                 local.store(store.to_owned(), call_out, Mutability::Mutable)
-                    .map_err(|_| RuntimeErrorCause::Immutable.error(call_stmt.span))?;
+                    .map_err(|err| err.error(call_stmt.span))?;
             },
 
             Stmt::Cond(cond_stmt) => {
                 let cond = match self.eval_expr(&local, &cond_stmt.cond)? {
                     Value::Bool(a) => a,
-                    _ => return Err(RuntimeErrorCause::TypeError.error(cond_stmt.span)),
+                    v => return Err(RuntimeErrorCause::TypeError(format!("cannot use {} as condition for if statement", v.type_name()))
+                        .error(cond_stmt.span)),
                 };
                 if cond {
                     for stmt in &cond_stmt.stmt1 {
-                        self.eval_stmt(local, stmt)?;
+                        if let Some(ret) = self.eval_stmt(local, stmt)? {
+                            return Ok(Some(ret));
+                        }
                     }
                 } else {
                     for stmt in &cond_stmt.stmt2 {
-                        self.eval_stmt(local, stmt)?;
+                        if let Some(ret) = self.eval_stmt(local, stmt)? {
+                            return Ok(Some(ret));
+                        }
                     }
                 }
             },
@@ -148,7 +158,7 @@ impl Interpreter {
             Stmt::Cons(cons_stmt) => {
                 let expr = self.eval_expr(&local, &cons_stmt.expr)?;
                 local.store(cons_stmt.name.clone(), expr, Mutability::Immutable)
-                    .map_err(|_| RuntimeErrorCause::Immutable.error(cons_stmt.span))?;
+                    .map_err(|err| err.error(cons_stmt.span))?;
             },
 
             Stmt::Return(return_stmt) => {
@@ -182,7 +192,13 @@ impl Interpreter {
                 } else {
                     None
                 })
-                .ok_or_else(|| RuntimeErrorCause::MissingVariable.error(expr.span)),
+                .ok_or_else(|| RuntimeErrorCause::MissingVariable(format!("variable {} is not defined", variable))
+                    .error(expr.span)),
+
+            ExprKind::List(exprs) => Ok(Value::List(exprs
+                .iter()
+                .map(|expr| self.eval_expr(local, expr))
+                .collect::<RuntimeResult<Vec<_>>>()?)),
         }
     }
 
@@ -190,12 +206,14 @@ impl Interpreter {
         match op {
             UnaryOp::Not => match val {
                 Value::Bool(a) => Ok(Value::Bool(!a)),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                v => Err(RuntimeErrorCause::TypeError(format!("boolean complement of a {} is not defined", v.type_name()))
+                    .error(span)),
             },
 
             UnaryOp::Minus => match val {
                 Value::Int(a) => Ok(Value::Int(-a)),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                v => Err(RuntimeErrorCause::TypeError(format!("negative of a {} is not defined", v.type_name()))
+                    .error(span)),
             }
         }
     }
@@ -210,38 +228,48 @@ impl Interpreter {
                 (Value::Bool(a), Value::Bool(b)) => Ok((a==false && b==true).into()),
                 (Value::Int(a), Value::Int(b)) => Ok((a < b).into()),
                 (Value::String(a), Value::String(b)) => Ok((a < b).into()),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (Value::List(a), Value::List(b)) => Ok((a.len() < b.len()).into()),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("cannot compare {} and {}", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
 
             BinaryOp::Le => match (val1, val2) {
                 (Value::Bool(a), Value::Bool(b)) => Ok((!(a==false && b==true)).into()),
                 (Value::Int(a), Value::Int(b)) => Ok((a <= b).into()),
                 (Value::String(a), Value::String(b)) => Ok((a <= b).into()),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (Value::List(a), Value::List(b)) => Ok((a.len() <= b.len()).into()),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("cannot compare {} and {}", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
 
             BinaryOp::Gt=> match (val1, val2) {
                 (Value::Bool(a), Value::Bool(b)) => Ok((a==true && b==false).into()),
                 (Value::Int(a), Value::Int(b)) => Ok((a > b).into()),
                 (Value::String(a), Value::String(b)) => Ok((a.len() > b.len()).into()),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (Value::List(a), Value::List(b)) => Ok((a.len() > b.len()).into()),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("cannot compare {} and {}", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
 
             BinaryOp::Ge=> match (val1, val2) {
                 (Value::Bool(a), Value::Bool(b)) => Ok((!(a==true && b==false)).into()),
                 (Value::Int(a), Value::Int(b)) => Ok((a >= b).into()),
                 (Value::String(a), Value::String(b)) => Ok((a.len() >= b.len()).into()),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (Value::List(a), Value::List(b)) => Ok((a.len() >= b.len()).into()),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("cannot compare {} and {}", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
 
             BinaryOp::And => match (val1, val2) {
                 (Value::Bool(a), Value::Bool(b)) => Ok((a && b).into()),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("boolean and of {} and {} is not defined", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
 
             BinaryOp::Or => match (val1, val2) {
                 (Value::Bool(a), Value::Bool(b)) => Ok((a || b).into()),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("boolean or of {} and {} is not defined", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
 
             BinaryOp::Add => match (val1, val2) {
@@ -252,22 +280,26 @@ impl Interpreter {
                     buf.push_str(&b);
                     Ok(buf.into())
                 },
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("addition of {} and {} is not defined", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
 
             BinaryOp::Sub => match (val1, val2) {
                 (Value::Int(a), Value::Int(b)) => Ok((a - b).into()),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("subtraction of {} and {} is not defined", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
 
             BinaryOp::Mul => match (val1, val2) {
                 (Value::Int(a), Value::Int(b)) => Ok((a * b).into()),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("multiplication of {} and {} is not defined", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
 
             BinaryOp::Div => match (val1, val2) {
                 (Value::Int(a), Value::Int(b)) => Ok((a / b).into()),
-                _ => Err(RuntimeErrorCause::TypeError.error(span)),
+                (v1, v2) => Err(RuntimeErrorCause::TypeError(format!("division of {} and {} is not defined", v1.type_name(), v2.type_name()))
+                    .error(span)),
             },
         }
     }

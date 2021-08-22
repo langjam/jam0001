@@ -15,6 +15,14 @@ pub struct Span {
     pub end: usize,
 }
 
+impl Span {
+    pub fn line_no(&self, source: &str) -> usize {
+        source[..self.start]
+            .lines()
+            .count()
+    }
+}
+
 impl From<pest::Span<'_>> for Span {
     fn from(span: pest::Span<'_>) -> Self {
         Self {
@@ -114,7 +122,7 @@ pub enum ExprKind {
     Variable(String),
     Unary(UnaryOp, Box<Expr>),
     Binary(BinaryOp, Box<Expr>, Box<Expr>),
- 
+    List(Vec<Expr>),
 }
 
 #[derive(Debug)]
@@ -196,6 +204,7 @@ fn parse_semantic_body(semantic_body: Pair) -> Vec<Function> {
     functions
 }
 
+
 fn parse_comment(comment: Pair) -> Vec<Stmt> {
     comment.into_inner().map(parse_statement).collect()
 }
@@ -225,8 +234,6 @@ fn parse_statement(pair: Pair) -> Stmt {
                 expr,
             })
         },
-
-        Rule::argsStmt => todo!("args statement"),
 
         Rule::loopStmt => {
             let span = pair.as_span().into();
@@ -298,11 +305,23 @@ fn parse_statement(pair: Pair) -> Stmt {
             })
         },
 
+   
         _ => unreachable!(),
     }
 }
 
 fn parse_expr(pair: Pair) -> Expr {
+
+    fn parse_list(pair: Pair) -> Expr {
+        let span = Span::from(pair.as_span());
+        let expr = Expr {
+            span,
+            kind: ExprKind::List(pair.into_inner().map(parse_expr).collect::<Vec<_>>())
+        };
+        expr
+
+    }
+
     fn parse_equality(pair: Pair) -> Expr {
         let span = Span::from(pair.as_span());
         let mut pairs = pair.into_inner();
@@ -469,5 +488,11 @@ fn parse_expr(pair: Pair) -> Expr {
         } 
     }
 
-    parse_equality(pair.into_inner().next().unwrap())
+    let first = pair.into_inner().next().unwrap();
+
+    match first.as_rule() {
+        Rule::list => parse_list(first),
+        Rule::equality => parse_equality(first),
+        _ => unreachable!(),
+    }
 }

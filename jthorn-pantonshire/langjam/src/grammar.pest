@@ -2,13 +2,15 @@
 hws = _{ " " | "\t" }
 //Vertical whitespace
 vws = _{ hws* ~ NEWLINE ~ hws* }
+//Separator between tokens inside of a comment
+sep = _{ hws | hws* ~ NEWLINE ~ hws* ~ "//" ~ hws* }
 
 //basic definitions
 digit = { '0'..'9' }
 alpha = { 'a'..'z' | 'A'..'Z' }
 number = { digit+ }
 alphanumeric = { alpha ~ (alpha | digit | "_" | "-")* }
-reserved = { ^"then" | ^"as" | ^"storing" | ^"if" | ^"else" | ^"otherwise" }
+reserved = { ^"then" | ^"as" | ^"storing" | ^"if" | ^"else" | ^"otherwise" | ^"do" | ^"does"}
 ident = { !(reserved ~ (hws | NEWLINE | EOI)) ~ alphanumeric }
 
 stringContents = { (!("\"") ~ ANY)* }
@@ -33,33 +35,32 @@ opNeg = { "-" }
 litTrue  = { ^"true" }
 litFalse = { ^"false" }
 
-expr        = { equality }
-equality    = { comparison ~ (hws* ~ (opNeq | opEq) ~ hws* ~ comparison )* }
-comparison  = { termOr ~ (hws* ~ (opGt | opGe | opLt | opLe) ~ hws* ~ termOr )* }
-termOr      = { factorAnd ~ (hws* ~ (opSub | opAdd | opOr) ~ hws* ~ factorAnd )* }
-factorAnd   = { unary ~ (hws* ~ (opDiv | opMul | opAnd) ~ hws* ~ unary)? }
-unary       = { (opNot | opNeg) ~ hws* ~ unary | primary }
-primary     = { number | litTrue | litFalse | ident | string | "(" ~ hws* ~ expr ~ hws* ~ ")" }
+expr        = { list | equality }
+list        = { "list" ~ sep* ~ "[" ~ sep* ~ expr ~ (sep* ~ "," ~ sep* ~ expr)*  ~ sep* ~ "]"}
+equality    = { comparison ~ (sep* ~ (opNeq | opEq) ~ sep* ~ comparison )* }
+comparison  = { termOr ~ (sep* ~ (opGt | opGe | opLt | opLe) ~ sep* ~ termOr )* }
+termOr      = { factorAnd ~ (sep* ~ (opSub | opAdd | opOr) ~ sep* ~ factorAnd )* }
+factorAnd   = { unary ~ (sep* ~ (opDiv | opMul | opAnd) ~ sep* ~ unary)? }
+unary       = { (opNot | opNeg) ~ sep* ~ unary | primary }
+primary     = { number | litTrue | litFalse | ident | string | "(" ~ sep* ~ expr ~ sep* ~ ")" }
 
 //statements
-varStmt = { ^"stores" ~ hws+ ~ expr ~ hws+ ~ ^"in" ~ hws+ ~ ident }
-loopStmt = { ^"repeatedly" ~ hws+ ~ "(" ~ hws* ~ comment ~ hws* ~ ")" ~ hws+ ~ expr ~ hws+ ~ ^"times" }
-callStmt = { ident ~ (hws+ ~ callArgs)? ~ (("," | hws) ~ hws* ~ callStore)? }
-callArgs = { expr ~ (hws* ~ "," ~ hws* ~ expr)* }
-callStore = { ^"storing" ~ hws+ ~ ^"the" ~ hws+ ~ (^"output" | ^"result") ~ hws+ ~ ^"in" ~ hws+ ~ ident }
-listStmt = { ident | ident ~ "," ~ listStmt }
-argsStmt = { ^"takes" ~ hws+ ~ listStmt}
-condStmt = { ^"if" ~ hws+ ~ expr ~ hws+ ~ ^"do" ~ hws+ ~ comment ~ hws+ ~ ^"else" ~ hws+ ~ comment}
-consStmt = { ^"constant" ~ hws+ ~ ident ~ hws+ ~ ^"is" ~ hws+ ~ expr}
-returnStmt = { (^"outputs" | ^"returns") ~ hws+ ~ expr }
-stmt = { argsStmt | varStmt | loopStmt | condStmt | consStmt | returnStmt | callStmt }
-comment = { stmt ~ ((hws | ",") ~ hws* ~ "then" ~ hws+ ~ stmt)* }
-commentStmt = { "//" ~ hws* ~ (fnIntro ~ hws+)? ~ comment ~ vws+ ~ ^"function" ~ hws+ ~ ident ~ hws* ~ "(" ~ hws* ~ (ident ~ (hws* ~ "," ~ hws* ~ ident)*)? ~ hws* ~ ")" ~ (hws* ~ dummyBlock)? }
+varStmt = { ^"stores" ~ sep+ ~ expr ~ sep+ ~ ^"in" ~ sep+ ~ ident }
+loopStmt = { ^"repeatedly" ~ sep+ ~ "(" ~ sep* ~ comment ~ sep* ~ ")" ~ sep+ ~ expr ~ sep+ ~ ^"times" }
+callStmt = { ident ~ (sep+ ~ callArgs)? ~ (("," | sep) ~ sep* ~ callStore)? }
+callArgs = { expr ~ (sep* ~ "," ~ sep* ~ expr)* }
+callStore = { ^"storing" ~ sep+ ~ ^"the" ~ sep+ ~ (^"output" | ^"result") ~ sep+ ~ ^"in" ~ sep+ ~ ident }
+condStmt = { ^"if" ~ sep+ ~ expr ~ (sep | ",") ~ sep* ~ ^"does" ~ sep+ ~ comment ~ (sep | ",") ~ sep* ~ (^"else" | ^"otherwise") ~ sep+ ~ comment}
+consStmt = { ^"constant" ~ sep+ ~ ident ~ sep+ ~ ^"is" ~ sep+ ~ expr}
+returnStmt = { (^"outputs" | ^"returns") ~ sep+ ~ expr }
+stmt = { (varStmt | loopStmt | condStmt | consStmt | returnStmt | callStmt)}
+comment = { stmt ~ ((sep | ",") ~ sep* ~ "then" ~ sep+ ~ stmt)* }
+commentStmt = { "//" ~ sep* ~ (fnIntro ~ sep+)? ~ comment ~ vws+ ~ ^"function" ~ hws+ ~ ident ~ hws* ~ "(" ~ hws* ~ (ident ~ (hws* ~ "," ~ hws* ~ ident)*)? ~ hws* ~ ")" ~ (hws* ~ dummyBlock)? }
 semanticBody = {commentStmt ~ (vws+ ~ semanticBody)*}
 syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (("\n")*~mainStmt~("\n")*)* ~ "}"}
 mainStmt = { ident ~"<-"~ mainStmt | ident ~ "(" ~ mainStmt ~ ")" | ident }
 program = { vws* ~ semanticBody ~ vws* ~ EOI }
 
-fnIntro = _{ (^"a" ~ hws+ ~ ^"function" ~ hws+ ~ ^"which") | (^"this" ~ hws+ ~ ^"function") }
+fnIntro = _{ (^"a" ~ sep+ ~ ^"function" ~ sep+ ~ ^"which") | (^"this" ~ sep+ ~ ^"function") }
 
 dummyBlock = _{ "{" ~ (dummyBlock | !("}") ~ ANY)* ~ "}" }

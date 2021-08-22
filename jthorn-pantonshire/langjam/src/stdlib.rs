@@ -1,6 +1,7 @@
 use std::io::{self, Write};
 
 use crate::value::Value;
+use crate::error::RuntimeErrorCause;
 
 macro_rules! std_fns {
     ($($p:pat => $e:expr),*) => {
@@ -11,7 +12,7 @@ macro_rules! std_fns {
             }
         }
 
-        pub fn call_std_fn(name: &str, args: &[Value]) -> Option<Value> {
+        pub fn call_std_fn(name: &str, args: &[Value]) -> Option<Result<Value, RuntimeErrorCause>> {
             match name {
                 $($p => Some($e(args))),*,
                 _ => None,
@@ -21,10 +22,16 @@ macro_rules! std_fns {
 }
 
 std_fns! {
-    "print" => print
+    "print" => print,
+    "type" => type_name,
+    "measure" => measure,
+    "get" => get
+    // "map" => map
 }
 
-pub fn print(args: &[Value]) -> Value {
+
+
+pub fn print(args: &[Value]) -> Result<Value, RuntimeErrorCause> {
     let stdout = io::stdout();
     let mut stdout = stdout.lock();
 
@@ -36,5 +43,51 @@ pub fn print(args: &[Value]) -> Value {
 
     stdout.flush().expect("failed to flush stdout");
 
-    Value::Void
+    Ok(Value::Void)
+}
+
+pub fn type_name(args: &[Value]) -> Result<Value, RuntimeErrorCause> {
+    let arg = args.get(0)
+        .ok_or_else(|| RuntimeErrorCause::MissingVariable("type function expects an argument".into()))?;
+
+    Ok(Value::String(arg.type_name().to_owned()))
+}
+
+pub fn measure(args: &[Value]) -> Result<Value, RuntimeErrorCause> {
+    let arg = args.get(0)
+        .ok_or_else(|| RuntimeErrorCause::MissingVariable("measure function expects an argument".into()))?;
+
+    match arg {
+        Value::String(s) => Ok((s.chars().count() as i64).into()),
+        Value::List(l) => Ok((l.len() as i64).into()),
+        v => Err(RuntimeErrorCause::TypeError(format!("cannot measure the length of {}", v.type_name()))),
+    }
+}
+
+pub fn get(args: &[Value]) -> Result<Value, RuntimeErrorCause> {
+    let collection = args.get(0)
+        .ok_or_else(|| RuntimeErrorCause::MissingVariable("get function expects two arguments".into()))?;
+
+    let index = args.get(1)
+        .ok_or_else(|| RuntimeErrorCause::MissingVariable("get function expects two arguments".into()))?;
+
+    let index = match index {
+        Value::Int(x) => *x,
+        v => return Err(RuntimeErrorCause::TypeError(format!("cannot use {} as index", v.type_name()))),
+    } as usize;
+
+    match collection {
+        Value::String(s) => s
+            .chars()
+            .nth(index)
+            .ok_or_else(|| RuntimeErrorCause::OutOfBoundsError(format!("index {} is out of bounds", index)))
+            .map(|c| Value::String(c.to_string())),
+
+        Value::List(l) => l
+            .get(index)
+            .cloned()
+            .ok_or_else(|| RuntimeErrorCause::OutOfBoundsError(format!("index {} is out of bounds", index))),
+
+        v => return Err(RuntimeErrorCause::TypeError(format!("cannot get element from {}", v.type_name()))),
+    }
 }
