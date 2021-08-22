@@ -328,17 +328,21 @@ mod test {
 
     #[test]
     fn numbers() {
-        let res = parse_value("42").expect("parse").1;
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("42").expect("parse").1;
         assert!(matches!(res, ValueAst::Number(42)));
-        let res = parse_value("-42").expect("parse").1;
+        let res = all_consuming(parse_value)("-42").expect("parse").1;
         assert!(matches!(res, ValueAst::Number(-42)));
-        let res = parse_value("0").expect("parse").1;
+        let res = all_consuming(parse_value)("0").expect("parse").1;
         assert!(matches!(res, ValueAst::Number(0)));
     }
 
     #[test]
     fn texts() {
-        let res = parse_value("\"foobar\"").expect("parse").1;
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("\"foobar\"").expect("parse").1;
         match res {
             ValueAst::Text(s) => assert_eq!(s, "foobar"),
             _ => assert!(false, "invalid result type"),
@@ -347,7 +351,9 @@ mod test {
 
     #[test]
     fn references() {
-        let res = parse_value("foobar").expect("parse").1;
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("foobar").expect("parse").1;
         match res {
             ValueAst::Reference(n) => assert_eq!(n, "foobar"),
             _ => assert!(false, "invalid result type"),
@@ -356,7 +362,9 @@ mod test {
 
     #[test]
     fn struct_values() {
-        let res = parse_value("{\n\tfoo: 42,\n}\n").expect("parse").1;
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("{\n\tfoo: 42,\n}\n").expect("parse").1;
         match res {
             ValueAst::Struct(s) => {
                 assert_eq!(None, s.name);
