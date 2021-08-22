@@ -10,4 +10,4 @@ main := proc () void {
     else if (temperature_celsius < 30) { print("It's warming up."); }
     else if (temperature_celsius < 35) { print("It's hot."); }
     else { print("Hey, your hair is on fire, I'm on fire too! Is this fine? Yeah this is fine."); }
-}
+};
