@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"fmt"
+	"log"
 	"strings"
 
 	"github.com/grossamos/jam0001/shared"
@@ -90,15 +90,11 @@ func (l *Lexer) makeTokens() ([]shared.Token, error) {
 	return tokens, nil
 }
 
-// func (l *Lexer) peak_ahead(indecies int) string {
-// 	return l.text[l.index : l.index+indecies]
-// }
-
 func RunLexer(text string) []shared.Token {
 	lex := NewLexer(text)
 	tokens, err := lex.makeTokens()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Fatal(err)
 	}
 	return tokens
 }

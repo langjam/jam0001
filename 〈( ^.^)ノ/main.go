@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"io/ioutil"
 
@@ -11,17 +12,22 @@ import (
 )
 
 func main() {
+	// load test code from disk
 	dat, err := ioutil.ReadFile("examples/test_while.sml")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-
 	code := string(dat)
 	fmt.Println(code)
 
+	// run lexer
 	toks := lexer.RunLexer(code)
-	fmt.Println(toks)
+	// fmt.Println(toks)
+
+	// run parser
 	nodes, comments := parser.GenerateAst(toks)
-	// nodes.Print("")
+	// shared.Node{IsExpression: true, Children: nodes}.Print("")
+
+	// run evaluator
 	evaluator.RunEvaluator(nodes, comments)
 }
