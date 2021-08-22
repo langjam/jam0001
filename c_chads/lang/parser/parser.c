@@ -220,6 +220,24 @@ static pnode_t pnode_binary(pnode_kind_t kind, pnode_t left, pnode_t right) {
     return node;
 }
 
+static pnode_t pnode_ternary(pnode_kind_t kind, pnode_t cond, pnode_t left, pnode_t right) {
+    if (isinval(cond) || isinval(left) || isinval(right)) {
+        pnode_checkfree(&cond);
+        pnode_checkfree(&left);
+        pnode_checkfree(&right);
+        return mkinval();
+    }
+    pnode_t node = {
+        .kind = kind,
+        .addressing = PA_TERNARY,
+        .children = vec_new(sizeof(pnode_t))
+    };
+    pnode_attach(&node, cond);
+    pnode_attach(&node, left);
+    pnode_attach(&node, right);
+    return node;
+}
+
 pnode_t *pnode_uvalue(pnode_t *of) {
     if (of->addressing != PA_UNARY) {
         fprintf(stderr, "Internal error: Invalid addressing mode for unary expression, %d", of->addressing);
@@ -228,12 +246,36 @@ pnode_t *pnode_uvalue(pnode_t *of) {
     return vec_get(&of->children, 0);
 }
 
+pnode_t *pnode_cond(pnode_t *of) {
+    if (of->addressing != PA_TERNARY) {
+        fprintf(stderr, "Internal error: Invalid addressing mode for ternary expression, %d", of->addressing);
+        exit(1);
+    }
+    return vec_get(&of->children, 0);
+}
+
+pnode_t *pnode_body(pnode_t *of) {
+    if (of->addressing != PA_TERNARY) {
+        fprintf(stderr, "Internal error: Invalid addressing mode for ternary expression, %d", of->addressing);
+        exit(1);
+    }
+    return vec_get(&of->children, 1);
+}
+
+pnode_t *pnode_alt(pnode_t *of) {
+    if (of->addressing != PA_TERNARY) {
+        fprintf(stderr, "Internal error: Invalid addressing mode for ternary expression, %d", of->addressing);
+        exit(1);
+    }
+    return vec_get(&of->children, 1);
+}
+
 pnode_t *pnode_left(pnode_t *of) {
     if (of->addressing != PA_BINARY) {
         fprintf(stderr, "Internal error: Invalid addressing mode for binary expression, %d", of->addressing);
         exit(1);
     }
-    return vec_get(&of->children, 0);
+    return vec_get(&of->children, 2);
 }
 
 pnode_t *pnode_right(pnode_t *of) {
@@ -298,11 +340,12 @@ static strview_t typedecl() {
 }
 
 #define OPS_W 4
-#define OPS_H 10
+#define OPS_H 11
 
 static const string OPERATORS[OPS_H][OPS_W] = {
     { "*", "/", "%" },
     { "+", "-" },
+    { "<<", ">>" },
     { "<", ">", ">=", "<=" },
     { "==", "!=" },
     { "&" },
@@ -371,20 +414,27 @@ static pnode_t statement() {
         pnode_t left = most_important_expression();
         skip_v(")");
         enddelim(delim);
-        return pnode_binary(PN_WHILE, left, body());
+        return pnode_binary(PN_WHILE, left, statement());
     }
-    if (check("return")) {
+    else if (check("return")) {
         skip_v("return");
-        return pnode_unary(PN_RETURN, most_important_expression());
+        return pnode_unary(PN_RETURN, statement());
     }
     else if (check("if")) {
         skip_v("if");
         rune delim = begindelim('(');
         skip_v("(");
-        pnode_t left = most_important_expression();
+        pnode_t cond = most_important_expression();
         skip_v(")");
         enddelim(delim);
-        return pnode_binary(PN_IF, left, body());
+        pnode_t body = statement();
+        if (check("else")) {
+            skip_v("else");
+            return pnode_ternary(PN_IF, cond, body, statement());
+        }
+        else {
+            return pnode_binary(PN_IF, cond, body);
+        }
     }
     return most_important_expression();
 }

@@ -176,7 +176,15 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
             return TT_RBRACKET;
         case '!':
         case '<':
+            if (lex_peek(self) == '<')
+            {
+                lex_skip(self);
+            }
         case '>':
+            if (lex_peek(self) == '>')
+            {
+                lex_skip(self);
+            }
         case '=':
             if (lex_peek(self) == '=')
             {

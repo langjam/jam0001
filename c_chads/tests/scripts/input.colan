@@ -11,6 +11,8 @@ dounary := proc(x : int) int {
 };
 
 main := proc () int {
-    print(domath(12; .2));
-    print(dounary(032));
+    if (1)
+        print(domath(12; .2))
+    else if (2)
+        print(dounary(032 << 3 >> 2));
 };

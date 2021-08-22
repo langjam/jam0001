@@ -22,6 +22,9 @@ void print_ast(struct Parser_Node *node, usize depth) {
         case PA_UNARY:
             printf("~~");
             break;
+        case PA_TERNARY:
+            printf("??");
+            break;
         case PA_LISTING:
             printf("[]");
             break;

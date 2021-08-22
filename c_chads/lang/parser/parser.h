@@ -10,6 +10,7 @@ struct Parser_State {
 };
 
 enum Parser_Node_Addressing {
+    PA_TERNARY,
     PA_BINARY,
     PA_UNARY,
     PA_LISTING,
@@ -62,8 +63,8 @@ struct Parser_Node {
             strview_t val; 
         } string;
         struct {
-            strview_t val; 
             enum Parser_Number_Kind kind;
+            strview_t val; 
         } number;
         struct {
             strview_t val; 
