@@ -7,10 +7,10 @@ This is a sample .comment program. This line, ironically, is ignored because it 
  * @param total number of repetitions
  */
 // Set repetitions so far to 0.
-// If total number of repetitions is 0 then jump to the line containing "And we're done".
-// Print the phrase.
+// If total number of repetitions is 0 then jump forward 4 lines.
+// Print with the string as the phrase.
 // Set repetitions so far to repetitions so far + 1.
-// If repetitions so far is less than total number of repetitions then jump back 3 lines.
+// Jump back 2 lines.
 // And we're done.
 
 The main program is below!

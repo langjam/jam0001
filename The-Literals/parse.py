@@ -5,6 +5,7 @@ from abstract_syntax_trees import (
     Comparison,
     Function,
     IfStmt,
+    JumpStmt,
     Number,
     Parameter,
     Program,
@@ -14,7 +15,7 @@ from abstract_syntax_trees import (
     StringLiteral,
     Variable,
     reset_functions,
-    reset_env
+    reset_env,
 )
 from tokenise import Token, Tokeniser
 
@@ -170,8 +171,19 @@ class Parser:
         if token == Token.SETVAR:
             self.advance()
             return self.parse_set_stmt()
+        elif token == Token.JUMP:
+            self.advance()
+            return self.parse_jump_stmt()
         elif token == Token.IDENTIFIER_WORD:
             return self.parse_func_call()
+
+    def parse_jump_stmt(self):
+        direction_token, direction_value = self.advance()
+        num_lines_token, num_lines_value = self.advance()
+        token, value = self.advance()
+        if token != Token.LINES:
+            raise UnexpectedTokenError(Token.LINES, token)
+        return JumpStmt(direction_value, num_lines_value)
 
     def parse_set_stmt(self):
         target = self.parse_identifier()
@@ -219,7 +231,7 @@ class Parser:
     def parse_arguments(self):
         token, value = self.peek_lexeme()
         args = []
-        while token == Token.WITH:
+        while token == Token.WITH or token == Token.AND:
             args.append(self.parse_argument())
             token, value = self.peek_lexeme()
         return dict(args)
@@ -237,6 +249,7 @@ class Parser:
             raise UnexpectedTokenError(Token.AS, token)
         self.advance()
         arg_value = self.parse_expr()
+        print(arg_value)
         return (arg_name, arg_value)
 
     def parse_reverse_assignment(self):
@@ -268,7 +281,7 @@ class Parser:
             return Number(int(operand_value))
         elif token == Token.STRING_LITERAL:
             operand_token, operand_value = self.expect(Token.STRING_LITERAL)
-            return StringLiteral(operand_value.strip("\""))
+            return StringLiteral(operand_value.strip('"'))
         elif token == Token.IDENTIFIER_WORD:
             varname = self.parse_identifier()
             return Variable(varname)
@@ -535,7 +548,7 @@ if __name__ == "__main__":
     # parser = Parser(program(function_call_with_params_and_result))
     # parser.parse()
 
-    input_file = "samples/string_literal.comment"
+    input_file = "samples/echo.comment"
     with open(input_file, "r") as f:
         text = f.read()
     tokeniser = Tokeniser(text)
