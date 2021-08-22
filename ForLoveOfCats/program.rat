@@ -1,13 +1,11 @@
 (block
-	(define string "Hello world!")
+	(define values (list "Hello!" 25 (+ 5 9) "Haha" 96))
 
-	(define end 1)
-	(while (<= end (len string))
+	(define index 1)
+	(while (< index (len values))
 		(block
-			(print (slice string 0 end))
-			(set end (+ end 1))
+			(print (lookup values index))
+			(set index (+ index 1))
 		)
 	)
-
-	(panic)
 )

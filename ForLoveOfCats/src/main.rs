@@ -362,6 +362,7 @@ enum Value {
 	None,
 	Bool(bool),
 	I64(i64),
+	List(Vec<Value>),
 	String(String),
 	Lambda(Lambda),
 }
@@ -370,9 +371,28 @@ impl std::fmt::Display for Value {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			Value::None => write!(f, "None"),
+
 			Value::Bool(lit) => write!(f, "{}", lit),
+
 			Value::I64(num) => write!(f, "{}", num),
+
+			Value::List(list) => {
+				write!(f, "(")?;
+
+				let count = list.len();
+				for (index, entry) in list.iter().enumerate() {
+					if index + 1 >= count {
+						write!(f, "{}", entry)?;
+					} else {
+						write!(f, "{}, ", &entry)?;
+					}
+				}
+
+				write!(f, ")")
+			}
+
 			Value::String(string) => write!(f, "{}", string),
+
 			Value::Lambda { .. } => write!(f, "`Lambda Object`"),
 		}
 	}
@@ -558,6 +578,9 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 				"and" => logical_and(state, &args),
 				"or" => logical_or(state, &args),
 
+				"list" => list(state, &args),
+
+				"lookup" => lookup(state, &args),
 				"len" => len_impl(state, &args),
 				"slice" => slice_impl(state, &args),
 
@@ -752,6 +775,30 @@ fn unwrap_usize(state: &mut ScopeState, value: i64) -> usize {
 	value as usize
 }
 
+fn list(_: &mut ScopeState, values: &[Value]) -> Value {
+	Value::List(values.to_vec())
+}
+
+fn lookup(state: &mut ScopeState, values: &[Value]) -> Value {
+	if values.len() != 2 {
+		runtime_error!(
+			state,
+			"Expected 2 arguments to lookup, got {}",
+			values.len()
+		);
+	}
+
+	let value = &values[0];
+
+	let index = unwrap_integer(state, &values[1]);
+	let index = unwrap_usize(state, index);
+
+	match value {
+		Value::List(list) => list[index].clone(),
+		_ => runtime_error!(state, "Cannot lookup on value which is not list"),
+	}
+}
+
 fn slice_impl(state: &mut ScopeState, values: &[Value]) -> Value {
 	if values.len() != 3 {
 		runtime_error!(state, "Expected 3 arguments to slice, got {}", values.len());
@@ -766,8 +813,9 @@ fn slice_impl(state: &mut ScopeState, values: &[Value]) -> Value {
 	let end = unwrap_usize(state, end);
 
 	match value {
+		Value::List(list) => Value::List(list[start..end].to_vec()),
 		Value::String(string) => Value::String(string[start..end].to_string()),
-		_ => runtime_error!(state, "Cannot slice non-string"),
+		_ => runtime_error!(state, "Cannot slice value which is not list or string"),
 	}
 }
 
@@ -777,8 +825,9 @@ fn len_impl(state: &mut ScopeState, values: &[Value]) -> Value {
 	}
 
 	match &values[0] {
+		Value::List(list) => Value::I64(list.len() as i64),
 		Value::String(string) => Value::I64(string.len() as i64),
-		_ => runtime_error!(state, "Cannot get len of non-string"),
+		_ => runtime_error!(state, "Cannot get len of value which is not list or string"),
 	}
 }
 
