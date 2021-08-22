@@ -1,0 +1,7 @@
+#!/bin/bash 
+
+apt install python3
+apt install perl
+apt install nodejs
+apt install ghc
+apt install tcc
