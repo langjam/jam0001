@@ -32,7 +32,7 @@ let rec emit_ast oc ?(self_name : string option = None) (func: ast) =
   | Var id ->
     Printf.fprintf oc "x%d" id
   | App(op, args) ->
-    Printf.fprintf oc "%a(%a)"
+    Printf.fprintf oc "(%a(%a))"
       (emit_op ~self_name) op
       (emit_ast_list ~self_name) args
   | If(cond, ifcase, elsecase) ->

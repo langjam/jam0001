@@ -11,4 +11,5 @@ def _out(x0, x1):
 def f(x0, x1, x2): return (lambda x0, x1: x0 - x1)((lambda x0, x1: x0 * x1)(x0, x1), x2)
 def g(x0, x1): return (lambda x0, x1: x0 * x1)(f(x0, 42, x1), f(x0, 42, x1))
 def equals_10(x0): return (0 if (lambda x0, x1: x0 - x1)(x0, 10) else 1)
-def gap_sum(): return 0
+def gap_sum(x0, x1): return (lambda x0, x1: x0 + x1)((lambda x0, x1: x0 - x1)(x0, 10), x1)
+def nani(x0): return (lambda x0, x1: x0 + x1)((lambda x0, x1: x0 + x1)(3, 7), x0)
