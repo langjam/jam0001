@@ -804,7 +804,7 @@ function compile(parsetree, comments, filename='') {
 		if (func.params.length !== 0) {
 			visit_comments_between_start_start(func, func.params[0])
 			previous = func.params[0]
-			for (let i = 0; i < func.params.length; i++) {
+			for (let i = func.params.length - 1; i >= 0; i--) {
 				add_op(op.STORE, 0, i)
 				add_op(op.DROP)
 				const param = func.params[i]
