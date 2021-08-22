@@ -123,7 +123,7 @@ static enum Token_Type lex_ident(struct Lexer_State *self) {
 static enum Token_Type lex_num(struct Lexer_State *self) {
     if (lex_is(self, '-')) TRY_SKIP(self, '-'); 
  
-    if (!is_num(lex_peek(self))) return TT_INVALID;
+    if (!(is_num(lex_peek(self)) || lex_peek(self) == '.')) return TT_INVALID;
 
     if (lex_peek(self) == '0') {
         rune ch;
@@ -148,7 +148,7 @@ static enum Token_Type lex_num(struct Lexer_State *self) {
     bool had_dot = false;
 
     rune ch;
-    while (ch = lex_peek(self), (ch >= '0' && ch <= '9') || (ch == '.')) {
+    while (ch = lex_peek(self), is_num(ch) || (ch == '.')) {
         if (ch == '.') {
             if (had_dot) break;
             had_dot = true;

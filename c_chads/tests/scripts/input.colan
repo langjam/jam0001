@@ -9,6 +9,6 @@ dounary := proc(x : int) int {
 };
 
 main := proc () int {
-    domath(12; 2);
-    dounary(12);
+    domath(12; .2);
+    dounary(032);
 };
