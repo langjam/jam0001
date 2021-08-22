@@ -3,6 +3,7 @@ import express from 'express'
 import 'ws'
 import WebSocket from "ws";
 import { VM } from "../compiler/VM";
+import { WrappedComment } from "../compiler/WrappedComment";
 
 export class ApiModel {
     private mModel : Model 
@@ -14,7 +15,6 @@ export class ApiModel {
     }
 
     executeCallbacks() {
-        console.log(this.mCallbacks);
         for( let value of this.mCallbacks) {
             let obj = this.mModel.toObject();
             let jsonString = JSON.stringify(obj);
@@ -40,9 +40,13 @@ export class ApiModel {
         let obj = req.body;
         let comment = obj.comment;
         let id = obj.parent;
+        let posts = this.mModel.posts;
         if(comment.content === 'run') {
-            let vm = new VM(this.mModel.makeCommentProvider(id))
-            vm.run();
+            let result = posts.filter( post => post.id === id)
+            if(result.length > 0) {
+                let vm = new VM(this.mModel.makeCommentProvider(id))
+                vm.run();
+            }
         } else {
             comment.id = this.mModel.getNexUniqueId();
             this.mModel.addComment(id, comment);
@@ -66,7 +70,15 @@ export class ApiModel {
     
     swapComment(req: express.Request, res: express.Response, direction : Direction) { 
         let obj = req.body;
-        this.mModel.swapFull(obj.idFirst, obj.idSecond);
+        let commentProv = this.mModel.makeCommentProvider(obj.post);
+        let other : WrappedComment | undefined = commentProv.getNextComment(obj.id);
+        if(direction === Direction.UP) {
+            other = commentProv.getPrevComment(obj.id);
+        }
+        console.log(other)
+        if(other !== undefined) {
+            this.mModel.swapFull(obj.id, other.id);
+        }
         res.sendStatus(200);
     }
 

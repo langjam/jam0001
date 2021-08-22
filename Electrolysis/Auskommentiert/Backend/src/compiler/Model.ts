@@ -237,7 +237,6 @@ export class Model {
             comments.push(comment);
         }
         this.mCommentsMap.set(post.id, new ModelPost(post.title, post.content, post.id, "", post.upvotes, post.date, comments));
-        console.log(inspect(this.posts, false, null, true));
         this.mCallback();
     }
     getNexUniqueId() : number {
@@ -274,14 +273,14 @@ export class Model {
                 let tempDate = entryOne.date;
                 entryOne.date = entryTwo.date;
                 entryTwo.date = tempDate;
-                parentOne.children = parentOne.children.map(child => {
-                    if(child.id === entryOne?.id) {
-                        return entryTwo;
-                    } else {
-                        return child;
-                    }
-                }) as ModelComment[]
+                let tempParentId = entryOne.parentId;
+                entryOne.parentId = entryTwo.parentId;
+                entryTwo.parentId = tempParentId;
 
+                parentOne.children.splice(parentOne.children.indexOf(entryOne as ModelComment));
+                parentTwo.children.splice(parentTwo.children.indexOf(entryTwo as ModelComment));
+                parentOne.children.push(entryTwo as ModelComment)
+                parentTwo.children.push(entryOne as ModelComment)
             }
         }
         this.mCallback();

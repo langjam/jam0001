@@ -35,8 +35,8 @@ type Downvote = {
 }
 
 type SwapRequest = {
-    idFirst: string,
-    idSecond: string,
+    post: string,
+    id: string,
 }
 
-export type { AppType, TopicType, CommentType, CommentCreate, Upvote, Downvote }
+export type { AppType, TopicType, CommentType, CommentCreate, Upvote, Downvote, SwapRequest }
