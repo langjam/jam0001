@@ -4,6 +4,7 @@ import Exchange exposing (..)
 import Language.AST as AST exposing (Universe(..))
 import Language.Core exposing (Runtime)
 import Language.Pancake as Pancake
+import Language.Parser as Parser exposing (parse)
 import Platform exposing (Program, worker)
 
 
@@ -63,12 +64,20 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotSrc sourceCode ->
-            case Pancake.compile sourceCode of
-                Nothing ->
-                    ( Idle, result compilationFail )
+            let
+                parsed =
+                    parse sourceCode
+            in
+            case Pancake.compile parsed of
+                Err _ ->
+                    ( Idle
+                    , result <| compilationFail <| Pancake.errorLines parsed
+                    )
 
-                Just runtime ->
-                    ( Compiled runtime, result compilationOk )
+                Ok runtime ->
+                    ( Compiled runtime
+                    , result <| compilationOk <| Pancake.typedLines parsed
+                    )
 
         GotStep _ ->
             ( model, state <| StateInfo <| AST.universeToString Alpha )

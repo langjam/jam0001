@@ -6,7 +6,11 @@ import Parser exposing (..)
 import Tuple exposing (pair)
 
 
-parse : String -> List (Result (List DeadEnd) Instruction)
+type alias Output =
+    List (Result (List DeadEnd) Instruction)
+
+
+parse : String -> Output
 parse =
     preprocess >> List.map (run instruction)
 

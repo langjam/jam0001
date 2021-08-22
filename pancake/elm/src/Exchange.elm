@@ -3,17 +3,25 @@ module Exchange exposing (..)
 
 type alias CompilationResult =
     { successful : Bool
+    , errorLines : List Int
+    , typedLines : List String -- "normal" / "comment" / "label"
     }
 
 
-compilationOk : CompilationResult
-compilationOk =
-    CompilationResult True
+compilationOk : List String -> CompilationResult
+compilationOk typedLines =
+    { successful = True
+    , errorLines = []
+    , typedLines = typedLines
+    }
 
 
-compilationFail : CompilationResult
-compilationFail =
-    CompilationResult False
+compilationFail : List Int -> CompilationResult
+compilationFail errorLines =
+    { successful = False
+    , errorLines = errorLines
+    , typedLines = []
+    }
 
 
 type alias StateInfo =
