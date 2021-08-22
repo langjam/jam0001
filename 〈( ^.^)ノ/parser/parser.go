@@ -136,15 +136,15 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 		"m":     1,
 		"print": 1,
 		"not":   1,
-		"add":   1}[ins]) {
+		"and":   1}[ins]) {
 
 		fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
 		os.Exit(1)
 	}
 
-	if ins == "add" {
+	if ins == "and" {
 		if args[0].Children[0].Val.Type == shared.TTwcomment {
-			args[0].Children[0].Val.Type = shared.TTwcommentAdd
+			args[0].Children[0].Val.Type = shared.TTwcommentAnd
 		} else {
 			fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
 			os.Exit(1)
@@ -214,7 +214,7 @@ func (p *Parser) Parse(tree shared.Node) {
 			p.parseInstruction(child.Val.Value, tree.Children[i+1:], child.Val.Pos)
 		case shared.TTstring, shared.TTref:
 			p.parseCall(tree.Children[i+1:])
-		case shared.TTwcomment, shared.TTwcommentAdd:
+		case shared.TTwcomment, shared.TTwcommentAnd:
 			p.parseComment(
 				child.Val.Value,
 				child.Val.Type == shared.TTwcomment,

@@ -104,7 +104,7 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
   
 		case shared.TTnull:
   
-		case shared.TTwcomment, shared.TTwcommentAdd: // skip comments
+		case shared.TTwcomment, shared.TTwcommentAnd: // skip comments
   
 		default:
 			fmt.Println("Unimplemented feature:", expr.Val)
