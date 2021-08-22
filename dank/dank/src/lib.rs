@@ -1,3 +1,5 @@
+#![feature(try_trait_v2)]
+
 pub mod ast;
 pub mod data;
 pub mod env;

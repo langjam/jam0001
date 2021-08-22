@@ -83,7 +83,16 @@ peg::parser!(pub grammar dank() for str {
          / w:while_loop() {w}
          / b:block() {b}
          / f:func() {f}
+         / start:position!() name:ident() ___ "=" ___ value:expr() ___ ";" end:position!() {
+            Stmt { span: start..end, kind: StmtKind::Assignment(name.into(), Box::new(value)) }
+         }
+         / start:position!() "break" ___ ";" end:position!() { Stmt { span: start..end, kind: StmtKind::Break } }
+         / start:position!() "continue" ___ ";" end:position!() { Stmt { span: start..end, kind: StmtKind::Continue } }
+         / start:position!() "return" ___ value:expr()? ";" end:position!() {
+            Stmt { span: start..end, kind: StmtKind::Return(value.map(Box::new)) }
+         }
          / e:expr() ___ ";" end:position!() { Stmt {  span: e.span.start..end, kind: StmtKind::ExprStmt(Box::new(e)) } }
+
 
     pub rule func() -> Stmt<'input>
     = start:position!() "fn" ___ name:ident() _ "(" args:ident() ** ("," ___) ")" ___ body:block() end:position!()
@@ -290,6 +299,9 @@ Ast
 
         let f = fn() {};
         let f_with_args = fn(a, b) { print a, b; };
+
+        fn returns_x(x) { return x; }
+        fn returns_nothing { return; }
       "#;
 
         test_eq!(
@@ -577,6 +589,7 @@ Ast
     fn while_loop() {
         let test = r#"
         while true { print("hello" + "world"); }
+        while true { break; continue; }
         "#;
         test_eq!(
             test,
@@ -600,6 +613,23 @@ Ast
                     op: BinOpKind::Add
                     right: ExprKind::Literal
                       field0: Str("world")
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::While
+        condition: ExprKind::Literal
+          field0: Bool(true)
+        body: StmtKind::Block
+          statements= 
+            LineComment
+              body: CommentBody::Empty
+              stmt: StmtKind::ExprStmt
+                expr: ExprKind::Variable
+                  name: "break"
+            LineComment
+              body: CommentBody::Empty
+              stmt: StmtKind::ExprStmt
+                expr: ExprKind::Variable
+                  name: "continue"
 "#
         );
     }

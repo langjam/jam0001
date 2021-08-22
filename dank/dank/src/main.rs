@@ -31,12 +31,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     name: "clock".into(),
                     arity: 0,
                     func: Box::new(|_args| {
-                        Ok(dank::data::Value::Num(
+                        dank::data::Value::Num(
                             std::time::SystemTime::now()
                                 .duration_since(std::time::SystemTime::UNIX_EPOCH)
                                 .unwrap()
                                 .as_secs() as f64,
-                        ))
+                        )
+                        .into()
                     }),
                 })),
             );

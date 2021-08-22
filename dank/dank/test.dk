@@ -28,6 +28,35 @@ print -4838;
 print !0;
 
 
-
 let callable = { __call__: fn(){} };
-callable();
+print callable();
+
+let callable2 = { __call__: fn() { return 5; } };
+print callable2();
+
+
+fn outer() {
+    fn inner() { return 7; }
+
+    let x = 5;
+
+    print "before inner return";
+
+    {
+        x = inner();
+    }
+
+    print "after inner return";
+
+    return x;
+}
+
+print outer();
+
+let x = 0;
+while true {
+    x = x + 1;
+    break;
+}
+print x;
+

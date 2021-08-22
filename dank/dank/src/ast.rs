@@ -60,6 +60,13 @@ pub enum StmtKind<'a> {
         #[rename = "condition"] ExprPtr<'a>,
         #[rename = "body"] StmtPtr<'a>,
     ),
+    Return(#[rename = "value"] Option<ExprPtr<'a>>),
+    Assignment(
+        #[rename = "name"] Cow<'a, str>,
+        #[rename = "value"] ExprPtr<'a>,
+    ),
+    Break,
+    Continue,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, AstToStr)]

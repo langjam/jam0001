@@ -1,6 +1,6 @@
 use std::{borrow::Cow, cell::RefCell, collections::HashMap};
 
-use crate::{ast::Function, eval::EvalError};
+use crate::{ast::Function, eval::Signal};
 
 pub type Ptr<T> = std::rc::Rc<T>;
 pub type ObjPtr<'a> = Ptr<RefCell<Object<'a>>>;
@@ -21,7 +21,7 @@ pub struct NativeFn<'s> {
     pub name: Cow<'s, str>,
     pub arity: u8, // todo: variadics
     // TODO: This needs a trait
-    pub func: Box<dyn Fn(Vec<Value<'s>>) -> Result<Value<'s>, EvalError>>,
+    pub func: Box<dyn Fn(Vec<Value<'s>>) -> Signal<'s>>,
 }
 
 impl<'s> std::fmt::Debug for NativeFn<'s> {

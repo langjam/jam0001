@@ -9,17 +9,97 @@ pub struct Evaluator<'a, 'b: 'a> {
     buf_stack: Vec<String>,
     env: Env<Cow<'a, str>, Value<'a>>,
     is_processing_comments: bool,
+    is_in_loop: bool,
     arena: &'b bumpalo::Bump,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum EvalError<'a> {
     ArityMismatch(String),
     NotCallable(String),
     TypeError(String),
+    RuntimeError(String),
     UndefinedProperty(Cow<'a, str>),
     DuplicatedLiteralField(Cow<'a, str>),
     UndefinedVariable(Cow<'a, str>),
+}
+
+#[derive(Debug, Clone)]
+pub enum Signal<'a> {
+    Value(Value<'a>),
+    Return(Value<'a>),
+    Break,
+    Continue,
+    Error(EvalError<'a>),
+}
+
+impl<'a> std::ops::FromResidual for Signal<'a> {
+    fn from_residual(residual: <Self as std::ops::Try>::Residual) -> Self {
+        residual
+    }
+}
+
+impl<'a> std::ops::Try for Signal<'a> {
+    type Output = Value<'a>;
+    type Residual = Signal<'a>;
+
+    fn from_output(output: Self::Output) -> Self {
+        Self::Value(output)
+    }
+
+    fn branch(self) -> std::ops::ControlFlow<Self::Residual, Self::Output> {
+        match self {
+            Signal::Value(value) => std::ops::ControlFlow::Continue(value),
+            Signal::Return(_) | Signal::Break | Signal::Continue | Signal::Error(_) => {
+                std::ops::ControlFlow::Break(self)
+            }
+        }
+    }
+}
+
+impl<'a> From<Value<'a>> for Signal<'a> {
+    fn from(v: Value<'a>) -> Self {
+        Self::Value(v)
+    }
+}
+
+impl<'a> From<EvalError<'a>> for Signal<'a> {
+    fn from(e: EvalError<'a>) -> Self {
+        Self::Error(e)
+    }
+}
+
+impl<'a> From<Result<Value<'a>, EvalError<'a>>> for Signal<'a> {
+    fn from(res: Result<Value<'a>, EvalError<'a>>) -> Self {
+        match res {
+            Ok(ok) => ok.into(),
+            Err(e) => e.into(),
+        }
+    }
+}
+
+impl<'a> Signal<'a> {
+    #[inline]
+    pub fn extract(self) -> Option<Value<'a>> {
+        match self {
+            Signal::Value(v) | Signal::Return(v) => Some(v),
+            Signal::Break | Signal::Continue | Signal::Error(_) => None,
+        }
+    }
+
+    #[inline]
+    pub fn extract_unwrap(self) -> Value<'a> {
+        self.extract()
+            .expect("Attempted to extract a value from a break or continue signal.")
+    }
+
+    #[inline]
+    pub fn map_return(self) -> Self {
+        match self {
+            Signal::Return(v) => Signal::Value(v),
+            _ => self,
+        }
+    }
 }
 
 // TODO: return/break/continue signals
@@ -29,6 +109,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             env,
             buf_stack: Vec::new(),
             is_processing_comments: false,
+            is_in_loop: false,
             arena,
         }
     }
@@ -56,14 +137,14 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 // QQQ: how should we handle errors occurring at comment-time?
                 self.buf_stack.push(String::new());
 
-                let is_success = self
-                    .eval_stmt(stmt)
-                    .map_err(|e| {
+                let is_success = match self.eval_stmt(stmt) {
+                    Signal::Error(e) => {
                         // TODO: optionally disable this
                         eprintln!("Failed to evaluate a comment: {:?}", e);
-                    })
-                    .map(|_| ())
-                    .ok();
+                        None
+                    }
+                    _ => Some(()),
+                };
 
                 let code = self.arena.alloc(self.buf_stack.pop().unwrap());
                 is_success.and_then(move |_| {
@@ -107,6 +188,13 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             StmtKind::Block(b) => self.eval_comments_in_block(b),
             StmtKind::While(_, stmt) => self.eval_comments_in_stmt(stmt),
             StmtKind::UnscopedBlock(_) => unreachable!("Cannot appear while processing comments"),
+            StmtKind::Return(v) => v
+                .as_mut()
+                .map(|v| self.eval_comments_in_expr(v))
+                .unwrap_or(()),
+            StmtKind::Break => (),
+            StmtKind::Continue => (),
+            StmtKind::Assignment(_, value) => self.eval_comments_in_expr(value),
         }
     }
 
@@ -136,48 +224,47 @@ impl<'a, 'b> Evaluator<'a, 'b> {
     }
 
     fn eval_ast(&mut self, ast: &Ast<'a>) -> Result<Value<'a>, EvalError<'a>> {
-        self.eval_block(&ast.statements)
+        match self.eval_block(&ast.statements) {
+            Signal::Error(e) => Err(e),
+            rest => Ok(rest.extract_unwrap()),
+        }
     }
 
-    fn eval_block(&mut self, block: &[LineComment<'a>]) -> Result<Value<'a>, EvalError<'a>> {
+    fn eval_block(&mut self, block: &[LineComment<'a>]) -> Signal<'a> {
         self.env.push();
         let result = self.eval_unscoped_block(block);
         self.env.pop();
         result
     }
 
-    fn eval_unscoped_block(
-        &mut self,
-        block: &[LineComment<'a>],
-    ) -> Result<Value<'a>, EvalError<'a>> {
+    fn eval_unscoped_block(&mut self, block: &[LineComment<'a>]) -> Signal<'a> {
         for stmt in block.iter().filter_map(|line| line.stmt.as_ref()) {
             self.eval_stmt(stmt)?;
         }
-        Ok(Value::Null)
+        Value::Null.into()
     }
 
-    fn eval_expr(&mut self, expr: &Expr<'a>) -> Result<Value<'a>, EvalError<'a>> {
+    fn eval_expr(&mut self, expr: &Expr<'a>) -> Signal<'a> {
         match &expr.kind {
-            ExprKind::Literal(l) => Ok(l.clone()),
-            ExprKind::Variable(v) => self
-                .env
-                .get(v)
-                .cloned()
-                .ok_or_else(|| EvalError::UndefinedVariable(v.clone())),
+            ExprKind::Literal(l) => l.clone().into(),
+            ExprKind::Variable(v) => match self.env.get(v).cloned() {
+                Some(v) => v.into(),
+                None => EvalError::UndefinedVariable(v.clone()).into(),
+            },
             ExprKind::ObjectLiteral(lit) => {
                 let mut object = Object::default();
                 for (k, v) in lit {
                     let value = self.eval_expr(v)?;
                     if object.fields.contains_key(k) {
-                        return Err(EvalError::DuplicatedLiteralField(k.clone()));
+                        return EvalError::DuplicatedLiteralField(k.clone()).into();
                     }
                     object.fields.insert(k.clone(), value);
                 }
-                Ok(Value::Obj(object.move_on_heap()))
+                Value::Obj(object.move_on_heap()).into()
             }
             ExprKind::LambdaLiteral(f) => {
                 let fn_ref = crate::data::Ptr::new((&**f).clone());
-                Ok(Value::Fn(fn_ref))
+                Value::Fn(fn_ref).into()
             }
             ExprKind::Binary(l, op, r) => {
                 macro_rules! bin_op {
@@ -188,15 +275,22 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     }};
                     (__internal $self:ident, $left:ident + $right:ident) => {{
                         match ($left, $right) {
-                            (Value::Num(l), Value::Num(r)) => Ok(Value::Num(l + r)),
-                            (Value::Str(l), Value::Str(r)) => Ok(Value::Str(format!("{}{}", l, r).into())),
-                            (l, r) => Err($self.bin_op_type_error(&l, &r, "+")),
+                            (Value::Num(l), Value::Num(r)) => Signal::Value(Value::Num(l + r)),
+                            (Value::Str(l), Value::Str(r)) => Signal::Value(Value::Str(format!("{}{}", l, r).into())),
+                            (l, r) => Signal::Error($self.bin_op_type_error(&l, &r, "+")),
+                        }
+                    }};
+                    (__internal $self:ident, $left:ident / $right:ident) => {{
+                        match ($left, $right) {
+                            (Value::Num(l), Value::Num(r)) if r != 0.0 => Signal::Value(Value::Num(l / r)),
+                            (Value::Num(_), Value::Num(r)) if r == 0.0 => Signal::Error(EvalError::RuntimeError("Attempted to divide by zero".into())),
+                            (l, r) => Signal::Error($self.bin_op_type_error(&l, &r, "/")),
                         }
                     }};
                     (__internal $self:ident, $left:ident $op:tt $right:ident) => {{
                         match ($left, $right) {
-                            (Value::Num(l), Value::Num(r)) => Ok(Value::Num(l $op r)),
-                            (l, r) => Err($self.bin_op_type_error(&l, &r, stringify!($op))),
+                            (Value::Num(l), Value::Num(r)) => Signal::Value(Value::Num(l $op r)),
+                            (l, r) => Signal::Error($self.bin_op_type_error(&l, &r, stringify!($op))),
                         }
                     }};
                 }
@@ -208,7 +302,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     BinOpKind::Or => {
                         let l = self.eval_expr(l)?;
                         if self.is_truthy(&l) {
-                            Ok(l)
+                            l.into()
                         } else {
                             self.eval_expr(r)
                         }
@@ -217,9 +311,9 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                         let l = self.eval_expr(l)?;
                         let r = self.eval_expr(r)?;
                         if !self.is_truthy(&l) {
-                            Ok(l)
+                            l.into()
                         } else {
-                            Ok(r)
+                            r.into()
                         }
                     }
                 }
@@ -227,18 +321,19 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             ExprKind::Unary(op, operand) => {
                 let operand = self.eval_expr(operand)?;
                 match op {
-                    UnOpKind::Not => Ok(Value::Bool(!self.is_truthy(&operand))),
+                    UnOpKind::Not => Value::Bool(!self.is_truthy(&operand)).into(),
                     UnOpKind::Neg if matches!(operand, Value::Num(_)) => {
                         let value = match operand {
                             Value::Num(n) => n,
                             _ => unreachable!(),
                         };
-                        Ok(Value::Num(-value))
+                        Value::Num(-value).into()
                     }
-                    UnOpKind::Neg => Err(EvalError::TypeError(format!(
+                    UnOpKind::Neg => EvalError::TypeError(format!(
                         "Cannot apply the operator `-` to {}",
                         operand
-                    ))),
+                    ))
+                    .into(),
                 }
             }
             ExprKind::Property(name, obj) => {
@@ -257,60 +352,59 @@ impl<'a, 'b> Evaluator<'a, 'b> {
         }
     }
 
-    fn call(
-        &mut self,
-        callee: &Value<'a>,
-        args: Vec<Value<'a>>,
-    ) -> Result<Value<'a>, EvalError<'a>> {
-        match callee {
+    fn call(&mut self, callee: &Value<'a>, args: Vec<Value<'a>>) -> Signal<'a> {
+        let previous_state = self.is_in_loop;
+        self.is_in_loop = false;
+        let result = (|| match callee {
             Value::Fn(func) => {
                 if func.args.len() != args.len() {
-                    return Err(EvalError::ArityMismatch(format!(
+                    return EvalError::ArityMismatch(format!(
                         "{} expected {} arguments but was given {}",
                         callee,
                         func.args.len(),
                         args.len()
-                    )));
+                    ))
+                    .into();
                 }
 
                 self.env.push();
                 for (arg, arg_value) in func.args.iter().zip(args.into_iter()) {
                     self.env.add(arg.clone(), arg_value);
                 }
-                self.eval_block(&func.body)?;
+                let result = self.eval_block(&func.body);
                 let _ = self.env.pop();
-                Ok(Value::Null)
+                result.map_return()
             }
             Value::NativeFn(func) => {
                 if func.arity as usize != args.len() {
-                    return Err(EvalError::ArityMismatch(format!(
+                    return EvalError::ArityMismatch(format!(
                         "{} expected {} arguments but was given {}",
                         callee,
                         func.arity,
                         args.len()
-                    )));
+                    ))
+                    .into();
                 }
 
-                (func.func)(args)
+                (func.func)(args).map_return()
             }
-            Value::Obj(_) => match self.get_prop(callee, "__call__".into()) {
-                Ok(method) => self.call(&method, args),
-                Err(_) => Err(EvalError::NotCallable(format!(
+            Value::Obj(_) => match self.get_prop(callee, "__call__".into()).extract() {
+                Some(method) => self.call(&method, args),
+                None => EvalError::NotCallable(format!(
                     "Object {} is missing the __call__ property so it cannot be called",
                     callee
-                ))),
+                ))
+                .into(),
             },
-            Value::Num(_) | Value::Bool(_) | Value::Null | Value::Str(_) => Err(
-                EvalError::NotCallable(format!("`{}` is not a callable object.", callee)),
-            ),
-        }
+            Value::Num(_) | Value::Bool(_) | Value::Null | Value::Str(_) => {
+                EvalError::NotCallable(format!("`{}` is not a callable object.", callee)).into()
+            }
+        })();
+        self.is_in_loop = previous_state;
+        result
     }
 
-    fn get_prop(
-        &mut self,
-        obj: &Value<'a>,
-        name: Cow<'a, str>,
-    ) -> Result<Value<'a>, EvalError<'a>> {
+    fn get_prop(&mut self, obj: &Value<'a>, name: Cow<'a, str>) -> Signal<'a> {
         match obj {
             Value::Obj(obj) => {
                 let obj = obj.borrow();
@@ -318,12 +412,13 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     .get(&name)
                     .cloned()
                     .ok_or(EvalError::UndefinedProperty(name))
+                    .into()
             }
-            _ => Err(EvalError::UndefinedProperty(name)),
+            _ => EvalError::UndefinedProperty(name).into(),
         }
     }
 
-    fn eval_stmt(&mut self, stmt: &Stmt<'a>) -> Result<Value<'a>, EvalError<'a>> {
+    fn eval_stmt(&mut self, stmt: &Stmt<'a>) -> Signal<'a> {
         match &stmt.kind {
             StmtKind::Print(args) => {
                 for (i, a) in args.iter().enumerate() {
@@ -348,14 +443,49 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 let fn_obj = Value::Fn(fn_ref);
                 self.env.add(f.name.clone(), fn_obj);
             }
+            StmtKind::Assignment(name, value) => {
+                let value = self.eval_expr(value)?;
+                if self.env.update(name, value).is_none() {
+                    return EvalError::UndefinedVariable(name.clone()).into();
+                }
+            }
             StmtKind::Block(b) => return self.eval_block(b),
             StmtKind::UnscopedBlock(b) => return self.eval_unscoped_block(b),
             StmtKind::ExprStmt(e) => {
                 self.eval_expr(e)?;
             }
-            StmtKind::While(_, _) => todo!(),
+            StmtKind::While(condition, body) => {
+                let previous_state = self.is_in_loop;
+                self.is_in_loop = true;
+                let signal = loop {
+                    let condition = self.eval_expr(condition)?;
+                    if !self.is_truthy(&condition) {
+                        break Value::Null.into();
+                    }
+                    match self.eval_stmt(body) {
+                        // Handle break and continue signals explicitly, while propagating returns and errors
+                        Signal::Break => break Value::Null.into(),
+                        Signal::Continue => (),
+                        Signal::Return(v) => break Signal::Return(v),
+                        Signal::Error(e) => break e.into(),
+                        // Ignore normal values
+                        Signal::Value(_) => (),
+                    }
+                };
+                self.is_in_loop = previous_state;
+                return signal;
+            }
+            StmtKind::Break => return self.generate_loop_signal(Signal::Break),
+            StmtKind::Continue => return self.generate_loop_signal(Signal::Continue),
+            StmtKind::Return(v) => {
+                return if let Some(v) = v.as_ref() {
+                    Signal::Return(self.eval_expr(v)?)
+                } else {
+                    Signal::Return(Value::Null)
+                };
+            }
         }
-        Ok(Value::Null)
+        Value::Null.into()
     }
 
     fn print<S: Into<String>>(&mut self, s: S) {
@@ -384,6 +514,22 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             "Cannot apply the operator `{}` to {} and {}",
             op, l, r,
         ))
+    }
+
+    fn generate_loop_signal(&self, signal: Signal<'a>) -> Signal<'a> {
+        let noun = match signal {
+            Signal::Break => "break",
+            Signal::Continue => "continue",
+            Signal::Error(_) => unreachable!(),
+            Signal::Value(_) => unreachable!(),
+            Signal::Return(_) => unreachable!(),
+        };
+
+        if self.is_in_loop {
+            signal
+        } else {
+            EvalError::RuntimeError(format!("Cannot {} outside of a loop", noun)).into()
+        }
     }
 }
 
