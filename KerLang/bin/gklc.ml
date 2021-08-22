@@ -47,7 +47,7 @@ let set_out_lang s =
 
 let speclist =
   [("-verbose", Arg.Set verbose, "Output debug information");
-   ("-o", Arg.String set_out_lang, "Set output file name")]
+   ("-o", Arg.String set_out_lang, "Set output file name, extension must be .ml, .py or .c")]
 
 let () =
   Arg.parse speclist anon_fun usage_msg;
