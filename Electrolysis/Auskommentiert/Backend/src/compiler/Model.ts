@@ -36,8 +36,8 @@ class CommentBase {
     get content() {
         return this.mContent;
     }
-    set content(content) {
-        this.mContent = content;
+    set content(newContent : string) {
+        this.mContent = newContent;
     }
     get upvotes() {
         return this.mUpvotes;
@@ -69,11 +69,9 @@ class CommentBase {
 }
 
 
-class ModelComment extends CommentBase {
-    private mAST : Comment;
-    constructor(ast : Comment, astString : string, upvotes : number, id : string, parentId : string, date: number, children : ModelComment[]) {
+export class ModelComment extends CommentBase {
+    constructor(astString : string, upvotes : number, id : string, parentId : string, date: number, children : ModelComment[]) {
         super(id, parentId, astString, upvotes, date, children);
-        this.mAST = ast;
     }
 
     toObject() : any {
@@ -86,11 +84,11 @@ class ModelComment extends CommentBase {
         };
     }
     makeWrappedComment() {
-        return new WrappedComment(this.mAST, this.mUpvotes, this.mId, this.mDate);
+        return new WrappedComment(this);
     }
 }
 
-class ModelPost extends CommentBase {
+export class ModelPost extends CommentBase {
     private mTitle : string;
     get title() {
         return this.mTitle;
@@ -147,11 +145,41 @@ class ModelCommentProvider extends CommentProvider {
         }
         throw new Error("Comment not a child of it's own parent?!");
     }
+    getPrevComment(currentCommentId: string): WrappedComment | undefined {
+        let parentId = this.mModel.allCommentBases.get(currentCommentId)?.parentId;
+        if(parentId === undefined) {
+            return undefined;
+        }
+        let siblings = this.mModel.allCommentBases.get(parentId)?.childrenSorted;
+        if(siblings === undefined) {
+            return undefined;
+        }
+        for(let i = 0; i < siblings.length; ++i) {
+            if(siblings[i].id === currentCommentId) {
+                if(i - 1 < 0) {
+                    return undefined;
+                }
+                return siblings[i - 1].makeWrappedComment();
+            }
+        }
+        throw new Error("Comment not a child of it's own parent?!");
+    }
     getFirstChildComment(parentCommentId: string): WrappedComment | undefined {
         return this.mModel.allCommentBases.get(parentCommentId)?.childrenSorted[0].makeWrappedComment();
     }
     getParentComment(childCommentId: string): WrappedComment | undefined {
-        throw new Error("Method not implemented.");
+        let parentId = this.mModel.allCommentBases.get(childCommentId)?.parentId;
+        if(parentId === undefined) {
+            return undefined;
+        }
+        let parent = this.mModel.allCommentBases.get(parentId);
+        if(parent === undefined) {
+            return undefined;
+        }
+        if(parent instanceof ModelComment) {
+            return (parent as ModelComment).makeWrappedComment();
+        }
+        return undefined;
     }
 }
 
@@ -224,13 +252,7 @@ export class Model {
     }
 
     private parseComment(parentId : string, jsonComment : any) : ModelComment {
-        let parseResult = parse(jsonComment.content);
-        if(parseResult.errs.length > 0 || parseResult.ast === null) {
-            console.log("HI");
-            throw new Error(parseResult.errs[0].toString());
-        }
         let comm = new ModelComment(
-            parseResult.ast.comment,
             jsonComment.content, 
             jsonComment.upvotes, 
             jsonComment.id,

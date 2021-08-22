@@ -11,33 +11,69 @@ model.addPost({
     date: 100,
     children: [
         {
-            id: "31",
-            content: "x is 0",
+            id: "1",
+            content: "swapContent {get 2 comments below 1 down}",
+            upvotes: -5,
+            date: 100,
+            children: []
+        },
+        {
+            id: "10",
+            content: "[]",
+            upvotes: -5,
+            date: 100,
+            children: []
+        },
+        {
+            id: "5",
+            content: "0",
             upvotes: -5,
             date: 100,
             children: []
         },
         {
             id: "32",
-            content: "while x < 10:",
+            content: "while ${get comment 1 up} < 10:",
             upvotes: 1,
             date: 200,
             children: [
                 {
-                    id: "33",
-                    content: "log(x, x*2, x/2, 1+x*2)",
+                    id: "36",
+                    content: "if ${get comment 1 left 1 up}<=5:",
                     upvotes: -5,
                     date: 300,
-                    children: []
+                    children: [
+                        {
+                            id: "33",
+                            content: "log(${get comment 2 left 1 up}, ${get comment 2 left 2 up})",
+                            upvotes: -5,
+                            date: 400,
+                            children: []
+                        }
+                    ]
                 },
                 {
                     id: "35",
-                    content: "x is x + 1",
+                    content: "set {get comment 1 left 1 up} to ${get comment 1 left 1 up} + 1",
+                    upvotes: -5,
+                    date: 400,
+                    children: []
+                },
+                {
+                    id: "100",
+                    content: "set {get comment 1 left 2 up} to (${get comment 1 left 2 up} + [${get comment 1 left 1 up}])",
                     upvotes: -5,
                     date: 400,
                     children: []
                 }
             ]
+        },
+        {
+            id: "333",
+            content: "log(${get comment 2 up}, ${get comment 3 up})",
+            upvotes: -5,
+            date: 400,
+            children: []
         }
     ]
 });
