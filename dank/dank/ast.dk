@@ -1,3 +1,7 @@
+// fn rename(name) {
+//     AST.name = name;
+// }
+
 // dbg(AST.name);
 let x = 5;
 
@@ -7,17 +11,13 @@ let x = 5;
 let y = 5;
 print z;
 
-
-// fn rename(name) {
-//     AST.name = name;
-// }
-
-
 // please rename this to "func".
 fn test(a, b, c) {
+    // AST.value.op = "*";
+    // AST.value.left.op = "*";
+    // dbg(AST.code);
     return a + b + c;
 }
 
-print func(1, 2, 3);
-
+print func(2, 2, 2);
 

@@ -321,8 +321,8 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 match op {
                     BinOpKind::Add => bin_op!(self, l + r),
                     BinOpKind::Sub => bin_op!(self, l - r),
-                    BinOpKind::Div => bin_op!(self, l * r),
-                    BinOpKind::Mul => bin_op!(self, l / r),
+                    BinOpKind::Mul => bin_op!(self, l * r),
+                    BinOpKind::Div => bin_op!(self, l / r),
                     BinOpKind::Eq => Value::from(bin_op!(self, l == r)).into(),
                     BinOpKind::Ne => Value::from(bin_op!(self, l != r)).into(),
                     BinOpKind::Lt => Value::from(bin_op!(self, l < r)).into(),

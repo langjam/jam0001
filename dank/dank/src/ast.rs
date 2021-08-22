@@ -105,13 +105,42 @@ pub enum BinOpKind {
     Ge,
 }
 
+impl BinOpKind {
+    pub fn symbol(&self) -> &'static str {
+        match self {
+            BinOpKind::Add => "+",
+            BinOpKind::Sub => "-",
+            BinOpKind::Div => "/",
+            BinOpKind::Mul => "*",
+            BinOpKind::Or => "||",
+            BinOpKind::And => "&&",
+            BinOpKind::Eq => "==",
+            BinOpKind::Ne => "!=",
+            BinOpKind::Lt => "<",
+            BinOpKind::Le => "<=",
+            BinOpKind::Gt => ">",
+            BinOpKind::Ge => ">=",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, AstToStr)]
 pub enum UnOpKind {
     Neg,
     Not,
 }
 
-#[derive(Debug, Clone, PartialEq, AstToStr)]
+impl UnOpKind {
+    pub fn symbol(&self) -> &'static str {
+        match self {
+            UnOpKind::Neg => "-",
+            UnOpKind::Not => "!",
+        }
+    }
+}
+
+#[derive(EnumKind, Debug, Clone, PartialEq, AstToStr)]
+#[enum_kind(ExprKindName)]
 pub enum ExprKind<'a> {
     ObjectLiteral(Vec<(Cow<'a, str>, Expr<'a>)>),
     LambdaLiteral(Ptr<Function<'a>>),

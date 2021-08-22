@@ -169,7 +169,7 @@ macro_rules! impl_arithm_op {
             fn $method(self, rhs: Value<'s>) -> Self::Output {
                 match (self, rhs) {
                     (Value::Num(l), Value::Num(r)) => Value::from(l $op r).into(),
-                    (l, r) => crate::eval::Evaluator::bin_op_type_error(&l, &r, "+").into(),
+                    (l, r) => crate::eval::Evaluator::bin_op_type_error(&l, &r, stringify!(tt)).into(),
                 }
             }
         }
@@ -196,7 +196,7 @@ impl<'s> std::ops::Div<Value<'s>> for Value<'s> {
             (Value::Num(_), Value::Num(r)) if r == 0.0 => {
                 crate::eval::EvalError::RuntimeError("Attempted to divide by zero".into()).into()
             }
-            (l, r) => crate::eval::Evaluator::bin_op_type_error(&l, &r, "+").into(),
+            (l, r) => crate::eval::Evaluator::bin_op_type_error(&l, &r, "/").into(),
         }
     }
 }

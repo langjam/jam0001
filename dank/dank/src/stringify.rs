@@ -105,31 +105,11 @@ impl<'s> Stringify for Expr<'s> {
             ExprKind::Binary(l, op, r) => format!(
                 "({} {} {})",
                 l.stringify_impl(indent_level),
-                match op {
-                    BinOpKind::Add => "+",
-                    BinOpKind::Sub => "-",
-                    BinOpKind::Div => "/",
-                    BinOpKind::Mul => "*",
-                    BinOpKind::Or => "||",
-                    BinOpKind::And => "&&",
-                    BinOpKind::Eq => "==",
-                    BinOpKind::Ne => "!=",
-                    BinOpKind::Lt => "<",
-                    BinOpKind::Le => "<=",
-                    BinOpKind::Gt => ">",
-                    BinOpKind::Ge => ">=",
-                },
+                op.symbol(),
                 r.stringify_impl(indent_level)
             ),
             ExprKind::Unary(op, expr) => {
-                format!(
-                    "({}({}))",
-                    match op {
-                        UnOpKind::Neg => "-",
-                        UnOpKind::Not => "!",
-                    },
-                    expr.stringify_impl(indent_level)
-                )
+                format!("({}({}))", op.symbol(), expr.stringify_impl(indent_level))
             }
         }
     }
