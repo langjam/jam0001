@@ -4,8 +4,10 @@ use crate::token::TokenKind;
 pub enum Priority {
     Lowest,
     Assign,
+    Boolean,
     Sum,
     Product,
+    Bitwise,
     Call,
 }
 
@@ -16,6 +18,8 @@ impl Priority {
             TokenKind::Plus | TokenKind::Minus => Self::Sum,
             TokenKind::Asterisk | TokenKind::ForwardSlash => Self::Product,
             TokenKind::Assign => Self::Assign,
+            TokenKind::And | TokenKind::Or => Self::Boolean,
+            TokenKind::BitwiseAnd | TokenKind::BitwiseOr => Self::Bitwise,
             _ => Self::Lowest,
         }
     }

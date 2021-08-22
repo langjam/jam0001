@@ -245,7 +245,11 @@ fn get_symbol(symbol: &str) -> Option<TokenKind> {
         "-" => TokenKind::Minus,
         "=" => TokenKind::Assign,
         "[" => TokenKind::LeftBracket,
-        "]" => TokenKind::RightBracket
+        "]" => TokenKind::RightBracket,
+        "&&" => TokenKind::And,
+        "||" => TokenKind::Or,
+        "&" => TokenKind::BitwiseAnd,
+        "|" => TokenKind::BitwiseOr
     }
 }
 

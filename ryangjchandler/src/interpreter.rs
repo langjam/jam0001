@@ -275,6 +275,12 @@ impl<'i> Interpreter<'i> {
                 let right = self.execute_expression(*right)?.unwrap();
 
                 match operator {
+                    TokenKind::And => {
+                        Value::Bool(left.to_bool() && right.to_bool())
+                    },
+                    TokenKind::Or => {
+                        Value::Bool(left.to_bool() || right.to_bool())
+                    },
                     TokenKind::Plus => {
                         match (left, right) {
                             (Value::String(mut l), Value::String(r)) => {

@@ -23,3 +23,11 @@ if "" {
 if null {
     println("null is falsy")
 }
+
+if true && true {
+    println("And expressions...")
+}
+
+if true || false {
+    println("Or expressions...")
+}

@@ -72,6 +72,10 @@ pub enum TokenKind {
     RightBracket,
     For,
     In,
+    And,
+    Or,
+    BitwiseAnd,
+    BitwiseOr,
 }
 
 pub type TokenList = Vec<Token>;
