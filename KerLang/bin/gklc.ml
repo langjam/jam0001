@@ -21,8 +21,7 @@ let parse_file f =
   | Kerlang.Kl_parser.Eof -> List.rev !blocks
   | Kerlang.Kl_parser.SyntaxError msg ->
     let pos = lexbuf.Lexing.lex_curr_p in
-    Printf.eprintf "\x1b[1;31msyntax error\x1b[0m (%a) : %s\n" print_position pos msg;
-    exit 1
+    print_syntax_error pos msg
 
 let usage_msg = Sys.argv.(0) ^ " [-verbose] <file1> -o <output>"
 

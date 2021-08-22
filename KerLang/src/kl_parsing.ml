@@ -31,3 +31,7 @@ let next_line lexbuf =
 let print_position outx pos =
   Printf.fprintf outx "%s:%d:%d" pos.pos_fname
     pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
+
+let print_syntax_error pos msg =
+  Printf.eprintf "\x1b[1;31msyntax error\x1b[0m (%a) : %s\n" print_position pos msg;
+  exit 1
