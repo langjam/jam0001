@@ -166,27 +166,17 @@ class CallStmt(Stmt):
 
     def execute(self):
         function = find_function(self.func_name)
-        return_val = function.run(self.args)
+        evaluated_args = {name: value for (name, value) in self.args.items()}
+        result = function.run(evaluated_args)
+        set_var("it", result)
         if self.postfix_assignment:
-            # TODO: Assign some_env[postfix_assignment] = return_val
-            pass
+            set_var(self.postfix_assignment, result)
+        if function.return_value != None:
+            set_var(function.return_value, result)
 
 
 class ReturnStmt(Stmt):
     pass
-
-
-class CallStmt(Stmt):
-    def __init__(self, func_name, args, postfix_assignment=None):
-        self.func_name = func_name
-        self.args = args
-        self.postfix_assignment = postfix_assignment
-
-    def __repr__(self):
-        if self.postfix_assignment:
-            return f"CALL {self.func_name} WITH {self.args} AND CALL IT {self.postfix_assignment}"
-        else:
-            return f"CALL {self.func_name} WITH {self.args}"
 
 
 class Stmts:
@@ -213,8 +203,8 @@ class Function:
         self,
         func_name: str,
         params: "list[Parameter]",
-        return_var: Variable,
         body: Stmts,
+        return_var: str = None,
     ):
         self.func_name = func_name
         self.params = params
@@ -227,8 +217,10 @@ class Function:
             f"RETURNS:{self.return_var}, BODY={self.body}"
         )
 
-    def run(self):
+    def run(self, args):
+        push_env(args)
         self.body.execute()
+        pop_env()
 
 
 class Program:
@@ -238,6 +230,9 @@ class Program:
 
     def __repr__(self):
         return f"\nPROGRAM \n{self.funcs}\n{self.stmts}"
+
+    def execute(self):
+        self.stmts.execute()
 
 
 if __name__ == "__main__":
