@@ -38,7 +38,7 @@ toCode =
     let
         replaceLabel atom =
             if AST.isLabel atom then
-                AST.Actual "next"
+                AST.Actual "pass"
 
             else
                 atom
@@ -180,15 +180,20 @@ type alias Command =
 commands : Dict String Command
 commands =
     Dict.fromList
-        [ ( "next", next )
+        [ ( "pass", pass )
         , ( "flip", flip )
-        , ( "exit", exit )
+        , ( "halt", exit )
         ]
 
 
 next : Command
 next runtime =
     { runtime | ip = runtime.ip + 1 }
+
+
+pass : Command
+pass =
+    identity
 
 
 jump : Int -> Command

@@ -3176,8 +3176,8 @@ var $author$project$Language$Core$toInt = function (value) {
 		return _Debug_todo(
 			'Language.Core',
 			{
-				start: {line: 368, column: 13},
-				end: {line: 368, column: 23}
+				start: {line: 373, column: 13},
+				end: {line: 373, column: 23}
 			})('oops');
 	}
 };
@@ -3384,7 +3384,7 @@ var $elm$core$Tuple$mapSecond = F2(
 	});
 var $author$project$Language$Core$toCode = function () {
 	var replaceLabel = function (atom) {
-		return $author$project$Language$AST$isLabel(atom) ? $author$project$Language$AST$Actual('next') : atom;
+		return $author$project$Language$AST$isLabel(atom) ? $author$project$Language$AST$Actual('pass') : atom;
 	};
 	return A2(
 		$elm$core$Basics$composeR,
@@ -4431,7 +4431,7 @@ var $author$project$Language$Parser$preprocess = A2(
 	$elm$core$List$map(
 		function (line) {
 			return $elm$core$String$isEmpty(
-				$elm$core$String$trim(line)) ? 'next' : line;
+				$elm$core$String$trim(line)) ? 'pass' : line;
 		}));
 var $elm$parser$Parser$DeadEnd = F3(
 	function (row, col, problem) {
@@ -4646,17 +4646,13 @@ var $author$project$Language$Core$flip = function (runtime) {
 			universe: $author$project$Language$AST$flipUniverse(runtime.universe)
 		});
 };
-var $author$project$Language$Core$next = function (runtime) {
-	return _Utils_update(
-		runtime,
-		{ip: runtime.ip + 1});
-};
+var $author$project$Language$Core$pass = $elm$core$Basics$identity;
 var $author$project$Language$Core$commands = $elm$core$Dict$fromList(
 	_List_fromArray(
 		[
-			_Utils_Tuple2('next', $author$project$Language$Core$next),
+			_Utils_Tuple2('pass', $author$project$Language$Core$pass),
 			_Utils_Tuple2('flip', $author$project$Language$Core$flip),
-			_Utils_Tuple2('exit', $author$project$Language$Core$exit)
+			_Utils_Tuple2('halt', $author$project$Language$Core$exit)
 		]));
 var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
@@ -4859,6 +4855,11 @@ var $author$project$Language$Core$jump = F2(
 			runtime,
 			{ip: ip});
 	});
+var $author$project$Language$Core$next = function (runtime) {
+	return _Utils_update(
+		runtime,
+		{ip: runtime.ip + 1});
+};
 var $author$project$Language$Core$Char = function (a) {
 	return {$: 'Char', a: a};
 };
@@ -4891,8 +4892,8 @@ var $author$project$Language$Core$toValue = function (atom) {
 			return _Debug_todo(
 				'Language.Core',
 				{
-					start: {line: 358, column: 13},
-					end: {line: 358, column: 23}
+					start: {line: 363, column: 13},
+					end: {line: 363, column: 23}
 				})('unreachable');
 	}
 };
