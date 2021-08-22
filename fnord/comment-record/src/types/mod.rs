@@ -5,7 +5,7 @@ pub enum ResolvedType {
     Unit,
     Number,
     Text,
-    Comment(StructType),
+    //Comment(StructType),
     Struct(StructType),
 }
 

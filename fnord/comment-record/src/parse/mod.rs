@@ -16,7 +16,6 @@ use crate::ast::{
 };
 
 pub fn parse(name: &str, input: &str) -> Result<Script, String> {
-    use nom::branch::alt;
     use nom::combinator::all_consuming;
     use nom::multi::many0;
 
@@ -139,7 +138,7 @@ pub fn struct_value(input: &str) -> IResult<&str, ValueAst> {
     use nom::multi::many0;
     use nom::sequence::{delimited, terminated, tuple};
 
-    use crate::ast::{Comment, StructValue, StructValueData};
+    use crate::ast::{StructValue, StructValueData};
 
     map(
         tuple((
@@ -173,8 +172,6 @@ pub fn field_value(input: &str) -> IResult<&str, FieldValueAst> {
     use nom::character::complete::char;
     use nom::combinator::map;
     use nom::sequence::{terminated, tuple};
-
-    use crate::ast::Comment;
 
     map(
         tuple((
@@ -311,8 +308,6 @@ pub fn parse_struct_type(input: &str) -> IResult<&str, StructTypeAst> {
     use nom::multi::many0;
     use nom::sequence::{delimited, preceded, terminated, tuple};
 
-    use crate::ast::Comment;
-
     map(
         tuple((
             parse_comment,
@@ -343,8 +338,6 @@ pub fn field_type(input: &str) -> IResult<&str, FieldTypeAst> {
     use nom::character::complete::char;
     use nom::combinator::map;
     use nom::sequence::{terminated, tuple};
-
-    use crate::ast::Comment;
 
     map(
         tuple((
@@ -518,7 +511,6 @@ mod test {
     #[test]
     fn comment_group() {
         use nom::combinator::all_consuming;
-        use crate::ast::Comment;
 
         let res = all_consuming(parse_comment)("    # FOO\n    # BAR\n").expect("parse").1;
 
@@ -591,7 +583,7 @@ mod test {
 
         let res = all_consuming(parse_ast)("# here we are\nfoo = { number: 42, };").expect("parse").1;
         match res {
-            Ast::ValueDef(name, v) => {
+            Ast::ValueDef(_, v) => {
                 match v {
                     ValueAst::Struct(s) => {
                         assert_eq!(1, s.comment.lines.len());

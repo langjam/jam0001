@@ -208,7 +208,7 @@ impl Env {
                     Value::Unit => Err("unit has no comments (why?)".into()),
                     Value::Number(_) => Err("number has no comments (why?)".into()),
                     Value::Text(_) => Err("text has no comments (why?)".into()),
-                    Value::Comment(c) => Err("comment has no comments (why?)".into()),
+                    Value::Comment(_) => Err("comment has no comments (why?)".into()),
                     Value::Struct(s) => s.comment.get_field(field),
                 }
             }
@@ -231,7 +231,7 @@ impl Env {
                     Value::Unit => Err("unit has no comments (why?)".into()),
                     Value::Number(_) => Err("number has no comments (why?)".into()),
                     Value::Text(_) => Err("text has no comments (why?)".into()),
-                    Value::Comment(c) => Err("comment has no comments (why?)".into()),
+                    Value::Comment(_) => Err("comment has no comments (why?)".into()),
                     Value::Struct(s) => Ok(Value::Comment(s.comment.clone())),
                 }
             }
@@ -240,7 +240,7 @@ impl Env {
                     Value::Unit => Err("unit has no fields".into()),
                     Value::Number(_) => Err("number has no fields".into()),
                     Value::Text(_) => Err("text has no fields".into()),
-                    Value::Comment(c) => Err("comment has no field comments (why?)".into()),
+                    Value::Comment(_) => Err("comment has no field comments (why?)".into()),
                     Value::Struct(s) => {
                         match s.fields.get(field) {
                             None => Err(format!("struct has no field named {}", field)),
