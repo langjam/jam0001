@@ -76,7 +76,7 @@ function makeTransformer(context) {
                 const {children} = p
                 params = children.join(', ')
             }
-            return `function (${params}) {\n${body}\n}`
+            return `(${params}) => {\n${body}\n}`
         },
         temps: (words: string[]) => `let ${words.join(', ')}`,
         map: (entries: string[]) => `{ ${entries.join(', ')} }`,
