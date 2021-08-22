@@ -7,7 +7,21 @@ in vrv you have comments operating on their surrounding program syntax.
 
 ## Dependencies
 
-Vrv is implemented in Scala, the only system requirement is a working Java runtime.
+Vrv is implemented in Scala, thus you will need a working [Java](https://java.com) runtime on your system.
+Be sure you can execute the `java -version` command successfully.
+
+You will also need the [coursier](https://get-coursier.io/docs/cli-installation) CLI in order to build this
+project.
+
+If you already have Java, you can get coursier by doing:
+
+``` shell
+curl -fLo coursier https://git.io/coursier-cli && chmod +x coursier
+```
+
+Be sure to place the `coursier` executable in this project's directory, and that
+you can execute the `./coursier --version` command successfully.
+
 
 ## Running
 
