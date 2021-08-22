@@ -307,7 +307,7 @@ class Train {
 
         this.first_class_messages = first_class_messages
         this.current_message = ""
-        this.ticks_left = getRandomInt(50, 100);
+        this.ticks_left = getRandomInt(100, 1000);
     }
 
     travelAlongPath(path) {
@@ -396,7 +396,7 @@ class Train {
                 this.ticks_left = getRandomInt(100, 150);
             } else {
                 this.current_message = "";
-                this.ticks_left = getRandomInt(200, 250);
+                this.ticks_left = getRandomInt(500, 1500);
             }
         }
     }
