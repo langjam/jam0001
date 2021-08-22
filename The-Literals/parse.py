@@ -9,6 +9,7 @@ from abstract_syntax_trees import (
     Parameter,
     Program,
     SetStmt,
+    Stmt,
     Stmts,
     Variable,
 )
@@ -148,10 +149,12 @@ class Parser:
     def parse_stmt(self):
         contents = self.parse_stmt_contents()
         token, value = self.peek_lexeme()
+        contains_done = False
         if token == Token.LEAVE_FUNC:
             self.advance()
+            contains_done = True
         self.expect(Token.DOT)
-        return contents
+        return Stmt(contents, contains_done)
 
     def parse_stmt_contents(self):
         token, value = self.advance()
