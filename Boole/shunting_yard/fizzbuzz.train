@@ -1,60 +1,60 @@
 [LOCOMOTIVE]
-start at incrementeradd track 1
+start at Utrecht track 1
 [FIRST CLASS]
 [SECOND CLASS]
 x: 0
 
 [LOCOMOTIVE]
-start at incrementeradd track 2
+start at Utrecht track 2
 [FIRST CLASS]
 [SECOND CLASS]
 x: 1
 
-{incrementeradd}
+{Utrecht}
 operation: add
-track 1: go to incrementerdup track 1
-track 2: go to incrementeradd track 2
+track 1: go to Amsterdam track 1
+track 2: go to Utrecht track 2
 
-{incrementerdup}
+{Amsterdam}
 operation: duplicate
-track 1: go to incrementeradd track 1
-track 2: go to duppre15 track 1
+track 1: go to Utrecht track 1
+track 2: go to Sneek track 1
 
 
 
 
 [LOCOMOTIVE]
-start at mod15 track 2
+start at Leeuwarden track 2
 [FIRST CLASS]
 [SECOND CLASS]
 x: 15
 
-{duppre15}
+{Sneek}
 operation: duplicate
-track 1: go to transferpre15 track 1
-track 2: go to transferpre15 track 2
+track 1: go to Woerden track 1
+track 2: go to Woerden track 2
 
-{transferpre15}
+{Woerden}
 operation: transfer
-track 1: go to yeet track 1
-track 2: go to mod15 track 1
+track 1: go to Harlingen track 1
+track 2: go to Leeuwarden track 1
 
-{mod15}
+{Leeuwarden}
 operation: mod
-track 1: go to check15 track 1
-track 2: go to mod15 track 2
+track 1: go to Groningen track 1
+track 2: go to Leeuwarden track 2
 
-{check15}
+{Groningen}
 operation: switch eq
-track 1: go to plus15 track 2
-track 2: go to droppost15 track 1
+track 1: go to Eindhoven track 2
+track 2: go to Assen track 1
 
-{droppost15}
+{Assen}
 operation: delete top
-track 1: go to duppre5 track 1
+track 1: go to Berlijn track 1
 
 [LOCOMOTIVE]
-start at plus15 track 1
+start at Eindhoven track 1
 [FIRST CLASS]
 [SECOND CLASS]
 f: 102
@@ -66,51 +66,51 @@ u: 117
 z: 122
 z: 122
 
-{plus15}
+{Eindhoven}
 operation: add
-track 1: go to dup15 track 1
-track 2: go to yeet track 1
+track 1: go to Delft track 1
+track 2: go to Harlingen track 1
 
-{dup15}
+{Delft}
 operation: duplicate
-track 1: go to plus15 track 1
-track 2: go to printstrd10 track 1
+track 1: go to Eindhoven track 1
+track 2: go to Dortmund track 1
 
 
 
 
 [LOCOMOTIVE]
-start at mod5 track 2
+start at Leiden track 2
 [FIRST CLASS]
 [SECOND CLASS]
 x: 5
 
-{duppre5}
+{Berlijn}
 operation: duplicate
-track 1: go to transferpre5 track 1
-track 2: go to transferpre5 track 2
+track 1: go to Vlissingen track 1
+track 2: go to Vlissingen track 2
 
-{transferpre5}
+{Vlissingen}
 operation: transfer
-track 1: go to yeet track 1
-track 2: go to mod5 track 1
+track 1: go to Harlingen track 1
+track 2: go to Leiden track 1
 
-{mod5}
+{Leiden}
 operation: mod
-track 1: go to check5 track 1
-track 2: go to mod5 track 2
+track 1: go to DenHelder track 1
+track 2: go to Leiden track 2
 
-{check5}
+{DenHelder}
 operation: switch eq
-track 1: go to plus5 track 2
-track 2: go to droppost5 track 1
+track 1: go to Gouda track 2
+track 2: go to Zoetermeer track 1
 
-{droppost5}
+{Zoetermeer}
 operation: delete top
-track 1: go to duppre3 track 1
+track 1: go to Haarlem track 1
 
 [LOCOMOTIVE]
-start at plus5 track 1
+start at Gouda track 1
 [FIRST CLASS]
 [SECOND CLASS]
 b: 98
@@ -118,51 +118,51 @@ u: 117
 z: 122
 z: 122
 
-{plus5}
+{Gouda}
 operation: add
-track 1: go to dup5 track 1
-track 2: go to yeet track 1
+track 1: go to Hilversum track 1
+track 2: go to Harlingen track 1
 
-{dup5}
+{Hilversum}
 operation: duplicate
-track 1: go to plus5 track 1
-track 2: go to printstrd5 track 1
+track 1: go to Gouda track 1
+track 2: go to Bielefeld track 1
 
 
 
 
 [LOCOMOTIVE]
-start at mod3 track 2
+start at Breda track 2
 [FIRST CLASS]
 [SECOND CLASS]
 x: 3
 
-{duppre3}
+{Haarlem}
 operation: duplicate
-track 1: go to transferpre3 track 1
-track 2: go to transferpre3 track 2
+track 1: go to Dordrecht track 1
+track 2: go to Dordrecht track 2
 
-{transferpre3}
+{Dordrecht}
 operation: transfer
-track 1: go to yeet track 1
-track 2: go to mod3 track 1
+track 1: go to Harlingen track 1
+track 2: go to Breda track 1
 
-{mod3}
+{Breda}
 operation: mod
-track 1: go to check3 track 1
-track 2: go to mod3 track 2
+track 1: go to Almere track 1
+track 2: go to Breda track 2
 
-{check3}
+{Almere}
 operation: switch eq
-track 1: go to plus3 track 2
-track 2: go to droppost3 track 1
+track 1: go to Alkmaar track 2
+track 2: go to Lelystad track 1
 
-{droppost3}
+{Lelystad}
 operation: delete top
-track 1: go to printnumd1 track 1
+track 1: go to Antwerpen track 1
 
 [LOCOMOTIVE]
-start at plus3 track 1
+start at Alkmaar track 1
 [FIRST CLASS]
 [SECOND CLASS]
 f: 102
@@ -170,15 +170,15 @@ i: 105
 z: 122
 z: 122
 
-{plus3}
+{Alkmaar}
 operation: add
-track 1: go to dup3 track 1
-track 2: go to yeet track 1
+track 1: go to Hoorn track 1
+track 2: go to Harlingen track 1
 
-{dup3}
+{Hoorn}
 operation: duplicate
-track 1: go to plus3 track 1
-track 2: go to printstr track 1
+track 1: go to Alkmaar track 1
+track 2: go to Emmen track 1
 
 
 
@@ -187,57 +187,57 @@ track 2: go to printstr track 1
 
 
 
-{printnumd1}
+{Antwerpen}
 operation: nothing
-track 1: go to printnum track 1
+track 1: go to Tilburg track 1
 
-{printnum}
+{Tilburg}
 operation: print number
-track 1: go to yeet track 1
+track 1: go to Harlingen track 1
 
-{printstrd10}
+{Dortmund}
 operation: nothing
-track 1: go to printstrd9 track 1
+track 1: go to Essen track 1
 
-{printstrd9}
+{Essen}
 operation: nothing
-track 1: go to printstrd8 track 1
+track 1: go to Dusseldorf track 1
 
-{printstrd8}
+{Dusseldorf}
 operation: nothing
-track 1: go to printstrd7 track 1
+track 1: go to Keulen track 1
 
-{printstrd7}
+{Keulen}
 operation: nothing
-track 1: go to printstrd6 track 1
+track 1: go to Hamburg track 1
 
-{printstrd6}
+{Hamburg}
 operation: nothing
-track 1: go to printstrd5 track 1
+track 1: go to Bielefeld track 1
 
-{printstrd5}
+{Bielefeld}
 operation: nothing
-track 1: go to printstrd4 track 1
+track 1: go to Zwolle track 1
 
-{printstrd4}
+{Zwolle}
 operation: nothing
-track 1: go to printstrd3 track 1
+track 1: go to Bremen track 1
 
-{printstrd3}
+{Bremen}
 operation: nothing
-track 1: go to printstrd2 track 1
+track 1: go to Hengelo track 1
 
-{printstrd2}
+{Hengelo}
 operation: nothing
-track 1: go to printstrd1 track 1
+track 1: go to Enschede track 1
 
-{printstrd1}
+{Enschede}
 operation: nothing
-track 1: go to printstr track 1
+track 1: go to Emmen track 1
 
-{printstr}
+{Emmen}
 operation: print string
-track 1: go to yeet track 1
+track 1: go to Harlingen track 1
 
-{yeet}
+{Harlingen}
 operation: delete
