@@ -290,7 +290,7 @@ class Train {
     cart_locations = []
     length
 
-    constructor(location, prim, sec, direction, identifier, first_class_messages) {
+    constructor(location, prim, sec, direction, identifier, first_class_messages, length) {
         this.location = location;
         this.accent = sec;
         this.accent1 = prim;
