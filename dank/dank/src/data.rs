@@ -24,6 +24,13 @@ pub struct NativeFn<'s> {
     pub func: Box<dyn Fn(Vec<Value<'s>>) -> Signal<'s>>,
 }
 
+// pub trait NativeObj<'s> {
+//     fn to_string(&self) -> String;
+//     fn get_prop(&self, name: Cow<'s, str>) -> Signal<'s>;
+//     fn set_prop(&self, name: Cow<'s, str>) -> Signal<'s>;
+//
+// }
+
 impl<'s> NativeFn<'s> {
     pub fn create<S: Into<Cow<'s, str>>>(
         name: S,

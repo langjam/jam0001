@@ -205,6 +205,10 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             StmtKind::Break => (),
             StmtKind::Continue => (),
             StmtKind::Assignment(_, value) => self.eval_comments_in_expr(value),
+            StmtKind::PropAssignment(obj, _, value) => {
+                self.eval_comments_in_expr(obj);
+                self.eval_comments_in_expr(value);
+            }
         }
     }
 
@@ -420,6 +424,17 @@ impl<'a, 'b> Evaluator<'a, 'b> {
         }
     }
 
+    fn set_prop(&mut self, obj: &Value<'a>, name: Cow<'a, str>, value: Value<'a>) -> Signal<'a> {
+        match obj {
+            Value::Obj(obj) => {
+                let mut obj = obj.borrow_mut();
+                obj.fields.insert(name, value.clone());
+                value.into()
+            }
+            _ => EvalError::UndefinedProperty(name).into(),
+        }
+    }
+
     fn eval_stmt(&mut self, stmt: &Stmt<'a>) -> Signal<'a> {
         match &stmt.kind {
             StmtKind::Print(args) => {
@@ -450,6 +465,11 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 if self.env.update(name, value).is_none() {
                     return EvalError::UndefinedVariable(name.clone()).into();
                 }
+            }
+            StmtKind::PropAssignment(obj, prop, value) => {
+                let obj = self.eval_expr(obj)?;
+                let value = self.eval_expr(value)?;
+                self.set_prop(&obj, prop.clone(), value)?;
             }
             StmtKind::Block(b) => return self.eval_block(b),
             StmtKind::UnscopedBlock(b) => return self.eval_unscoped_block(b),

@@ -39,7 +39,8 @@ let callable = { __call__: fn(){} };
 print callable();
 
 let callable2 = { __call__: fn() { return 5; } };
-print callable2();
+callable.field = "added after creation";
+print callable, callable2();
 
 
 fn outer() {
@@ -87,5 +88,4 @@ while true {
         break;
     }
 }
-
 

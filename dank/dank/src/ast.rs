@@ -72,6 +72,11 @@ pub enum StmtKind<'a> {
         #[rename = "name"] Cow<'a, str>,
         #[rename = "value"] ExprPtr<'a>,
     ),
+    PropAssignment(
+        #[rename = "obj"] ExprPtr<'a>,
+        #[rename = "prop"] Cow<'a, str>,
+        #[rename = "value"] ExprPtr<'a>,
+    ),
     Break,
     Continue,
 }

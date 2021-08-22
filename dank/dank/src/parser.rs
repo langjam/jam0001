@@ -92,6 +92,16 @@ peg::parser!(pub grammar dank() for str {
          / start:position!() name:ident() ___ "=" ___ value:expr() ___ ";" end:position!() {
           Stmt { span: start..end, kind: StmtKind::Assignment(name.into(), Box::new(value)) }
          }
+         / start:position!() obj:access()  ___ "=" ___ value:expr() ___ ";" end:position!() {?
+           if let ExprKind::Property(prop, obj) = obj.kind {
+               Ok(Stmt {
+                   span: start..end,
+                   kind: StmtKind::PropAssignment(obj, prop, Box::new(value))
+               })
+           } else {
+               Err("Invalid assignment target: expected a property, but got a different node.")
+           }
+         }
          / e:expr() ___ ";" end:position!() { Stmt {  span: e.span.start..end, kind: StmtKind::ExprStmt(Box::new(e)) } }
 
 
@@ -109,7 +119,7 @@ peg::parser!(pub grammar dank() for str {
     = start:position!() "fn" _ "(" args:ident() ** ("," ___) ")" ___ body:block() end:position!()
     {
       Expr { span: start..end, kind: ExprKind::LambdaLiteral(Box::new(Function {
-        name: format!("fn@{}:{}", start, end).into(),
+        name: format!("lambda@{}:{}", start, end).into(),
         args: args.into_iter().map(Into::into).collect(),
         body: match body.kind { StmtKind::Block(b) => b, _ => unreachable!() }
     })) }
@@ -269,6 +279,48 @@ pub mod tests {
                 $expected.trim().as_display()
             )
         };
+    }
+
+    #[test]
+    fn assignment() {
+        let test = r#"
+          x = 5;
+          obj.field = 7;
+          call().field1.field2.value = "value";
+      "#;
+        test_eq!(
+            test,
+            r#"Ast
+  statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::Assignment
+        name: "x"
+        value: ExprKind::Literal
+          field0: Num(5.0)
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::PropAssignment
+        obj: ExprKind::Variable
+          name: "obj"
+        prop: "field"
+        value: ExprKind::Literal
+          field0: Num(7.0)
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::PropAssignment
+        obj: ExprKind::Property
+          name: "field2"
+          obj: ExprKind::Property
+            name: "field1"
+            obj: ExprKind::Call
+              callee: ExprKind::Variable
+                name: "call"
+              args= 
+        prop: "value"
+        value: ExprKind::Literal
+          field0: Str("value")"#
+        );
     }
 
     #[test]
@@ -470,7 +522,7 @@ Ast
         name: "f"
         initializer: ExprKind::LambdaLiteral
           field0: Function
-            name: "fn@83:90"
+            name: "lambda@83:90"
             args= 
             body= 
     LineComment
@@ -479,7 +531,7 @@ Ast
         name: "f_with_args"
         initializer: ExprKind::LambdaLiteral
           field0: Function
-            name: "fn@118:142"
+            name: "lambda@118:142"
             args= 
               "a"
               "b"
