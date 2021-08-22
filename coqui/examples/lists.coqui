@@ -1,0 +1,60 @@
+define [empty list] resulting in [an empty list] as {
+  %(The empty list :: is ^nothing.)
+}
+
+define [construct a list from %(a head) and %(a tail)]
+resulting in [a list containing at least one element]
+as {
+  %(A list containing at least one element :: has both ^{$(a head) and $(a tail)}.)
+}
+
+define [%(a list) is empty] as {
+  %(The result :: is the same as checking if [$(the list) is [an empty list]]).
+}
+
+define [list that only contains %(a single value)] resulting in [a list] as {
+  %(The list :: containing only {$(a single value)} is ^{$(the single value) and ^nothing}).
+}
+
+define [first element of %(a list)] resulting in [the first element] as {
+  If ?[$(the list) matches ^{%(a head) and %(a tail)}],
+  {%(the first element :: $(the head))}.
+  Otherwise, {the list is empty. Therefore, we !(cannot get the first element of an empty list)}.
+}
+
+define [rest of %(a list)] resulting in [the rest of the list] as {
+  If ?[$(the list) matches ^{%(a head) and %(a tail)}],
+  {%(the rest of the list :: is $(the tail))}.
+  Otherwise, {the list is empty. Therefore, we !(cannot get the rest of an empty list)}.
+}
+
+define [append %(a value) to the end of %(a list)] as {
+  When ?[$(the list) is empty], {%(the result :: is [a list that only contains $(the value)])}.
+  Otherwise, {
+    compute %(a new tail :: by [appending $(the value) to the end of [the rest of $(the list)]]).
+    Then, take the @[first element of $(the list)].
+    %(The result :: is found by [constructing a list from @it and $(the new tail)].)
+  }
+}
+
+define [map over %(a list) with %(a transformation)] as {
+  If ?[$(the list) is empty] then
+  {%(The result :: is an [empty list])}.
+  Otherwise, {
+    take @[the first element of $(the list)].
+    Transform @it into %(a new value :: by [apply $(a transformation) to @it]).
+    Compute %(a new tail :: by [map over [the rest of $(the list)] with $(the transformation)]).
+    Form %(the result :: by [construct a list from $(the new value) and $(the new tail)]).
+  }
+}
+
+define [sum of %(a list)] resulting in [a summation] as {
+  If ?[$(the list) is empty] then {%(the summation :: is 0).}
+  Otherwise, {take @[the first element of $(the list)]. Compute %(the summation :: by [adding @it to [the sum of [the rest of $(the list)]]]).}
+}
+
+verbs {
+  [to map -> mapping]
+  [to construct -> constructing]
+  [to append -> appending]
+}

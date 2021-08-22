@@ -1,0 +1,10 @@
+include "lists.coqui"
+
+define [%(n)th fibonacci number] as {
+  If ?[$(n) is less than 2], then
+    {finding the $(n)th fibonacci number is arbitrary, as %(the result :: is just $n itself)}.
+  Otherwise, {
+    we take @[the &[$n - 2]th fibonacci number] and @[the &[$n - 1]th fibonacci number].
+    %(The result :: is [the sum of @them]).
+  }
+}

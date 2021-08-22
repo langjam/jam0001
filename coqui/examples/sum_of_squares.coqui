@@ -1,0 +1,22 @@
+include "lists.coqui"
+
+define [%n is positive] as {
+  %(The result :: of asking {"is $n positive"} is acquired to determining if "[$n is greater than ^0]".)
+}
+
+define [first %n positive integers] as {
+  If ?[$n is positive] then {
+    Take @[the first &[$n - 1] positive integers].
+    Compute %(the result :: by [appending $n to the end of @it]).
+  } otherwise {
+    %(The result :: is ^nothing).
+  }
+}
+
+define [sum of the first %n squares] as {
+  To compute the squares, we define %(a square transformation :: to be "#{given a number %x, :: [multiply $x by $x]}").
+
+  In order to compute the sum of the first $n squares, we start with %(a list :: containing [the first $n positive integers]).
+  We compute %(the list of squares :: by [mapping over $(the list) with $(the square transformation)] we defined previously).
+  %(The result :: is [the sum of $(the list of squares)]).
+}
