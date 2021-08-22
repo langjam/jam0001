@@ -1,6 +1,4 @@
-(** OCaml code generator - To transpile to OCaml.
-    Call emit_ast_as_function to print the generated code of a function,
-    given its name and its AST. *)
+(** OCaml code generator - To transpile to OCaml *)
 
 open Kl_IR
 

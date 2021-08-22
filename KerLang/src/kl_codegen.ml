@@ -60,10 +60,21 @@ module PY_Realizer = Realizer (struct
       Kl_2py.emit_ast_as_function_decl oc name prog
   end)
 
+module C_Realizer = Realizer (struct
+    let realize_header oc =
+      Kl_2c.emit_header oc
+
+    let realize_term oc prog =
+      Kl_2c.emit_ast oc prog
+
+    let realize_decl oc name prog =
+      Kl_2c.emit_ast_as_function_decl oc name prog
+  end)
+
 type lang = ML | PY | C
 
 let realize oc lang prog =
   match lang with
   | ML -> ML_Realizer.realize oc prog
   | PY -> PY_Realizer.realize oc prog
-  | _ -> assert false
+  | C -> C_Realizer.realize oc prog
