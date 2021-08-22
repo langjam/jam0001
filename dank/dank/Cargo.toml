@@ -18,6 +18,7 @@ peg = { git = "https://github.com/kevinmehall/rust-peg" }
 ast2str = { git = "https://github.com/optimalstrategy/ast2str" }
 clap = "3.0.0-beta.4"
 bumpalo = "3.7.0"
+enum-kinds = "0.5.1"
 
 [dev-dependencies]
 pretty_assertions = "0.7.2"

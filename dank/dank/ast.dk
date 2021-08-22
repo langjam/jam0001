@@ -1,0 +1,7 @@
+// dbg(AST.name);
+let x = 5;
+
+// AST.name = "z";
+let y = 5;
+print z;
+

@@ -1,6 +1,7 @@
 use std::{borrow::Cow, cell::RefCell, rc::Rc};
 
 use ast2str::AstToStr;
+use enum_kinds::EnumKind;
 
 use crate::data::Value;
 
@@ -51,7 +52,8 @@ pub struct If<'a> {
     pub otherwise: Option<Stmt<'a>>,
 }
 
-#[derive(Debug, Clone, PartialEq, AstToStr)]
+#[derive(EnumKind, Debug, Clone, PartialEq, AstToStr)]
+#[enum_kind(StmtKindName)]
 pub enum StmtKind<'a> {
     LetDecl(
         #[rename = "name"] Cow<'a, str>,

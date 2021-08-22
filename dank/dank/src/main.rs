@@ -54,6 +54,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .into(),
             );
+            env.add(
+                "dbg".into(),
+                dank::data::NativeFn::create("debug", 1, |mut args| {
+                    println!("{}", args.pop().unwrap().to_string());
+                    dank::data::Value::Null.into()
+                })
+                .into(),
+            );
             env
         },
         &arena,

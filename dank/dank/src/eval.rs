@@ -161,8 +161,9 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     self.env.update_or_add("AST".into(), value);
                 }
 
-                let code = self.arena.alloc(self.buf_stack.pop().unwrap());
-                is_success.and_then(move |_| {
+                let code = self.arena.alloc(self.buf_stack.pop().unwrap()).trim();
+                let code = if code.is_empty() { None } else { Some(code) };
+                is_success.and(code).and_then(move |code| {
                     crate::parser::dank::file(code)
                         .map(|ast| Stmt {
                             span: 0..0,
