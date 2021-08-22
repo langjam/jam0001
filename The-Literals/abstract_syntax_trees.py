@@ -163,7 +163,9 @@ class StmtContents:
 
 
 class IfStmt(StmtContents):
-    def __init__(self, condition: Expr, thenpt: StmtContents, thenpt_contains_done: bool):
+    def __init__(
+        self, condition: Expr, thenpt: StmtContents, thenpt_contains_done: bool
+    ):
         self.condition = condition
         self.thenpt = thenpt
         self.thenpt_contains_done = thenpt_contains_done
@@ -176,7 +178,6 @@ class IfStmt(StmtContents):
         if condition_result:
             self.thenpt.execute()
             return self.thenpt_contains_done
-        
 
 
 class SetStmt(StmtContents):
@@ -188,7 +189,10 @@ class SetStmt(StmtContents):
         return f"SET {self.target} TO {self.value}"
 
     def execute(self):
-        set_var(self.target, self.value.evaluate())
+        if isinstance(self.value, int):
+            set_var(self.target, self.value)
+        else:
+            set_var(self.target, self.value.evaluate())
 
 
 class CallStmt(Stmt):
@@ -209,6 +213,7 @@ class CallStmt(Stmt):
         evaluated_args = {name: value.evaluate() for (name, value) in self.args.items()}
         result = function.run(evaluated_args)
         set_var("it", result)
+        print(f"Result of call was {result}")
         if self.postfix_assignment:
             set_var(self.postfix_assignment, result)
         if function.return_var != None:
@@ -222,21 +227,20 @@ class ReturnStmt(StmtContents):
 class Stmts:
     def __init__(self, stmt_list):
         self.stmt_list = stmt_list
-        self.current_index = 0
         self.length = len(stmt_list)
 
     def __repr__(self):
         return str(self.stmt_list)
 
     def execute(self):
-        self.current_index = 0
-        while self.current_index < self.length:
-            next_stmt = self.stmt_list[self.current_index]
+        current_index = 0
+        while current_index < self.length:
+            next_stmt = self.stmt_list[current_index]
             is_done = next_stmt.execute()
             if is_done:
                 break
             else:
-                self.current_index += 1
+                current_index += 1
 
 
 class Function:
@@ -262,7 +266,9 @@ class Function:
     def run(self, args):
         push_env(args)
         self.body.execute()
+        result = get_var(self.return_var)
         pop_env()
+        return result
 
 
 class Program:

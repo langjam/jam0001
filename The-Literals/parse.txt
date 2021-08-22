@@ -5,18 +5,8 @@ IF (VAR n) is (NUMBER 1) THEN SET fib TO NUMBER 1
 CALL Calculates the nth fibonacci number WITH {'n': (VAR n) - (NUMBER 1)} AND CALL IT x
 CALL Calculates the nth fibonacci number WITH {'n': (VAR n) - (NUMBER 2)} AND CALL IT y
 SET fib TO (VAR x) + (VAR y)
-CALL Calculates the nth fibonacci number WITH {'n': NUMBER 5}
-Calling Calculates the nth fibonacci number with args {'n': NUMBER 5}
-Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
-L = 5, R = 1
-Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
-L = 4, R = 1
-Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
-L = 3, R = 1
-Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
-L = 2, R = 1
-Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
-L = 1, R = 1
+CALL Calculates the nth fibonacci number WITH {'n': NUMBER 0}
+Calling Calculates the nth fibonacci number with args {'n': NUMBER 0}
 Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
 L = 0, R = 1
 Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
@@ -499,6 +489,16 @@ Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)
 L = -239, R = 1
 Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
 L = -240, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -241, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -242, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -243, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -244, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -245, R = 1
 Traceback (most recent call last):
   File "D:\Users\Rod\Projects\jam0001\The-Literals\parse.py", line 544, in <module>
     program.execute()
