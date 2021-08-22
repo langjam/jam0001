@@ -7,7 +7,7 @@ I want to use [Deamer](https://github.com/Deruago/theDeamerProject) to create a 
 # Directories
 
 This folder contains varies subdirectories:
-- definition: contains the DLDL definitions.
+- definition: contains the [DLDL](https://github.com/Deruago/DLDL) definitions.
 - DLJ1: Contains source code
 
 # Build instructions
