@@ -65,7 +65,7 @@ and emit_op oc ?(self_name : string option = None) (op: op) =
     Printf.fprintf oc "%s" name
   | SELF ->
     match self_name with
-    | None -> failwith "were gonna need a self name here"
+    | None -> Kl_errors.dev_error "self_name needed but not provided"
     | Some name -> Printf.fprintf oc "%s" name
 
 let emit_ast_as_function_decl oc (name : string) (func : ast) =

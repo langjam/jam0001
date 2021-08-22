@@ -36,18 +36,18 @@ let rec eval ?self:(self : ast option = None) (env : int list) (ftable : ftable)
     else eval ~self env ftable b1
 
 and eval_op (self : ast option) ftable = function
-  | OUT -> (function [x; next] -> print_int x |> print_newline; next | _ -> failwith "OUT : wrong number of args")
-  | ADD -> (function [x; y] -> x + y | _ -> failwith "ADD : wrong number of args")
-  | SUB -> (function [x; y] -> x - y | _ -> failwith "SUB : wrong number of args")
-  | MUL -> (function [x; y] -> x * y | _ -> failwith "MUL : wrong number of args")
-  | DIV -> (function [x; y] -> x / y | _ -> failwith "DIV : wrong number of args")
+  | OUT -> (function [x; next] -> print_int x |> print_newline; next | _ -> Kl_errors.dev_error "OUT : wrong number of args")
+  | ADD -> (function [x; y] -> x + y | _ -> Kl_errors.dev_error "ADD : wrong number of args")
+  | SUB -> (function [x; y] -> x - y | _ -> Kl_errors.dev_error "SUB : wrong number of args")
+  | MUL -> (function [x; y] -> x * y | _ -> Kl_errors.dev_error "MUL : wrong number of args")
+  | DIV -> (function [x; y] -> x / y | _ -> Kl_errors.dev_error "DIV : wrong number of args")
   | FUN fname -> (fun args ->
-    let body = List.assoc fname ftable in
-    eval ~self:(Some body) args ftable body)
+      let body = List.assoc fname ftable in
+      eval ~self:(Some body) args ftable body)
   | SELF ->
     match self with
     | Some body -> fun args -> eval ~self args ftable body
-    | None -> failwith "'self' is unbound"
+    | None -> Kl_errors.dev_error "'self' is unbound"
 
 and pp_ast fmt = function
   | App (op, args) ->

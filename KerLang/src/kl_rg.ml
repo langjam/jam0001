@@ -28,7 +28,7 @@ let rg_step (rg: rg_t): rg_t * int32 =
   (b, (xor32 (lsh32 (rsh32 a 16) 16) (rsh32 b 16)))
 
 (** Returns a random number in the range inf_sup using rg,
-  and returns the new state of rg. *)
+    and returns the new state of rg. *)
 let rg_int (inf_sup: int * int) (rg: rg_t): rg_t * int =
   let (rg, x) = rg_step rg in
   let x: int = Int32.to_int x in
@@ -37,7 +37,7 @@ let rg_int (inf_sup: int * int) (rg: rg_t): rg_t * int =
   (rg, x)
 
 (** Prints n lines of random numbers in the range inf_sup using rg.
-  Returns the new state of rg. *)
+    Returns the new state of rg. *)
 let rg_test_print (inf_sup: int * int) (n: int) (rg: rg_t): rg_t =
   let rg_ref = ref rg in
   for _ = 0 to n-1 do
