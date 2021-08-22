@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod parser;
+mod proof_tree;
 mod raw_ast;
 mod type_check;
 mod vm;
@@ -20,6 +21,10 @@ fn main() {
 		text
 	};
 	let program = parser::parse(&program_text);
+	if let Err(type_check::Error::Bad(err)) = type_check::check_program(&program) {
+		eprintln!("error: {}", err);
+		std::process::exit(1);
+	}
 	let result = vm::evaluate(program);
 	match result {
 		vm::Value::Tuple(v) if v.len() == 0 => {}

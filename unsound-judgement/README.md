@@ -16,22 +16,6 @@ in a formal language).
 
 Examples are located in `examples`.
 
-## Using the compiler
-
-nanodijkstra is very easy to use.
-
-### Build
-
-```sh
-$ cargo build
-```
-
-### Run
-
-```sh
-$ cargo run file.nd
-```
-
 ## How do proofs work?
 
 There are two kinds of "propositions" - preconditions, and postconditions.
@@ -109,6 +93,18 @@ The `$` is not special to the compiler; it's just a human convention.
 
 - `$return` means "the return value of the function call"
 - `$name` means "the value of the `name` parameter of the function"
+
+### Build
+
+```sh
+$ cargo build
+```
+
+### Run
+
+```sh
+$ cargo run file.nd
+```
 
 ## Notes
 
