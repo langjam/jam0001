@@ -1,0 +1,4 @@
+(executable
+ (name coqui)
+ (libraries core angstrom cmdliner)
+ (preprocess (pps ppx_jane ppx_deriving.show)))
