@@ -57,7 +57,7 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 		case lexer.II_m:
 			mathInput := instruction_args[0].Val.Value
 			// TODO: add error if instruction_args is larger that 1
-			mResult, err := m.Do(mathInput, []string{}, []string{})
+			mResult, err := m.Do(mathInput, e.vars, []string{})
 			if err != nil {
 				fmt.Println("MathError: expression invalid: ", mathInput)
 			}

@@ -59,7 +59,6 @@ func (l *Lexer) make_tokens() ([]shared.Token, error) {
 			ref_token, err = l.make_ref()
 			tokens = append(tokens, ref_token)
 		} else if l.current_char == '"' {
-			// l.advance()
 			tokens = append(tokens, shared.Token{Type: shared.TTstring, Value: l.make_text()})
 			if l.current_char != '"' {
 				return []shared.Token{}, &IllegalSyntaxError{message: "Error finding closed bracket" + string(l.current_char), pos: l.pos}
@@ -74,7 +73,7 @@ func (l *Lexer) make_tokens() ([]shared.Token, error) {
 			tokens = append(tokens, shared.Token{Type: shared.TTwcomment, Value: l.make_text()})
 			l.advance()
 		} else {
-			return []shared.Token{}, &IllegalSyntaxError{message: "invalid identifier" + string(l.current_char), pos: l.pos}
+			return []shared.Token{}, &IllegalSyntaxError{message: "invalid identifier (" + string(int(l.current_char)) + ")", pos: l.pos}
 		}
 
 		if err != nil {
