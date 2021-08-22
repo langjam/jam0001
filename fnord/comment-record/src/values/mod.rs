@@ -37,6 +37,18 @@ impl Value {
                 t.push_str(r);
                 Value::Text(t)
             }
+            (Value::Number(l), Value::Text(r)) => {
+                let mut t = String::new();
+                t.push_str(&l.to_string());
+                t.push_str(r);
+                Value::Text(t)
+            }
+            (Value::Text(l), Value::Number(r)) => {
+                let mut t = String::new();
+                t.push_str(l);
+                t.push_str(&r.to_string());
+                Value::Text(t)
+            }
             _ => panic!("typecheck error!"),
         }
     }

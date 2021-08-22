@@ -22,7 +22,10 @@ inputs = Inputs {
     distance: 3,
 };
 
-result = Outputs {
+outputs = Outputs {
     # n.b. in a future version unit for this could be calculated
     speed: inputs.time + inputs.distance,
 };
+
+output_comment = outputs.speed!!;
+result = "Result: " + outputs.speed + " " + output_comment.UNIT;
