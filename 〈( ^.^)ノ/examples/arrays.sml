@@ -12,3 +12,7 @@ print($1)
 // peek gets value at an index
 print("peek:")
 print(peek($1 2))
+
+// len gets the length
+print("len:")
+print(len($1))
