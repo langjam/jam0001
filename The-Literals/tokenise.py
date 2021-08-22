@@ -11,6 +11,7 @@ class Token(Enum):
     AND_CALL_IT = auto()
     AS = auto()
     BINOP = auto()
+    BACK = auto()
     BOF = auto()
     CODE = auto()
     COMPARISON = auto()
@@ -19,13 +20,16 @@ class Token(Enum):
     END_DEF = auto()
     EOF = auto()
     EOL = auto()
+    FORWARD = auto()
     FUNCTION = auto()
     FUNCTION_NAME = auto()
     HEADER_END = auto()
     HFILL = auto()
     IDENTIFIER_WORD = auto()
     IF_KEYWORD = auto()
+    JUMP = auto()
     LEAVE_FUNC = auto()
+    LINES = auto()
     NUMBER = auto()
     NEGATIVE = auto()
     PARAM = auto()
@@ -90,7 +94,7 @@ class Tokeniser:
         while self.peek() != "\"":
             self.advance()
         self.advance()
-        if not self.done() and self.text[self.current] == ".":
+        if not self.done():
             return Token.STRING_LITERAL
 
     def ignore(self):
@@ -101,7 +105,7 @@ class Tokeniser:
         while self.peek() in " \t":
             self.advance()
 
-    def identifier(self):
+    def identifier_word(self):
         p = self.peek()
         while p.isalnum() or p == "'":
             self.advance()
@@ -166,16 +170,16 @@ class Tokeniser:
             if self.advance_if("And we're done", case_sensitive=True):
                 return Token.END_DEF
 
-            if self.advance_if("If"):
+            if self.advance_if("If "):
                 return Token.IF_KEYWORD
 
-            if self.advance_if("then"):
+            if self.advance_if("then "):
                 return Token.THEN
 
-            if self.advance_if("set"):
+            if self.advance_if("set "):
                 return Token.SETVAR
 
-            if self.advance_if("to"):
+            if self.advance_if("to "):
                 return Token.TO
 
             if self.advance_if("ditto"):
@@ -184,11 +188,23 @@ class Tokeniser:
             if self.advance_if("and call it"):
                 return Token.AND_CALL_IT
 
-            if self.advance_if("and"):
+            if self.advance_if("and "):
                 return Token.AND
 
-            if self.advance_if("with"):
+            if self.advance_if("with "):
                 return Token.WITH
+            
+            if self.advance_if("jump "):
+                return Token.JUMP
+
+            if self.advance_if("back "):
+                return Token.BACK
+
+            if self.advance_if("forward "):
+                return Token.FORWARD
+
+            if self.advance_if("lines"):
+                return Token.LINES
 
             if self.advance_if("as "):
                 return Token.AS
@@ -226,7 +242,7 @@ class Tokeniser:
 
             # Is it an identifier? This MUST go at the end because of how vague it is.
             if ch.isalpha():
-                return self.identifier()
+                return self.identifier_word()
 
         return None
 

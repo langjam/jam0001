@@ -201,6 +201,16 @@ class SetStmt(StmtContents):
     def execute(self):
         set_var(self.target, self.value.evaluate())
 
+class JumpStmt(StmtContents):
+    def __init__(self, direction: str, num_lines: Expr):
+        self.direction = direction
+        self.num_lines = num_lines
+
+    def __repr__(self):
+        return f"JUMP {self.direction} {self.num_lines} LINES"
+
+    def execute(self):
+        pass
 
 class CallStmt(Stmt):
     def __init__(self, func_name, args, postfix_assignment=None):
@@ -241,9 +251,22 @@ class Stmts:
         current_index = 0
         while current_index < self.length:
             next_stmt = self.stmt_list[current_index]
+            next_body = next_stmt.body
             is_done = next_stmt.execute()
             if is_done:
                 break
+            elif isinstance(next_body, JumpStmt):
+                if "back" in next_body.direction:
+                    current_index -= next_body.num_lines.evaluate()
+                else:
+                    current_index += next_body.num_lines.evaluate()
+            elif isinstance(next_body, IfStmt) and next_body.condition.evaluate():
+                thenpt = next_body.thenpt
+                if isinstance(thenpt, JumpStmt):
+                    if "back" in thenpt.direction:
+                        current_index -= thenpt.num_lines.evaluate()
+                    else:
+                        current_index += thenpt.num_lines.evaluate()
             else:
                 current_index += 1
 
