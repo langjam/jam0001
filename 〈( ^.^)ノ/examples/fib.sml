@@ -1,7 +1,14 @@
 
-set($-1 "hello") // hello
-set($1 "word") // world
+set($-1 1)
+set($-2 1)
 
-"hello, world"()
+set($-3 $-2) // save
+set($-2 m("$-2 + $-1")) // calc
+set($-1 $-3) // load
 
-print("$-1 $1")
+"save, calc and load"() // fib
+
+while (1) {
+  "fib"()
+  print($-1)
+}
