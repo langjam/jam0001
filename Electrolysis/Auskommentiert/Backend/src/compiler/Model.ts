@@ -1,10 +1,6 @@
 import { CommentProvider } from "./CommentProvider";
-import { Comment } from "./grammar";
 import { WrappedComment, WrappedCommentSorter } from "./WrappedComment";
 import { inspect } from "util";
-import {parse} from "./grammar";
-import { urlToHttpOptions } from "url";
-import { compileFunction } from "vm";
 
 export enum Direction {
     UP,
@@ -186,6 +182,10 @@ class ModelCommentProvider extends CommentProvider {
 export class Model {
     private mCommentsMap : Map<string, CommentBase> = new Map();
     private mCounter : number = 1;
+    private mCallback: Function = () => {}
+    constructor(callback: Function = () => {}) {
+        this.mCallback = callback;
+    }
     addPost(post : any): void {
         let comments : ModelComment[] = [];
         for(let topLevelComment of post.children) {
@@ -194,6 +194,7 @@ export class Model {
         }
         this.mCommentsMap.set(post.id, new ModelPost(post.title, post.content, post.id, "", post.upvotes, post.date, comments));
         console.log(inspect(this.posts, false, null, true));
+        this.mCallback();
     }
     getNexUniqueId() : number {
         return this.mCounter++;
@@ -202,6 +203,7 @@ export class Model {
         let commentObj : ModelComment = this.parseComment(commentId, commentJson)
         this.mCommentsMap.get(commentId)?.addChild(commentObj);
         this.mCommentsMap.set(commentObj.id, commentObj);
+        this.mCallback();
     }
     makeCommentProvider(postId : string) : CommentProvider {
         return new ModelCommentProvider(this, postId);
@@ -238,6 +240,7 @@ export class Model {
 
             }
         }
+        this.mCallback();
     }
 
     swapContent(idFirst: string, idSecond: string) {
@@ -249,6 +252,7 @@ export class Model {
             entryOne.content = entryTwo.content;
             entryTwo.content = tempContent;
         }
+        this.mCallback();
     }
 
     private parseComment(parentId : string, jsonComment : any) : ModelComment {

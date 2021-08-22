@@ -11,7 +11,6 @@ import GlobalTopicStore from './GlobalTopicStore';
 
 class Topic extends Component<TopicType, TopicType> {
     comments: Array<ReactElement<any, any>> = [];
-    timer: NodeJS.Timeout | undefined = undefined
 
     constructor(props: TopicType) {
         super(props);
@@ -29,12 +28,8 @@ class Topic extends Component<TopicType, TopicType> {
 
     componentDidMount() {
         GlobalTopicStore.setTopic(this.state);
-        this.timer = setInterval(() => {
-            fetch("http://" + window.location.hostname + ":6789/api/topic/" + this.state.id).then(data => data.json()).then(data => {
-                this.setState(data);
-                this.initComments(data);
-            }).catch(reason => { console.log(reason) })
-        }, 100)
+        this.setState(this.props);
+        this.initComments(this.props);
     }
 
     render() {

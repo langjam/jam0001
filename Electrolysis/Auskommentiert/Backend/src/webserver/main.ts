@@ -2,9 +2,13 @@ import express from 'express';
 import { Direction } from '../compiler/Model';
 import {ApiModel} from './ApiModel';
 import cors from 'cors';
-import bodyParser from 'body-parser';
+import 'ws'
+import * as http from 'http'
+import WebSocket from 'ws';
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({server, path:'/api/ws/data'});
 const port = 6789;
 let api = new ApiModel();
 app.use(express.json());
@@ -35,6 +39,13 @@ app.get("/api/topic/:id", (req: express.Request, res: express.Response) => {
     api.queryTopic(req, res);
 });
 
-app.listen(port, () => {
+wss.on('connection', (ws: WebSocket) => {
+    api.registerCallback(ws);
+    ws.on('close', () => {
+        api.removeCallback(ws);
+    })
+});
+
+server.listen(port, () => {
     console.log("api started");
-})
+});

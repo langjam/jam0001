@@ -75,8 +75,10 @@ import AnswerCreateTopic from './AnswerCreateTopic';
 //        }
 //    ]
 //}
+let websocket: WebSocket = new WebSocket("ws://" + window.location.hostname + ":6789/api/ws/data")
 
 class App extends Component<{}, AppType> {
+
 
     constructor(props: any) {
         super(props);
@@ -89,6 +91,11 @@ class App extends Component<{}, AppType> {
         fetch("http://" + window.location.hostname + ":6789/api/data").then(data => data.json()).then(data => {
             this.setState(data);
         }).catch(reason => { console.log(reason) })
+
+        websocket.addEventListener('message', (msg) => {
+            let obj = JSON.parse(msg.data.toString())
+            this.setState(obj);
+        });
     }
 
     render() {

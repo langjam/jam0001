@@ -1,11 +1,25 @@
 import { Direction, Model } from "../compiler/Model";
 import express from 'express'
+import 'ws'
+import WebSocket from "ws";
+import { VM } from "../compiler/VM";
 
 export class ApiModel {
     private mModel : Model 
+    private mCallbacks : Array<WebSocket> = [];
 
     constructor() {
-        this.mModel = new Model();
+        this.mModel = new Model(() => this.executeCallbacks());
+        this.mCallbacks = [];
+    }
+
+    executeCallbacks() {
+        console.log(this.mCallbacks);
+        for( let value of this.mCallbacks) {
+            let obj = this.mModel.toObject();
+            let jsonString = JSON.stringify(obj);
+            value.send(jsonString);
+        }
     }
 
     getData(req: express.Request, res: express.Response) {
@@ -26,9 +40,14 @@ export class ApiModel {
         let obj = req.body;
         let comment = obj.comment;
         let id = obj.parent;
-        comment.id = this.mModel.getNexUniqueId();
-        this.mModel.addComment(id, comment);
-        res.sendStatus(200);
+        if(comment.content === 'run') {
+            let vm = new VM(this.mModel.makeCommentProvider(id))
+            vm.run();
+        } else {
+            comment.id = this.mModel.getNexUniqueId();
+            this.mModel.addComment(id, comment);
+            res.sendStatus(200);
+        }
     }
 
     upvote(req: express.Request, res: express.Response) { 
@@ -59,5 +78,12 @@ export class ApiModel {
         } else {
             res.sendStatus(500);
         }
+    }
+
+    registerCallback(ws: WebSocket) {
+        this.mCallbacks.push(ws);
+    }
+    removeCallback(ws: WebSocket ) {
+        delete this.mCallbacks[this.mCallbacks.indexOf(ws)];
     }
 }
