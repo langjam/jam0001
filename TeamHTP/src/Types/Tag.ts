@@ -1,9 +1,7 @@
 import Base from './Base'
-import Function from './Function'
 import {Definition} from 'mdast'
 
 class Tag extends Base {
-    private readonly members: Record<string, Function>
     private taggedElement: Base | undefined
     private rawMd: string
 
@@ -11,7 +9,6 @@ class Tag extends Base {
         super(mdastContent, tag);
         this.taggedElement = undefined
         this.rawMd = rawMd
-        this.members = {}
     }
 
     setTaggedElement(child: Base) {
@@ -24,18 +21,6 @@ class Tag extends Base {
 
     getMdastContent(): Definition {
         return <Definition>this.mdastContent
-    }
-
-    isMemberDefined(memberName: string): boolean {
-        return this.members[memberName] !== undefined
-    }
-
-    getMember(memberName: string): Function {
-        return this.members[memberName]
-    }
-
-    addMember(memberName:string, memberFunction: Function): void {
-        this.members[memberName] = memberFunction
     }
 
     getRawMd(): string {
