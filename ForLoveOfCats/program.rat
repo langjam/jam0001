@@ -8,4 +8,6 @@
 			(set end (+ end 1))
 		)
 	)
+
+	(panic)
 )

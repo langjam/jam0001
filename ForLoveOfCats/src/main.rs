@@ -537,7 +537,6 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 
 				"print" => print_values(&args),
 
-				"pause" => pause(state, &args),
 				"panic" => panic_impl(state, &args),
 
 				name => {
@@ -766,16 +765,7 @@ fn insert_comment(state: &mut ScopeState, values: &[Value]) -> Value {
 	Value::None
 }
 
-fn pause(state: &mut ScopeState, values: &[Value]) -> Value {
-	if !values.is_empty() {
-		print!("Pausing!: ");
-		print_values(values);
-	} else {
-		println!("Pausing!");
-	}
-
-	println!();
-
+fn repl(state: &mut ScopeState) {
 	loop {
 		print!("> ");
 		std::io::stdout().flush().unwrap();
@@ -800,13 +790,11 @@ fn pause(state: &mut ScopeState, values: &[Value]) -> Value {
 			}
 		}
 	}
-
-	println!();
-
-	Value::None
 }
 
-fn panic_impl(state: &ScopeState, values: &[Value]) -> Value {
+fn panic_impl(state: &mut ScopeState, values: &[Value]) -> Value {
+	println!();
+
 	if !values.is_empty() {
 		print!("Panic!: ");
 
@@ -822,8 +810,7 @@ fn panic_impl(state: &ScopeState, values: &[Value]) -> Value {
 		println!("Panic!");
 	}
 
-	println!("========================================");
-	print_comments(state);
+	repl(state);
 
 	std::process::exit(-1);
 }
