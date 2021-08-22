@@ -88,7 +88,9 @@ init ast =
     , labels = toLabels ast
     , names =
         Dict.fromList
-            [ ( "+", Fun add )
+            [ ( "+", Fun <| func 2 sum )
+            , ( "-", Fun <| func 2 sub )
+            , ( "<", Fun <| func 2 lt )
             ]
     , stack = []
     , ok = True
@@ -182,6 +184,7 @@ commands =
     Dict.fromList
         [ ( "pass", pass )
         , ( "flip", flip )
+        , ( "flip_if", flip_if )
         , ( "halt", exit )
         ]
 
@@ -209,6 +212,24 @@ exit runtime =
 flip : Command
 flip runtime =
     { runtime | universe = AST.flipUniverse runtime.universe }
+
+
+flip_if : Command
+flip_if runtime =
+    let
+        ( runtime_, maybeValue ) =
+            pop runtime
+    in
+    case maybeValue of
+        Just (Int int) ->
+            if int == 0 then
+                runtime_
+
+            else
+                flip runtime_
+
+        _ ->
+            panic runtime
 
 
 step : Command
@@ -403,11 +424,6 @@ toFunc value =
             Nothing
 
 
-add : Func
-add =
-    func 2 sum
-
-
 
 -- HELPERS
 
@@ -424,3 +440,19 @@ sub args =
             toInt <| Maybe.withDefault (Int 0) <| Array.get id args
     in
     Just <| Int (int 0 - int 1)
+
+
+lt : Executioner
+lt args =
+    let
+        int id =
+            toInt <| Maybe.withDefault (Int 0) <| Array.get id args
+
+        result =
+            int 0 < int 1
+    in
+    if result then
+        Just (Int 1)
+
+    else
+        Just (Int 0)

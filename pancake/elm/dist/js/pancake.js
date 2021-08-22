@@ -2359,6 +2359,43 @@ function _Platform_mergeExportsDebug(moduleName, obj, exports)
 
 
 
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
+
+
+
 
 // STRINGS
 
@@ -2485,43 +2522,6 @@ var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString
 	}
 
 	return _Utils_Tuple3(newOffset, row, col);
-});
-
-
-
-var _Bitwise_and = F2(function(a, b)
-{
-	return a & b;
-});
-
-var _Bitwise_or = F2(function(a, b)
-{
-	return a | b;
-});
-
-var _Bitwise_xor = F2(function(a, b)
-{
-	return a ^ b;
-});
-
-function _Bitwise_complement(a)
-{
-	return ~a;
-};
-
-var _Bitwise_shiftLeftBy = F2(function(offset, a)
-{
-	return a << offset;
-});
-
-var _Bitwise_shiftRightBy = F2(function(offset, a)
-{
-	return a >> offset;
-});
-
-var _Bitwise_shiftRightZfBy = F2(function(offset, a)
-{
-	return a >>> offset;
 });
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$LT = {$: 'LT'};
@@ -3113,85 +3113,6 @@ var $author$project$Language$AST$Alpha = {$: 'Alpha'};
 var $author$project$Language$Core$Fun = function (a) {
 	return {$: 'Fun', a: a};
 };
-var $author$project$Language$Core$Int = function (a) {
-	return {$: 'Int', a: a};
-};
-var $elm$core$Array$repeat = F2(
-	function (n, e) {
-		return A2(
-			$elm$core$Array$initialize,
-			n,
-			function (_v0) {
-				return e;
-			});
-	});
-var $author$project$Language$Core$func = F2(
-	function (argc, f) {
-		var dummyValue = $author$project$Language$Core$Int(0);
-		return {
-			argi: 0,
-			args: A2($elm$core$Array$repeat, argc, dummyValue),
-			func: f
-		};
-	});
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$Elm$JsArray$map = _JsArray_map;
-var $elm$core$Array$map = F2(
-	function (func, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = function (node) {
-			if (node.$ === 'SubTree') {
-				var subTree = node.a;
-				return $elm$core$Array$SubTree(
-					A2($elm$core$Elm$JsArray$map, helper, subTree));
-			} else {
-				var values = node.a;
-				return $elm$core$Array$Leaf(
-					A2($elm$core$Elm$JsArray$map, func, values));
-			}
-		};
-		return A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A2($elm$core$Elm$JsArray$map, helper, tree),
-			A2($elm$core$Elm$JsArray$map, func, tail));
-	});
-var $elm$core$List$sum = function (numbers) {
-	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
-};
-var $elm$core$Debug$todo = _Debug_todo;
-var $author$project$Language$Core$toInt = function (value) {
-	if (value.$ === 'Int') {
-		var _int = value.a;
-		return _int;
-	} else {
-		return _Debug_todo(
-			'Language.Core',
-			{
-				start: {line: 373, column: 13},
-				end: {line: 373, column: 23}
-			})('oops');
-	}
-};
-var $author$project$Language$Core$sum = A2(
-	$elm$core$Basics$composeR,
-	$elm$core$Array$map($author$project$Language$Core$toInt),
-	A2(
-		$elm$core$Basics$composeR,
-		$elm$core$Array$toList,
-		A2(
-			$elm$core$Basics$composeR,
-			$elm$core$List$sum,
-			A2($elm$core$Basics$composeR, $author$project$Language$Core$Int, $elm$core$Maybe$Just))));
-var $author$project$Language$Core$add = A2($author$project$Language$Core$func, 2, $author$project$Language$Core$sum);
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
 var $elm$core$Dict$Black = {$: 'Black'};
@@ -3315,6 +3236,162 @@ var $elm$core$Dict$fromList = function (assocs) {
 		$elm$core$Dict$empty,
 		assocs);
 };
+var $author$project$Language$Core$Int = function (a) {
+	return {$: 'Int', a: a};
+};
+var $elm$core$Array$repeat = F2(
+	function (n, e) {
+		return A2(
+			$elm$core$Array$initialize,
+			n,
+			function (_v0) {
+				return e;
+			});
+	});
+var $author$project$Language$Core$func = F2(
+	function (argc, f) {
+		var dummyValue = $author$project$Language$Core$Int(0);
+		return {
+			argi: 0,
+			args: A2($elm$core$Array$repeat, argc, dummyValue),
+			func: f
+		};
+	});
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var $elm$core$Debug$todo = _Debug_todo;
+var $author$project$Language$Core$toInt = function (value) {
+	if (value.$ === 'Int') {
+		var _int = value.a;
+		return _int;
+	} else {
+		return _Debug_todo(
+			'Language.Core',
+			{
+				start: {line: 394, column: 13},
+				end: {line: 394, column: 23}
+			})('oops');
+	}
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Language$Core$lt = function (args) {
+	var _int = function (id) {
+		return $author$project$Language$Core$toInt(
+			A2(
+				$elm$core$Maybe$withDefault,
+				$author$project$Language$Core$Int(0),
+				A2($elm$core$Array$get, id, args)));
+	};
+	var result = _Utils_cmp(
+		_int(0),
+		_int(1)) < 0;
+	return result ? $elm$core$Maybe$Just(
+		$author$project$Language$Core$Int(1)) : $elm$core$Maybe$Just(
+		$author$project$Language$Core$Int(0));
+};
+var $author$project$Language$Core$sub = function (args) {
+	var _int = function (id) {
+		return $author$project$Language$Core$toInt(
+			A2(
+				$elm$core$Maybe$withDefault,
+				$author$project$Language$Core$Int(0),
+				A2($elm$core$Array$get, id, args)));
+	};
+	return $elm$core$Maybe$Just(
+		$author$project$Language$Core$Int(
+			_int(0) - _int(1)));
+};
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$Elm$JsArray$map = _JsArray_map;
+var $elm$core$Array$map = F2(
+	function (func, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = function (node) {
+			if (node.$ === 'SubTree') {
+				var subTree = node.a;
+				return $elm$core$Array$SubTree(
+					A2($elm$core$Elm$JsArray$map, helper, subTree));
+			} else {
+				var values = node.a;
+				return $elm$core$Array$Leaf(
+					A2($elm$core$Elm$JsArray$map, func, values));
+			}
+		};
+		return A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A2($elm$core$Elm$JsArray$map, helper, tree),
+			A2($elm$core$Elm$JsArray$map, func, tail));
+	});
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $author$project$Language$Core$sum = A2(
+	$elm$core$Basics$composeR,
+	$elm$core$Array$map($author$project$Language$Core$toInt),
+	A2(
+		$elm$core$Basics$composeR,
+		$elm$core$Array$toList,
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$List$sum,
+			A2($elm$core$Basics$composeR, $author$project$Language$Core$Int, $elm$core$Maybe$Just))));
 var $author$project$Language$AST$Actual = function (a) {
 	return {$: 'Actual', a: a};
 };
@@ -3445,7 +3522,16 @@ var $author$project$Language$Core$init = function (ast) {
 				[
 					_Utils_Tuple2(
 					'+',
-					$author$project$Language$Core$Fun($author$project$Language$Core$add))
+					$author$project$Language$Core$Fun(
+						A2($author$project$Language$Core$func, 2, $author$project$Language$Core$sum))),
+					_Utils_Tuple2(
+					'-',
+					$author$project$Language$Core$Fun(
+						A2($author$project$Language$Core$func, 2, $author$project$Language$Core$sub))),
+					_Utils_Tuple2(
+					'<',
+					$author$project$Language$Core$Fun(
+						A2($author$project$Language$Core$func, 2, $author$project$Language$Core$lt)))
 				])),
 		ok: true,
 		stack: _List_Nil,
@@ -3688,7 +3774,7 @@ var $author$project$Language$Parser$isIdentifier = function (c) {
 	return $elm$core$Char$isAlpha(c) || A2(
 		$elm$core$List$member,
 		c,
-		$elm$core$String$toList('<=>!$%&^?+-*/'));
+		$elm$core$String$toList('<=>!$%&^?+-*/_'));
 };
 var $author$project$Language$Parser$identifier = $elm$parser$Parser$getChompedString(
 	$elm$parser$Parser$chompWhile($author$project$Language$Parser$isIdentifier));
@@ -4646,19 +4732,74 @@ var $author$project$Language$Core$flip = function (runtime) {
 			universe: $author$project$Language$AST$flipUniverse(runtime.universe)
 		});
 };
+var $author$project$Language$Core$panic = function (runtime) {
+	return _Utils_update(
+		runtime,
+		{ok: false});
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$isEmpty = function (xs) {
+	if (!xs.b) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$List$tail = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(xs);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Language$Core$pop = function (runtime) {
+	if ($elm$core$List$isEmpty(runtime.stack)) {
+		return _Utils_Tuple2(
+			$author$project$Language$Core$panic(runtime),
+			$elm$core$Maybe$Nothing);
+	} else {
+		var x = $elm$core$List$head(runtime.stack);
+		var stack = A2(
+			$elm$core$Maybe$withDefault,
+			_List_Nil,
+			$elm$core$List$tail(runtime.stack));
+		return _Utils_Tuple2(
+			_Utils_update(
+				runtime,
+				{stack: stack}),
+			x);
+	}
+};
+var $author$project$Language$Core$flip_if = function (runtime) {
+	var _v0 = $author$project$Language$Core$pop(runtime);
+	var runtime_ = _v0.a;
+	var maybeValue = _v0.b;
+	if ((maybeValue.$ === 'Just') && (maybeValue.a.$ === 'Int')) {
+		var _int = maybeValue.a.a;
+		return (!_int) ? runtime_ : $author$project$Language$Core$flip(runtime_);
+	} else {
+		return $author$project$Language$Core$panic(runtime);
+	}
+};
 var $author$project$Language$Core$pass = $elm$core$Basics$identity;
 var $author$project$Language$Core$commands = $elm$core$Dict$fromList(
 	_List_fromArray(
 		[
 			_Utils_Tuple2('pass', $author$project$Language$Core$pass),
 			_Utils_Tuple2('flip', $author$project$Language$Core$flip),
+			_Utils_Tuple2('flip_if', $author$project$Language$Core$flip_if),
 			_Utils_Tuple2('halt', $author$project$Language$Core$exit)
 		]));
-var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
-var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
-var $elm$core$Basics$ge = _Utils_ge;
-var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
 var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
 var $elm$core$Array$setHelp = F4(
 	function (shift, index, value, tree) {
@@ -4682,10 +4823,6 @@ var $elm$core$Array$setHelp = F4(
 				tree);
 		}
 	});
-var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
-var $elm$core$Array$tailIndex = function (len) {
-	return (len >>> 5) << 5;
-};
 var $elm$core$Array$set = F3(
 	function (index, value, array) {
 		var len = array.a;
@@ -4723,63 +4860,6 @@ var $author$project$Language$Core$argsLeft = function (f) {
 };
 var $author$project$Language$Core$execute = function (f) {
 	return f.func(f.args);
-};
-var $author$project$Language$Core$panic = function (runtime) {
-	return _Utils_update(
-		runtime,
-		{ok: false});
-};
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$List$isEmpty = function (xs) {
-	if (!xs.b) {
-		return true;
-	} else {
-		return false;
-	}
-};
-var $elm$core$List$tail = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(xs);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Language$Core$pop = function (runtime) {
-	if ($elm$core$List$isEmpty(runtime.stack)) {
-		return _Utils_Tuple2(
-			$author$project$Language$Core$panic(runtime),
-			$elm$core$Maybe$Nothing);
-	} else {
-		var x = $elm$core$List$head(runtime.stack);
-		var stack = A2(
-			$elm$core$Maybe$withDefault,
-			_List_Nil,
-			$elm$core$List$tail(runtime.stack));
-		return _Utils_Tuple2(
-			_Utils_update(
-				runtime,
-				{stack: stack}),
-			x);
-	}
 };
 var $author$project$Language$Core$push = F2(
 	function (atom, runtime) {
@@ -4892,8 +4972,8 @@ var $author$project$Language$Core$toValue = function (atom) {
 			return _Debug_todo(
 				'Language.Core',
 				{
-					start: {line: 363, column: 13},
-					end: {line: 363, column: 23}
+					start: {line: 384, column: 13},
+					end: {line: 384, column: 23}
 				})('unreachable');
 	}
 };
@@ -4942,39 +5022,6 @@ var $author$project$Language$Core$exec = F2(
 		var universe = instruction.a;
 		var atom = instruction.b;
 		return _Utils_eq(runtime.universe, universe) ? A2($author$project$Language$Core$dealWithAtom, atom, runtime) : $author$project$Language$Core$next(runtime);
-	});
-var $elm$core$Array$getHelp = F3(
-	function (shift, index, tree) {
-		getHelp:
-		while (true) {
-			var pos = $elm$core$Array$bitMask & (index >>> shift);
-			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-			if (_v0.$ === 'SubTree') {
-				var subTree = _v0.a;
-				var $temp$shift = shift - $elm$core$Array$shiftStep,
-					$temp$index = index,
-					$temp$tree = subTree;
-				shift = $temp$shift;
-				index = $temp$index;
-				tree = $temp$tree;
-				continue getHelp;
-			} else {
-				var values = _v0.a;
-				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
-			}
-		}
-	});
-var $elm$core$Array$get = F2(
-	function (index, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
-			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
-			A3($elm$core$Array$getHelp, startShift, index, tree)));
 	});
 var $elm_community$maybe_extra$Maybe$Extra$unwrap = F3(
 	function (_default, f, m) {

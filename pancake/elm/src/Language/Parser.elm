@@ -95,4 +95,4 @@ identifier =
 
 isIdentifier : Char -> Bool
 isIdentifier c =
-    isAlpha c || List.member c (String.toList "<=>!$%&^?+-*/")
+    isAlpha c || List.member c (String.toList "<=>!$%&^?+-*/_")
