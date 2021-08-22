@@ -55,12 +55,12 @@ static struct Interpreter_Value* get_var(strview_t name) {
     return val;
 }
 
-static struct Interpreter_Value execute(struct Vec OF(struct Parser_Node*) *body) {
+static struct Interpreter_Value execute(struct Parser_Node* body) {
 
-    for (usize i = 0; i < body->size; i++) {
+    for (usize i = 0; i < body->children.size; i++) {
         bool should_return;
 
-        struct Interpreter_Value retval = intrp_run(vec_get(body, i), &should_return);
+        struct Interpreter_Value retval = intrp_run(vec_get(&body->children, i), &should_return);
 
         if (should_return)
             return retval;
@@ -100,7 +100,7 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
                 map_add(&vars, fdecl->data.decl.name, &arg);
             }
             intrp.vars = &vars;
-            ret = execute(&pnode_right(func->data.func.ast)->children);
+            ret = execute(pnode_right(func->data.func.ast));
         } break;
         default:
         break;
@@ -148,7 +148,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
     struct Interpreter_Value ret = void_val(); 
     switch (node->kind) {
         case PN_TOPLEVEL:
-            ret = execute(&node->children);
+            ret = execute(node);
         break;
         case PN_ASSIGN:
             ret = assign(node);
@@ -159,6 +159,19 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
         case PN_RETURN:
             ret = intrp_run(pnode_uvalue(node), NULL);
             *should_return = true;
+        break;
+        case PN_IF: {
+            struct Interpreter_Value cond = intrp_run(pnode_left(node), NULL);
+            if (cond.data.intg.val)
+                ret = execute(pnode_right(node));
+        } break;
+        case PN_WHILE:
+            while (1) {
+                struct Interpreter_Value cond = intrp_run(pnode_left(node), NULL);
+                if (cond.data.intg.val)
+                    ret = execute(pnode_right(node));
+                else break;
+            }
         break;
         case PN_DECL:
             declaration(node);
@@ -235,5 +248,5 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
 }
 
 struct Interpreter_Value intrp_main() {
-    return execute(&pnode_right(((struct Interpreter_Value*)map_get(&intrp.global, strview_from("main")))->data.func.ast)->children);
+    return execute(pnode_right(((struct Interpreter_Value*)map_get(&intrp.global, strview_from("main")))->data.func.ast));
 }
