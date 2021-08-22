@@ -39,7 +39,6 @@ $uncom_words = {}
 [
 ["uncom-v", [], lambda { "uncom ver 2108.2021" }],
 ["shrek!", [], lambda { puts "shrek!" ; nil }],
-["halt", [], lambda { raise "Program has finished" }], # TODO: GET A PROPER HALT
 
 ["false", [], lambda { false }],
 ["true", [], lambda { true }],
@@ -132,12 +131,6 @@ end
 class Uncom
 	def initialize(source = "")
 		@source = source
-		#if file_path != "" then
-		#	f = File.new file_path
-		#	@source = f.read
-		#	f.close
-		#end
-
 		@func_stacks = [[]]
 		@data_stacks = [[]]
 		# first one is global, rest are used for func locals, where last is for current func
@@ -161,12 +154,6 @@ class Uncom
 	end
 
 	def run(steps: true, print_words: false)
-		# 3. DONE when at end of string return special `halt` word that sets end of prog
-
-		# 4. DONE write `run` function that calls this to run the @source program
-		#    step should take an arg for how many words you want to run for
-		#    step should return both? stacks
-
 		while (steps.is_a? TrueClass or steps > 0) do
 			steps -= 1 if steps.is_a? Integer
 			w = next_word
@@ -183,17 +170,12 @@ class Uncom
 	# NOTE: WHEN WE DO A CALL, CHECK IF WE JUMPED INTO A COMMENT, IF SO COMEBACK FROM CALL
 
 	def next_word
-		# get next word, starting at instruction_ptr advancing forwards
-		# can be a string, number, quote or comment
-
 		def cur_char() @source[@instruction_ptr] end
-		def look_ahead() @source[@instruction_ptr + 1] end
 		def eof?() @instruction_ptr >= @source.length end
 
 		whitespace = [" ", "\t", "\n"]
 		one_chars = ["(", ")", "{", "}", "[", "]", "#"]
 
-		# 1. DONE skip whitespace, make brackets, spaces, curly-braces delimmiters
 		while (whitespace.include? cur_char) do
 			@instruction_ptr += 1
 		end
@@ -210,17 +192,22 @@ class Uncom
 				len += 1 # comment += cur_char
 				@instruction_ptr += 1
 			end
-
 			return UnComment.new @source, start, len
 		end
 
 		if cur_char == "{" then
-			# TODO: Consume quote if we see one
 			start = @instruction_ptr
 			len = 0
-			nest = 1
-
-			# return UnQuote.new @source, start, len
+			nest = 0
+			loop do
+				raise "unclosed { cannot parse" if eof?
+				nest += 1 if cur_char == "{"
+				nest -= 1 if cur_char == "}"
+				len += 1
+				@instruction_ptr += 1
+				break if nest == 0
+			end
+			return UnQuote.new @source, start, len
 		end
 
 		if one_chars.include? cur_char then
@@ -235,8 +222,6 @@ class Uncom
 			@instruction_ptr += 1
 		end
 
-
-		# try convert to number
 		begin
 			num = Integer(word)
 			word = num
@@ -245,10 +230,6 @@ class Uncom
 		end
 
 		return word
-
-		# 2. DONE get to the point that we can replace array.split with this function
-
-		# 6. add support for quotes, making sure to keep track of nested quotes
 	end
 
 	# retuns false when nothing was done, true when func(s) were called
@@ -264,7 +245,8 @@ class Uncom
 
 	def do_word(word)
 		# number -> push
-		if word.is_a? Integer then
+		# quote-> push
+		if word.is_a?(Integer) or word.is_a?(UnQuote) then
 			data.push word
 			return try_apply_stacks()
 		end
@@ -273,11 +255,15 @@ class Uncom
 		if word.is_a? UnComment then
 			# TODO: check if comment is named and do variable storage
 
-			# 7. DONE add support for comments, decide on when their vars get bound
-			# 8. comments get bound inside do_word
+			# 8. decide on when their vars get bound
+			# 9. comments get bound inside do_word
 			return false
 		end
 
+		# TODO
+		# [ ] to push / pop local frames, make sure to raise error on underflow
+		# } to pop return stack, make sure to raise error on underflow
+		
 		# ( -> push data + func stacks
 		if word == "(" then
 			@data_stacks.push([])
@@ -299,9 +285,6 @@ class Uncom
 			func.pop(func.length)
 			return false # no funcs called
 		end
-
-		# quotation -> push
-			# TODO
 
 		# found global -> do word
 		if @dict.first.member? word then
@@ -340,6 +323,12 @@ def do_source(source)
 	uncom.run()
 	#puts
 	uncom
+
+	#if file_path != "" then
+	#	f = File.new file_path
+	#	@source = f.read
+	#	f.close
+	#end
 end
 
 do_source("  dookie= $smokey= 42 -69 (1 + 2 + 3) # this is comment
@@ -360,6 +349,9 @@ and #these are normal words
 	["x= 5 x= ( x + x + x ) x", [15]],
 	["5 x= ( x + x + x ) x= x", [15]],
 	["1 2 3 .", []],
+	["1 # 2 3 4", [1]],
+	["{1 2 3} quote?", [true]],
+	["{1 {2} 3} quote?", [true]],
 	].each_with_index {|t, idx|
 		raise "failed test number #{idx + 1}" if do_source(t[0]).data != t[1]
 	}
