@@ -18,9 +18,13 @@ export const YackRepl: React.FC<{
   pushMessage: (message: ReplMessage) => void;
 }> = ({ evaluator, messages, pushMessage }) => {
   let editor = useRef<Ace.Editor>();
+  let scrollContainer = useRef<HTMLDivElement>(null);
 
   return (
-    <>
+    <div
+      style={{ overflow: 'auto', display: 'flex', flexFlow: 'column', flex: 1 }}
+      ref={scrollContainer}
+    >
       <div style={{ marginTop: '-1px' }}>
         {messages.map((value, index) => (
           <div key={index}>
@@ -70,13 +74,15 @@ export const YackRepl: React.FC<{
                   pushMessage({ kind: 'error', message: error.message });
                   editor.setValue('');
                 }
+
+                scrollContainer.current?.scrollTo(0, 999999999);
               },
             },
           ]}
         />
       </div>
       <div style={{ flex: 1 }} onClick={() => editor?.current?.focus()}></div>
-    </>
+    </div>
   );
 };
 

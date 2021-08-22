@@ -24,6 +24,29 @@ export type Value =
   | NativeFunctionValue
   | ADTInstanceValue;
 
+export class LazyValue {
+  public readonly kind = 'Lazy';
+  private value: Value | undefined;
+  private evaluating = false;
+  public constructor(private readonly thunk: () => Value) {}
+
+  public force(): Value {
+    if (!this.value) {
+      if (this.evaluating) {
+        throw new Error('Circular reference!');
+      }
+
+      try {
+        this.evaluating = true;
+        this.value = this.thunk();
+      } finally {
+        this.evaluating = false;
+      }
+    }
+    return this.value;
+  }
+}
+
 export class VoidValue {
   public readonly kind = 'Void';
 }
@@ -32,7 +55,7 @@ export class CommentValue {
   public readonly kind = 'Comment';
   public constructor(
     public readonly segments: ReadonlyArray<CommentSegment>,
-    public readonly examples: Map<string, Value>
+    public readonly examples: Map<string, LazyValue>
   ) {}
 }
 
@@ -79,7 +102,7 @@ export class ADTInstanceValue {
 }
 
 export class Scope {
-  private readonly values = new Map<string, Value>();
+  private readonly values = new Map<string, Value | LazyValue>();
   private readonly meta = new Map<string, CommentValue>();
 
   public constructor(private readonly parent: Scope | null = null) {}
@@ -89,12 +112,16 @@ export class Scope {
     this.meta.clear();
   }
 
-  public define(name: string, value: Value): void {
+  public define(name: string, value: Value | LazyValue): void {
     this.values.set(name, value);
   }
 
   public resolve(name: string): Value | undefined {
-    return this.values.get(name) ?? this.parent?.resolve(name);
+    let result = this.values.get(name) ?? this.parent?.resolve(name);
+    if (result?.kind === 'Lazy') {
+      result = result.force();
+    }
+    return result;
   }
 
   public defineMeta(name: string, value: CommentValue): void {
@@ -106,7 +133,7 @@ export class Scope {
   }
 
   public resolveExample(name: string, specifier: string): Value | undefined {
-    return this.resolveMeta(name)?.examples.get(specifier);
+    return this.resolveMeta(name)?.examples.get(specifier)?.force();
   }
 }
 
@@ -130,9 +157,9 @@ export class Evaluator {
   }
 
   public execute(script: Script): void {
-    for (let [name, { meta, value }] of script.declarations.entries()) {
+    for (const [name, { meta, value }] of script.declarations.entries()) {
       if (value) {
-        this.globalScope.define(name, this.evaluate(value, this.globalScope));
+        this.globalScope.define(name, new LazyValue(() => this.evaluate(value, this.globalScope)));
       }
 
       if (meta) {
@@ -158,6 +185,8 @@ export class Evaluator {
       return this.evaluateConstructor(expression);
     } else if (expression.kind === 'Match') {
       return this.evaluateMatch(expression, scope);
+    } else if (expression.kind === 'Void') {
+      return new VoidValue();
     }
 
     return unreachable(expression);
@@ -198,10 +227,11 @@ export class Evaluator {
   }
 
   private evaluateComment(expr: SemanticComment, scope: Scope): CommentValue {
-    let examples = new Map<string, Value>();
+    let examples = new Map<string, LazyValue>();
     for (let segment of expr.segments) {
       if (segment.kind === 'ExampleSegment') {
-        examples.set(segment.name, this.evaluate(segment.value, scope));
+        let segmentValue = segment.value;
+        examples.set(segment.name, new LazyValue(() => this.evaluate(segmentValue, scope)));
       }
     }
     return new CommentValue(expr.segments, examples);

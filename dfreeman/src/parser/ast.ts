@@ -8,6 +8,7 @@ export type Declaration = DefDeclaration | ADTDeclaration;
 export type Expression =
   | NumberLiteral
   | BooleanLiteral
+  | VoidLiteral
   | FunctionExpression
   | CallExpression
   | Identifier
@@ -15,6 +16,15 @@ export type Expression =
   | MatchExpression;
 
 export type Pattern = NumberLiteral | BooleanLiteral | Identifier | ADTConstructorPattern;
+
+export class VoidLiteral {
+  public readonly kind = 'Void';
+  public constructor(public readonly loc: Loc) {}
+
+  public static fromToken({ loc }: NodeDetails): VoidLiteral {
+    return new VoidLiteral(loc);
+  }
+}
 
 export class NumberLiteral {
   public readonly kind = 'Number';

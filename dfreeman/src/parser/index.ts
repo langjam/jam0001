@@ -26,6 +26,7 @@ import {
   ADTConstructorPattern,
   MatchExpression,
   BooleanLiteral,
+  VoidLiteral,
 } from './ast';
 import { node } from './combinators';
 
@@ -65,7 +66,8 @@ const metaIdentifier = node(
   })
 );
 
-const number = node(NumberLiteral.fromToken, token(/\d+/, { kind: 'Number' }));
+const voidLit = node(VoidLiteral.fromToken, token(/void\b/, { kind: 'Void' }));
+const number = node(NumberLiteral.fromToken, token(/\d+(\.\d*)?/, { kind: 'Number' }));
 const boolean = node(BooleanLiteral.fromToken, token(/true\b|false\b/, { kind: 'Boolean' }));
 
 ////////////////////////////////////////////////////////////////
@@ -87,6 +89,7 @@ const constructorPattern = node(
 
 const expression: Combinator<Expression> = defer((expr) =>
   alt(
+    voidLit,
     number,
     boolean,
     identifier,
