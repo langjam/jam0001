@@ -17,7 +17,7 @@ import (
 
 func help() {
 	fmt.Println(
-`smile - an esoteric programming language made for langjam
+		`smile - an esoteric programming language made for langjam
 Usage: smile [ file ] [ flags ]
 	--help, -h: show this help and exit
 	--debug, -d: show info for debugging the interpretor (ast, tokens)`)
@@ -35,8 +35,11 @@ func main() {
 		help()
 	}
 
-	for i:=1; i < len(os.Args); i++ {
+	for i := 1; i < len(os.Args); i++ {
 		switch os.Args[i] {
+		case "--version":
+			fmt.Println("〈( ^.^)ノ\tv0.1")
+			return
 		case "--debug", "-d":
 			debugMode = true
 		case "--help", "-h":
