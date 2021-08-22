@@ -1,0 +1,11 @@
+def my_text = "ertywety";;
+
+def double = fn f: [Text -> Text] -> fn x: Text ->
+    [f [f x]];;
+
+{
+    def _ = double $ (fn x: Text -> my_text) $ "asdf";
+    def _ = "poiu" ++ "gagasdg" ++ "asdgafasdg";
+    def x = 123 + 456;
+    my_text +++ "blargle"
+};;
