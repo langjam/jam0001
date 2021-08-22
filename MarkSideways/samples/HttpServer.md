@@ -21,7 +21,7 @@ Register handlers for all the static content.
 TODO: it'd be nice to have a favicon loaded from disk. This will require file I/O features in the built-in library.
 
 ```
-files = get_static_files();
+files = getStaticFiles();
 file_names = files.keys();
 for i = 0 till file_names.length {
     name = file_names[i];

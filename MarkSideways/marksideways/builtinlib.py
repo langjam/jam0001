@@ -4,6 +4,7 @@ import sys
 import time
 from .values import *
 from .builtinlibgame import get_game_lib
+from .builtinlibhttpserve import get_httpserve_lib
 
 def ensure_arg_count(throw_token, args, min, max = None):
   if max == None: max = min
@@ -24,6 +25,11 @@ def ensure_is_bool(throw_token, args, arg_index):
   if arg.type != 'BOOL':
     return new_error_value(throw_token, "Invalid argument. Expected a boolean for argument #" + str(arg_index + 1))
 
+def ensure_is_integer(throw_token, args, arg_index):
+  arg = args[arg_index]
+  if arg.type != 'INT':
+    return new_error_value(throw_token, "Invalid argument. Expected an integer for argument #" + str(arg_index + 1))
+
 def ensure_is_num(throw_token, args, arg_index):
   arg = args[arg_index]
   if arg.type != 'FLOAT' and arg.type != 'INT':
@@ -33,9 +39,14 @@ def ensure_is_string(throw_token, args, arg_index):
   if args[arg_index].type != 'STRING':
     return new_error_value(throw_token, "Invalid argument. Expected a string for argument #" + str(arg_index + 1))
 
+def ensure_is_function(throw_token, args, arg_index):
+  if not args[arg_index].is_invocable:
+    return new_error_value(throw_token, "Invalid argument. Expected an invocable function for argument #" + str(arg_index + 1))
+
 def generate_builtins():
   
   gamelib = get_game_lib()
+  httpservelib = get_httpserve_lib()
 
   def _assert(throw_token, args):
     err = ensure_arg_count(throw_token, args, 2)
@@ -184,6 +195,26 @@ def generate_builtins():
     if err != None: return err
     return gamelib['set_title'](throw_token, args)
 
+  def _http_server_create_handler(throw_token, args):
+    err = ensure_arg_count(throw_token, args, 3)
+    if err != None: return err
+    for i in (0, 1):
+      err = ensure_is_string(throw_token, args, i)
+      if err != None: return err
+    err = ensure_is_function(throw_token, args, 2)
+    if err != None: return err
+    return httpservelib['create_handler'](throw_token, args[0].value, args[1].value, args[2])
+
+  def _http_server_start(throw_token, args):
+    err = ensure_arg_count(throw_token, args, 1)
+    if err != None: return err
+    err = ensure_is_integer(throw_token, args, 0)
+    if err != None: return err
+    port = args[0].value
+    if port < 1 or port > 65535:
+      return new_error_value(throw_token, "Invalid port number! Cannot use " + str(port) + ".")
+    return httpservelib['start'](throw_token, port)
+
   lookup = {
     'assert': _assert,
     'floor': _floor,
@@ -195,6 +226,8 @@ def generate_builtins():
     'game_is_key_pressed': _game_is_key_pressed,
     'game_is_quit': _game_is_quit,
     'game_set_title': _game_set_title,
+    'http_server_create_handler': _http_server_create_handler,
+    'http_server_start': _http_server_start,
     'json_parse': _json_parse,
     'json_serialize': _json_serialize,
     'parse_int': _parse_int,

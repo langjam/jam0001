@@ -6,6 +6,7 @@ class Value:
   def __init__(self, _type):
     self.type = _type
     self.is_error = False
+    self.is_invocable = False
 
 class ErrorValue(Value):
   def __init__(self, stackTrace):
@@ -203,6 +204,7 @@ class BuiltInFunction(Value):
   def __init__(self, id, handler):
     super().__init__('BUILTIN_FUNCTION')
     self.handler = handler
+    self.is_invocable = True
   def to_string(self):
     return "<Built-in function: " + self.id + ">"
 
@@ -210,6 +212,7 @@ class FunctionValue(Value):
   def __init__(self, method_def):
     super().__init__('FUNCTION')
     self.method_def = method_def
+    self.is_invocable = True
   def to_string(self):
     return "<function: " + self.method_def.name.value + ">"
 
@@ -237,6 +240,7 @@ class MethodValue(Value):
     super().__init__('METHOD')
     self.method_def = method_def
     self.instance = instance
+    self.is_invocable = True
 
   def to_string(self):
     # TODO: better information here
@@ -246,6 +250,7 @@ class ConstructorValue(Value):
   def __init__(self, class_def):
     super().__init__('CONSTRUCTOR')
     self.class_def = class_def
+    self.is_invocable = True
   def to_string(self):
     return "<constructor: " + self.class_def.name.value + ">"
     
