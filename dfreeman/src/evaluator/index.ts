@@ -1,6 +1,8 @@
 import { unreachable } from '../utils';
 import {
   ADTConstructor,
+  BinOp,
+  BinOpExpression,
   BooleanLiteral,
   CallExpression,
   Expression,
@@ -200,6 +202,8 @@ export class Evaluator {
       return this.evaluateMatch(expression, scope);
     } else if (expression.kind === 'Void') {
       return new VoidValue();
+    } else if (expression.kind === 'BinOp') {
+      return this.evaluateBinOp(expression, scope);
     }
 
     return unreachable(expression);
@@ -309,6 +313,59 @@ export class Evaluator {
     );
   }
 
+  private evaluateBinOp(expr: BinOpExpression, scope: Scope): Value {
+    let lhs = this.evaluate(expr.lhs, scope);
+    let rhs = this.evaluate(expr.rhs, scope);
+
+    if (expr.op === BinOp.Equals) {
+      return new BooleanValue(this.isEqual(lhs, rhs));
+    } else {
+      if (lhs.kind !== 'Number' || rhs.kind !== 'Number') {
+        throw new TypeError(expr.loc, 'Expected two numbers');
+      }
+
+      if (expr.op === BinOp.Add) {
+        return new NumberValue(lhs.value + rhs.value);
+      } else if (expr.op === BinOp.Subtract) {
+        return new NumberValue(lhs.value - rhs.value);
+      } else if (expr.op === BinOp.Modulo) {
+        return new NumberValue(lhs.value % rhs.value);
+      }
+
+      unreachable(expr.op);
+    }
+  }
+
+  private isEqual(left: Value, right: Value): boolean {
+    if (left === right) {
+      return true;
+    }
+
+    if (left.kind !== right.kind) {
+      return false;
+    }
+
+    if (left.kind === 'ADTInstance' && right.kind === 'ADTInstance') {
+      if (left.adtConstructor !== right.adtConstructor || left.args.length !== right.args.length) {
+        return false;
+      }
+
+      for (let i = 0; i < left.args.length; i++) {
+        if (!this.isEqual(left.args[i], right.args[i])) {
+          return false;
+        }
+      }
+
+      return true;
+    } else if (left.kind === 'Boolean' && right.kind === 'Boolean') {
+      return left.value === right.value;
+    } else if (left.kind === 'Number' && right.kind === 'Number') {
+      return left.value === right.value;
+    }
+
+    return false;
+  }
+
   private evaluateMatch(expr: MatchExpression, outerScope: Scope): Value {
     let subject = this.evaluate(expr.subject, outerScope);
     for (let arm of expr.arms) {
@@ -329,7 +386,13 @@ export class Evaluator {
     value: Value,
     scope: Scope
   ): Array<[string, Value]> | null {
-    if (pattern.kind === 'Number' && value.kind === 'Number' && pattern.value === value.value) {
+    if (pattern.kind === 'Void' && value.kind === 'Void') {
+      return [];
+    } else if (
+      pattern.kind === 'Number' &&
+      value.kind === 'Number' &&
+      pattern.value === value.value
+    ) {
       return [];
     } else if (
       pattern.kind === 'Boolean' &&

@@ -31,6 +31,7 @@ const TokenMap: Record<string, string> = {
   Number: 'constant.numeric',
   Boolean: 'constant.language',
   Equals: 'keyword.operator',
+  BinOp: 'keyword.operator',
   Pipe: 'keyword.operator',
   RArrow: 'keyword.operator',
   Identifier: 'identifier',

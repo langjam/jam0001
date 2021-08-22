@@ -27,6 +27,7 @@ import {
   MatchExpression,
   BooleanLiteral,
   VoidLiteral,
+  BinOpExpression,
 } from './ast';
 import { node } from './combinators';
 
@@ -35,20 +36,23 @@ import { node } from './combinators';
 ////
 
 const ws = token(/\s+/, { priority: 0, silent: true });
-const ignoredComment = token(/#.*(?=\n|$)/, { priority: 0x100, silent: true });
+const ignoredComment = token(/#.*(?=\n|$)/, { priority: 0x101, silent: true });
 
 const def = token(/def\b/, { kind: 'DefKeyword' });
 const data = token(/data\b/, { kind: 'DataKeyword' });
 const fun = token(/fun\b/, { kind: 'FunKeyword' });
 const match = token(/match\b/, { kind: 'MatchKeyword' });
 const end = token(/end\b/, { kind: 'EndKeyword' });
-const eq = token('=', { kind: 'Equals' });
+const eq = token('=', { kind: 'Equals', priority: 0x100 });
 const rArrow = token('->', { kind: 'RArrow' });
 const lParen = token('(', { kind: 'LParen' });
 const rParen = token(')', { kind: 'RParen' });
 const comma = token(',', { kind: 'Comma' });
 const semicolon = token(';', { kind: 'Semicolon' });
 const pipe = token('|', { kind: 'Pipe' });
+const plusMinus = token(/\+|-/, { kind: 'BinOp', priority: 0x100 });
+const modulo = token('%', { kind: 'BinOp' });
+const doubleEq = token('==', { kind: 'BinOp' });
 
 const identifier = node(
   Identifier.fromToken,
@@ -67,7 +71,7 @@ const metaIdentifier = node(
 );
 
 const voidLit = node(VoidLiteral.fromToken, token(/void\b/, { kind: 'Void' }));
-const number = node(NumberLiteral.fromToken, token(/\d+(\.\d*)?/, { kind: 'Number' }));
+const number = node(NumberLiteral.fromToken, token(/-?\d+(\.\d*)?/, { kind: 'Number' }));
 const boolean = node(BooleanLiteral.fromToken, token(/true\b|false\b/, { kind: 'Boolean' }));
 
 ////////////////////////////////////////////////////////////////
@@ -75,7 +79,7 @@ const boolean = node(BooleanLiteral.fromToken, token(/true\b|false\b/, { kind: '
 ////
 
 const pattern: Combinator<Pattern> = defer(() =>
-  alt(identifier, number, boolean, constructorPattern)
+  alt(voidLit, identifier, number, boolean, constructorPattern)
 );
 
 const constructorPattern = node(
@@ -87,7 +91,9 @@ const constructorPattern = node(
 //// Expressions
 ////
 
-const expression: Combinator<Expression> = defer((expr) =>
+const expression = defer(() => equalsExpression);
+
+const leafExpression: Combinator<Expression> = defer(() =>
   alt(
     voidLit,
     number,
@@ -97,7 +103,7 @@ const expression: Combinator<Expression> = defer((expr) =>
     functionExpression,
     callExpression,
     matchExpression,
-    seq(lParen, expr, rParen).map((seq) => seq[1])
+    seq(lParen, expression, rParen).map((seq) => seq[1])
   )
 );
 
@@ -114,12 +120,37 @@ const functionExpression = node(
 
 const callExpression = node(
   CallExpression.fromSequence,
-  seq(expression, lParen, repeatSep(expression, comma), rParen)
+  seq(leafExpression, lParen, repeatSep(expression, comma), rParen)
 );
 
 const matchExpression = node(
   MatchExpression.fromSequence,
   seq(match, expression, repeatOne(seq(pipe, pattern, rArrow, expression)), end)
+);
+
+////////////////////////////////////////////////////////////////
+//// Binary Operators
+////
+
+const equalsExpression: Combinator<Expression> = defer((equalsExpression) =>
+  alt(
+    modExpression,
+    node(BinOpExpression.fromSequence, seq(equalsExpression, doubleEq, modExpression))
+  )
+);
+
+const modExpression: Combinator<Expression> = defer((modExpression) =>
+  alt(
+    plusMinusExpression,
+    node(BinOpExpression.fromSequence, seq(modExpression, modulo, plusMinusExpression))
+  )
+);
+
+const plusMinusExpression: Combinator<Expression> = defer((plusMinusExpression) =>
+  alt(
+    leafExpression,
+    node(BinOpExpression.fromSequence, seq(plusMinusExpression, plusMinus, leafExpression))
+  )
 );
 
 ////////////////////////////////////////////////////////////////

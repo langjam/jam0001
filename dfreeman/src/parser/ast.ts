@@ -10,13 +10,19 @@ export type Expression =
   | NumberLiteral
   | BooleanLiteral
   | VoidLiteral
+  | BinOpExpression
   | FunctionExpression
   | CallExpression
   | Identifier
   | ADTConstructor
   | MatchExpression;
 
-export type Pattern = NumberLiteral | BooleanLiteral | Identifier | ADTConstructorPattern;
+export type Pattern =
+  | VoidLiteral
+  | NumberLiteral
+  | BooleanLiteral
+  | Identifier
+  | ADTConstructorPattern;
 
 export class VoidLiteral {
   public readonly kind = 'Void';
@@ -76,6 +82,45 @@ export class Identifier {
   }
 }
 
+export enum BinOp {
+  Add,
+  Subtract,
+  Modulo,
+  Equals,
+}
+
+export class BinOpExpression {
+  public readonly kind = 'BinOp';
+  public constructor(
+    public readonly lhs: Expression,
+    public readonly op: BinOp,
+    public readonly rhs: Expression,
+    public readonly loc: Loc
+  ) {}
+
+  public static fromSequence(
+    { loc }: NodeDetails,
+    [lhs, op, rhs]: [Expression, Token, Expression]
+  ): BinOpExpression {
+    return new BinOpExpression(lhs, BinOpExpression.resolveOp(op.content), rhs, loc);
+  }
+
+  private static resolveOp(op: string): BinOp {
+    switch (op) {
+      case '+':
+        return BinOp.Add;
+      case '-':
+        return BinOp.Subtract;
+      case '%':
+        return BinOp.Modulo;
+      case '==':
+        return BinOp.Equals;
+    }
+
+    throw new Error('Internal error: invalid binary operator ' + op);
+  }
+}
+
 export class DefDeclaration {
   public readonly kind = 'DefDeclaration';
   public constructor(
@@ -109,10 +154,15 @@ export class Script {
         declarations.set(name.value, { meta, value });
       } else if (declaration.kind === 'ADTDeclaration') {
         let { name, constructors } = declaration;
+        let identityConstructor: ADTConstructor | null = null;
         for (let constructor of constructors) {
-          declarations.set(constructor.name.value, { meta: null, value: constructor });
+          if (constructor.name.value === name.value) {
+            identityConstructor = constructor;
+          } else {
+            declarations.set(constructor.name.value, { meta: null, value: constructor });
+          }
         }
-        declarations.set(name.value, { meta, value: null });
+        declarations.set(name.value, { meta, value: identityConstructor });
       } else {
         unreachable(declaration);
       }
