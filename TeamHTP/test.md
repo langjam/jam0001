@@ -24,3 +24,7 @@ this is a paragraph
     unkick
         this uncheckItem: '**kick ass**'.
 )
+[TodoList]:: (
+    parseError
+        this checkItem '**kick ass**'
+)
