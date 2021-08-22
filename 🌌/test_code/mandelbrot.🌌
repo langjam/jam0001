@@ -1,0 +1,32 @@
+import complex;
+
+let maximum number of iterations := 255;
+
+func count mandelbrot iterations at point `x` `y` {
+	let center := complex { 
+		re := x / 200.0 - 2.5,
+		im := y / 200.0 - 1.0,
+	};
+
+	let z := complex { re := 0.0, im := 0.0 };
+
+	let iteration count := 0;
+	while magnitude squared of (z) < 4.0 && iteration count < maximum number of iterations {
+		z := add(square(z), center);
+		iteration := iteration + 1;
+	}
+
+	return iteration count;
+}
+
+println("P1 700 400");
+let y := 0;
+while y < 400 {
+	let x := 0;
+	while x < 700 {
+		print(count mandelbrot iterations at (float(x), float(y)) == maximum number of iterations, " ");
+		x := x + 1;
+	}
+	y := y + 1;
+	println();
+}

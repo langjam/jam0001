@@ -1,0 +1,13 @@
+func test {
+    let x := 1;
+
+    func nested `y` {
+        println (x);
+        println (y);
+    }
+
+    x := 2;
+    nested (x + 1);
+}
+
+test ();

@@ -1,0 +1,25 @@
+func is prime checks whether a given `number` is prime {
+    let i the potential divisor := 2;
+
+    if number < 2 {
+        return 0;
+    }
+
+    while i * i <= number {
+        if number % i == 0 {
+            return 0;
+        }
+        i := i + 1;
+    }
+
+    return 1;
+}
+
+let k the potential prime := 2;
+while k < 100 {
+    if is prime (k) {
+        println(k);
+    }
+
+    k := k + 1;
+}
