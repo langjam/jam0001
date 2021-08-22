@@ -19,7 +19,7 @@ This is the submission of Team Boole:
 
 # Compilation instructions
 ```bash
-cargo run -- -shunting_yard/truth_machine.train
+cargo run -- shunting_yard/truth_machine.train
 ```
 an optional argument (`--cli / -c`) can be added to run in headless mode.
 
