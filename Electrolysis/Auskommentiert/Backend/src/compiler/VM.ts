@@ -89,8 +89,7 @@ export class VM {
             }
             let commentA = target.array[0] as WrappedComment;
             let commentB = target.array[1] as WrappedComment;
-            // TODO SWAP
-            //this.mASTProvider.swapComments(commentA, commentB);
+            this.mASTProvider.swapFull(commentA.id, commentB.id);
         } else if(ast.kind === AST.ASTKinds.ManipulationCommentMove) {
             let target = this.findComments(comment, ast.target);
             if(!(target instanceof VMValueArray)) {

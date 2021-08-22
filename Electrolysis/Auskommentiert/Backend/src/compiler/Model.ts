@@ -263,7 +263,6 @@ export class Model {
         this.notifyChange();
     }
     makeCommentProvider(postId : string) : CommentProvider {
-        console.log(this.mCommentsMap.get(postId));
         return new ModelCommentProvider(this, postId);
     }
     get posts() : ModelPost[] {
@@ -296,8 +295,8 @@ export class Model {
                 entryOne.parentId = entryTwo.parentId;
                 entryTwo.parentId = tempParentId;
 
-                parentOne.children.splice(parentOne.children.indexOf(entryOne as ModelComment));
-                parentTwo.children.splice(parentTwo.children.indexOf(entryTwo as ModelComment));
+                parentOne.children.splice(parentOne.children.indexOf(entryOne as ModelComment), 1);
+                parentTwo.children.splice(parentTwo.children.indexOf(entryTwo as ModelComment), 1);
                 parentOne.children.push(entryTwo as ModelComment)
                 parentTwo.children.push(entryOne as ModelComment)
             }
@@ -322,11 +321,9 @@ export class Model {
         if (comment !== undefined && comment instanceof ModelComment) {
             let parent = this.mCommentsMap.get(comment.parentId);
 
-            console.log("delet")
             this.mCommentsMap.delete(id);
             if(parent !== undefined) {
-                console.log("parent exists");
-            parent.children.slice(parent.children.indexOf(comment), 1);
+                parent.children.slice(parent.children.indexOf(comment), 1);
             }
         }
         this.notifyChange();
