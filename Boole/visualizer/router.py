@@ -394,7 +394,7 @@ class World:
             for i in range(1, len(path) - 1):
                 for j in range(id):
                     if path[i] in self.roads[j][3]:
-                        tiles.remove(Tile(path[i][0], path[i][1], "CROSSING"))
+                        tiles.remove(Tile(path[i][0], path[i][1], "X"))
                         tiles.add(Tile(path[i][0], path[i][1], "CROSSING"))
                         break
                 else:
@@ -423,6 +423,18 @@ class World:
                     if path[i - 1][1] == path[i][1] + 1 and path[i + 1][0] == path[i][0] + 1:
                         tiles.add(Tile(path[i][0], path[i][1], "ES"))
 
+            for j in range(id):
+                if road[3][-1] in self.roads[j][3]:
+                    if Tile(road[3][-1][0], road[3][-1][1], "X") in tiles:
+                        tiles.remove(Tile(road[3][-1][0], road[3][-1][1], "X"))
+                        if road[3][-2][0] == road[3][-1][0] - 1 :
+                            tiles.add(Tile(road[3][-1][0], road[3][-1][1], "T_WEST"))
+                        if road[3][-2][0] == road[3][-1][0] + 1 :
+                            tiles.add(Tile(road[3][-1][0], road[3][-1][1], "T_EAST"))
+                        if road[3][-2][1] == road[3][-1][1] - 1 :
+                            tiles.add(Tile(road[3][-1][0], road[3][-1][1], "T_NORTH"))
+                        if road[3][-2][1] == road[3][-1][1] + 1 :
+                            tiles.add(Tile(road[3][-1][0], road[3][-1][1], "T_SOUTH"))
         data = {
             "stations" : [{"x":station.x,"y":station.y,"stoppers":station_data[i],"type":station.type, "name": station.name} for (i,station) in enumerate(self.stations)],
             "lines" : [{"station_id":line[0], "station_track":line[1],"path":line[3]} for line in lines],
