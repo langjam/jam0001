@@ -19,6 +19,7 @@ pub trait Communicator: Send + Sync {
     fn print(&self, station: Station, data: Vec<i64>) -> Result<(), CommunicatorError>;
     fn print_char(&self, station: Station, data: Vec<i64>) -> Result<(), CommunicatorError>;
     fn move_train(&self, from_station:Station, to_station:Station, train:Train, start_track:usize, end_track:usize) -> Result<(), CommunicatorError>;
+    fn delete_train(&self, train: Train) -> Result<(), CommunicatorError>;
 }
 
 
