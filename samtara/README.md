@@ -24,4 +24,4 @@ Leafr is written in Ruby 2.6.3.
 * [@sabrinathecodewitch](https://github.com/sabrinathecodewitch)
 * [@samdoiron](https://github.com/samdoiron)
 
-![](leafr-mascot.png)
+![Leafr mascot](./leafr-mascot.png)
