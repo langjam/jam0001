@@ -4,11 +4,13 @@ import Tag from './Tag'
 
 class Function extends Base {
     private parent: Tag
+    private rawMd: string
 
-    constructor(mdastContent: Definition, parent: Tag, tag?: Tag) {
+    constructor(mdastContent: Definition, parent: Tag, rawMd: string, tag?: Tag) {
         super(mdastContent, tag)
         this.parent = parent
-        console.log(`${this.getName()} (${this.getBody()})`)
+        this.rawMd = rawMd
+        console.log(this.rawMd)
     }
 
     getMdastContent(): Definition {
@@ -25,6 +27,10 @@ class Function extends Base {
 
     getBody() {
         return this.getMdastContent().title
+    }
+
+    getRawMd() {
+        return this.rawMd
     }
 }
 

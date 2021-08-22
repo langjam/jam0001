@@ -27,7 +27,7 @@ const TYPE_MAP: Record<string, typeof Base> = {
     'thematicBreak': ThematicBreak,
 }
 
-function wrap(runtime: Runtime, mdastContent: MdastContent, tag?: Tag): Base {
+function wrap(runtime: Runtime, mdastContent: MdastContent, rawMd: string, tag?: Tag): Base {
     if (mdastContent.type === 'definition' && (mdastContent.url === ':' || !mdastContent.url.includes(':'))) {
         // Infer type of link definition in context of bubblegum
         if (mdastContent.label === null || mdastContent.label === undefined) {
@@ -46,13 +46,13 @@ function wrap(runtime: Runtime, mdastContent: MdastContent, tag?: Tag): Base {
         else {
             // Associate function definition with parent tag
             if (runtime.isTagDefined(tagName)) {
-                const tag = runtime.getTag(tagName)
-                const func = new (type as typeof Function)(mdastContent, tag)
-                if (tag.isMemberDefined(func.getName())) {
+                const wrappedTag = runtime.getTag(tagName)
+                const func = new (type as typeof Function)(mdastContent, wrappedTag, rawMd, tag)
+                if (wrappedTag.isMemberDefined(func.getName())) {
                     throw new Error(`Function with name '${func.getName()}' is already defined in tag '${tagName}'`)
                 }
                 else {
-                    tag.addMember(func.getName(), func)
+                    wrappedTag.addMember(func.getName(), func)
                     return func
                 }
             }

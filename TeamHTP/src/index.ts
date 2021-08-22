@@ -1,9 +1,9 @@
 import fs from 'fs'
 
 import {startRepl} from './Repl'
-import {wrap, Tag, List} from './Types'
+import {List} from './Types'
 import Runtime from './Runtime'
-import {mdastToMd, mdToMdast} from './Markdown'
+import {mdastToMd} from './Markdown'
 
 const srcPath = process.argv[2];
 
