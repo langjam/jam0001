@@ -12,9 +12,10 @@ import GlobalTopicStore from './GlobalTopicStore';
 class Topic extends Component<TopicType, TopicType> {
     comments: Array<ReactElement<any, any>> = [];
 
-    UNSAFE_componentWillMount() {
-        this.setState(this.props)
-        for (let entry of this.props.comments) {
+    constructor(props: TopicType) {
+        super(props);
+        this.state = this.props;
+        for (let entry of this.props.children) {
             let component = <Comment id={entry.id} content={entry.content} children={entry.children} upvotes={entry.upvotes} date={entry.date}></Comment>
             this.comments.push(component)
         }

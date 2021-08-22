@@ -8,84 +8,92 @@ import TopicCreate from './TopicCreate';
 import AnswerCreate from './AnswerCreate';
 import AnswerCreateTopic from './AnswerCreateTopic';
 
-let data: AppType = {
-    topics: [
-        {
-            id: "1",
-            title: "Hi",
-            content: "Test Body",
-            upvotes: 0,
-            comments: [
-                {
-                    id: "1",
-                    content: "Ich bin ein Kommentar",
-                    children: [
-                        {
-                            id: "2",
-                            content: "Unterkommentar",
-                            children: [],
-                            upvotes: 0,
-                            date: Date.now()
-                        },
-                        {
-                            id: "3",
-                            content: "Zweiter Unterkommentar",
-                            children: [
-                                {
-                                    id: "4",
-                                    content: "Antwort",
-                                    children: [],
-                                    upvotes: 0,
-                                    date: Date.now()
-                                }
-                            ],
-                            upvotes: 0,
-                            date: Date.now()
-                        }
-                    ],
-                    upvotes: 0,
-                    date: Date.now()
-                }
-            ],
-            date: Date.now()
-        },
-        {
-            id: "2",
-            title: "Programming",
-            content: "Body",
-            upvotes: 0,
-            comments: [
-                {
-                    id: "1",
-                    content: "Ich bin ein Kommentar",
-                    children: [
-                        {
-                            id: "2",
-                            content: "Unterkommentar",
-                            children: [],
-                            upvotes: 0,
-                            date: Date.now()
-                        }
-                    ],
-                    upvotes: 0,
-                    date: Date.now()
-                }
-            ],
-            date: Date.now()
-        }
-    ]
-}
+//let data: AppType = {
+//    topics: [
+//        {
+//            id: "1",
+//            title: "Hi",
+//            content: "Test Body",
+//            upvotes: 0,
+//            comments: [
+//                {
+//                    id: "1",
+//                    content: "Ich bin ein Kommentar",
+//                    children: [
+//                        {
+//                            id: "2",
+//                            content: "Unterkommentar",
+//                            children: [],
+//                            upvotes: 0,
+//                            date: Date.now()
+//                        },
+//                        {
+//                            id: "3",
+//                            content: "Zweiter Unterkommentar",
+//                            children: [
+//                                {
+//                                    id: "4",
+//                                    content: "Antwort",
+//                                    children: [],
+//                                    upvotes: 0,
+//                                    date: Date.now()
+//                                }
+//                            ],
+//                            upvotes: 0,
+//                            date: Date.now()
+//                        }
+//                    ],
+//                    upvotes: 0,
+//                    date: Date.now()
+//                }
+//            ],
+//            date: Date.now()
+//        },
+//        {
+//            id: "2",
+//            title: "Programming",
+//            content: "Body",
+//            upvotes: 0,
+//            comments: [
+//                {
+//                    id: "1",
+//                    content: "Ich bin ein Kommentar",
+//                    children: [
+//                        {
+//                            id: "2",
+//                            content: "Unterkommentar",
+//                            children: [],
+//                            upvotes: 0,
+//                            date: Date.now()
+//                        }
+//                    ],
+//                    upvotes: 0,
+//                    date: Date.now()
+//                }
+//            ],
+//            date: Date.now()
+//        }
+//    ]
+//}
 
 class App extends Component<{}, AppType> {
 
-    UNSAFE_componentWillMount() {
-        this.setState(data)
-        //fetch("localhost:6789").then(data => data.json()).then(data => this.setState(data)).catch(reason => {})
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            topics: []
+        }
+    }
+
+    componentDidMount() {
+        fetch("http://" + window.location.hostname + ":6789/api/data").then(data => data.json()).then(data => {
+            this.setState(data);
+        }).catch(reason => { console.log(reason) })
     }
 
     render() {
         return (
-            <div>
+            <div key={this.state.topics.length}>
                 <Router>
                     <Route exact path="/create_topic">
                         <TopicCreate></TopicCreate>
@@ -99,7 +107,7 @@ class App extends Component<{}, AppType> {
                     {
                         this.state.topics.map(topic =>
                             <Route key={topic.id} exact path={"/topic/" + topic.id}>
-                                <Topic id={topic.id} title={topic.title} content={topic.content} comments={topic.comments} upvotes={topic.upvotes} date={topic.date} />
+                                <Topic id={topic.id} title={topic.title} content={topic.content} children={topic.children} upvotes={topic.upvotes} date={topic.date} />
                             </Route>
                         )
                     }

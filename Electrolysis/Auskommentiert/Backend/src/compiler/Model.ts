@@ -4,6 +4,12 @@ import { WrappedComment, WrappedCommentSorter } from "./WrappedComment";
 import { inspect } from "util";
 import {parse} from "./grammar";
 import { urlToHttpOptions } from "url";
+import { compileFunction } from "vm";
+
+export enum Direction {
+    UP,
+    DOWN
+}
 
 function ModelCommentSorter(a : ModelComment, b : ModelComment) : number {
     return a.date - b.date;
@@ -39,6 +45,9 @@ class CommentBase {
     }
     get childrenSorted() {
         return this.mChildren.sort(ModelCommentSorter);
+    }
+    vote(value : number) {
+        this.mUpvotes += value;
     }
     addChild(child : ModelComment):void {
         this.mChildren.push(child);
@@ -87,7 +96,7 @@ class ModelPost extends CommentBase {
             id: this.mId,
             title: this.mTitle,
             content: this.mContent,
-            comments: this.childrenSorted.map(v => v.toObject()),
+            children: this.childrenSorted.map(v => v.toObject()),
             upvotes: this.mUpvotes,
             date: this.mDate
         };
@@ -118,6 +127,7 @@ class ModelCommentProvider extends CommentProvider {
 
 export class Model {
     private mCommentsMap : Map<string, CommentBase> = new Map();
+    private mCounter : number = 1;
     addPost(post : any): void {
         let comments : ModelComment[] = [];
         for(let topLevelComment of post.children) {
@@ -128,8 +138,13 @@ export class Model {
         this.mCommentsMap.set(post.id, new ModelPost(post.title, post.content, post.id, post.upvotes, post.date, comments));
         console.log(inspect(this.posts, false, null, true));
     }
-    addComment(commentId : string, comment : ModelComment) {
-        this.mCommentsMap.get(commentId)?.addChild(comment);
+    getNexUniqueId() : number {
+        return this.mCounter++;
+    }
+    addComment(commentId : string, commentJson : any) {
+        let commentObj : ModelComment = this.parseComment(commentJson)
+        this.mCommentsMap.get(commentId)?.addChild(commentObj);
+        this.mCommentsMap.set(commentObj.id, commentObj);
     }
     makeCommentProvider(postId : string) : CommentProvider {
         return new ModelCommentProvider(this, postId);
@@ -139,6 +154,13 @@ export class Model {
     }
     get allCommentBases() : Map<string, CommentBase> {
         return this.mCommentsMap;
+    }
+    vote(id: string, value: number) {
+        let component : CommentBase | undefined = this.mCommentsMap.get(id);
+        component?.vote(value);
+    }
+    swapComments(id: string, direction : Direction) {
+
     }
     private parseComment(jsonComment : any) : ModelComment {
         let parseResult = parse(jsonComment.content);
@@ -153,5 +175,11 @@ export class Model {
             jsonComment.id,
             jsonComment.date,
             jsonComment.children.map((c : any) => this.parseComment(c)));
+    }
+    toObject() {
+        console.log(this.posts)
+        return {
+            topics: this.posts.map(post => post.toObject())
+        }
     }
 }

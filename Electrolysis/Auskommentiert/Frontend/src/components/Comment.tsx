@@ -12,8 +12,9 @@ import GlobalCommentStore from './GlobalCommentStore';
 class Comment extends Component<CommentType, CommentType> {
     answers: Array<ReactElement<any, any>> = [];
 
-    UNSAFE_componentWillMount() {
-        this.setState(this.props)
+    constructor(props: CommentType) {
+        super(props);
+        this.state = props;
         for (let entry of this.props.children) {
             let component = <Comment id={entry.id} content={entry.content} children={entry.children} upvotes={entry.upvotes} date={entry.date}></Comment>
             this.answers.push(component)

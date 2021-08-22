@@ -4,12 +4,18 @@ import { AppType } from './types'
 
 class TopicViewer extends Component<AppType, AppType> {
 
-    UNSAFE_componentWillMount() {
+
+    constructor(props: AppType) {
+        super(props);
+        this.state = props;
+    }
+
+    componentDidMount() {
         this.setState(this.props)
     }
 
     render() {
-        return <div>
+        return <div key={this.state.topics.length}>
             <div>
                 <Link to="create_topic">
                     <button>Create Topic</button>
@@ -18,10 +24,10 @@ class TopicViewer extends Component<AppType, AppType> {
             <div>
                 <h2>Topics</h2>
             </div>
-            <div>
+            <div key={this.state.topics.length}>
                 {this.state.topics.map(topic =>
-                    <Link to={"topic/" + topic.id}>
-                        <p>{topic.heading}</p>
+                    <Link to={"topic/" + topic.id} key={topic.id}>
+                        <p>{topic.title}</p>
                     </Link>
                 )}
             </div>
