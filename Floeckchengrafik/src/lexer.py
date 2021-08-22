@@ -30,6 +30,8 @@ class ComstructLexer(Lexer):
         "FUNCDESC",  # Define the args of a class / method /* @param */
         "FUNCSEP",  # .
         "NONE",  # None, equal to null in other languages
+        "TRUE",  # Boolean "yes"
+        "FALSE",  # Boolen "no"
     }
 
     ignore = " \t"
@@ -39,6 +41,8 @@ class ComstructLexer(Lexer):
     FUNCDESC = r'/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/'
     FUNCSEP = r'\.'
     NONE = r"None"
+    TRUE = r"true"
+    FALSE = r"false"
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
     STRING = r'"[^\"^\n]+"|""'
     PLUS = r'\+'

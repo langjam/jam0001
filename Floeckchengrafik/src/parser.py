@@ -124,6 +124,14 @@ class ComstructParser(Parser):
     def expr(self, p):
         return None
 
+    @_('TRUE')
+    def expr(self, p):
+        return True
+
+    @_('FALSE')
+    def expr(self, p):
+        return False
+
     @_('elem')
     def arglist(self, p):
         return [p.elem, ]
