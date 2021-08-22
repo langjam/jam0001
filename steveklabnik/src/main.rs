@@ -135,6 +135,7 @@ fn main() {
         .expect("Please pass a file path as the first argument");
 
     let toml = fs::read_to_string(path).expect("Could not read the file");
+    check_first_class(&toml);
     let value = toml.parse::<Value>().unwrap();
 
     let program = Exp::from(
@@ -149,6 +150,34 @@ fn main() {
     let result = eval(&program, &mut env);
 
     println!("{}", result);
+}
+
+fn check_first_class(toml: &str) {
+    // do we start with a #?
+    if toml.bytes().next().unwrap() != b'#' {
+        panic!("Sorry, you must start your program with a comment.");
+    }
+
+    // we want to check out the next 19 characters
+    let start = &toml[1..21];
+
+    let mut found = false;
+    for byte in start.bytes() {
+        if byte == b'\n' {
+            found = true;
+            break;
+        } 
+    }
+    if !found { panic!("You must only have 20 characters of a comment") }
+
+    // ... and then the rest
+    let rest = &toml[21..];
+
+    for byte in rest.bytes() {
+        if byte == b'#' {
+            panic!("You may not have any other #s, sorry, those are only for first class");
+        }
+    }
 }
 
 fn eval(exp: &Exp, env: &mut Env) -> Exp {
