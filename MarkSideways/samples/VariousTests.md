@@ -41,6 +41,25 @@ dict['b'] = 4;
 assert(dict.keys() + '' == '[a, b, c]', "checking keys");
 assert(dict.values() + '' == '[1, 4, 3]', "checking values");
 
+dict['d'] = 5;
+assert(dict.length == 4, "check length");
+assert(dict.keys() + '' == '[a, b, c, d]', "checking keys");
+assert(dict.values() + '' == '[1, 4, 3, 5]', "checking values");
+
+dict.remove('a');
+assert(dict.length == 3, "check length");
+assert(dict.keys() + '' == '[d, b, c]', "checking keys");
+assert(dict.values() + '' == '[5, 4, 3]', "checking values");
+
+dict.remove('c');
+assert(dict.length == 2, "check length");
+assert(dict.keys() + '' == '[d, b]', "checking keys");
+assert(dict.values() + '' == '[5, 4]', "checking values");
+
+assert(dict.get('d') == 5, "getting a key that exists with .get()");
+assert(dict.get('e') == null, "getting a key that doesn't exist with no fallback");
+assert(dict.get('f', 'bananas') == 'bananas', "getting a key that doesn't exist with a fallback");
+
 print("Dictionary tests passed");
 
 ```

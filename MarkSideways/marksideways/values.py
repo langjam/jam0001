@@ -176,15 +176,16 @@ class DictionaryValue(Value):
   def _builtin_values(self, throw_token, args):
     if len(args) != 0: return new_error_value(throw_token, "Dictionary.values() does not take in any arguments.")
     return ArrayValue(self.values[:])
+  def _builtin_remove(self, throw_token, args):
+    if len(args) != 1: return new_error_value(throw_token, "Dictionary.remove() requires a single key argument.")
+    return self.remove_item(throw_token, args[0])
   def get_field(self, name):
     output = self.fields.get(name)
     if output == None:
-      if name == 'get':
-        output = BuiltInFunction('dictionary.get', self._builtin_add)
-      if name == 'keys':
-        output = BuiltInFunction('dictionary.keys', self._builtin_keys)
-      if name == 'values':
-        output = BuiltInFunction('dictionary.values', self._builtin_values)
+      if name == 'get': output = BuiltInFunction('dictionary.get', self._builtin_get)
+      elif name == 'keys': output = BuiltInFunction('dictionary.keys', self._builtin_keys)
+      elif name == 'values': output = BuiltInFunction('dictionary.values', self._builtin_values)
+      elif name == 'remove': output = BuiltInFunction('dictionary.remove', self._builtin_remove)
       self.fields[name] = output
     return output
 
