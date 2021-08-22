@@ -8,13 +8,13 @@ import (
 )
 
 type Parser struct {
-	toks          []shared.Token
-	open_paren    int
-	needed_blocks int
-	comments      map[string]shared.Node
+	toks         []shared.Token
+	openParen    int
+	neededBlocks int
+	comments     map[string]shared.Node
 }
 
-func (p *Parser) make_ast() []shared.Node {
+func (p *Parser) makeAst() []shared.Node {
 	out := make([]shared.Node, 0, 256)
 
 	for len(p.toks) != 0 {
@@ -23,9 +23,9 @@ func (p *Parser) make_ast() []shared.Node {
 		switch tok.Type {
 		case shared.TTlparen, shared.TTopenBlock:
 			if tok.Type == shared.TTlparen {
-				p.open_paren += 1
+				p.openParen += 1
 			} else {
-				p.needed_blocks -= 1
+				p.neededBlocks -= 1
 			}
 
 			p.toks = p.toks[1:]
@@ -34,11 +34,11 @@ func (p *Parser) make_ast() []shared.Node {
 				out[len(out)-1].Children,
 				shared.Node{
 					IsExpression: true,
-					Children:     p.make_ast()})
+					Children:     p.makeAst()})
 			continue
 
 		case shared.TTrparen, shared.TTcloseBlock:
-			p.open_paren -= 1
+			p.openParen -= 1
 			p.toks = p.toks[1:]
 			return out
 
@@ -47,7 +47,7 @@ func (p *Parser) make_ast() []shared.Node {
 
 			if len(p.toks) > 0 &&
 				p.toks[0].Type == shared.TTlparen {
-				p.open_paren += 1
+				p.openParen += 1
 
 				out = append(out,
 					shared.Node{
@@ -59,7 +59,7 @@ func (p *Parser) make_ast() []shared.Node {
 		case shared.TTstring, shared.TTref:
 			if len(p.toks) > 1 &&
 				(p.toks)[1].Type == shared.TTlparen {
-				p.open_paren += 1
+				p.openParen += 1
 				p.toks = (p.toks)[1:]
 
 				out = append(out,
@@ -86,7 +86,7 @@ func (p *Parser) make_ast() []shared.Node {
 					out[index]}}
 
 		case shared.TTwhile:
-			p.needed_blocks += 1
+			p.neededBlocks += 1
 			if len(p.toks) <= 1 {
 				fmt.Println((&MissingBlockError{tok.Pos}).Error())
 				os.Exit(1)
@@ -113,8 +113,8 @@ func (p *Parser) make_ast() []shared.Node {
 
 func GenerateAst(toks []shared.Token) []shared.Node {
 	parser := Parser{toks, 0, 0, map[string]shared.Node{}}
-	ast := parser.make_ast()
-	if parser.needed_blocks != 0 {
+	ast := parser.makeAst()
+	if parser.neededBlocks != 0 {
 		fmt.Println((&MissingBlockError{toks[0].Pos}).Error())
 		os.Exit(1)
 	}
@@ -173,7 +173,7 @@ func (p *Parser) parseComment(content string, add bool, value []shared.Node) {
 	if add {
 		p.comments[content] = shared.Node{
 			IsExpression: true,
-			Children: append(p.comments[content].Children, value...)}
+			Children:     append(p.comments[content].Children, value...)}
 	} else {
 		p.comments[content] = value[0]
 	}
