@@ -4,20 +4,23 @@ use warp::Filter;
 use std::time::Duration;
 use futures_util::stream::StreamExt;
 use futures_util::join;
-use tokio::sync::mpsc::unbounded_channel;
+use tokio::sync::mpsc::{unbounded_channel, channel};
 use serde::{Serialize, Deserialize};
-use std::sync::Arc;
+use std::sync::{Arc};
 use warp::ws::WebSocket;
 use train::vm::Data;
 use train::ast::{Station, Train, Program};
 use std::sync::atomic::{AtomicI64, Ordering};
 use crate::frontend::web::runner::{WebRunner, send, GenerateVisualizerDataError};
 use thiserror::Error;
+use train::interface::Communicator;
 
 #[derive(Serialize)]
 #[serde(tag = "type")]
 pub enum MessageToWebpage{
-    AskForInput(i64),
+    AskForInput{
+        identifier: i64,
+    },
     Print {
         message: Vec<i64>
     },
@@ -62,25 +65,36 @@ async fn receive_message_wrapper(ws: WebSocket, program: Program, connection_id:
     }
 }
 
+
 async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) -> Result<(), ReceiveMessageError> {
     let (mut ws_tx, mut ws_rx) = ws.split();
 
     let (response_tx, response_rx) = unbounded_channel();
 
-    let runner = WebRunner::new(program.clone(), response_tx);
-    let mut vm = Data::new(program);
-
-
-    let visualizer_res = runner.generate_visualizer_file(connection_id);
-    let visualizer_path = match visualizer_res {
-        Ok(i) => i,
-        Err(e) => {
-            send(&mut ws_tx, &MessageToWebpage::CreateDataError).await;
-            return Err(e.into());
-        }
-    };
+    let (visualizer_path_tx, mut visualizer_path_rx) = channel(1);
 
     tokio::task::spawn(async move {
+        let runner = Arc::new(WebRunner::new(program.clone(), response_tx));
+        let mut vm = Arc::new(Data::new(program).await);
+
+
+        let visualizer_res = runner.generate_visualizer_file(connection_id);
+        let visualizer_path = match visualizer_res {
+            Ok(i) => i,
+            Err(e) => {
+                // send(&mut ws_tx, &MessageToWebpage::CreateDataError).await;
+                // return Err(e.into());
+                todo!()
+            }
+        };
+
+
+        tokio::task::spawn(async move {
+            if let Err(e) = visualizer_path_tx.send(visualizer_path).await {
+                log::error!("{}", e)
+            }
+        });
+
         while let Some(r) = ws_rx.next().await {
             match r {
                 Ok(i) => match i.to_str() {
@@ -89,15 +103,23 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
                         match serde_json::from_str::<MessageFromWebpage>(i) {
                             Ok(message) => match message {
                                 MessageFromWebpage::AdvanceSimulation => {
-                                    match vm.do_current_step(&runner) {
-                                        Err(e) => {
-                                            runner.send(MessageToWebpage::Error{message: format!("{:?}", e)}).expect("failed to send")
-                                        },
-                                        Ok(_) => {},
-                                    }
+                                    let local_vm = vm.clone();
+                                    let local_runner = runner.clone();
+                                    tokio::task::spawn(async move {
+                                        let step = local_vm.do_current_step(
+                                            local_runner.clone()
+                                        );
+                                        let res = step.await;
+                                        match res {
+                                            Err(e) => {
+                                                local_runner.send(MessageToWebpage::Error{message: format!("{:?}", e)}).expect("failed to send")
+                                            },
+                                            Ok(_) => {},
+                                        }
+                                    });
                                 }
                                 MessageFromWebpage::SendInputResponse{ identifier, input } => {
-                                    // runner.input_response(id, response);
+                                    runner.input_response(identifier, input).await;
                                 }
                             }
                             Err(e) => log::error!("serde: {}", e)
@@ -113,7 +135,9 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
     tokio::task::spawn(async move {
         let mut rx = response_rx;
 
-        send(&mut ws_tx, &MessageToWebpage::VisualizerData{path: format!("{:?}", visualizer_path)}).await;
+        if let Some(visualizer_path) = visualizer_path_rx.recv().await {
+            send(&mut ws_tx, &MessageToWebpage::VisualizerData{path: format!("{:?}", visualizer_path)}).await;
+        }
 
         loop {
             let res = rx.recv().await;

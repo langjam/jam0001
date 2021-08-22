@@ -60,6 +60,16 @@ impl WebRunner {
         Ok(())
     }
 
+    pub async fn input_response(&self, identifier: i64, message: Vec<i64>) {
+        if let Some(i) = self.channels.lock().await.remove(&identifier) {
+            log::info!("sending input response to sender");
+            if let Err(e) = i.send(message).await {
+                log::error!("{}", e);
+            }
+        }
+
+    }
+
     pub fn generate_visualizer_file(&self, connection_id: i64) -> Result<PathBuf, GenerateVisualizerDataError> {
         let mut res = Vec::new();
 
@@ -138,22 +148,17 @@ pub async fn send(sender: &mut SplitSink<WebSocket, Message>, m: &MessageToWebpa
     }
 }
 
+#[async_trait::async_trait]
 impl Communicator for WebRunner {
-    fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError> {
+    async fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError> {
         let input_identifier = self.current_index.fetch_add(1, Ordering::SeqCst);
 
-        let res = block_in_place(|| {
-            async {
-                let (mut tx, mut rx) = channel(1);
-                self.channels.lock().await.insert(input_identifier, tx);
+        let (tx, mut rx) = channel(1);
 
-                rx.recv().await
-            }
-        });
+        self.channels.lock().await.insert(input_identifier, tx);
+        self.send(MessageToWebpage::AskForInput{identifier: input_identifier})?;
 
-        task::spawn_blocking(|| {
-
-        });
+        rx.recv().await.ok_or(CommunicatorError::SendError)
     }
 
     fn print(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {

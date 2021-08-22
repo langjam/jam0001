@@ -1,6 +1,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::ops::Deref;
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::sync::{Arc, MutexGuard, PoisonError};
+use tokio::sync::Mutex;
 
 use crate::ast::{Program, Station, Train, SecondClassPassenger};
 use crate::interface::Communicator;
@@ -72,7 +73,7 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn new(program: Program) -> Data {
+    pub async fn new(program: Program) -> Data {
         let mut stations = HashMap::new();
         for station in program.stations {
             stations.insert(
@@ -89,26 +90,26 @@ impl Data {
                 .get(target.station.as_str())
                 .unwrap()
                 .lock()
-                .unwrap();
+                .await;
             st.trains[target.track].push_back(td);
         }
         Self { stations, trains }
     }
 
-    pub fn train_count(&self) -> Result<usize, VMError> {
+    pub async fn train_count(&self) -> Result<usize, VMError> {
         let mut x = 0;
         for (_, station) in self.stations.iter() {
-            let st = station.lock()?;
+            let st = station.lock().await;
             x += st.trains.iter().map(|x| x.len()).sum::<usize>();
         }
         Ok(x)
     }
 
-    pub fn do_current_step(&mut self, interface: &dyn Communicator) -> Result<bool, VMError> {
+    pub async fn do_current_step(&self, interface: Arc<dyn Communicator>) -> Result<bool, VMError> {
         let mut targets = vec![];
         let mut did_any_work = false;
         for (_, station_arc) in self.stations.iter() {
-            let mut station = station_arc.lock()?;
+            let mut station = station_arc.lock().await;
             let mut did_work = false;
             match station.operation {
                 Operation::Nothing => {
@@ -116,7 +117,7 @@ impl Data {
                 }
                 Operation::PrintNumber => {
                     if let Some(x) = station.trains[0].front() {
-                        let zz = x.lock()?;
+                        let zz = x.lock().await;
                         if let Ok(_) = interface.print(
                             zz.train
                                 .second_class_passengers
@@ -132,7 +133,7 @@ impl Data {
                 }
                 Operation::PrintString => {
                     if let Some(x) = station.trains[0].front() {
-                        let zz = x.lock()?;
+                        let zz = x.lock().await;
                         if let Ok(_) = interface.print_char(
                             zz.train
                                 .second_class_passengers
@@ -148,8 +149,8 @@ impl Data {
                 }
                 Operation::Input => {
                     if let Some(x) = station.trains[0].front() {
-                        let mut t = x.lock()?;
-                        if let Ok(other) = interface.ask_for_input() {
+                        let mut t = x.lock().await;
+                        if let Ok(other) = interface.ask_for_input().await {
                             for num in other {
                                 t.train.second_class_passengers.push(SecondClassPassenger{ name: String::from("input"), data: num });
                                 t.train.second_class_passengers.rotate_right(1);
@@ -163,7 +164,7 @@ impl Data {
                 Operation::SwitchEqZero => {
                     if let Some(x) = station.trains[0].pop_front() {
                         let xcln = x.clone();
-                        let st = x.lock()?;
+                        let st = x.lock().await;
                         let val = st
                             .train
                             .second_class_passengers
@@ -183,7 +184,7 @@ impl Data {
                 Operation::SwitchGteZero => {
                     if let Some(x) = station.trains[0].pop_front() {
                         let xcln = x.clone();
-                        let st = x.lock()?;
+                        let st = x.lock().await;
                         let val = st
                             .train
                             .second_class_passengers
@@ -203,7 +204,7 @@ impl Data {
                 Operation::SwitchEmpty => {
                     if let Some(x) = station.trains[0].pop_front() {
                         let xcln = x.clone();
-                        let st = x.lock()?;
+                        let st = x.lock().await;
                         let val = st.train.second_class_passengers.len();
                         if val == 0 {
                             let target = station.output.clone()[0].clone();
@@ -218,7 +219,7 @@ impl Data {
                 }
                 Operation::Duplicate => {
                     if let Some(x) = station.trains[0].front().cloned() {
-                        let train = x.lock()?;
+                        let train = x.lock().await;
                         let t2 = train.clone();
                         station.trains[1].push_back(Arc::new(Mutex::new(t2)));
                         did_work = true;
@@ -226,14 +227,14 @@ impl Data {
                 }
                 Operation::Rotate => {
                     if let Some(x) = station.trains[0].front() {
-                        let mut xx = x.lock()?;
+                        let mut xx = x.lock().await;
                         xx.train.second_class_passengers.rotate_left(1);
                         did_work = true;
                     }
                 }
                 Operation::DeleteTop => {
                     if let Some(x) = station.trains[0].front() {
-                        let mut xx = x.lock()?;
+                        let mut xx = x.lock().await;
                         xx.train.second_class_passengers.remove(0);
                         did_work = true;
                     }
@@ -242,10 +243,10 @@ impl Data {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
                             let xx = {
-                                let mut z = x.lock()?;
+                                let mut z = x.lock().await;
                                 z.train.second_class_passengers.remove(0)
                             };
-                            let mut yy = y.lock()?;
+                            let mut yy = y.lock().await;
                             yy.train.second_class_passengers.push(xx);
                             yy.train.second_class_passengers.rotate_right(1);
                             did_work = true;
@@ -255,8 +256,8 @@ impl Data {
                 Operation::Add => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock()?;
-                            let yy = y.lock()?;
+                            let mut xx = x.lock().await;
+                            let yy = y.lock().await;
                             let mut first_data = xx
                                 .train
                                 .second_class_passengers
@@ -276,8 +277,8 @@ impl Data {
                 Operation::Sub => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock()?;
-                            let yy = y.lock()?;
+                            let mut xx = x.lock().await;
+                            let yy = y.lock().await;
                             let mut first_data = xx
                                 .train
                                 .second_class_passengers
@@ -297,8 +298,8 @@ impl Data {
                 Operation::Mul => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock()?;
-                            let yy = y.lock()?;
+                            let mut xx = x.lock().await;
+                            let yy = y.lock().await;
                             let mut first_data = xx
                                 .train
                                 .second_class_passengers
@@ -318,8 +319,8 @@ impl Data {
                 Operation::Div => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock()?;
-                            let yy = y.lock()?;
+                            let mut xx = x.lock().await;
+                            let yy = y.lock().await;
                             let mut first_data = xx
                                 .train
                                 .second_class_passengers
@@ -339,8 +340,8 @@ impl Data {
                 Operation::Mod => {
                     if let Some(x) = station.trains[0].front() {
                         if let Some(y) = station.trains[1].front() {
-                            let mut xx = x.lock()?;
-                            let yy = y.lock()?;
+                            let mut xx = x.lock().await;
+                            let yy = y.lock().await;
                             let mut first_data = xx
                                 .train
                                 .second_class_passengers
@@ -393,9 +394,9 @@ impl Data {
                 .stations
                 .get(target.station.as_str())
                 .ok_or(VMError::PassengerMissing)?
-                .lock()?;
+                .lock().await;
             {
-                let tr = train.lock()?;
+                let tr = train.lock().await;
                 interface
                     .move_train(
                         current,

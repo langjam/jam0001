@@ -52,8 +52,8 @@ async fn main() {
 
     if matches.is_present("cli") {
         let runner = CliRunner::new();
-        let vm = Data::new(ast);
-        runner.run(vm);
+        let vm = Data::new(ast).await;
+        runner.run(vm).await;
     } else {
         web::run(ast).await;
     }

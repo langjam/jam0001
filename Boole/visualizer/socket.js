@@ -14,7 +14,7 @@ function startSocket() {
     console.info(WS_URL)
     let s = new WebSocket(WS_URL);
 
-    s.addEventListener("message", (m) => {
+    s.addEventListener("message", async (m) => {
 
         let message = JSON.parse(m.data)
         console.log(message);
@@ -35,6 +35,27 @@ function startSocket() {
                     error(message["message"])
                     break;
                 }
+                case "AskForInput": {
+                    let res;
+                    let prompt_message = "give an integer input:";
+                    while (1) {
+                        try {
+                            res = parseInt(await ask_for_input(prompt_message), 10);
+                            break;
+                        } catch (e) {
+                            prompt_message = "not an integer! " + prompt_message;
+                        }
+                    }
+
+
+                    s.send(JSON.stringify({
+                        "type": "SendInputResponse",
+                        "identifier": message["identifier"],
+                        "input": [res]
+                    }))
+
+                    break;
+                }
                 case "MoveTrain": {
                     const from_station_name = message["from_station"]["name"];
                     const from_track = message["start_track"];
@@ -43,6 +64,10 @@ function startSocket() {
                     const train_identifier = message["train"]["identifier"];
 
                     console.log(from_station_name, from_track, to_station_name, to_track, train_identifier);
+
+                    if (from_station_name === to_station_name) {
+                        return;
+                    }
 
                     const line = lineLookup.get(from_station_name).get(from_track)
 

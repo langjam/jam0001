@@ -2,6 +2,7 @@ use train::vm::Data;
 use train::interface::{Communicator, CommunicatorError};
 use std::io;
 use train::ast::{Station, Train};
+use std::sync::Arc;
 
 pub(crate) struct CliRunner {}
 
@@ -12,18 +13,20 @@ impl CliRunner {
         }
     }
 
-    pub fn run(&self, mut vm: Data) {
+    pub async fn run(self, mut vm: Data) {
+        let arc_self = Arc::new(self);
         loop {
             log::debug!("Next iteration!");
-            if !vm.do_current_step(self).expect("failed") {
+            if !vm.do_current_step(arc_self.clone()).await.expect("failed") {
                 break
             }
         }
     }
 }
 
+#[async_trait::async_trait]
 impl Communicator for CliRunner {
-    fn ask_for_input(&self) -> Result<Vec<i64>, train::interface::CommunicatorError> {
+    async fn ask_for_input(&self) -> Result<Vec<i64>, train::interface::CommunicatorError> {
         loop {
             let mut input_text = String::new();
             log::info!("INPUT: ");

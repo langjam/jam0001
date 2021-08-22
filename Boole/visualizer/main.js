@@ -4,8 +4,8 @@ const minimumZoom = .1;
 const default_scale = 10;
 const controlsHeight = 40;
 
-async function ask_for_input() {
-    return prompt("input")
+async function ask_for_input(prompt_message) {
+    return prompt(prompt_message)
 }
 
 let socket;
