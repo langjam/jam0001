@@ -9,6 +9,7 @@ from abstract_syntax_trees import (
     Parameter,
     Program,
     SetStmt,
+    Stmt,
     Stmts,
     Variable,
 )
@@ -52,7 +53,7 @@ class Parser:
         return token, value
 
     def parse(self):
-        print(self.parse_program())
+        return self.parse_program()
 
     def parse_program(self):
         self.expect(Token.BOF)
@@ -148,10 +149,12 @@ class Parser:
     def parse_stmt(self):
         contents = self.parse_stmt_contents()
         token, value = self.peek_lexeme()
+        contains_done = False
         if token == Token.LEAVE_FUNC:
             self.advance()
+            contains_done = True
         self.expect(Token.DOT)
-        return contents
+        return Stmt(contents, contains_done)
 
     def parse_stmt_contents(self):
         token, value = self.advance()
@@ -464,55 +467,55 @@ if __name__ == "__main__":
 
         return generator().__next__
 
-    parser = Parser(program())
-    parser.parse()
+    # parser = Parser(program())
+    # parser.parse()
 
-    parser = Parser(program(set_var_to_constant))
-    parser.parse()
+    # parser = Parser(program(set_var_to_constant))
+    # parser.parse()
 
-    parser = Parser(program(set_var_to_var))
-    parser.parse()
+    # parser = Parser(program(set_var_to_var))
+    # parser.parse()
 
-    parser = Parser(program(set_var_to_var_binop))
-    parser.parse()
+    # parser = Parser(program(set_var_to_var_binop))
+    # parser.parse()
 
-    parser = Parser(program(if_stmt_compare_constants))
-    parser.parse()
+    # parser = Parser(program(if_stmt_compare_constants))
+    # parser.parse()
 
-    parser = Parser(program(if_stmt_compare_variable_and_constant))
-    parser.parse()
+    # parser = Parser(program(if_stmt_compare_variable_and_constant))
+    # parser.parse()
 
-    parser = Parser(program(if_stmt_compare_variable_and_variable))
-    parser.parse()
+    # parser = Parser(program(if_stmt_compare_variable_and_variable))
+    # parser.parse()
 
-    parser = Parser(program(if_stmt_compare_constants_and_leave))
-    parser.parse()
+    # parser = Parser(program(if_stmt_compare_constants_and_leave))
+    # parser.parse()
 
-    parser = Parser(
-        program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
-    )
-    parser.parse()
+    # parser = Parser(
+    #     program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
+    # )
+    # parser.parse()
 
-    parser = Parser(program(function_no_params_no_return))
-    parser.parse()
+    # parser = Parser(program(function_no_params_no_return))
+    # parser.parse()
 
-    parser = Parser(program(function_params_no_return))
-    parser.parse()
+    # parser = Parser(program(function_params_no_return))
+    # parser.parse()
 
-    parser = Parser(program(function_params_and_return))
-    parser.parse()
+    # parser = Parser(program(function_params_and_return))
+    # parser.parse()
 
-    parser = Parser(program(code, set_var_to_constant))
-    parser.parse()
+    # parser = Parser(program(code, set_var_to_constant))
+    # parser.parse()
 
-    parser = Parser(program(function_call_no_params_no_result))
-    parser.parse()
+    # parser = Parser(program(function_call_no_params_no_result))
+    # parser.parse()
 
-    parser = Parser(program(function_call_no_params_with_result))
-    parser.parse()
+    # parser = Parser(program(function_call_no_params_with_result))
+    # parser.parse()
 
-    parser = Parser(program(function_call_with_params_and_result))
-    parser.parse()
+    # parser = Parser(program(function_call_with_params_and_result))
+    # parser.parse()
 
     input_file = "samples/fib.comment"
     with open(input_file, "r") as f:
@@ -520,4 +523,5 @@ if __name__ == "__main__":
 
     tokeniser = Tokeniser(text)
     parser = Parser(tokeniser.tokenise().__next__)
-    parser.parse()
+    program = parser.parse()
+    program.execute()
