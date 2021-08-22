@@ -1,12 +1,12 @@
 {"diagram":"id1", "toplevelcomponent":"id4"}
 
 {
-  "children": ["rects", "bounding boxes" ],
+  "children": ["process A", "process B" ],
   "connections": [
     {
       "name":"x2",
-      "source": {"component":"rects", "port":"fb"},
-      "target": {"component":"bounding boxes", "port":"in"}
+      "source": {"component":"process A", "port":"fb"},
+      "target": {"component":"process B", "port":"in"}
     }
   ],
   "diagram":"id1",
@@ -22,7 +22,7 @@
   "diagram":"id1",
   "id":"id5",
   "inputs": [],
-  "name":"rects",
+  "name":"process A",
   "outputs": ["fb" ],
   "synccode":""
 }
@@ -32,7 +32,7 @@
   "diagram":"id1",
   "id":"id6",
   "inputs": ["in" ],
-  "name":"bounding boxes",
+  "name":"process B",
   "outputs": [],
   "synccode":""
 }

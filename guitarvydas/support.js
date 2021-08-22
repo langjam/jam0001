@@ -17,7 +17,7 @@ function expandStyle (s) {
 function strMangle (s) {
         // remove HTML junk added by drawio
     var ret = s
-	.replace (/&[^ ]+;/g, '')
+	.replace (/&[^ ]+;/g, '\n')
 	.replace (/\\\\/g, '');
 
     return ret

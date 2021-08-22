@@ -1,0 +1,10 @@
+emitEscapeNewlines {
+Main = Fact+
+Fact = ident "(" ident "," Object ")."
+Object = string | ident | number
+ident = alnum+
+number = digit+
+string = quote notQuote* quote
+quote = "\""
+notQuote = ~quote any
+}

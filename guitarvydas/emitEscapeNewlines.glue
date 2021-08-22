@@ -1,0 +1,8 @@
+Main [@facts] = [[${facts}]]
+Fact [ident lp subject comma obj rpdot] = [[${ident}${lp}${subject}${comma}${obj}${rpdot}\n]]
+Object [obj] = [[${obj}]]
+ident [@cs] = [[${cs}]]
+number [@ds] = [[${ds}]]
+string [q1 @nqs q2] = [[${q1}${escapeNewlines (nqs)}${q2}]]
+quote [c] = [[${c}]]
+notQuote [c] = [[${c}]]
