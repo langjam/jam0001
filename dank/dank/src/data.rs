@@ -24,12 +24,32 @@ pub struct NativeFn<'s> {
     pub func: Box<dyn Fn(Vec<Value<'s>>) -> Signal<'s>>,
 }
 
-// pub trait NativeObj<'s> {
-//     fn to_string(&self) -> String;
-//     fn get_prop(&self, name: Cow<'s, str>) -> Signal<'s>;
-//     fn set_prop(&self, name: Cow<'s, str>) -> Signal<'s>;
-//
-// }
+pub trait NativeObj<'s>: std::fmt::Debug {
+    fn to_string(&self) -> String;
+    fn get_prop(&self, name: Cow<'s, str>) -> Signal<'s>;
+    fn set_prop(&self, name: Cow<'s, str>, value: Value<'s>) -> Signal<'s>;
+
+    fn native_eq(&self, other: &dyn NativeObj<'s>) -> bool {
+        let (this, _) = (self as *const Self).to_raw_parts();
+        let (other, _) = (other as *const dyn NativeObj<'s>).to_raw_parts();
+        this == other
+    }
+
+    fn native_ord(&self, _other: &dyn NativeObj<'s>) -> Option<std::cmp::Ordering> {
+        None
+    }
+}
+
+impl<'s> std::cmp::PartialEq for dyn NativeObj<'s> + 'static {
+    fn eq(&self, other: &Self) -> bool {
+        self.native_eq(other)
+    }
+}
+impl<'s> std::cmp::PartialOrd for dyn NativeObj<'s> + 'static {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.native_ord(other)
+    }
+}
 
 impl<'s> NativeFn<'s> {
     pub fn create<S: Into<Cow<'s, str>>>(
@@ -60,7 +80,7 @@ impl<'s> std::cmp::PartialEq for NativeFn<'s> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialOrd)]
 pub enum Value<'s> {
     Num(f64),
     Bool(bool),
@@ -69,6 +89,22 @@ pub enum Value<'s> {
     Obj(ObjPtr<'s>),
     Fn(Ptr<Function<'s>>),
     NativeFn(Ptr<NativeFn<'s>>),
+    NativeObj(Ptr<dyn NativeObj<'s>>),
+}
+
+impl<'s> std::cmp::PartialEq for Value<'s> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Num(l0), Self::Num(r0)) => l0 == r0,
+            (Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
+            (Self::Str(l0), Self::Str(r0)) => l0 == r0,
+            (Self::Obj(l0), Self::Obj(r0)) => l0 == r0,
+            (Self::Fn(l0), Self::Fn(r0)) => std::ptr::eq(l0 as *const _, r0 as *const _),
+            (Self::NativeFn(l0), Self::NativeFn(r0)) => l0 == r0,
+            (Self::NativeObj(l0), Self::NativeObj(r0)) => l0 == r0,
+            _ => false,
+        }
+    }
 }
 
 macro_rules! nop_partial_ord {
@@ -112,6 +148,7 @@ impl<'s> std::fmt::Display for Value<'s> {
                 }
                 write!(f, " }}")
             }
+            Value::NativeObj(o) => write!(f, "{}", o.to_string()),
         }
     }
 }

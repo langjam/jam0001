@@ -393,14 +393,16 @@ impl<'a, 'b> Evaluator<'a, 'b> {
 
                 (func.func)(args).map_return()
             }
-            Value::Obj(_) => match self.get_prop(callee, "__call__".into()).extract() {
-                Some(method) => self.call(&method, args),
-                None => EvalError::NotCallable(format!(
-                    "Object {} is missing the __call__ property so it cannot be called",
-                    callee
-                ))
-                .into(),
-            },
+            Value::Obj(_) | Value::NativeObj(_) => {
+                match self.get_prop(callee, "__call__".into()).extract() {
+                    Some(method) => self.call(&method, args),
+                    None => EvalError::NotCallable(format!(
+                        "Object {} is missing the __call__ property so it cannot be called",
+                        callee
+                    ))
+                    .into(),
+                }
+            }
             Value::Num(_) | Value::Bool(_) | Value::Null | Value::Str(_) => {
                 EvalError::NotCallable(format!("`{}` is not a callable object.", callee)).into()
             }
@@ -419,6 +421,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     .ok_or(EvalError::UndefinedProperty(name))
                     .into()
             }
+            Value::NativeObj(obj) => obj.get_prop(name),
             Value::Str(s) if name == "length" => Value::Num(s.len() as _).into(),
             _ => EvalError::UndefinedProperty(name).into(),
         }
@@ -431,6 +434,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 obj.fields.insert(name, value.clone());
                 value.into()
             }
+            Value::NativeObj(obj) => obj.set_prop(name, value),
             _ => EvalError::UndefinedProperty(name).into(),
         }
     }
@@ -544,6 +548,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             Value::Obj(_) => true,
             Value::Fn(_) => true,
             Value::NativeFn(_) => true,
+            Value::NativeObj(_) => true,
         }
     }
 
