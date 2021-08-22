@@ -67,8 +67,8 @@ def set_var(name, value):
     environment[name] = value
 
 
-def push_env():
-    environments.append(dict())
+def push_env(preconfigured_env=dict()):
+    environments.append(preconfigured_env)
 
 
 def pop_env():
@@ -204,8 +204,8 @@ class CallStmt(Stmt):
         set_var("it", result)
         if self.postfix_assignment:
             set_var(self.postfix_assignment, result)
-        if function.return_value != None:
-            set_var(function.return_value, result)
+        if function.return_var != None:
+            set_var(function.return_var, result)
 
 
 class ReturnStmt(StmtContents):
