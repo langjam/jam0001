@@ -23,6 +23,23 @@ static struct Span getlinespn(const usize line, const string src) {
     return (struct Span) { .from = i, .size = linesize };
 }
 
+static void getlinefrompos(usize pos, const string src, usize *line, usize *col) {
+    usize ln = 0;
+    usize cl = 0;
+    *line = 0;
+    *col = 0;
+    usize i;
+    for (i = 0; src[i] && i < pos; i += 1) {
+        cl += 1;
+        if (src[i] == '\n') {
+            cl = 0;
+            ln += 1;
+        }
+    }    
+    *line = ln;
+    *col = cl;
+}
+
 void eh_set_file(const string file) {
     filename = file;
 }
@@ -49,6 +66,12 @@ void eh_error(usize line, usize col, const string src) {
     eh_point(col);
     // Hack
     builder.size = 0;
+}
+
+void eh_error_pos(usize pos, const string src) {
+    usize line, col;
+    getlinefrompos(pos, src, &line, &col);
+    eh_error(line, col, src);
 }
 
 void eh_init() {

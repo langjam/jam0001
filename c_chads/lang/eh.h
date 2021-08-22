@@ -11,5 +11,4 @@ void eh_deinit();
 sb_t* eh_messagesb(); 
 void eh_set_file(const string file);
 void eh_at_token(struct Token *tok, const string src);
-
-
+void eh_error_pos(usize pos, const string src);

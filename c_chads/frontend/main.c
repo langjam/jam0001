@@ -111,6 +111,7 @@ int main(int argc, char *argv[]) {
     eh_set_file(argv[1]);
     eh_init();
     parser_init(src);
+    eh_error_pos(30, parser_get_state()->lexer.src);
     printf("------\n%s\n------\n", parser_get_state()->lexer.src);
     struct Parser_Node result = parser_parse_toplevel();
     print_ast(&result, 0);
