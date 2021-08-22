@@ -1,0 +1,5 @@
+This is a sample .comment program. This line, ironically, is ignored because it is not a comment.
+
+// Ask the user for a number and call it the input.
+// Set the result to the input * 2.
+// Print a number with the number as the result.

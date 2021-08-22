@@ -1,0 +1,80 @@
+/**
+ * Calculates the nth fibonacci number.
+ *
+ * @param n
+ * @return fib
+ */
+// If n is 0 then set fib to 1 and we're done.
+// If n is 1 then set fib to 1 and we're done.
+// Calculate the nth fibonacci number with n as n - 1 and call it x.
+// Ditto with n as n - 2 and call it y.
+// Set fib to x + y.
+// And we're done.
+
+TOKENISE
+
+/**
+ * Calculates the nth fibonacci number.
+ *
+ * @param n
+ * @return fib
+ */
+
+TOKEN       VALUE                       MEANING
+function    /**                         The equivalent of def, fn, fun, etc, in other languages.
+filler      *                           Contextual filler that can appear in a function header.
+fname       Calculates the              A function identifier.
+dot         .                           A full stop, period, dot, whatever you want to call it.
+filler      *                           Contextual filler that can appear in a function header.
+filler      *                           Contextual filler that can appear in a function header.
+param       @param                      The @param keyword.
+identifier  n                           An identifier.
+filler      *                           Contextual filler that can appear in a function header.
+returnvar   @return                     Specifies what a function returns.
+identifier  fib                         An identifier.
+header_end  */                          The end of a function signature.
+
+// If n is 0 then set fib to 1 and we're done.
+
+TOKEN       VALUE                       MEANING
+code        //                          Code introducer, meaning that this line will not be ignored.
+if          If                          Starts an if statement.
+identifier  n                           An identifier.
+equals      is                          Test for equality
+number      0                           A number.
+then        then                        Terminates the condition part of an if statement.
+set         set                         variable assignment
+identifier  fib                         An identifier.
+to          to                          separator between variable name and value in variable assignment.
+number      1                           A number.
+return      And we're done              Returns from a function, returning the value specified in @return (if present).
+dot         .                           A statement terminator.
+
+// Calculate the nth fibonacci number with n as n - 1 and call it x.
+
+TOKEN       VALUE                       MEANING
+code        //                          Code introducer, meaning that this line will not be ignored.
+fcall       Calculate the ...           Call a function.
+with        with                        Introduce function parameters.
+identifier  n                           An identifier.
+as          as                          Separate a parameter name from its value.
+identifier  n                           An identifier.
+minus       -                           Subtraction operator.
+number      1                           A number.
+postassign  and call it                 postfix variable assignment.
+identifier  x                           An identifier.
+dot         .                           A statement terminator.
+
+// Ditto with n as n - 2 and call it y.
+
+TOKEN       VALUE                       MEANING
+ditto       Ditto                       Expands to the name of the most recent function call.
+with        with                        Introduce function parameters.
+identifier  n                           An identifier.
+as          as                          Separate a parameter name from its value.
+identifier  n                           An identifier.
+minus       -                           Subtraction operator.
+number      2                           A number.
+postassign  and call it                 postfix variable assignment.
+identifier  y                           An identifier.
+dot         .                           A statement terminator.
