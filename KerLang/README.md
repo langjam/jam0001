@@ -37,6 +37,24 @@ let twice = (fun x0 ->
 
 If you don't want to generate source code it is possible to execute it directly too ! To do so you just need to provide a `main` function in your sources, the execution of the main function can be requested using the `-x` option of the compiler.
 
+Here is an example using a `main` function :
+
+```c
+/*
+	This function takes 1 argument,
+	it returns the product of argument 1 and 2.
+*/
+function twice;
+
+/*
+	It uses 8.
+	It shows the application of twice on 3.
+*/
+function main;
+```
+
+If compiled into C, Ocaml or Python3, such program will call the `main` function automatically.
+
 ## More about KerLang
 
 To know more about KerLang, examples are ready to be run in the `examples/` folder. The KerLang **manual** is also available as a pdf file.
