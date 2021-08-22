@@ -108,3 +108,98 @@ e.g. `10 < 1 ifFalse: [ console log: 'False!' ]` ==> False!
 The two can be combined like: `Boolean ifTrue: trueBranch ifFalse: falseBranch`,
 
 e.g. `1 < 10 ifTrue: [ console log: 'True!' ] ifFalse: [ console log: 'False!' ]` ==> True!
+
+# Library
+
+Bubblegum comes with some handy functions for basic tasks and manipulating markdown elements.
+
+### Blockquote
+
+The `append` function will append some markdown to the end of the element.
+```smalltalk
+MyBlockquote append: 'some **text**'
+```
+ The `text` function can be used to either set the text for the contents of the element, or to just return the contents.
+```smalltalk
+MyBlockquote text: 'some **text**'
+MyBlockquote text
+```
+
+### Code
+
+The `append` function will append some markdown to the end of the element.
+```smalltalk
+MyCode append: 'some **text**'
+```
+The `text` function can be used to either set the text for the contents of the element, or to just return the contents.
+```smalltalk
+MyCode text: 'some **text**'
+MyCode text
+```
+The `language` function can be used to either set the language for the code block, or to just return the language.
+```smalltalk
+MyCode language: 'js'
+MyCode language
+```
+The `eval` function will eval the contents of the code block and return the result if the code block language is set to 'js'.
+```smalltalk
+MyCode eval
+```
+
+### Heading
+
+The `append` function will append some markdown to the end of the element.
+```smalltalk
+MyHeading append: 'some **text**'
+```
+The `text` function can be used to either set the text for the contents of the element, or to just return the contents.
+```smalltalk
+MyHeading text: 'some **text**'
+MyHeading text
+```
+The `depth` function can be used to either set the heading depth, or to just return the depth. If setting the depth,
+the desired depth should be an integer from 1-6 (h1 - h6).
+```smalltalk
+MyHeading depth: 1
+MyHeading depth
+```
+
+### List
+
+The `checkItem` function will check the first unchecked item in the list whose text matches the argument.
+```smalltalk
+MyList checkItem: 'some **item**'
+```
+The `uncheckItem` function will uncheck the first checked item in the list whose text matches the argument.
+```smalltalk
+MyList uncheckItem: 'some **item**'
+```
+The `addItem` function will add an item to the list with the given text.
+```smalltalk
+MyList addItem: 'some **item**'
+```
+The `removeItem` function will remove the first item from the list whose text matches the argument.
+```smalltalk
+MyList removeItem: 'some **item**'
+```
+The `removeItemAtIndex` function will remove the item at the given index from the list.
+```smalltalk
+MyList removeItemAtIndex: 0
+```
+The `isChecked` function will return if the first item whose text matches the argument and is also a checkbox item is
+checked. If there are no items in the list matching these criteria then the function will return `undefined`.
+```smalltalk
+MyList isChecked: 'some **item**'
+```
+
+### Paragraph
+
+The `append` function will append some markdown to the end of the element.
+```smalltalk
+MyParagraph append: 'some **text**'
+```
+The `text` function can be used to either set the text for the contents of the element, or to just return the contents.
+```smalltalk
+MyParagraph text: 'some **text**'
+MyParagraph text
+```
