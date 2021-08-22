@@ -125,6 +125,16 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
         break;
     }
 
+    for (usize i = 0; i < intrp.vars->values.size; i++) {
+        struct Interpreter_Value* var = vec_get(&intrp.vars->values, i);
+        switch (var->type) {
+        case IT_STRING:
+            free(var->data.string.str.view);
+        break;
+        default:
+        break;
+        }
+    }
     map_drop(intrp.vars);
     intrp.vars = oldframe;
     return ret;
