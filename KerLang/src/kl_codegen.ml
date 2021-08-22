@@ -97,3 +97,6 @@ let realize oc lang prog =
     PY_Realizer.realize oc prog
   | C -> C_Realizer.realize oc prog
 
+let executes prog =
+  Kl_IR.flookup "main" prog
+  |> Kl_IR.eval [] prog
