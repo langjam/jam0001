@@ -7,10 +7,10 @@ Done
 - [x] logging/native bindings
 - [x] clean up REPL visuals
 - [x] ADT instance printing
+- [x] rich comment printing
 
 High priority
 
-- [ ] rich comment printing
 - [ ] embedded comment printing
 - [ ] expression embedding in comments
 - [ ] example files/walkthrough

@@ -1,3 +1,4 @@
+import { stripIndent } from 'common-tags';
 import { Token } from 'feldspar';
 import { unreachable } from '../utils';
 import { NodeDetails } from './combinators';
@@ -124,7 +125,7 @@ export type TextSegment = { kind: 'TextSegment'; content: string };
 export type ExampleSegment = {
   kind: 'ExampleSegment';
   name: string;
-  description: string;
+  source: string;
   value: Expression;
 };
 
@@ -142,12 +143,10 @@ export class SemanticComment {
       commentStart: Token,
       segments: Array<
         | Token
-        | [
-            exampleStart: Token,
-            exampleDescription: Token,
-            exampleValue: Expression,
-            exampleEnd: Token
-          ]
+        | {
+            source: string;
+            example: [exampleStart: Token, exampleValue: Expression, exampleEnd: Token];
+          }
       >,
       commentEnd: Token
     ]
@@ -157,11 +156,10 @@ export class SemanticComment {
 
     for (let segment of inputSegments) {
       if ('kind' in segment) {
-        let line = segment.content.replace(/^#/, '').trim();
         if (currentText) {
-          currentText.content += `\n${line}`;
+          currentText.content += segment.content;
         } else {
-          currentText = { kind: 'TextSegment', content: line };
+          currentText = { kind: 'TextSegment', content: segment.content };
         }
       } else {
         if (currentText) {
@@ -169,11 +167,14 @@ export class SemanticComment {
           currentText = undefined;
         }
 
-        let [startToken, descriptionToken, value] = segment;
+        let [startToken, value, endToken] = segment.example;
         let name = startToken.content.slice(startToken.content.indexOf('#') + 1).trim();
-        let description = descriptionToken.content.trim();
+        let source = stripIndent`${segment.source.slice(
+          startToken.content.length,
+          segment.source.length - endToken.content.length
+        )}`;
 
-        segments.push({ kind: 'ExampleSegment', name, description, value });
+        segments.push({ kind: 'ExampleSegment', name, value, source });
       }
     }
 

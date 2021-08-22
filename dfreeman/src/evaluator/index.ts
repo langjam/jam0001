@@ -54,6 +54,7 @@ export class VoidValue {
 export class CommentValue {
   public readonly kind = 'Comment';
   public constructor(
+    public readonly name: string,
     public readonly segments: ReadonlyArray<CommentSegment>,
     public readonly examples: Map<string, LazyValue>
   ) {}
@@ -163,20 +164,18 @@ export class Evaluator {
       }
 
       if (meta) {
-        this.globalScope.defineMeta(name, this.evaluateComment(meta, this.globalScope));
+        this.globalScope.defineMeta(name, this.evaluateComment(name, meta, this.globalScope));
       }
     }
   }
 
-  public evaluate(expression: Expression | SemanticComment, scope = this.globalScope): Value {
+  public evaluate(expression: Expression, scope = this.globalScope): Value {
     if (expression.kind === 'Number') {
       return this.evaluateNumber(expression);
     } else if (expression.kind === 'Boolean') {
       return this.evaluateBoolean(expression);
     } else if (expression.kind === 'Identifier') {
       return this.evaluateIdentifier(expression, scope);
-    } else if (expression.kind === 'SemanticComment') {
-      return this.evaluateComment(expression, scope);
     } else if (expression.kind === 'Function') {
       return this.evaluateFunction(expression, scope);
     } else if (expression.kind === 'Call') {
@@ -226,7 +225,7 @@ export class Evaluator {
     return value;
   }
 
-  private evaluateComment(expr: SemanticComment, scope: Scope): CommentValue {
+  private evaluateComment(name: string, expr: SemanticComment, scope: Scope): CommentValue {
     let examples = new Map<string, LazyValue>();
     for (let segment of expr.segments) {
       if (segment.kind === 'ExampleSegment') {
@@ -234,7 +233,7 @@ export class Evaluator {
         examples.set(segment.name, new LazyValue(() => this.evaluate(segmentValue, scope)));
       }
     }
-    return new CommentValue(expr.segments, examples);
+    return new CommentValue(name, expr.segments, examples);
   }
 
   private evaluateFunction(expr: FunctionExpression, scope: Scope): FunctionValue {

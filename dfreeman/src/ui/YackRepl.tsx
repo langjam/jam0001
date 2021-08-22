@@ -1,10 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { Ace } from 'ace-builds';
-import { Evaluator, Value, VoidValue } from '../evaluator';
+import { CommentValue, Evaluator, Value, VoidValue } from '../evaluator';
 import { YackEditor, YackMode } from './YackEditor';
 import { parser } from '../parser';
 import { ParseError } from 'feldspar';
 import { unreachable } from '../utils';
+import { ExampleSegment } from '../parser/ast';
 
 export type ReplMessage =
   | { kind: 'log'; value: Value }
@@ -123,7 +124,7 @@ const ReplRow: React.FC<{ message: ReplMessage }> = ({ message, ...props }) => {
           return (
             <>
               <Marker kind="comment" content={message.kind === 'out' ? '❮' : ''} />
-              <div style={{ paddingLeft: '4px' }}>
+              <div style={{ paddingLeft: '4px', display: 'flex', flex: 1 }}>
                 <YackLoggedValue value={message.value} />
               </div>
             </>
@@ -147,7 +148,7 @@ const ReplRow: React.FC<{ message: ReplMessage }> = ({ message, ...props }) => {
 
 const YackLoggedValue: React.FC<{ value: Value }> = ({ value, ...props }) => {
   if (value.kind === 'Comment') {
-    return <>Special Comment Goes Here</>;
+    return <YackComment comment={value} {...props} />;
   } else if (value.kind === 'Function') {
     return <YackCode style={{ display: 'block' }} source={value.source} {...props} />;
   } else {
@@ -198,7 +199,7 @@ const YackCode: React.FC<{ source: string; style?: React.CSSProperties }> = ({
     <span
       className="ace_editor ace-tomorrow-night-eighties"
       {...props}
-      style={{ whiteSpace: 'pre', marginTop: '2px', marginLeft: '1px', ...props.style }}
+      style={{ whiteSpace: 'pre', marginTop: '2px', ...props.style }}
     >
       {lineTokens.flatMap((tokens, outer) => {
         let result = tokens.map((token, inner) => (
@@ -219,5 +220,61 @@ const YackCode: React.FC<{ source: string; style?: React.CSSProperties }> = ({
         return result;
       })}
     </span>
+  );
+};
+
+const YackComment: React.FC<{ comment: CommentValue }> = ({ comment }) => {
+  return (
+    <div
+      style={{
+        padding: '1em',
+        margin: '4px 4px 4px 0',
+        borderRadius: '4px',
+        backgroundColor: '#444',
+      }}
+      className="ace_editor"
+    >
+      <div style={{ fontSize: '130%', marginBottom: '8px' }}>{comment.name}</div>
+      {comment.segments.map((segment, index) => {
+        if (segment.kind === 'TextSegment') {
+          return (
+            <div key={index} style={{ whiteSpace: 'pre-wrap' }}>
+              {segment.content}
+            </div>
+          );
+        } else {
+          return <YackCommentExample key={index} comment={comment} example={segment} />;
+        }
+      })}
+    </div>
+  );
+};
+
+const YackCommentExample: React.FC<{ comment: CommentValue; example: ExampleSegment }> = ({
+  example,
+  comment,
+  ...props
+}) => {
+  return (
+    <div {...props} style={{ marginTop: '1em' }}>
+      <div style={{ display: 'flex' }}>
+        <div
+          className="ace-tomorrow-night-eighties"
+          style={{ borderTopLeftRadius: '4px', borderTopRightRadius: '4px', padding: '.5em 1em 0' }}
+        >
+          <YackCode source={`${comment.name}#${example.name}`} />
+        </div>
+      </div>
+      <div
+        className="ace-tomorrow-night-eighties"
+        style={{
+          borderRadius: '4px',
+          borderTopLeftRadius: 0,
+          padding: '1em',
+        }}
+      >
+        <YackCode source={example.source} />
+      </div>
+    </div>
   );
 };

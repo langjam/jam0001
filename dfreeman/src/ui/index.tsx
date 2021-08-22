@@ -35,15 +35,17 @@ const Playground: React.FC = () => {
     ###
     Ok I can write a reasonable amount of stuff here.
 
-    @example#first the number two
+    For example, this is the number two:
+    @example#first
       2
     @end
 
-    @example#second the number 100
+    And this is a hundred:
+    @example#second
       100
     @end
     ###
-    def simpleTestValue = fun(a)
+    def fn = fun(a)
       fun(_)
         a
       end
@@ -95,6 +97,8 @@ const Playground: React.FC = () => {
         evaluator.execute(ast.value);
       } catch (error) {
         // TODO
+        console.log(parser.tokenize(source));
+        console.error(error);
       }
     },
     [evaluator]

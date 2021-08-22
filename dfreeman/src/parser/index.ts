@@ -128,9 +128,6 @@ const matchExpression = node(
 
 const inComment = state('in-comment', { exclusive: true });
 const inExampleCode = state('in-example-code');
-const inExampleDescription = state('in-example-dscription', {
-  exclusive: true,
-});
 
 const commentStart = token(/###\s*/, { kind: 'CommentStart', pushState: inComment });
 const commentLine = token(/.*\n/, { kind: 'CommentLine', requiredState: inComment });
@@ -139,12 +136,6 @@ const commentExampleStart = token(/\s*@example#[a-zA-Z_][a-zA-Z0-9_]*\b/, {
   kind: 'CommentExample',
   requiredState: inComment,
   priority: 0,
-  pushState: inExampleDescription,
-});
-
-const commentExampleDescription = token(/.*\n/, {
-  kind: 'CommentExampleDescription',
-  popState: inExampleDescription,
   pushState: inExampleCode,
 });
 
@@ -153,12 +144,11 @@ const commentExampleEnd = token(/\s*@end/, {
   popState: inExampleCode,
 });
 
-const commentExample = seq(
-  commentExampleStart,
-  commentExampleDescription,
-  expression,
-  commentExampleEnd
+const commentExample = node(
+  ({ source }, example) => ({ source, example }),
+  seq(commentExampleStart, expression, commentExampleEnd)
 );
+
 const comment = node(
   SemanticComment.fromSegments,
   seq(commentStart, repeat(alt(commentLine, commentExample)), commentEnd)
