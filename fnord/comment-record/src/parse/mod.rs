@@ -231,15 +231,22 @@ pub fn parse_value(input: &str) -> IResult<&str, ValueAst> {
             );
         }
         else if let Ok(second) = parse_field_access(prior.0) {
-            prior = (
-                second.0, 
-                ValueAst::FieldAccess(Box::new(prior.1), second.1.to_string()),
-            );
+            if let Ok(gnarly) = parse_comment_get(second.0) {
+                prior = (
+                    gnarly.0,
+                    ValueAst::FieldCommentGet(Box::new(prior.1), second.1.to_string()),
+                );
+            } else {
+                prior = (
+                    second.0,
+                    ValueAst::FieldAccess(Box::new(prior.1), second.1.to_string()),
+                );
+            }
         }
         else {
             let third = parse_comment_access(prior.0)?;
             prior = (
-                third.0, 
+                third.0,
                 ValueAst::CommentAccess(Box::new(prior.1), third.1.to_string()),
             );
         }

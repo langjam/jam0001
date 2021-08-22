@@ -32,6 +32,13 @@ picomment = pi!!;
 verified = pi!VERIFIED;
 
 some_text = pi!text;
+
+swapped = Rational {
+    #! pi.numerator
+    numerator: pi.denominator,
+    #! pi.denominator
+    denominator: pi.numerator,
+};
 ",
     ).unwrap();
     /*

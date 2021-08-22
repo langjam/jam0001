@@ -52,10 +52,27 @@ impl Env {
 
         let mut resolved_fields = vec![];
         for source_field in &ty.fields {
+            let comment = if source_field.comment.lines.len() == 1 && source_field.comment.lines[0].chars().next() == Some('!') {
+                let mut comment_source = source_field.comment.lines[0].split_at(1).1.trim_start().to_owned();
+                comment_source.push_str("!!");
+                let comment_query = crate::parse::parse_value(&comment_source)
+                    .map_err(|e| format!("Error in comment reference: {:?}", e))?.1;
+                println!();
+                println!("Evaluating comment source: {:?}", comment_source);
+                println!("Query: {:?}", comment_query);
+                match self.evaluate(&comment_query)? {
+                    Value::Comment(c) => c,
+                    other => return Err(format!("Invalid type from comment reference: {:?}", other)),
+                }
+            }
+            else {
+                CommentValue::from_lines(&source_field.comment.lines)
+            };
+
             resolved_fields.push(FieldType {
                 name: source_field.name.clone(),
                 ty: self.resolve_type_reference(&source_field.ty)?,
-                comment: CommentValue::from_lines(&source_field.comment.lines),
+                comment,
             });
         }
 
@@ -114,17 +131,32 @@ impl Env {
 
                 let mut fields = std::collections::HashMap::new();
                 for field_value in &s.fields {
-                    let mut field_comment = field_comments
-                        .get(&field_value.name)
-                        .map(|f| f.clone())
-                        .unwrap_or_else(CommentValueData::empty);
-                    field_comment.extend_with_lines(&field_value.comment.lines);
-                    let field_comment = field_comment.into();
+                    let comment = if field_value.comment.lines.len() == 1 && field_value.comment.lines[0].chars().next() == Some('!') {
+                        let mut comment_source = field_value.comment.lines[0].split_at(1).1.trim_start().to_owned();
+                        comment_source.push_str("!!");
+                        let comment_query = crate::parse::parse_value(&comment_source)
+                            .map_err(|e| format!("Error in comment reference: {:?}", e))?.1;
+                        println!();
+                        println!("Evaluating comment source: {:?}", comment_source);
+                        println!("Query: {:?}", comment_query);
+                        match self.evaluate(&comment_query)? {
+                            Value::Comment(c) => c,
+                            other => return Err(format!("Invalid type from comment reference: {:?}", other)),
+                        }
+                    }
+                    else {
+                        let mut field_comment = field_comments
+                            .get(&field_value.name)
+                            .map(|f| f.clone())
+                            .unwrap_or_else(CommentValueData::empty);
+                        field_comment.extend_with_lines(&field_value.comment.lines);
+                        field_comment.into()
+                    };
                     fields.insert(
                         field_value.name.clone(),
                         FieldValue {
                             value: self.evaluate(&field_value.value)?,
-                            comment: field_comment,
+                            comment,
                         },
                     );
                 }
@@ -166,6 +198,20 @@ impl Env {
                     Value::Text(_) => Err("text has no comments (why?)".into()),
                     Value::Comment(c) => Err("comment has no comments (why?)".into()),
                     Value::Struct(s) => Ok(Value::Comment(s.comment.clone())),
+                }
+            }
+            ValueAst::FieldCommentGet(source, field) => {
+                match self.evaluate(source)? {
+                    Value::Unit => Err("unit has no fields".into()),
+                    Value::Number(_) => Err("number has no fields".into()),
+                    Value::Text(_) => Err("text has no fields".into()),
+                    Value::Comment(c) => Err("comment has no field comments (why?)".into()),
+                    Value::Struct(s) => {
+                        match s.fields.get(field) {
+                            None => Err(format!("struct has no field named {}", field)),
+                            Some(f) => Ok(Value::Comment(f.comment.clone()))
+                        }
+                    }
                 }
             }
         }
