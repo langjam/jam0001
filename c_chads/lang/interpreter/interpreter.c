@@ -16,6 +16,9 @@ static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Val
             case IT_INT:
                 printf("%d", arg->data.intg.val);
             break;
+            case IT_FLOAT:
+                printf("%f", arg->data.flt.val);
+            break;
             case IT_STRING:
                 printf("%.*s", (int)arg->data.string.str.size, arg->data.string.str.view);
             break;
@@ -37,11 +40,27 @@ static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Val
     return void_val();
 }
 
+static struct Interpreter_Value cfunc_int(struct Vec OF(struct Interpreter_Value) *args) {
+    struct Interpreter_Value val = VEC_GET_VAL(struct Interpreter_Value, args, 0);
+    val.data.intg.val = (int)val.data.flt.val;
+    val.type = IT_INT;
+    return val;
+}
+
+static struct Interpreter_Value cfunc_float(struct Vec OF(struct Interpreter_Value) *args) {
+    struct Interpreter_Value val = VEC_GET_VAL(struct Interpreter_Value, args, 0);
+    val.data.flt.val = (float)val.data.intg.val;
+    val.type = IT_FLOAT;
+    return val;
+}
+
 void intrp_init() {
     intrp.global = map_new(sizeof(struct Interpreter_Value));
     intrp.vars = &intrp.global;
 
     map_add(intrp.vars, strview_from("print"), &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_print });
+    map_add(intrp.vars, strview_from("int"),   &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_int   });
+    map_add(intrp.vars, strview_from("float"), &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_float });
 }
 
 void intrp_deinit() {
@@ -113,6 +132,7 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
 
 static enum Interpreter_Type resolve_type(strview_t name) {
     if (strview_eq(name, strview_from("int")))    return IT_INT;    else 
+    if (strview_eq(name, strview_from("float")))  return IT_FLOAT;  else 
     if (strview_eq(name, strview_from("string"))) return IT_STRING;
 
     return IT_VOID;
@@ -126,7 +146,7 @@ static void declaration(struct Parser_Node* node) {
 }
 
 static struct Interpreter_Value assign(struct Parser_Node* node) {
-    struct Parser_Node* dst = vec_get(&node->children, 0); 
+    struct Parser_Node* dst = pnode_left(node); 
     strview_t dstname;
     if (dst->kind == PN_DECL) {
         declaration(dst);
@@ -134,7 +154,7 @@ static struct Interpreter_Value assign(struct Parser_Node* node) {
     } else
         dstname = dst->data.ident.val;
 
-    struct Interpreter_Value val = intrp_run(vec_get(&node->children, 1), NULL);
+    struct Interpreter_Value val = intrp_run(pnode_right(node), NULL);
     struct Interpreter_Value *var = get_var(dstname);
     if (val.type != var->type && var->type != IT_VOID)
         printf("Spank Spank! Bad Programmer! Mismatched type\n");
@@ -188,8 +208,23 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
             };
         break;
         case PN_NUMBER:
-            ret.type = IT_INT;
-            ret.data.intg.val = atoi(node->data.string.val.view);
+
+            if (node->data.number.kind != PNM_FLT) {
+                ret.type = IT_INT;
+                int base, offs;
+
+                switch (node->data.number.kind) {
+                case PNM_HEX: base = 16; offs = 2; break;
+                case PNM_BIN: base = 2;  offs = 2; break;
+                case PNM_OCT: base = 8;  offs = 1; break;
+                default:      base = 10; offs = 0; break;
+                }
+
+                ret.data.intg.val = (int)strtol(node->data.number.val.view + offs, NULL, base);
+            } else {
+                ret.type = IT_FLOAT;
+                ret.data.flt.val = strtof(node->data.number.val.view, NULL);
+            }
         break;
         case PN_IDENT: {
             ret = *get_var(node->data.ident.val);
@@ -199,36 +234,73 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
             struct Interpreter_Value 
                 left = intrp_run(pnode_left(node), NULL),
                 right = intrp_run(pnode_right(node), NULL);
-            int* rp = &ret.data.intg.val;
 
-            ret.type = IT_INT;
-            if (node->data.op.op.view[1] != '=') {
-                int lv = left.data.intg.val, rv = right.data.intg.val;
-                switch (node->data.op.op.view[0]) {
-                case '+': *rp = lv + rv; break;
-                case '-': *rp = lv - rv; break;
-                case '*': *rp = lv * rv; break;
-                case '/': *rp = lv / rv; break;
-                case '%': *rp = lv % rv; break;
+            if (left.type != right.type)
+                //error
+                ;
 
-                case '<': *rp = lv < rv; break;
-                case '>': *rp = lv > rv; break;
+            if (left.type == IT_INT) {
+                ret.type = IT_INT;
+                int* rp = &ret.data.intg.val;
+                if (node->data.op.op.view[1] != '=') {
+                    int lv = left.data.intg.val, rv = right.data.intg.val;
+                    switch (node->data.op.op.view[0]) {
+                    case '+': *rp = lv + rv; break;
+                    case '-': *rp = lv - rv; break;
+                    case '*': *rp = lv * rv; break;
+                    case '/': *rp = lv / rv; break;
+                    case '%': *rp = lv % rv; break;
+
+                    case '<': *rp = lv < rv; break;
+                    case '>': *rp = lv > rv; break;
+                    }
+                } else {
+                    int *lv = &left.data.intg.val, *rv = &right.data.intg.val;
+                    switch (node->data.op.op.view[0]) {
+                    case '+': *rp = *lv += *rv; break;
+                    case '-': *rp = *lv -= *rv; break;
+                    case '*': *rp = *lv *= *rv; break;
+                    case '/': *rp = *lv /= *rv; break;
+                    case '%': *rp = *lv %= *rv; break;
+
+                    case '>': *rp = *lv >= *rv; break;
+                    case '<': *rp = *lv <= *rv; break;
+                    case '=': *rp = *lv == *rv; break;
+                    case '!': *rp = *lv != *rv; break;
+                    }
                 }
+            } else if (left.type == IT_FLOAT) {
+                ret.type = IT_FLOAT;
+                float* rp = &ret.data.flt.val;
+                if (node->data.op.op.view[1] != '=') {
+                    float lv = left.data.flt.val, rv = right.data.flt.val;
+                    switch (node->data.op.op.view[0]) {
+                    case '+': *rp = lv + rv; break;
+                    case '-': *rp = lv - rv; break;
+                    case '*': *rp = lv * rv; break;
+                    case '/': *rp = lv / rv; break;
+
+                    case '<': *rp = lv < rv; break;
+                    case '>': *rp = lv > rv; break;
+                    }
+                } else {
+                    float *lv = &left.data.flt.val, *rv = &right.data.flt.val;
+                    switch (node->data.op.op.view[0]) {
+                    case '+': *rp = *lv += *rv; break;
+                    case '-': *rp = *lv -= *rv; break;
+                    case '*': *rp = *lv *= *rv; break;
+                    case '/': *rp = *lv /= *rv; break;
+
+                    case '>': *rp = *lv >= *rv; break;
+                    case '<': *rp = *lv <= *rv; break;
+                    case '=': *rp = *lv == *rv; break;
+                    }
+                }
+                
             } else {
-                int *lv = &left.data.intg.val, *rv = &right.data.intg.val;
-                switch (node->data.op.op.view[0]) {
-                case '+': *rp = *lv += *rv; break;
-                case '-': *rp = *lv -= *rv; break;
-                case '*': *rp = *lv *= *rv; break;
-                case '/': *rp = *lv /= *rv; break;
-                case '%': *rp = *lv %= *rv; break;
-
-                case '>': *rp = *lv >= *rv; break;
-                case '<': *rp = *lv <= *rv; break;
-                case '=': *rp = *lv == *rv; break;
-                case '!': *rp = *lv != *rv; break;
-                }
+                // error
             }
+
         } break;
         case PN_UNARY: {
 
@@ -248,5 +320,5 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
 }
 
 struct Interpreter_Value intrp_main() {
-    return execute(pnode_right(((struct Interpreter_Value*)map_get(&intrp.global, strview_from("main")))->data.func.ast));
+    return execute(pnode_right(get_var(strview_from("main"))->data.func.ast));
 }

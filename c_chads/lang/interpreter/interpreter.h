@@ -7,6 +7,7 @@ enum Interpreter_Type {
     IT_CFUNC,
     IT_FUNC,
     IT_INT,
+    IT_FLOAT,
     IT_STRING
 };
 
@@ -24,6 +25,9 @@ struct Interpreter_Value {
         struct {
             int val;
         } intg;
+        struct {
+            float val;
+        } flt;
         struct {
             strview_t str;
         } string;

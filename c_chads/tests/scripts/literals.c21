@@ -1,0 +1,8 @@
+main := proc() int {
+    hex := 0x10;
+    bin := 0b111;
+    oct := 015;
+    flt := 15.3;
+
+    print(hex; bin; oct; flt);
+};
