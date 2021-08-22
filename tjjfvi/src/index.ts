@@ -16,7 +16,10 @@ function run(text: string, input: string){
     -1,
     { kind: "func", args: ["$input"], name: "_main", body: lines.map(parseLine) },
     Object.create(null),
-    Object.create(null),
+    Object.assign(Object.create(null), {
+      toNumber: (_: unknown, [x]: unknown[]) =>
+        +(x as never),
+    }),
     [input],
   )))
 
