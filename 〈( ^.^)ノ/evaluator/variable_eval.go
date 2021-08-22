@@ -23,9 +23,8 @@ func (e *Evaluator) setRefValue(ref, value string) {
 		varIndex *= -1
 	}
 
-	if len(arr) < varIndex {
-		fmt.Println("Variable set: out of range.")
-		os.Exit(1)
+	for len(arr) <= varIndex {
+		arr = append(arr, "")
 	}
 
 	arr[varIndex] = value
