@@ -2,17 +2,18 @@
  * Example 5: Function Signatures *
  **********************************/
 
-x = function({
+print = function({
 	/*
-	 * This function is used to print a tree out of a list and a level:
-     * - param tree is a list, this function will print, while
-     * - param level defines, how many tabs will be printed before the tree
+	 * This function is used to print a string to the terminal:
+     * - param text is defined to get the String for the console
      *
      * This function
-     * - returns the next level to list
+     * - returns an integer
      */
-	out("Yeet")?
+	out(text)?
+
+	2? \\ Returns 2
 })?
 
 /* Print out "yeet" */
-x()?
+out(print("YEET"))?

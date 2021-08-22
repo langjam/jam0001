@@ -31,7 +31,6 @@ def intrange_inclusive(args):
 
 
 def setlist(args):
-    print(args)
     args[0][args[1]] = args[2]
 
 

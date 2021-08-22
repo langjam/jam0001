@@ -90,10 +90,11 @@ class StatementNode:
         def __init__(self, content):
             self.content = content
 
-    class ClassInstanciacionNode(GenericNode):
+    class ClassInstanciationNode(GenericNode):
 
-        def __init__(self, class_name):
+        def __init__(self, class_name, args):
             self.class_name = class_name
+            self.args = args
 
     class ClassMethodExecuteNode(GenericNode):
 
