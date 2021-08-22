@@ -1,0 +1,1 @@
+main = ["if", false, "it's true", "it's false"]

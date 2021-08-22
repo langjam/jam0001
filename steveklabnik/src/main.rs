@@ -136,16 +136,21 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
             }
         }
         Exp::Array(values) => {
-            let first = eval(&Exp::from(values[0].clone()), env);
+            let first = &values[0];
+            let rest: Vec<Exp> = values[1..].iter().map(|v| Exp::from(v.clone())).collect();
+
+            // check for built-ins
+            if let Value::String(s) = first {
+                match s.as_str() {
+                    "if" => return eval_if(&rest, env),
+                    _ => {}
+                }
+            }
+
+            let first = eval(&Exp::from(first.clone()), env);
 
             if let Exp::Fn(f) = first {
-                let args: Vec<Value> = values[1..]
-                    .iter()
-                    .map(|v| {
-                        let exp = Exp::from(v.clone());
-                        eval(&exp, env).into()
-                    })
-                    .collect();
+                let args: Vec<Value> = rest.iter().map(|v| eval(v, env).into()).collect();
 
                 f(&args).into()
             } else {
@@ -158,5 +163,18 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
         Exp::Datetime(_) => exp.clone(),
         Exp::Table(_) => exp.clone(),
         Exp::Fn(_) => panic!("what the eff is this"),
+    }
+}
+
+fn eval_if(args: &[Exp], env: &mut Env) -> Exp {
+    let test = args.get(0).expect("if with no test? sus");
+
+    match eval(test, env) {
+        Exp::Boolean(b) => {
+            let result = if b { &args[1] } else { &args[2] };
+
+            eval(result, env)
+        }
+        _ => panic!("test has to be a bool"),
     }
 }
