@@ -19,14 +19,14 @@ model.addPost({
         },
         {
             id: "10",
-            content: "[]",
+            content: "0",
             upvotes: -5,
             date: 100,
             children: []
         },
         {
             id: "5",
-            content: "0",
+            content: "[]",
             upvotes: -5,
             date: 100,
             children: []
