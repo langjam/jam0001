@@ -63,6 +63,7 @@
 					)
 				)
 
+				(# "Final stack:" stack)
 				(if (!= (len stack) 1)
 					(panic "Invalid number of RPN elements," (len stack) "values remain in stack")
 					()
