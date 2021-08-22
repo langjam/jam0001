@@ -67,39 +67,9 @@ shouts as loud as she can: "69!" Still not having any idea what this was about, 
 * incrementer.train outputs all numbers from 1 to infinity.
 * fibonacci_simple.train outputs all fibonacci numbers, using a very simple circuit.
 * fibonacci_complex.train outputs all fibonacci numbers, using a somewhat complex ciruit. This circuit looks quite nice, so this is the one we recommend running for testing.
+  ![](screenshots/map1.png)
 * rock_paper_scissors.train is possible but difficult to get running. It allows two players to play rock paper scissors, and the program will determine the winner.
 * fizzbuzz.train outputs all fizzbuzz values. It works in the CLI, but we have not gotten this running in the visualizer.
-* colatz.train takes a numbers as input, and outputs the numbers sequence to 1 using the collatz conjecture.
+* colatz.train takes a numbers as input, and outputs the numbers sequence to collatz sequence of the number
+  ![](screenshots/collatz.png)
 * echo.train takes an input and outputs it immediately. Very simple, so useful for testing.
-
-# Screenshots
-![](screenshots/map1.png)
-Example code:
-```
-[LOCOMOTIVE]
-start at AmsterdamCS track 1
-[FIRST CLASS]
-Jan: this is a nice long lime green train!
-Pieter: It has some blue accents as well!
-[SECOND CLASS]
-Julius: 1
-
-[LOCOMOTIVE]
-start at UtrechtCentraal track 2
-[FIRST CLASS]
-Gerrit: This train has a very pretty yellow colour!
-Marijke: I like the blue detail.
-Sara: The train is very short though...
-[SECOND CLASS]
-Jonathan: 1
-
-{UtrechtCentraal}
-operation: add
-track 1: go to UtrechtCentraal track 2
-track 2: go to AmsterdamCS track 1
-
-{AmsterdamCS}
-operation: print number
-track 1: go to UtrechtCentraal track 1
-
-```
