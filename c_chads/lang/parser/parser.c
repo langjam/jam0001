@@ -275,7 +275,7 @@ pnode_t *pnode_left(pnode_t *of) {
         fprintf(stderr, "Internal error: Invalid addressing mode for binary expression, %d", of->addressing);
         exit(1);
     }
-    return vec_get(&of->children, 2);
+    return vec_get(&of->children, 0);
 }
 
 pnode_t *pnode_right(pnode_t *of) {
