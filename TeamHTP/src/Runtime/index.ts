@@ -23,7 +23,7 @@ const opNames: Record<string, string> = {
 }
 
 const sortKeypairs = (pairs: [[string, string]]) => {
-    const sorted = [...pairs].sort(([a, _a], [b, _b]) => {
+    const sorted = [...pairs].sort(([a,], [b,]) => {
         if (a < b) return -1
         if (a > b) return 1
         return 0
@@ -39,7 +39,7 @@ const transformer = {
     keyword_message: sortKeypairs,
     message_pair: ([key, value]: [string, string]) => [key.slice(0, -1), value],
     unary_message: ([name]: [string]) => `${name}()`,
-    exprs: (exprs: string[]) => exprs.join('\n'),
+    exprs: (exprs: string[]) => exprs.join(';\n'),
     answer: ([v]: [string]) => `return ${v}`,
     assign: ([name, value]: [string, string]) => `${name} = ${value}`,
     keyword: ([callee, call, cascades]: [string, string, string[]]) => {
