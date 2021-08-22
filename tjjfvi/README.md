@@ -12,7 +12,9 @@ Hacked together in the last 4 hours of the jam.
 
 ## About
 
-Write beautifully-commented pseudo-code, and get a trace of the execution of the code.
+Write beautifully-commented pseudo-code, and get a trace of the execution of the code. The trace is outputted to stderr, and isn't part of the output of the program.
+
+Unlike some of the other languages, comments in this lang are *real* comments; they don't affect the execution of the code.
 
 Example fizz buzz program:
 ```
