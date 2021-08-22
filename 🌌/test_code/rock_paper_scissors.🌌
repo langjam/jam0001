@@ -1,0 +1,61 @@
+func get computer move {
+	let v := random integer () % 3;
+	if v < 0 { v := v * -1; }
+	return v;
+}
+
+func get human move {
+	let input := read line ();
+	if input == "rock\n" {
+		return 0;
+	} else if input == "paper\n" {
+		return 1;
+	} else if input == "scissors\n" {
+		return 2;
+	} else {
+		return -1;
+	}
+}
+
+let move_strings := ["rock", "paper", "scissors"];
+func print move `move` {
+	print(move_strings[move]);
+}
+
+while 1 {
+	print ("Enter your move [rock|paper|scissors]: ");
+	let human move := get human move ();
+	if human move == -1 {
+		println("Invalid input!");
+		continue;
+	}
+
+	let computer move := get computer move ();
+	print ("Computer picked: ");
+	print move (computer);
+	println (); 
+
+	if h == c {
+		println ("Tie!");
+	} else if h == 0 {
+		if c == 1 {
+			println ("You lose!");
+		} else if c == 2 {
+			println ("You win!");
+		}
+	} else if h == 1 {
+		if c == 0 {
+			println ("You win!");
+		} else if c == 2 {
+			println ("You lose!");
+		}
+	} else {
+		if c == 0 {
+			println ("You lose");
+		} else if c == 1 {
+			println ("You win!");
+		}
+	}
+
+	println ();
+}
