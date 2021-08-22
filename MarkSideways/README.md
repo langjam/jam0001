@@ -31,14 +31,36 @@ ExampleCode.init();
 
 This section of the document is the constructor of the Example Code class (class names, variables, and fields are case/space/punctuation insensitive to allow for natural language in the document comments, but consitent parsing in the code itself).
 
-This constructor contains a single line:
+This constructor generates a message string. It does so by calling a helper method called `generateGreeting`. This helper method is defined in the next sub-heading. Once it has a message, it prints it to STDOUT using the built-in `print` function.
 
 ```
-print("Hello, World!");
+message = this.generateGreeting("World");
+print(message);
 ```
+
+### Generate Greeting
+
+This sub heading is a method definition on the `Example Code` class. It contains one argument:
+
+- `receiver` - the name of the person or entity to be greeted
+
+Bulleted lists with an inline code snippet is how arguments are defined for methods. Now that `receiver` is defined, we can use it in code. This method just concatenates some strings to the receiver value and returns it.
+
+```
+return "Hello, " + receiver + "!";
+```
+
+### Language Syntax for snippets
+
+The actual scripting portion of MarkSideways is somewhat common, as you can see from the code snippets above. It is modelled after a generic variety of curly-brace scripting languages so that it feels natural and somewhat familiar to most users. This project is mostly an exploration of what a "First Class Comment" would look like on a very high level more so than an exploration of new syntax details.
 
 ## Other Demos
 
 There are a variety of demo code files in the `samples/` directory. You can run any of these samples by passing them to `ms.py` as-is. Remember, markdown **IS** the file format for marksideways. These are not just documentation readmes of these program. They **ARE** the programs.
 
-- [Tetris](/samples/Tetris.md) - 
+- **[Introduction](samples/Introduction.md)** - This is a similar Hello World program to the one embedded with this document, but covers more scenarios in more detail.
+- **[Tetris](samples/Tetris.md)** - This is an implementation of Tetris using SDL2 (via PyGame since the interpreter is written in Python). It demonstrates how to create a game window, draw to the screen, and use input from the user.
+- **[Calculate &pi;](samples/CalculatePi.md)** - This is a program that calculates &pi; by inscribing a circle in a square and choosing some number of random points within the square and seeing how many fall within the circle. The number of points can be passed in from the command line.
+
+> You may be wondering *"If there's a heading called 'Other Demos' here, isn't that technically creating a class definition called OtherDemos?"* and the answer is **Yes**. Because there are no full-block code snippets in this heading and no sub-headings, this is technically an empty class definition with an empty constructor.
+
