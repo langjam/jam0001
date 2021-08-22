@@ -1,5 +1,5 @@
 # Doigt's classical "temperature converter counter thing", this one is actually not really a classic but whatever..
-main := proc () {
+main := proc () void {
 
     celsius := 10;
 

@@ -1,5 +1,5 @@
 # Doigt's classical "Hand Pain and Copy Pasta" program
-main := proc () {
+main := proc () void {
 
     a := 2;
     b := 53;
