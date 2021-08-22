@@ -1,0 +1,25 @@
+{
+    "name": "nanodijsktra-syntax-highlighting",
+    "displayName": "Lang Jam Syntax Highlighting",
+    "description": "Syntax highlighting for @exists-forall and @strega-nil's Lang Jam project",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.59.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "nd",
+            "aliases": ["nanodijkstra", "nd"],
+            "extensions": ["nd"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "nd",
+            "scopeName": "source.nd",
+            "path": "./syntaxes/nanodijkstra.tmLanguage.json"
+        }]
+    }
+}

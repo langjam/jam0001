@@ -1,0 +1,105 @@
+type BinSearch = record {
+  arr: Array('t),
+  comp: ('t, 't) -> Order,
+} [
+  `comp is a total order`,
+  `arr is sorted w.r.t. comp`,
+];
+
+fn binary_search(
+  arr: array('t),
+  comp: ('t, 't) -> Order,
+  target: 't,
+  lo: 't,
+  hi: 't,
+) [
+  `$comp is a total order`,
+  `$arr is sorted w.r.t. $comp`,
+  0 <= $lo <= $hi <= len($arr),
+] -> Option(Int) [
+  @post: `if target \in arr[lo..hi], $return = some(index) && lo <= index < hi && get($arr, index) = target; else $return = none`
+] {
+  if lo = hi {
+    proof @post = `lo..hi is empty, so $target \notin $arr[$lo..$hi] = {}, so $return = none`;
+    None
+  } else {
+    let mid = lo + (hi - lo) / 2;
+    match comp(get(arr, mid) [@get_mid], target) {
+      Eq => {
+        proof @post = `lo <= mid < hi, and arr[mid] = target`;
+        Some(mid)
+      }
+      Lt => {
+        let result = binary_search(arr, comp, mid + 1, hi) [@];
+      }
+    }
+  }
+}
+
+
+fn binary_search(
+  arr: Array('t),
+  comp: ('t, 't) -> Order,
+  target: 't,
+) [
+  `$comp is a total order`,
+  `$arr is sorted w.r.t. $comp`,
+] -> Option(Int) [
+  @post: `if target \in arr, return = some(index) && get(arr, index) = target; else return = none`
+] {
+  fn search_rec(
+    lo: Int,
+    hi: Int,
+  ) [
+    `0 <= $lo <= $hi <= len($arr)`
+  ] -> Option(Int) [
+    @post_rec: `if target in arr[lo..hi], return = Some(index) where get(arr, index) = target; else return = None`
+  ] {
+    if lo = hi {
+      proof @post_rec = `arr[lo..hi] is empty`;
+      None
+    } else {
+      let mid = lo + (hi - lo) / 2;
+      proof @mid_between_lo_and_hi: `lo <= mid < hi` =
+        `(hi - lo) / 2 < hi; mid = lo + (hi - lo) / 2 < lo + hi - lo = hi`,
+        `0 <= (hi - lo) / 2; mid = lo + (hi - lo) / 2 >= lo + 0 = lo`;
+      match comp(get(arr, mid) [@get_mid], target) {
+        Eq => {
+          proof @post = `get(arr, mid) = target`;
+          Some(mid)
+        }
+        Lt => {
+          let result = binary_search(arr, comp, mid + 1, hi) [@bounds_right -> @result];
+          proof @bounds_right: `0 <= $lo <= $hi <= len($arr)` =
+            `$lo = mid and @mid_between_lo_and_hi`;
+          proof @post_rec = @result;
+          result
+        }
+        Gt => {
+          let result = binary_search(arr, comp, lo, mid) [@bounds_left -> @result]
+          proof @bounds_left: `0 <= $lo <= $hi <= len($arr)` =
+            `$hi = mid and @mid_between_lo_and_hi`;
+          proof @post_rec = @result;
+          result
+        }
+      }
+    }
+  }
+}
+
+prove @ref by ... from ...;
+           ~~~~~~ ~~~~~~~~
+           ^      ^ optional
+           | optional
+
+
+have @ref: prop;
+
+let s = sort(x) [-> @sorted_s];
+have @sorted_s: `$ret is sorted`;
+
+let s = sort(x) [-> @sorted_s: `$return is sorted`];
+
+
+let s = sort(x) [-> `$ret is sorted`]
+

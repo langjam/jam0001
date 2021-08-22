@@ -1,0 +1,21 @@
+fn fib(n: integer) [
+  `$n >= 0`
+] -> integer [
+  @fib_gt_zero: `$return >= 0`,
+] {
+	match n < 2 {
+		true => {
+      proof @fib_gt_zero = `n >= 0; thus, return = n >= 0`;
+      n
+    },
+		false => {
+      proof @fib_gt_zero = `fib(n - 1) >= 0, fib(n - 2) >= 0; thus, return = fib(n - 1) + fib(n - 2) >= 0 + 0 >= 0`;
+      fib(n - 1) [proof `$n >= 0` = `n >= 2 => n - 1 >= 1 > 0`]
+      + fib(n - 2) [proof `$n >= 0` = `n >= 2 => n - 2 >= 0`]
+    }
+	}
+}
+
+fn main() -> integer {
+	fib(6) [proof `$n >= 0` = `6 >= 0`]
+}

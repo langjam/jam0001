@@ -1,0 +1,524 @@
+use crate::raw_ast::*;
+
+grammar;
+
+pub Program: Program = <definitions:Definition*> => Program {
+	definitions
+};
+
+Definition: Definition = {
+	<TypeAlias>,
+	<SumType>,
+	<LetDefinition>
+};
+
+// ---- definitions ----
+TypeAlias: Definition =
+	KeywordType
+		<name:IdentifierToken>
+		<parameters:TypeParameters>
+		"="
+		<content:TypeExpr>
+		";"
+	=> {
+		let name = TypeIdent::Var(name);
+		Definition::TypeAlias {
+			name,
+			parameters,
+			content,
+		}
+	};
+
+SumType: Definition =
+	KeywordType
+		<name:IdentifierToken>
+		<parameters:TypeParameters>
+		"="
+		KeywordVariant
+		"{"
+			<constructors:Comma<VariantConstructor>>
+		"}"
+		";"
+	=> {
+		Definition::SumType {
+			name: TypeIdent::Var(name),
+			parameters,
+			constructors,
+		}
+	};
+VariantConstructor: (Var, Vec<TypeExpr>) = {
+	<id:Identifier> => (id, vec![]),
+	<id:Identifier> "(" <params:NonEmptyComma<TypeExpr>> ")" => (id, params)
+};
+
+LetDefinition: Definition = {
+	KeywordLet
+		<name:Identifier>
+		":"
+		<ty:TypeExpr>
+		"="
+		<body:Expr>
+		";"
+	=> {
+		Definition::Let {
+			name: name,
+			ty,
+			body,
+		}
+	},
+	KeywordFn
+		<name:Identifier>
+		"("
+		<parameters:Comma<FunctionParameter>>
+		")"
+		<preconditions:FunctionPreconditions>
+		"->"
+		<ret_ty:TypeExpr>
+		<postconditions:FunctionPostconditions>
+		<body:Block>
+	=> {
+		let mut parameter_types = vec![];
+		let mut parameter_names = vec![];
+		for (name, ty) in parameters {
+			parameter_names.push(name);
+			parameter_types.push(ty);
+		}
+		let precond_types = preconditions.iter().map(|p| p.proposition.clone()).collect();
+		let postcond_types = postconditions.iter().map(|p| p.proposition.clone()).collect();
+		Definition::Let {
+			name: name,
+			ty: TypeExpr::Function {
+				parameters: parameter_types,
+				result: Box::new(ret_ty),
+				preconditions: precond_types,
+				postconditions: postcond_types,
+			},
+			body: Expr::Lambda {
+				parameters: parameter_names,
+				ret_ty: None,
+				preconditions,
+				postconditions,
+				body,
+			},
+		}
+	}
+};
+FunctionParameter: (Var, TypeExpr) = <id:Identifier> ":" <ty:TypeExpr> => (id, ty);
+FunctionPreconditions: Vec<ProofParam> = {
+	=> vec![],
+	"[" <Comma<ProofParam>> "]",
+};
+FunctionPostconditions: Vec<ProofResult> = {
+	=> vec![],
+	"[" <Comma<ProofResult>> "]",
+};
+
+ProofParam: ProofParam =
+	<ident:(<ProofRefIdent> ":")?> <proposition:PropositionString> =>
+		ProofParam {
+			ident,
+			proposition,
+		};
+
+ProofResult: ProofResult =
+	<ident:ProofRefIdent> ":" <proposition:PropositionString> =>
+		ProofResult {
+			ident,
+			proposition,
+		};
+
+// ---- types ----
+TypeParameters: Vec<TypeParameter> = {
+	=> vec![],
+	"(" <NonEmptyComma<TypeParameter>> ")",
+};
+TypeArguments: Vec<TypeExpr> = {
+	=> vec![],
+	"(" <NonEmptyComma<TypeExpr>> ")",
+};
+
+TypeExpr: TypeExpr = {
+	<tp:TypeParameter> => TypeExpr::TypeParameter(tp),
+	<name:TypeIdent> <arguments:TypeArguments> =>
+		TypeExpr::RegularType {
+			name,
+			arguments,
+		},
+	"fn" "(" <parameters:Comma<TypeExpr>> ")" "->" <result:TypeExpr> =>
+		TypeExpr::Function {
+			parameters,
+			result: Box::new(result),
+			preconditions: vec![],
+			postconditions: vec![],
+		},
+	"(" <elements:Comma<TypeExpr>> ")" => TypeExpr::Tuple(elements),
+};
+TypeIdent: TypeIdent = {
+	<id:IdentifierToken> => TypeIdent::Var(id),
+	KeywordArray => TypeIdent::Array,
+}
+
+// ---- expressions ----
+Expr: Expr = {
+	<SimpleExpr>,
+	<ComparisonExpr>,
+	<AdditiveExpr>,
+	<MultiplicativeExpr>,
+	<Lambda>,
+	<Match>,
+	<b:Block> => Expr::Block(b),
+};
+SimpleExpr: Expr = {
+	<id:Identifier> => Expr::Var(id),
+	<IntLit>,
+	<StringLit>,
+	<Call>,
+	<Array>,
+	<Tuple>,
+	<MagicExpr>,
+	"(" <Expr> ")",
+};
+
+IntLit: Expr = <i:IntLitToken> => Expr::IntLit(i);
+StringLit: Expr = <s:StringLitToken> => Expr::StringLit(s);
+
+ComparisonExpr: Expr =
+	<e1:ComparisonParameter> <func:ComparisonOperator> <e2:ComparisonParameter>
+=> Expr::Call {
+		callee: Box::new(Expr::Var(Var(func))),
+		args: vec![e1, e2],
+		preconditions: vec![],
+		postconditions: vec![],
+	};
+
+ComparisonParameter: Expr = {
+	<SimpleExpr>,
+	<AdditiveExpr>,
+	<MultiplicativeExpr>,
+};
+ComparisonOperator: String = {
+	"=" => "__eq".to_string(),
+	"!=" => "__ne".to_string(),
+	"<" => "__lt".to_string(),
+	"<=" => "__le".to_string(),
+	">" => "__gt".to_string(),
+	">=" => "__ge".to_string(),
+};
+
+AdditiveExpr: Expr = {
+	<e1:SimpleExpr> <func:AdditiveOperator> <e2:SimpleExpr> =>
+		Expr::Call {
+			callee: Box::new(Expr::Var(Var(func))),
+			args: vec![e1, e2],
+			preconditions: vec![],
+			postconditions: vec![],
+		},
+	<e1:AdditiveExpr> <func:AdditiveOperator> <e2:SimpleExpr> =>
+		Expr::Call {
+			callee: Box::new(Expr::Var(Var(func))),
+			args: vec![e1, e2],
+			preconditions: vec![],
+			postconditions: vec![],
+		},
+};
+AdditiveOperator: String = {
+	"+" => "__add".to_owned(),
+	"-" => "__sub".to_owned(),
+};
+
+MultiplicativeExpr: Expr = {
+	<e1:SimpleExpr> <func:MultiplicativeOperator> <e2:SimpleExpr> =>
+		Expr::Call {
+			callee: Box::new(Expr::Var(Var(func))),
+			args: vec![e1, e2],
+			preconditions: vec![],
+			postconditions: vec![],
+		},
+	<e1:MultiplicativeExpr> <func:MultiplicativeOperator> <e2:SimpleExpr> =>
+		Expr::Call {
+			callee: Box::new(Expr::Var(Var(func))),
+			args: vec![e1, e2],
+			preconditions: vec![],
+			postconditions: vec![],
+		},
+};
+MultiplicativeOperator: String = {
+	"*" => "__mul".to_owned(),
+	"/" => "__div".to_owned(),
+};
+
+Call: Expr =
+	<callee:SimpleExpr>
+		"(" <args:Comma<Expr>> ")"
+		<conditions:CallProofInfo>
+	=> {
+		let (preconditions, postconditions) = conditions;
+		Expr::Call {
+			callee: Box::new(callee),
+			args,
+			preconditions,
+			postconditions,
+		}
+	};
+CallProofInfo: (Vec<ProofExpr>, Vec<ProofBinding>) = {
+	=> (vec![], vec![]),
+	"["
+		<preconditions:Comma<ProofExpr>>
+		<postconditions:("->" <NonEmptyComma<ProofBinding>>)?>
+	"]"
+	=> {
+		(preconditions, postconditions.unwrap_or_else(|| vec![]))
+	}
+};
+ProofExpr: ProofExpr = {
+	<ident:ProofRefIdent> <proposition:(":" <PropositionString>)?> =>
+		ProofExpr::Ref {
+			ident,
+			proposition,
+		},
+	KeywordProof <proposition:PropositionString> "=" <proof:ProofString> =>
+		ProofExpr::Inline {
+			proposition,
+			proof,
+		},
+};
+ProofBinding: ProofBinding = <ident:ProofRefIdent> <proposition:(":" <PropositionString>)?> =>
+	ProofBinding {
+		ident,
+		proposition,
+	};
+
+Array: Expr = KeywordArray "(" <elements:Comma<Expr>> ")" => Expr::Array(elements);
+Tuple: Expr = {
+	"(" ")" => Expr::Tuple(vec![]),
+	"(" <e1:Expr> "," <rest:Comma<Expr>> ")" => {
+		let mut elements = vec![e1];
+		elements.extend(rest);
+		Expr::Tuple(elements)
+	},
+};
+
+Lambda: Expr = {
+	KeywordFn
+		"(" <parameters:Comma<Identifier>> ")"
+		<preconditions:FunctionPreconditions>
+		<body:Block>
+	=> {
+		Expr::Lambda {
+			parameters,
+			ret_ty: None,
+			preconditions,
+			postconditions: vec![],
+			body,
+		}
+	},
+	KeywordFn
+		"(" <parameters:Comma<Identifier>> ")"
+		<preconditions:FunctionPreconditions>
+		"->" <ret_ty:TypeExpr?>
+		<postconditions:FunctionPostconditions>
+		<body:Block>
+	=> {
+		Expr::Lambda {
+			parameters,
+			ret_ty,
+			preconditions,
+			postconditions,
+			body,
+		}
+	},
+};
+
+Match: Expr = KeywordMatch <discrim:Expr> "{" <cases:Comma<MatchCase>> "}" =>
+	Expr::Match {
+		discrim: Box::new(discrim),
+		cases,
+	};
+MatchCase: (Pattern, Expr) = <pattern:Pattern> "=>" <expr:Expr> => (pattern, expr);
+Pattern: Pattern = {
+	KeywordUnderscore => Pattern::Any,
+	<name:Identifier> =>
+		Pattern::Constructor {
+			name,
+			elements: vec![]
+		},
+	<name:Identifier> "(" <elements:Comma<PatternElement>> ")" =>
+		Pattern::Constructor {
+			name,
+			elements,
+		},
+};
+PatternElement: Option<Var> = {
+	KeywordUnderscore => None,
+	<name:Identifier> => Some(name),
+};
+
+
+MagicExpr: Expr = {
+	KeywordMagic "(" <name:StringLitToken> ")" =>
+		Expr::Magic {
+			name,
+			params: vec![],
+		},
+	KeywordMagic "(" <name:StringLitToken> "," <arguments:Comma<Expr>> ")" =>
+		Expr::Magic {
+			name,
+			params: arguments,
+		},
+};
+
+Block: Block =
+	"{"
+		<statements:Statement*>
+		<expr:Expr>
+	"}"
+	=> {
+		Block {
+			statements,
+			result: Box::new(expr),
+		}
+	};
+
+Statement: Statement = {
+	<expr:Expr> ";" => Statement::Expr(expr),
+	KeywordLet <lhs:Identifier> "=" <rhs:Expr> ";" =>
+		Statement::Let {
+			lhs,
+			rhs,
+		},
+	KeywordLet "(" <lhs:Comma<PatternElement>> ")" "=" <rhs:Expr> ";" =>
+		Statement::LetTuple {
+			lhs,
+			rhs,
+		},
+	KeywordProof
+		<ident:ProofRefIdent>
+		<proposition:(":" <PropositionString>)?>
+		"=" <proof:ProofString>
+	";"
+	=>
+		Statement::Proof {
+			ident,
+			proposition,
+			proof,
+		},
+	KeywordKnown <ident:ProofRefIdent> ":" <proposition:PropositionString> ";" =>
+		Statement::Known {
+			ident,
+			proposition,
+		},
+};
+
+// ---- propositions ----
+
+PropositionString: PropositionString = <s:PropositionStringToken> => PropositionString(s);
+ProofString: ProofString = <s:PropositionStringToken> => ProofString(s);
+
+// ---- helpers ----
+
+Comma<E>: Vec<E> = <list:(<E> ",")*> <last:E?> => {
+	let mut res = list;
+	if let Some(last) = last {
+		res.push(last)
+	};
+	res
+};
+NonEmptyComma<E>: Vec<E> = {
+	<first:E> => {
+		vec![first]
+	},
+	<list:(<E> ",")+> <last:E?> => {
+		let mut res = list;
+		if let Some(last) = last {
+			res.push(last)
+		};
+		res
+	},
+};
+
+
+// ---- lex ----
+
+// keywords
+KeywordUnderscore: () = "_";
+KeywordLet: () = "let";
+KeywordProof: () = "proof";
+KeywordKnown: () = "known";
+KeywordFn: () = "fn";
+KeywordType: () = "type";
+KeywordRecord: () = "record";
+KeywordVariant: () = "variant";
+KeywordMatch: () = "match";
+KeywordIf: () = "if";
+KeywordElse: () = "else";
+KeywordArray: () = "array";
+KeywordMagic: () = "__magic";
+
+// made pub so that KeywordParser exists
+pub Keyword: &'static str = {
+	KeywordUnderscore => "let",
+	KeywordLet => "let",
+	KeywordProof => "proof",
+	KeywordKnown => "known",
+	KeywordFn => "fn",
+	KeywordType => "type",
+	KeywordRecord => "record",
+	KeywordVariant => "variant",
+	KeywordMatch => "match",
+	KeywordIf => "if",
+	KeywordElse => "else",
+	KeywordArray => "array",
+	KeywordMagic => "__magic",
+};
+
+// don't need to worry about keywords; since the keywords are also top-level definitions,
+// no keyword can ever be an identifier
+Identifier: Var = <id:IdentifierToken> => Var(id);
+IdentifierToken: String = <s:r"[_a-zA-Z][-_'a-zA-Z0-9]*"> => s.to_owned();
+
+// '<keyword> is not allowed as a type parameter
+// additionally, for reasons of confusion, 'blah' or 'o'blah is not allowed either
+TypeParameter: TypeParameter = <s:r"'[_a-zA-Z][-_a-zA-Z0-9]*"> =>
+	match KeywordParser::new().parse(&s[1..]) {
+		Ok(kw) => panic!("Keyword ({}) is not allowed as a type parameter", kw),
+		Err(_) => TypeParameter(s[1..].to_owned()),
+	};
+ 
+// @<keyword> is not allowed as a proof reference
+ProofRefIdent: ProofRefIdent = <s:r"@[_a-zA-Z][-_'a-zA-Z0-9]*"> =>
+	match KeywordParser::new().parse(&s[1..]) {
+		Ok(kw) => panic!("Keyword ({}) is not allowed as a type parameter", kw),
+		Err(_) => ProofRefIdent(s[1..].to_owned()),
+	};
+
+IntLitToken: i64 = <s:r"-?[0-9]+"> => i64::from_str_radix(s, 10).unwrap();
+StringLitToken: String = <s:r#""([^\\"]|\\\\|\\"|\\n)*""#> =>
+	{
+		let s = &s[1..s.len() - 1];
+		let mut res = String::new();
+		let mut in_escape = false;
+		for ch in s.chars() {
+			if in_escape {
+				in_escape = false;
+				if ch == '\\' {
+					res.push('\\')
+				} else if ch == '"' {
+					res.push('"')
+				} else if ch == 'n' {
+					res.push('\n')
+				} else {
+					panic!("Unknown escape sequence \\{}", ch)
+				}
+			} else {
+				if ch == '\\' {
+					in_escape = true
+				} else {
+					res.push(ch)
+				}
+			}
+		}
+
+		res
+	};
+PropositionStringToken: String = <s:r"`[^`]*`"> => s[1..s.len() - 1].to_owned();
+

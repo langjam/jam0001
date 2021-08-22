@@ -1,0 +1,73 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "nanodijkstra",
+	"scopeName": "source.nd",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#proof_refs"
+		},
+		{
+			"include": "#proof_strings"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#numbers"
+		}
+	],
+	"repository": {
+		"comments": {
+			"patterns": [{
+				"name": "comment.line.jam",
+				"match": "#.*$"
+			}]
+		},
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.jam",
+				"match": "\\b(fn|let|if|else|match|proof|have|array)\\b"
+			}]
+		},
+		"proof_refs": {
+			"patterns": [{
+				"name": "support.variable.jam",
+				"match": "@[_a-za-z][-_'a-za-z0-9]**"
+			}]
+		},
+		"proof_strings": {
+			"patterns": [{
+				"name": "comment.block.documentation.jam",
+				"begin": "`",
+				"end": "`",
+				"patterns": [
+					{
+						"name": "comment.block.documentation.escape.jam",
+						"match": "\\\\`"
+					}
+				]
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.jam",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.jam",
+					"match": "\\\\."
+				}
+			]
+		},
+		"numbers": {
+			"name": "constant.numeric.jam",
+			"match": "\\b[0-9]+(?:\\.[0-9]+)?\\b"
+		}
+	}
+}

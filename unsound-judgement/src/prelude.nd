@@ -1,0 +1,59 @@
+type bool = variant {
+	false,
+	true,
+};
+type option('a) = variant {
+  none,
+  some('a),
+};
+
+fn __eq(a: 'a, b: 'a) -> bool {
+	__magic("eq", a, b)
+}
+fn __ne(a: 'a, b: 'a) -> bool {
+	__magic("ne", a, b)
+}
+fn __lt(a: integer, b: integer) -> bool {
+	__magic("lt", a, b)
+}
+fn __gt(a: integer, b: integer) -> bool {
+	__magic("gt", a, b)
+}
+fn __le(a: integer, b: integer) -> bool {
+	__magic("le", a, b)
+}
+fn __ge(a: integer, b: integer) -> bool {
+	__magic("ge", a, b)
+}
+fn __add(a: integer, b: integer) -> integer {
+	__magic("add", a, b)
+}
+fn __sub(a: integer, b: integer) -> integer {
+	__magic("sub", a, b)
+}
+fn __mul(a: integer, b: integer) -> integer {
+	__magic("mul", a, b)
+}
+fn __div(a: integer, b: integer) -> integer {
+	__magic("div", a, b)
+}
+
+fn get(arr: array('a), idx: integer) [
+  `0 <= $idx < len($arr)`
+] -> 'a {
+  __magic("get", arr, idx)
+}
+fn len(arr: array('a)) -> integer [
+  @result: `0 <= $return`
+] {
+  proof @result = `assumed`;
+  __magic("len", arr)
+}
+
+fn print(x: 'a) -> () {
+  __magic("print", x)
+}
+fn println(x: 'a) -> () {
+  print(x);
+  print("\n")
+}
