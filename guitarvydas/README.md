@@ -21,9 +21,9 @@ The following is a discussion about the [language jam](https://github.com/langja
 
   <img src="https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/details.png?raw=true" alt="details.png" style="zoom:67%;" />
 
-- (`sequence.drawio` shows the order in which components must be executed)
+- `sequence.drawio` shows the order in which components must be executed
 
-- (`details.drawio` shows the details within the components (BASH at the moment))
+- `details.drawio` shows the details within the components (BASH at the moment)
 
 - run `run.bash` from the command line, it should print 
 ```
@@ -33,11 +33,21 @@ hello
 goodbye
 ```
 
+## Prerequisites
+
+- npm install ohm-js
+- npm install atob
+- npm install pako
+- bash, node.js, tsort (*NIX command)
+
 # Abstract
 
 Transpile drawings to code.
 
-The main purpose of this project is to show that it is easy to transpile diagrams to code.
+The main purposes of this project are:
+
+1. to riff on the idea of 1st-class comments (as per the langjam theme)
+2. to show that it is easy to transpile diagrams to code.
 
 For simplicity of explanation, only a toy example is transpiled.
 
@@ -69,6 +79,7 @@ This is done using drawio, PROLOG, Ohm-JS and JavaScript.
 - JSON
 - Ohm-JS (PEG parser)
 - Glue tool (code emitter/formatter for Ohm-JS)
+- pipelines.
 
 # Drawings
 
@@ -152,6 +163,12 @@ The less syntax and the less type checking (!) the better (see, also, the Readab
 Lisp (Common Lisp, Racket) would be my choice, but Ohm-JS has not yet been ported to lisp.
 
 80x86 is Old Assembler.  JS and Lisp are the New Assemblers.
+
+# Pipelines
+
+This project consists of many transpilers (aka languages), but each transpiler is very simple and does exactly one thing (well).
+
+PEG makes it possible to quickly build many transpilers for one project.   
 
 # Discussion
 To me, 1st class comments means that:
