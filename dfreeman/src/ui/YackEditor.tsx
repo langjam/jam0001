@@ -11,11 +11,12 @@ export const YackEditor: React.FC<IAceEditorProps> = (props) => {
   return (
     <ReactAce
       mode={YackMode}
-      style={{ width: '100%', height: '100%' }}
       theme="tomorrow_night_eighties"
       showPrintMargin={false}
-      setOptions={{ useSoftTabs: true, tabSize: 2, ...props.setOptions }}
+      highlightActiveLine={false}
       {...props}
+      style={{ width: '100%', height: '100%', ...props.style }}
+      setOptions={{ useSoftTabs: true, tabSize: 2, ...props.setOptions }}
     />
   );
 };
@@ -26,6 +27,7 @@ const TokenMap: Record<string, string> = {
   FunKeyword: 'keyword',
   EndKeyword: 'keyword',
   MatchKeyword: 'keyword',
+  Void: 'constant.language',
   Number: 'constant.numeric',
   Boolean: 'constant.language',
   Equals: 'keyword.operator',
@@ -78,7 +80,7 @@ class YackTokenizer implements Tokenizer {
       return { tokens, state: this.dehydrateState(result.state) };
     } catch {
       return {
-        tokens: [{ type: 'comment', value: line }],
+        tokens: [{ type: 'text', value: line }],
         state: '<INITIAL>',
       };
     }

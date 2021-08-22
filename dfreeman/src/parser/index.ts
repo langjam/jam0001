@@ -102,6 +102,7 @@ const functionExpression = node(
   FunctionExpression.fromSequence,
   seq(
     fun,
+    maybe(identifier),
     seq(lParen, repeatSep(identifier, comma), rParen).map((seq) => seq[1]),
     repeatSep(expression, semicolon),
     end

@@ -5,13 +5,14 @@ Picture a 90s-style Under Construction gif here.
 Done
 
 - [x] logging/native bindings
+- [x] clean up REPL visuals
+- [x] ADT instance printing
 
 High priority
 
-- [ ] clean up REPL visuals
 - [ ] rich comment printing
-- [ ] ADT instance printing
-- [ ] comment linking
+- [ ] embedded comment printing
+- [ ] expression embedding in comments
 - [ ] example files/walkthrough
 - [ ] error reporting in console
 - [ ] `@expect` in examples
@@ -22,6 +23,7 @@ Lower priority
 - [ ] equality
 - [ ] strings
 - [ ] error reporting in source
+- [ ] tag items with associated docs in repl output
 
 Nice to have
 

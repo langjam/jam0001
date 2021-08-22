@@ -179,6 +179,7 @@ export class FunctionExpression {
   public readonly kind = 'Function';
   public constructor(
     public readonly source: string,
+    public readonly name: string | null,
     public readonly params: ReadonlyArray<Identifier>,
     public readonly body: ReadonlyArray<Expression>,
     public readonly loc: Loc
@@ -186,9 +187,9 @@ export class FunctionExpression {
 
   public static fromSequence(
     { source, loc }: NodeDetails,
-    [, params, body]: [Token, Array<Identifier>, Array<Expression>, Token]
+    [, name, params, body]: [Token, Identifier | null, Array<Identifier>, Array<Expression>, Token]
   ): FunctionExpression {
-    return new FunctionExpression(source, params, body, loc);
+    return new FunctionExpression(source, name?.value ?? null, params, body, loc);
   }
 }
 

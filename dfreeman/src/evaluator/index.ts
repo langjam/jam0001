@@ -50,6 +50,7 @@ export class FunctionValue {
   public readonly kind = 'Function';
   public constructor(
     public readonly source: string,
+    public readonly name: string | null,
     public readonly params: ReadonlyArray<string>,
     public readonly body: ReadonlyArray<Expression>,
     public readonly scope: Scope
@@ -208,7 +209,7 @@ export class Evaluator {
 
   private evaluateFunction(expr: FunctionExpression, scope: Scope): FunctionValue {
     let params = expr.params.map((identifier) => identifier.value);
-    return new FunctionValue(expr.source, params, expr.body, scope);
+    return new FunctionValue(expr.source, expr.name, params, expr.body, scope);
   }
 
   private evaluateCall(expr: CallExpression, outerScope: Scope): Value {
@@ -227,6 +228,10 @@ export class Evaluator {
     }
 
     let innerScope = new Scope(callee.scope);
+    if (callee.name) {
+      innerScope.define(callee.name, callee);
+    }
+
     for (let i = 0; i < args.length; i++) {
       innerScope.define(callee.params[i], args[i]);
     }

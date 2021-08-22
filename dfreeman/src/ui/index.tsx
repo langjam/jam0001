@@ -77,7 +77,13 @@ const Playground: React.FC = () => {
   `);
 
   let pushMessage = (message: ReplMessage) => setMessages((messages) => [...messages, message]);
-  let evaluator = useMemo(() => new Evaluator(buildNativeDefinitions({ log: pushMessage })), []);
+  let evaluator = useMemo(
+    () =>
+      new Evaluator(
+        buildNativeDefinitions({ log: (value) => pushMessage({ kind: 'log', value }) })
+      ),
+    []
+  );
   let doUpdateSource = useCallback(
     (source: string) => {
       evaluator.reset();
