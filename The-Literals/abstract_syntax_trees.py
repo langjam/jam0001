@@ -190,10 +190,7 @@ class SetStmt(StmtContents):
         return f"SET {self.target} TO {self.value}"
 
     def execute(self):
-        if isinstance(self.value, int):
-            set_var(self.target, self.value)
-        else:
-            set_var(self.target, self.value.evaluate())
+        set_var(self.target, self.value.evaluate())
 
 
 class CallStmt(Stmt):
