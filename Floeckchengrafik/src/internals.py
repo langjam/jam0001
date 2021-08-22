@@ -65,7 +65,7 @@ internals = {
     "string_removesuffix": lambda args: args[0].removesuffix(args[1]),
     "string_replace": lambda args: args[0].replace(args[1], args[2]),
     "string_split": lambda args: args[0].split(args[1]),
-    "sleep": lambda args: time.sleep(args[0])
+    "sleep": lambda args: time.sleep(args[0] / 1000)
 }
 
 env = {
