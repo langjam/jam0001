@@ -60,3 +60,13 @@ def set_marksideways_dir(dir):
 
 def get_marksideways_dir():
   return _ms_dir
+
+# It's the last evening of a hackathon so I deserve a break!
+# This is a way to just save the interpreter's scope.globals value in a centralized way.
+# This is accessed by the HTTP server when it runs handlers.
+_sgh = None
+def set_scope_globals_hack(g):
+  global _sgh
+  _sgh = g
+def get_scope_globals_hack():
+  return _sgh

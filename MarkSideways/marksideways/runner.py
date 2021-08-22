@@ -1,4 +1,4 @@
-from .exceptions import ParserException
+from .exceptions import ParserException, print_stack_trace
 from .tokenizer import markdown_tokenize, code_tokenize, Token
 from .nodes import *
 from .parser import parse_code
@@ -26,6 +26,7 @@ class Runner:
     built_ins = generate_builtins()
     user_defined = gather_user_entities(document)
     globals = merge_dictionaries(built_ins, user_defined)
+    set_scope_globals_hack(globals)
     locals = {
       'args': ArrayValue(list(map(lambda arg: StringValue(arg), args))),
     }
@@ -33,18 +34,8 @@ class Runner:
     status = run_code_block(document.code, Scope(globals, locals))
     if status != None:
       if status.type == 'EXCEPTION':
-        stack_trace = status.arg
-        stack_trace_walker = stack_trace
-        while stack_trace_walker != None:
-          token = stack_trace_walker.token
-          error = stack_trace_walker.error
-          prefix = token.filename + " Line " + str(token.line) + " Column " + str(token.col) + ":"
-          print(prefix)
-          if error != None:
-            print("  > " + error)
-          stack_trace_walker = stack_trace_walker.next
+        print_stack_trace(status.arg)
 
-    
 def _parse_markdown_structure(items):
   root = None
   active_class = None

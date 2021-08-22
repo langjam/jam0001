@@ -137,25 +137,32 @@ class FunctionInvocation(Expression):
     
     if is_null(root_value): return to_null_error_value(root_value)
 
-    if root_value.type == 'FUNCTION':
-      method_def = root_value.method_def
-      return run_function(self.open_paren, method_def.code, scope.globals, None, method_def.arg_names, args)
-    elif root_value.type == 'METHOD':
-      method_def = root_value.method_def
-      class_def = method_def.class_def
-      return run_function(self.open_paren, method_def.code, scope.globals, root_value.instance, method_def.arg_names, args)
-    elif root_value.type == 'CONSTRUCTOR':
-      class_def = root_value.class_def
-      instance = InstanceValue(root_value.class_def)
-      value = run_function(self.open_paren, class_def.code, scope.globals, instance, class_def.arg_names, args)
-      if value.is_error: return value
-      return instance
-    elif root_value.type == 'BUILTIN_FUNCTION':
-      output = root_value.handler(self.open_paren, args)
-      if output == None: output = NULL_VALUE
-      return output
+    if root_value.is_invocable:
+      return run_function_value(self.open_paren, root_value, scope.globals, args)
     else:
       return new_error_value(self.expression.first_token, "This is not a function method or constructor and cannot be invoked like this.")
+
+def run_function_value(throw_token, func_value, scope_globals, args):
+  if func_value.type == 'FUNCTION':
+    method_def = func_value.method_def
+    return run_function(throw_token, method_def.code, scope_globals, None, method_def.arg_names, args)
+  
+  if func_value.type == 'METHOD':
+    method_def = func_value.method_def
+    class_def = method_def.class_def
+    return run_function(throw_token, method_def.code, scope_globals, func_value.instance, method_def.arg_names, args)
+  
+  if func_value.type == 'CONSTRUCTOR':
+    class_def = func_value.class_def
+    instance = InstanceValue(func_value.class_def)
+    value = run_function(throw_token, class_def.code, scope_globals, instance, class_def.arg_names, args)
+    if value.is_error: return value
+    return instance
+  
+  if func_value.type == 'BUILTIN_FUNCTION':
+    output = func_value.handler(throw_token, args)
+    if output == None: output = NULL_VALUE
+    return output
 
 class ExpressionAsExecutable(Executable):
   def __init__(self, expression):

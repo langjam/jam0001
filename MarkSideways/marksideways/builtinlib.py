@@ -5,6 +5,7 @@ import time
 from .values import *
 from .builtinlibgame import get_game_lib
 from .builtinlibhttpserve import get_httpserve_lib
+from .util import *
 
 def ensure_arg_count(throw_token, args, min, max = None):
   if max == None: max = min
@@ -213,7 +214,7 @@ def generate_builtins():
     port = args[0].value
     if port < 1 or port > 65535:
       return new_error_value(throw_token, "Invalid port number! Cannot use " + str(port) + ".")
-    return httpservelib['start'](throw_token, port)
+    return httpservelib['start'](throw_token, port, get_scope_globals_hack())
 
   lookup = {
     'assert': _assert,

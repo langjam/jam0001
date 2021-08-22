@@ -10,3 +10,14 @@ class StackTrace:
     self.token = token
     self.error = error
     self.next = nested
+
+def print_stack_trace(stack_trace):
+  stack_trace_walker = stack_trace
+  while stack_trace_walker != None:
+    token = stack_trace_walker.token
+    error = stack_trace_walker.error
+    prefix = token.filename + " Line " + str(token.line) + " Column " + str(token.col) + ":"
+    print(prefix)
+    if error != None:
+      print("  > " + error)
+    stack_trace_walker = stack_trace_walker.next
