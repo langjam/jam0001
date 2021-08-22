@@ -36,6 +36,8 @@ You can only run instruction statements inside a comment! 💬
 
 ## Installation
 
+**NOTE:** Please run on **Linux**.
+
 ```
 $ git clone https://github.com/mufeedvh/regretti.git
 $ cd regretti/
