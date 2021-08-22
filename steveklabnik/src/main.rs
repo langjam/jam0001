@@ -5,16 +5,19 @@ use std::env;
 use std::f64::consts::PI;
 use std::fmt;
 use std::fs;
+use std::rc::Rc;
 
 #[derive(Debug)]
-struct Env {
+struct Env<'a> {
     env: HashMap<String, Exp>,
+    parent: Option<&'a Env<'a>>,
 }
 
-impl Default for Env {
-    fn default() -> Self {
-        let mut default = Self {
+impl<'a> Default for Env<'a> {
+    fn default() -> Env<'static> {
+        let mut default = Env {
             env: Default::default(),
+            parent: None,
         };
 
         default.env.insert(
@@ -66,6 +69,7 @@ enum Exp {
     Array(toml::value::Array),
     Table(toml::value::Table),
     Fn(fn(&[Value], &mut Env) -> Value),
+    Lambda { params: Rc<Exp>, body: Rc<Exp> },
 }
 
 impl fmt::Debug for Exp {
@@ -87,6 +91,7 @@ impl fmt::Debug for Exp {
             }
             Exp::Table(_t) => write!(f, "[table]"),
             Exp::Fn(_func) => write!(f, "[func]"),
+            Exp::Lambda { .. } => write!(f, "[lambda]"),
         }
     }
 }
@@ -121,6 +126,7 @@ fn exp_to_value(exp: Exp, env: &mut Env) -> toml::Value {
         Exp::Array(a) => Value::Array(a),
         Exp::Table(t) => Value::Table(t),
         Exp::Fn(func) => func(&[], env),
+        Exp::Lambda { .. } => panic!("cannot turn a lambda into a value"),
     }
 }
 
@@ -166,9 +172,11 @@ fn check_first_class(toml: &str) {
         if byte == b'\n' {
             found = true;
             break;
-        } 
+        }
     }
-    if !found { panic!("You must only have 20 characters of a comment") }
+    if !found {
+        panic!("You must only have 20 characters of a comment")
+    }
 
     // ... and then the rest
     let rest = &toml[21..];
@@ -180,9 +188,19 @@ fn check_first_class(toml: &str) {
     }
 }
 
+fn env_get(k: &str, env: &Env) -> Option<Exp> {
+    match env.env.get(k) {
+        Some(exp) => Some(exp.clone()),
+        None => match &env.parent {
+            Some(parent_env) => env_get(k, &parent_env),
+            None => None,
+        },
+    }
+}
+
 fn eval(exp: &Exp, env: &mut Env) -> Exp {
     match exp {
-        Exp::String(s) => match env.env.get(s) {
+        Exp::String(s) => match env_get(s, env) {
             Some(a) => a.clone(),
             None => Exp::String(s.clone()),
         },
@@ -196,21 +214,32 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
                     "if" => return eval_if(&rest, env),
                     "begin" => return eval_begin(&rest, env),
                     "define" => return eval_define(&rest, env),
+                    "lambda" => return eval_lambda(&rest),
                     _ => {}
                 }
             }
 
             let first = eval(&Exp::from(first.clone()), env);
 
-            if let Exp::Fn(f) = first {
-                let args: Vec<Value> = rest
-                    .iter()
-                    .map(|v| exp_to_value(eval(v, env), env))
-                    .collect();
+            match first {
+                Exp::Fn(f) => {
+                    let args: Vec<Value> = rest
+                        .iter()
+                        .map(|v| exp_to_value(eval(v, env), env))
+                        .collect();
 
-                f(&args, env).into()
-            } else {
-                panic!("'{}' needs to be a function", first);
+                    f(&args, env).into()
+                }
+                Exp::Lambda { params, body } => {
+                    let args: Vec<Value> = rest
+                        .iter()
+                        .map(|v| exp_to_value(eval(v, env), env))
+                        .collect();
+                    let new_env = &mut env_for_lambda(params, &args, env);
+
+                    eval(&body, new_env)
+                }
+                _ => panic!("'{}' needs to be a function", first),
             }
         }
         Exp::Integer(_) => exp.clone(),
@@ -219,7 +248,48 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
         Exp::Datetime(_) => exp.clone(),
         Exp::Table(_) => exp.clone(),
         Exp::Fn(_) => panic!("what the eff is this"),
+        Exp::Lambda { .. } => panic!("what the eff is this"),
     }
+}
+
+fn env_for_lambda<'a>(params: Rc<Exp>, args: &[Value], parent_env: &'a mut Env) -> Env<'a> {
+    let keys: Vec<_> = if let Exp::Array(a) = &*params {
+        a.iter()
+            .map(|x| match x {
+                Value::String(s) => s.clone(),
+                _ => panic!("args have to be strings"),
+            })
+            .collect()
+    } else {
+        panic!("arguments have to be an array");
+    };
+
+    let values: Vec<Value> = args
+        .iter()
+        .map(|v| exp_to_value(eval(&Exp::from(v.clone()), parent_env), parent_env))
+        .collect();
+
+    let mut env: HashMap<String, Exp> = HashMap::new();
+
+    for (k, v) in keys.iter().zip(values.iter()) {
+        env.insert(k.clone(), Exp::from(v.clone()));
+    }
+
+    Env {
+        env,
+        parent: Some(parent_env),
+    }
+}
+
+fn eval_lambda(args: &[Exp]) -> Exp {
+    if args.len() > 2 {
+        panic!("sorry, lambda can only take args and a body");
+    }
+
+    let params = Rc::new(args[0].clone());
+    let body = Rc::new(args[1].clone());
+
+    Exp::Lambda { params, body }
 }
 
 fn eval_if(args: &[Exp], env: &mut Env) -> Exp {
