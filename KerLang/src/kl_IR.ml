@@ -83,3 +83,19 @@ let count = func ~name:(Some("count")) @@
   If (Var 0,
       app OUT [Var 0; app SELF [sub (Var 0) (Cst 1)]],
       app OUT [Cst 0; Cst 0])
+
+(** {2 Utils} *)
+
+let max3 x y z = max (max x y) z
+
+let rec ast_count_params (func : ast): int =
+  match func with
+  | Cst _ -> 0
+  | Var id ->
+    (* The exisence of x_n tells us that there are at least (n + 1) variables. *)
+    id + 1
+  | App (_, args) ->
+    List.fold_right (fun ast acc -> max (ast_count_params ast) acc) args 0
+  | If (cond, ifcase, elsecase) ->
+    max3 (ast_count_params cond) (ast_count_params ifcase) (ast_count_params elsecase)
+
