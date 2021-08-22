@@ -129,12 +129,15 @@ impl WebRunner {
 
         log::info!("python id: {}", child.id());
         let mut x: u64 = 0;
+        // let memlimit = std::env::var("PYTHON_MEMLIMIT")?.parse()?;
         while let Ok(None) = child.try_wait() {
+
             let usage = WebRunner::python_mem_usage(child.id());
             if x % 100 == 0 {
                 log::info!("Python is using {} kb of memory ({} mb, {} gb)", usage, usage/1024, usage/1024/1024);
             }
-            if usage > 3000000 {
+
+            if usage > 8000000 {
                 child.kill().unwrap();
             }
             tokio::task::yield_now().await;
