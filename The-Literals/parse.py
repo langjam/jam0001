@@ -516,10 +516,10 @@ if __name__ == "__main__":
     parser = Parser(program(function_call_with_params_and_result))
     parser.parse()
 
-    # input_file = "samples/fib.comment"
-    # with open(input_file, "r") as f:
-    #     text = f.read()
+    input_file = "samples/fib.comment"
+    with open(input_file, "r") as f:
+        text = f.read()
 
-    # tokeniser = Tokeniser(text)
-    # parser = Parser(tokeniser.tokenise().__next__)
-    # parser.parse()
+    tokeniser = Tokeniser(text)
+    parser = Parser(tokeniser.tokenise().__next__)
+    parser.parse()

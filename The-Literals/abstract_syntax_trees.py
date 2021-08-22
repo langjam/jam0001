@@ -9,9 +9,24 @@ class UndefinedVariableError(Exception):
         return f"Undefined variable: {self.varname}"
 
 
+class UnknownFunctionError(Exception):
+    def __init__(self, name):
+        self.func_name = name
+
+    def __str__(self):
+        return f"Unknown function: {self.func_name}"
+
+
 # All of the functions, by name.
 # Q. Would builtins go here also?
 functions = {}
+
+
+def find_function(func_name: str):
+    try:
+        return functions[func_name]
+    except KeyError:
+        raise UnknownFunctionError(func_name)
 
 
 environments = []
@@ -70,10 +85,7 @@ class Variable(Operand):
         return f"VAR {self.varname}"
 
     def evaluate(self):
-        if self.varname in defined_variables:
-            return defined_variables[self.varname]
-        else:
-            raise UndefinedVariableError(self.varname)
+        return get_var(self.varname)
 
 
 class Parameter(Expr):
@@ -137,11 +149,8 @@ class SetStmt(Stmt):
         return f"SET {self.target} TO {self.value}"
 
     def execute(self):
-        defined_variables[self.target] = self.value
+        set_var(self.target, self.value)
 
-def find_function(func_name: str):
-    # Move this later, and also define it!
-    pass
 
 class CallStmt(Stmt):
     def __init__(self, func_name, args, postfix_assignment=None):
@@ -162,8 +171,10 @@ class CallStmt(Stmt):
             # TODO: Assign some_env[postfix_assignment] = return_val
             pass
 
+
 class ReturnStmt(Stmt):
     pass
+
 
 class CallStmt(Stmt):
     def __init__(self, func_name, args, postfix_assignment=None):
@@ -227,3 +238,56 @@ class Program:
 
     def __repr__(self):
         return f"\nPROGRAM \n{self.funcs}\n{self.stmts}"
+
+
+if __name__ == "__main__":
+
+    def it_sets_variables():
+        reset_env()
+        set_stmt = SetStmt("x", 35)
+        set_stmt.execute()
+        variable = Variable("x")
+        value = variable.evaluate()
+
+        assert value == 35
+
+    def it_pushes_and_pops_environments():
+        reset_env()
+        set_stmt = SetStmt("x", 17)
+        set_stmt.execute()
+        variable = Variable("x")
+        value = variable.evaluate()
+        assert value == 17
+
+        push_env()
+        set_stmt = SetStmt("x", 99)
+        set_stmt.execute()
+        value = variable.evaluate()
+        assert value == 99
+
+        pop_env()
+        value = variable.evaluate()
+        assert value == 17
+
+    def it_complains_about_unknown_variables():
+        reset_env()
+        try:
+            variable = Variable("x")
+            variable.evaluate()
+            assert False
+        except UndefinedVariableError:
+            assert True
+
+    def it_complains_about_unknown_functions():
+        reset_env()
+        try:
+            call_stmt = CallStmt("Blows the bloody doors off", [])
+            call_stmt.execute()
+            assert False
+        except UnknownFunctionError:
+            assert True
+
+    it_sets_variables()
+    it_pushes_and_pops_environments()
+    it_complains_about_unknown_variables()
+    it_complains_about_unknown_functions()
