@@ -305,6 +305,17 @@ export class Model {
         this.notifyChange();
     }
 
+    deleteComment(id: string) {
+        let comment = this.mCommentsMap.get(id);
+        if (comment !== undefined && comment instanceof ModelComment) {
+            let parent = this.mCommentsMap.get(comment.parentId);
+
+            this.mCommentsMap.delete(id);
+            parent?.children.slice(parent.children.indexOf(comment), 1);
+        }
+        this.notifyChange();
+    }
+
     private parseComment(parentId : string, jsonComment : any) : ModelComment {
         let comm = new ModelComment(
             jsonComment.content, 
@@ -326,18 +337,28 @@ export class Model {
     save() {
         let obj = {
             counter: this.mCounter,
-            posts: this.toObject
+            posts: this.toObject()
         }
         let objString = JSON.stringify(obj);
+        try {
         fs.writeFileSync('state.json', objString)
+        } catch {
+
+        }
     }
 
     load() {
+        try {
+
         let objString = fs.readFileSync('state.json').toString()
+        console.log(objString)
         let obj = JSON.parse(objString);
         this.mCounter = obj.counter;
-        for( let topic of obj.topics ) {
+        for( let topic of obj.posts.topics ) {
             this.addPost(topic);
+        }
+        }catch (error) {
+            console.log(error)
         }
     }
 }
