@@ -49,8 +49,26 @@ print("Hello, World!");
 
 A *First-Class Comment* looks like this:
 ```c
-#
+#Hello world
+x := 0;
+
+# This prints "Hello world"
 print([x | tostring]);
+```
+
+```c
+# ^increment
+x := 0;
+
+# This prints 1
+print([x | isset increment]);
+
+if ([x | isset increment]) {
+    x = x + 1;   
+}
+
+# try removing the ^increment in the comment
+print(x);
 ```
 
 #### Variables
