@@ -979,7 +979,7 @@ function run(compilation_result, pc=0, func, args) {
 					if (handler !== undefined) handler.call(redactify(comment.text))
 				} else {
 					const handler = comment_handlers.get(comment.tag)
-					if (handler !== undefined) handler.call(...comment.parameters.map(redactify), redactify(comment.text))
+					if (handler !== undefined) handler.call(redactify(comment.text), ...comment.parameters.map(redactify).slice().reverse())
 				}
 			}
 		}
