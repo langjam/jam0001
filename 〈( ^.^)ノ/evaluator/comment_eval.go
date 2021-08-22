@@ -38,6 +38,8 @@ func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
 		zero: e.zero,
 		comments: e.comments}
 
+	val := shared.Node{}
+
 	for _, comment := range comments {
 		_, ok := ev.comments[comment]
 		if !ok {
@@ -53,12 +55,11 @@ func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
 		ev.positive = ev.positive[ev.maxRef:]
 		ev.maxRef = 0
 
-		ev.eval_expr(ev.comments[comment])
-
+		val = ev.eval_expr(ev.comments[comment])
 	}
 
 	e.zero = ev.zero
 	e.negative = ev.negative
 
-	return shared.Node{}
+	return val
 }
