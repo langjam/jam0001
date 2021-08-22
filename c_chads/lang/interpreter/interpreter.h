@@ -4,12 +4,15 @@
 
 enum Interpreter_Type {
     IT_VOID,
+    IT_CPTR,
     IT_CFUNC,
     IT_FUNC,
     IT_INT,
     IT_FLOAT,
     IT_STRING,
-    IT_ARRAY
+    IT_ARRAY,
+    IT_STRUCTDECL,
+    IT_STRUCT
 };
 
 typedef struct Interpreter_Value (*Interpreter_Cfunc)(struct Vec OF(struct Interpreter_Value)*);
@@ -35,6 +38,13 @@ struct Interpreter_Value {
         struct {
             struct Vec OF(struct Interperter_Value) values;
         } array;
+        struct {
+            strview_t typename;
+            struct Map OF(struct Interpreter_Value) fields;
+        } strct;
+        struct {
+            struct Map OF(enum Interpreter_Type) fields;
+        } strctdecl;
     } data;
 };
 
