@@ -1,4 +1,14 @@
-from abstract_syntax_trees import Binop, Comparison, FuncHeader, IfStmt, Number, Parameter, Program, SetStmt, Variable
+from abstract_syntax_trees import (
+    Binop,
+    Comparison,
+    Function,
+    IfStmt,
+    Number,
+    Parameter,
+    Program,
+    SetStmt,
+    Variable,
+)
 from run_code import apply_binop, apply_comparison
 from tokenise import Token, Tokeniser
 
@@ -50,21 +60,21 @@ class Parser:
         return Program(functions, stmts)
 
     def parse_functions(self):
+        functions = []
         token, value = self.peek_lexeme()
         while token in (Token.EOL, Token.FUNCTION):
             while token == Token.EOL:
                 self.advance()
                 token, value = self.peek_lexeme()
 
-        functions = []
-        while token == Token.FUNCTION:
-            functions.append(self.parse_function())
-            token, value = self.peek_lexeme()
+            while token == Token.FUNCTION:
+                functions.append(self.parse_function())
+                token, value = self.peek_lexeme()
         return functions
 
     def parse_function(self):
         params = []
-        return_var = Variable("it")
+        return_var = None
 
         token, value = self.advance()
         self.expect(Token.EOL)
@@ -96,14 +106,14 @@ class Parser:
         self.expect(Token.EOL)
 
         # Parse the function body.
-        self.parse_stmts()
+        body = self.parse_stmts()
 
         # End of function definition.
         self.expect(Token.END_DEF)
         self.expect(Token.DOT)
         self.expect(Token.EOL)
 
-        return FuncHeader(func_name, params, return_var)
+        return Function(func_name, params, return_var, body)
 
     def parse_param(self):
         self.advance()
@@ -154,7 +164,7 @@ class Parser:
         if token != Token.TO:
             raise UnexpectedTokenError(Token.TO, token)
         expr = self.parse_expr()
-        return SetStmt(target, operand)
+        return SetStmt(target, expr)
 
     def parse_identifier(self):
         identifier_words = []
@@ -163,7 +173,7 @@ class Parser:
             identifier_words.append(value)
             self.advance()
             token, value = self.peek_lexeme()
-        return ' '.join(identifier_words)
+        return " ".join(identifier_words)
 
     def parse_if_stmt(self):
         condition = self.parse_expr()
@@ -178,13 +188,9 @@ class Parser:
             self.advance()  # we already have these values!
             second_operand = self.parse_operand()
             if operator_token == Token.BINOP:
-                return Binop(
-                    operator_value, first_operand, second_operand
-                )
+                return Binop(operator_value, first_operand, second_operand)
             if operator_token == Token.COMPARISON:
-                return Comparison(
-                    operator_value, first_operand, second_operand
-                )
+                return Comparison(operator_value, first_operand, second_operand)
         else:
             return first_operand
 
