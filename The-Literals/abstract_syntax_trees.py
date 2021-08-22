@@ -143,7 +143,6 @@ class Comparison(Expr):
 class Stmt:
     def __init__(self, body, done=False):
         self.body = body
-        print(self.body)
         self.done = done
 
     def __repr__(self):
@@ -205,12 +204,10 @@ class CallStmt(Stmt):
             return f"CALL {self.func_name} WITH {self.args}"
 
     def execute(self):
-        print(f"Calling {self.func_name} with args {self.args}")
         function = find_function(self.func_name)
         evaluated_args = {name: value.evaluate() for (name, value) in self.args.items()}
         result = function.run(evaluated_args)
         set_var("it", result)
-        print(f"Result of call was {result}")
         if self.postfix_assignment:
             set_var(self.postfix_assignment, result)
         if function.return_var != None:

@@ -2,7 +2,6 @@ from comparator_constants import EQUAL, GREATER_THAN, GT_OR_EQ, LESS_THAN, LT_OR
 
 
 def apply_binop(op, left_operand, right_operand):
-    print(f"L = {left_operand.evaluate()}, R = {right_operand.evaluate()}")
     if op == "+":
         op_result = left_operand.evaluate() + right_operand.evaluate()
     elif op == "-":
