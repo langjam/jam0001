@@ -24,6 +24,7 @@ let elookup (vname : string) env =
   | None -> raise (Kl_errors.CompileError ("unknown name " ^ vname ^ " in context"))
   | Some x -> x
 
+let[@inline] show x next = App (OUT, [x; next])
 let[@inline] add x y = App (ADD, [x; y])
 let[@inline] sub x y = App (SUB, [x; y])
 let[@inline] mul x y = App (MUL, [x; y])

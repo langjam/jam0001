@@ -25,13 +25,10 @@ and operation =
 type cconstraint =
   | Takes of int
   | Let of string * expr
+  | Shows of expr list
   | Returns of expr
   | Uses of expr list
   | Nothing
-
-type function_result =
-  | Function of expr
-  | Yolo of expr list
 
 let rec pp_expr oc (expr : expr) =
   match expr with
@@ -40,7 +37,7 @@ let rec pp_expr oc (expr : expr) =
 
 and pp_value oc (value: value) =
   match value with
-  | Arg id -> Format.fprintf oc "x%d" id
+  | Arg id -> Format.fprintf oc "x%d" (id - 1)
   | Cst value -> Format.fprintf oc "%d" value
   | Var name -> Format.fprintf oc "%s" name
   | Hole -> Format.fprintf oc "{??}"
@@ -75,6 +72,9 @@ let pp_cconstraint oc (cc: cconstraint) =
     Format.fprintf oc "- Takes %d arguments\n" how_many_args
   | Let (var_name, expr) ->
     Format.fprintf oc "- Let %s be %a" var_name pp_expr expr
+  | Shows expr_list ->
+    Format.fprintf oc "- Shows";
+    List.iter (fun expr -> Format.fprintf oc "%s" "\n  * "; pp_expr oc expr) expr_list
   | Returns expr ->
     Format.fprintf oc "- Returns %a" pp_expr expr
   | Uses expr_list ->
@@ -83,10 +83,15 @@ let pp_cconstraint oc (cc: cconstraint) =
   | Nothing ->
     Format.fprintf oc "- Has comments for humans\n"
 
-type comment_function = {
+type function_result =
+  | Function of expr
+  | Yolo of expr list
+
+and comment_function = {
   name : string;
   n_args : int;
   declarations : (string * expr) list;
+  printing : expr list;
   result : function_result;
 }
 
@@ -246,6 +251,7 @@ let rec parse_statement (decl : (string * expr) list) (comment : tok list) : cco
       begin try
           let a, b = look_for "be" q in Let (string_of_comment a, f b)
         with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
+    | "show" | "shows" -> let l = split_kw "and" q in Shows (List.map f l)
     | "return" | "returns" -> Returns (f q)
     | "use" | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
     | _ -> parse_statement decl q
@@ -260,6 +266,7 @@ let generate_function (Spec (_, name, comment)) =
       | Nothing -> build_function f q
       | Takes n -> build_function {f with n_args = n} q
       | Let (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
+      | Shows l -> build_function {f with printing = f.printing @ l} q
       | Returns e ->
         let r = match f.result with
           | Yolo [] -> Function e
@@ -286,7 +293,7 @@ let generate_function (Spec (_, name, comment)) =
         in build_function {f with result = r} q
   in
   let res = build_function {
-      name; n_args = 0; declarations = []; result = Yolo []
+      name; n_args = 0; declarations = []; printing = []; result = Yolo []
     } comments
   in
   print_comment_function res; res
@@ -335,19 +342,24 @@ let rec complete_holes decl (remain : expr list) = function
       (Node (Rec l)), !r
 
 let rec compile_yolo decl = function
-  | [] -> raise (CompileError "unable to synthetize the function !")
+  | [] -> raise (CompileError "unable to synthesize the function !")
   | e::q ->
     try let res, _ = complete_holes decl q e in res
     with InterruptParsing -> compile_yolo decl q
 
-let rec compile_function (ftable : Kl_IR.ftable) { result; declarations; _ } =
-  match result with
+let rec compile_function (ftable : Kl_IR.ftable) { result; declarations; printing; _ } =
+  let compile_ex = compile_expr ftable declarations in
+  let res = match result with
   | Function e ->
     Printf.printf "- compiling the function to KL_IR\n";
-    compile_expr ftable declarations e
+    compile_ex e
   | Yolo l ->
-    Printf.printf "- perform function synthesis\n";
-    compile_expr ftable declarations (compile_yolo declarations l)
+    Printf.printf "- performing function synthesis\n";
+    compile_ex (compile_yolo declarations l)
+  in let rec add_printing res = function
+  | [] -> res
+  | e::q -> add_printing (Kl_IR.show (compile_ex e) res) q
+  in add_printing res printing
 
 and compile_expr ftable env = function
   | Leaf v -> compile_value ftable env v
