@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
     struct Parser_Node result = parser_parse_toplevel();
     checker_run(&result);
     //print_ast(&result, 0);
-    //printf("------Running------\n");
+    printf("------Running------\n");
 
     intrp_init();
 
