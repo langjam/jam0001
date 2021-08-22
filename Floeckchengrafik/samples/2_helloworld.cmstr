@@ -10,7 +10,7 @@ helloworld = function({ \\ Declare a Function
      * More informations in the Readme under `Functions`.
      */
 
-    h="Hello"? \\ Declare a variable
+    h="Hello"? \\ Declare the first word
     space=" "? \\ Declare the space
     w="World"? \\ Declare the second word
 

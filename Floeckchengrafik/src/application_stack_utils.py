@@ -76,14 +76,31 @@ class StatementNode:
 
     class FunctionDefinitionNode(GenericNode):
 
-        def __init__(self, content, args):
+        def __init__(self, content):
             self.content = content
-            self.args = args
 
     class FunctionCallNode(GenericNode):
 
         def __init__(self, func_name, args):
             self.func_name = func_name
+            self.args = args
+
+    class ClassDefinitionNode(GenericNode):
+
+        def __init__(self, content):
+            self.content = content
+
+    class ClassInstanciationNode(GenericNode):
+
+        def __init__(self, class_name, args):
+            self.class_name = class_name
+            self.args = args
+
+    class ClassMethodExecuteNode(GenericNode):
+
+        def __init__(self, clazz, name, args):
+            self.clazz = clazz
+            self.name = name
             self.args = args
 
     class ForLoopExecutorNode(GenericNode):

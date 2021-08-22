@@ -31,12 +31,12 @@ def intrange_inclusive(args):
 
 
 def setlist(args):
-    print(args)
     args[0][args[1]] = args[2]
 
 
 internals = {
-    "function": lambda args: StatementNode.FunctionDefinitionNode(args[0], args[1:len(args)]),
+    "function": lambda args: StatementNode.FunctionDefinitionNode(args[0]),
+    "class": lambda args: StatementNode.ClassDefinitionNode(args[0]),
     "out": out,
     "readline": lambda args: input(args[0] if len(args) == 1 else ""),
     "length": lambda args: len(args[0]),
@@ -53,24 +53,45 @@ internals = {
     "list_set": setlist,
     "intrange": intrange,
     "intrange_inclusive": intrange_inclusive,
+    "string_startswith": lambda args: args[0].startswith(args[1]),
+    "string_endswith": lambda args: args[0].endswith(args[1]),
+    "string_islower": lambda args: args[0].islower(),
+    "string_isupper": lambda args: args[0].isupper(),
+    "string_lower": lambda args: args[0].lower(),
+    "string_upper": lambda args: args[0].upper(),
+    "string_removeprefix": lambda args: args[0].removeprefix(args[1]),
+    "string_removesuffix": lambda args: args[0].removesuffix(args[1]),
+    "string_replace": lambda args: args[0].replace(args[1], args[2]),
+    "string_split": lambda args: args[0].split(args[1])
 }
 
 env = {
-    "function": StatementNode.FunctionDefinitionNode("internal", []),
-    "out": StatementNode.FunctionDefinitionNode("internal", []),
-    "readline": StatementNode.FunctionDefinitionNode("internal", []),
-    "length": StatementNode.FunctionDefinitionNode("internal", []),
-    "if": StatementNode.FunctionDefinitionNode("internal", []),
-    "exit": StatementNode.FunctionDefinitionNode("internal", []),
-    "for": StatementNode.FunctionDefinitionNode("internal", []),
-    "list_add": StatementNode.FunctionDefinitionNode("internal", []),
-    "list_clear": StatementNode.FunctionDefinitionNode("internal", []),
-    "list_extend": StatementNode.FunctionDefinitionNode("internal", []),
-    "list_pop": StatementNode.FunctionDefinitionNode("internal", []),
-    "list_reverse": StatementNode.FunctionDefinitionNode("internal", []),
-    "list_sort": StatementNode.FunctionDefinitionNode("internal", []),
-    "list_get": StatementNode.FunctionDefinitionNode("internal", []),
-    "list_set": StatementNode.FunctionDefinitionNode("internal", []),
-    "intrange": StatementNode.FunctionDefinitionNode("internal", []),
-    "intrange_inclusive": StatementNode.FunctionDefinitionNode("internal", []),
+    "function": StatementNode.FunctionDefinitionNode("internal"),
+    "class": StatementNode.FunctionDefinitionNode("internal"),
+    "out": StatementNode.FunctionDefinitionNode("internal"),
+    "readline": StatementNode.FunctionDefinitionNode("internal"),
+    "length": StatementNode.FunctionDefinitionNode("internal"),
+    "if": StatementNode.FunctionDefinitionNode("internal"),
+    "exit": StatementNode.FunctionDefinitionNode("internal"),
+    "for": StatementNode.FunctionDefinitionNode("internal"),
+    "list_add": StatementNode.FunctionDefinitionNode("internal"),
+    "list_clear": StatementNode.FunctionDefinitionNode("internal"),
+    "list_extend": StatementNode.FunctionDefinitionNode("internal"),
+    "list_pop": StatementNode.FunctionDefinitionNode("internal"),
+    "list_reverse": StatementNode.FunctionDefinitionNode("internal"),
+    "list_sort": StatementNode.FunctionDefinitionNode("internal"),
+    "list_get": StatementNode.FunctionDefinitionNode("internal"),
+    "list_set": StatementNode.FunctionDefinitionNode("internal"),
+    "intrange": StatementNode.FunctionDefinitionNode("internal"),
+    "intrange_inclusive": StatementNode.FunctionDefinitionNode("internal"),
+    "string_startswith": StatementNode.FunctionDefinitionNode("internal"),
+    "string_endswith": StatementNode.FunctionDefinitionNode("internal"),
+    "string_islower": StatementNode.FunctionDefinitionNode("internal"),
+    "string_isupper": StatementNode.FunctionDefinitionNode("internal"),
+    "string_lower": StatementNode.FunctionDefinitionNode("internal"),
+    "string_uppper": StatementNode.FunctionDefinitionNode("internal"),
+    "string_removeprefix": StatementNode.FunctionDefinitionNode("internal"),
+    "string_removesuffix": StatementNode.FunctionDefinitionNode("internal"),
+    "string_replace": StatementNode.FunctionDefinitionNode("internal"),
+    "string_split": StatementNode.FunctionDefinitionNode("internal"),
 }

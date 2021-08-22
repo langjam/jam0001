@@ -8,6 +8,15 @@ from application_stack_utils import StatementNode
 class ComstructParser(Parser):
     tokens = ComstructLexer.tokens
 
+    # debugfile = "parser.log"
+
+    precedence = (
+        ("left", "NAME", "NUMBER", "STRING"),
+        ("left", "PLUS", "MINUS"),
+        ("left", "MULTIPLY", "DIVIDE"),
+        ("left", "FUNCDESC"),
+    )
+
     @_("expr NEWSTMT")
     def exprs(self, p):
         return [p.expr, ]
@@ -111,6 +120,10 @@ class ComstructParser(Parser):
     def elem(self, p):
         return p.expr
 
+    @_('NONE')
+    def expr(self, p):
+        return None
+
     @_('elem')
     def arglist(self, p):
         return [p.elem, ]
@@ -118,6 +131,14 @@ class ComstructParser(Parser):
     @_('arglist SEP elem')
     def arglist(self, p):
         return p.arglist + [p.elem, ]
+
+    @_("NAME FUNCSEP NAME LPAREN arglist RPAREN")
+    def expr(self, p):
+        return StatementNode.ClassMethodExecuteNode(p.NAME0, p.NAME1, p.arglist)
+
+    @_("NAME FUNCSEP NAME LPAREN RPAREN")
+    def expr(self, p):
+        return StatementNode.ClassMethodExecuteNode(p.NAME0, p.NAME1, [])
 
     @_("NAME LPAREN arglist RPAREN")
     def expr(self, p):
