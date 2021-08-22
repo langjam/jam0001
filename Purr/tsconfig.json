@@ -18,7 +18,8 @@
     },
     "include": [
         "./parse-that/*.ts",
-        "./purr-on/*.ts"
+        "./purr-on/*.ts",
+        "./purr.ts"
     ],
     "exclude": [
         "node_modules",
