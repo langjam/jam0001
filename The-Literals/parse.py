@@ -115,7 +115,7 @@ class Parser:
         self.expect(Token.DOT)
         self.expect(Token.EOL)
 
-        return Function(func_name, params, return_var, body)
+        return Function(func_name, params, body, return_var)
 
     def parse_param(self):
         self.advance()
@@ -127,7 +127,7 @@ class Parser:
         self.advance()
         varname = self.parse_identifier()
         self.expect(Token.EOL)
-        return Variable(varname)
+        return varname
 
     def parse_stmts(self):
         stmts_end_tokens = [Token.END_DEF, Token.EOF]
@@ -227,9 +227,7 @@ class Parser:
         if token == Token.IDENTIFIER_WORD:
             target = self.parse_identifier()
         else:
-            raise UnexpectedTokenError(
-                Token.IDENTIFIER_WORD, token
-            )
+            raise UnexpectedTokenError(Token.IDENTIFIER_WORD, token)
         return target
 
     def parse_expr(self):
