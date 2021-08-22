@@ -12,7 +12,11 @@ use std::process::Command;
 use crate::frontend::web::MessageToWebpage;
 use futures_util::SinkExt;
 use thiserror::Error;
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::mpsc::{UnboundedSender, Sender, channel};
+use std::sync::atomic::{AtomicI64, Ordering};
+use tokio::task::block_in_place;
+use tokio::sync::Mutex;
+use tokio::task;
 
 #[derive(Serialize)]
 struct VisualizerStation {
@@ -25,6 +29,8 @@ struct VisualizerStation {
 pub struct WebRunner {
     program: Program,
     response_tx: UnboundedSender<MessageToWebpage>,
+    channels: Mutex<HashMap<i64, Sender<Vec<i64>>>>,
+    current_index: AtomicI64,
 }
 
 #[derive(Debug, Error)]
@@ -44,6 +50,8 @@ impl WebRunner {
         Self {
             program,
             response_tx,
+            channels: Default::default(),
+            current_index: AtomicI64::new(0),
         }
     }
 
@@ -132,7 +140,20 @@ pub async fn send(sender: &mut SplitSink<WebSocket, Message>, m: &MessageToWebpa
 
 impl Communicator for WebRunner {
     fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError> {
-        todo!()
+        let input_identifier = self.current_index.fetch_add(1, Ordering::SeqCst);
+
+        let res = block_in_place(|| {
+            async {
+                let (mut tx, mut rx) = channel(1);
+                self.channels.lock().await.insert(input_identifier, tx);
+
+                rx.recv().await
+            }
+        });
+
+        task::spawn_blocking(|| {
+
+        });
     }
 
     fn print(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
