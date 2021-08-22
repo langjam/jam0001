@@ -12,7 +12,7 @@ CFLAGS := $(CSAN) $(CLIB) $(CWARN) -g -Werror
 
 all:
 	if [ ! -d "./bin" ]; then mkdir bin; fi
-	$(CPFX) $(CC) $(CFLAGS) $(CSRC) -g -o ./bin/COLAN-21
+	$(CPFX) $(CC) $(CFLAGS) $(CSRC) -o ./bin/COLAN-21
 
 test:
 	$(CPFX) $(CC) $(CFLAGS) $(CTST) -Wno-gnu-zero-variadic-macro-arguments -g -o ./bin/test

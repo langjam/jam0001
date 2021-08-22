@@ -4,11 +4,20 @@
 #include "../lang/interpreter/interpreter.h"
 #include "../aid/sfio/sfio.h"
 
-void print_ast(struct Parser_Node *node, usize depth) {
+void print_type(struct Parser_Type *type) {
+    for (usize i = 0; i < type->depths.size; i += 1) {
+        usize v = *(usize*)vec_get(&type->depths, i);
+        if (v != 0) printf("%zu", v);
+        printf("*");
+    }
+    printf("%.*s", (int)type->name.size, type->name.view);
+}
 
+void print_ast(struct Parser_Node *node, usize depth) {
+    eh_error_pos(node->pos, parser_get_state()->lexer.src);
     if (node->kind == PN_DECL) {
         struct Vec *annots = &node->data.decl.annotations;
-        for (usize i = 0; i < node->data.decl.annotations.size; i += 1) {
+        for (usize i = 0; i < annots->size; i += 1) {
             for (usize i = 0; i < depth; i += 1) 
                 printf("    ");
             strview_t *view = vec_get(annots, i);
@@ -38,6 +47,17 @@ void print_ast(struct Parser_Node *node, usize depth) {
     switch (node->kind) {
         case PN_INVAL:
             break;
+        case PN_LIST:
+            printf("List\n");
+            break;
+        case PN_NEW:
+            printf("New(");
+            print_type(&node->data.newinst.type);
+            printf(")\n");
+            break;
+        case PN_STRUCT:
+            printf("Struct\n");
+            break;
         case PN_TOPLEVEL:
             printf("Toplevel\n");
             break;
@@ -59,8 +79,14 @@ void print_ast(struct Parser_Node *node, usize depth) {
         case PN_BODY:
             printf("Body\n");
             break;
+        case PN_INIT:
+            printf("Init(name = ");
+            printf("%.*s)\n", (int)node->data.init.name.size, node->data.init.name.view);
+            break;
         case PN_DECL:
-            printf("Decl(type = %.*s, name = %.*s)\n", (int)node->data.decl.type.size, node->data.decl.type.view, (int)node->data.decl.name.size, node->data.decl.name.view);
+            printf("Decl(type = ");
+            print_type(&node->data.decl.type);
+            printf(", name = %.*s)\n", (int)node->data.decl.name.size, node->data.decl.name.view);
             break;
         case PN_OPERATOR:
             printf("Op(%.*s)\n", (int)node->data.op.op.size, node->data.op.op.view);
@@ -72,7 +98,9 @@ void print_ast(struct Parser_Node *node, usize depth) {
             printf("Return\n");
             break;
         case PN_PROC:
-            printf("Proc(return=%.*s)\n", (int)node->data.proc.return_type.size, node->data.proc.return_type.view);
+            printf("Proc(return = ");
+            print_type(&node->data.proc.return_type);
+            printf(")\n");
             break;
         case PN_CALL:
             printf("Call\n");

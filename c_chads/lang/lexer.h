@@ -33,7 +33,9 @@ enum Token_Type {
     TT_OPERATOR,
     TT_SEMI,
     TT_RETURN,
-    TT_PROC
+    TT_PROC,
+    TT_STRUCT,
+    TT_NEW
 };
 
 extern const string TT_NAMES[];

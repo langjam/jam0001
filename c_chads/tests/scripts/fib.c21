@@ -6,6 +6,8 @@ fib := proc(n: int) int {
     return fib(n - 1) + fib(n - 2);
 };
 
-main := proc() int {
-    print(fib(10));
+main := proc() void {
+    print(fib(40));
+
+    x := new Vec2 { x: 123, y: 123 };
 };
