@@ -4,9 +4,7 @@
    also known as the glorious Ker-Lann Compiler but who cares ?
 *)
 
-(**
-   Parse a KerLang file and print the result of the parsing
-*)
+(** Parse a KerLang file and print the result of the parsing *)
 let parse_file f =
   let lexbuf = Lexing.from_channel (open_in f) in
   let blocks = ref [] in
@@ -26,7 +24,7 @@ let usage_msg = Sys.argv.(0) ^ " [-verbose] <srcfile> -o <output>"
 let verbose = ref false
 let input_files = ref ""
 let output_file = ref ""
-let output_lang = ref ""
+let output_lang : Kerlang.Kl_codegen.lang option ref = ref None
 let error msg = raise (Arg.Bad msg)
 
 let check () =
@@ -37,12 +35,15 @@ let anon_fun filename =
   input_files := filename
 
 let set_out_lang s =
-  if not (Sys.file_exists s) then
-    error ("file '" ^ s ^ "' does'nt exist !");
-  match Filename.extension s with
-  | ("ml" | "py" | "c") as l -> output_lang := l
-  | _ as ext ->
-    error ("Unknwon file extension '" ^ ext ^ "' (known extensions are .ml .py .c")
+  begin match Filename.extension s with
+    | ".ml" -> output_lang := Some ML
+    | ".py" -> output_lang := Some PY
+    | ".c" -> output_lang := Some C
+    | _ as ext ->
+      error ("Unknwon file extension '" ^ ext ^ "' (known extensions are .ml .py .c")
+  end;
+  output_file := s
+
 
 let speclist =
   [("-verbose", Arg.Set verbose, "Output debug information");
@@ -59,4 +60,4 @@ let () =
   |> Kerlang.Kl_codegen.emit_kl_ir
   |> fun x ->
   Kerlang.Kl_codegen.print_info x;
-  Kerlang.Kl_codegen.PY_Realizer.realize (open_out !output_file) x
+  Kerlang.Kl_codegen.realize (open_out !output_file) (Option.get !output_lang) x
