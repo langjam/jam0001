@@ -19,7 +19,6 @@ const (
 	PositiveCellReference
 	OpenParen
 	CloseParen
-	FunctionCall
 	AddOp
 	SubOp
 	MulOp
@@ -31,6 +30,9 @@ const (
 	GEOp
 	EqOp
 	NEqOp
+	SinOp
+	CosOp
+	TanOp
 )
 
 var PrecedenceMap map[int]int = map[int]int{
@@ -48,6 +50,9 @@ var PrecedenceMap map[int]int = map[int]int{
 	GEOp:       1,
 	EqOp:       1,
 	NEqOp:      1,
+	SinOp:      10,
+	CosOp:      10,
+	TanOp:      10,
 }
 
 //============================================================================
@@ -187,6 +192,12 @@ func (l *Lexer) Lex(input string) error {
 			l.EatPushToken(LTOp)
 		} else if l.MatchPrefix(">") {
 			l.EatPushToken(GTOp)
+		} else if l.MatchPrefix("sin") {
+			l.EatPushToken(SinOp)
+		} else if l.MatchPrefix("cos") {
+			l.EatPushToken(CosOp)
+		} else if l.MatchPrefix("tan") {
+			l.EatPushToken(TanOp)
 		} else if l.MatchRanges("09") {
 			l.EatPushToken(NumberLiteral)
 		} else if l.MatchPrefix("$") {
@@ -345,6 +356,27 @@ func (e *Evaluator) Execute() error {
 			result = 1
 		}
 		e.values = append(e.values[:length-2], result)
+	case SinOp:
+		length := len(e.values)
+		if length < 1 {
+			return errors.New("too few arguments for sin")
+		}
+		a := e.values[length-1]
+		e.values = append(e.values[:length-1], int(math.Sin(float64(a))))
+	case CosOp:
+		length := len(e.values)
+		if length < 1 {
+			return errors.New("too few arguments for cos")
+		}
+		a := e.values[length-1]
+		e.values = append(e.values[:length-1], int(math.Cos(float64(a))))
+	case TanOp:
+		length := len(e.values)
+		if length < 1 {
+			return errors.New("too few arguments for tan")
+		}
+		a := e.values[length-1]
+		e.values = append(e.values[:length-1], int(math.Tan(float64(a))))
 	default:
 		return errors.New("unknown operation")
 	}
@@ -389,6 +421,18 @@ func (e *Evaluator) Evaluate(input []Token) error {
 			// Pop the OpenParen
 			e.operations = e.operations[:len(e.operations)-1]
 
+			// If this was a function call, make the call
+			if e.GetLastOperation().kind == SinOp || e.GetLastOperation().kind == CosOp || e.GetLastOperation().kind == TanOp {
+				err := e.Execute()
+				if err != nil {
+					return err
+				}
+			}
+
+		case SinOp, CosOp, TanOp:
+			// Execut a function call on the arguments
+			e.operations = append(e.operations, Operation{token.kind, PrecedenceMap[token.kind]})
+
 		default:
 			// By default we're working with a binary operaion
 			precedence := PrecedenceMap[token.kind]
@@ -432,7 +476,7 @@ func Do(input string) (string, error) {
 	lexer.Lex(input)
 	e := Evaluator{}
 	e.Evaluate(lexer.out)
-	
+
 	if len(e.values) != 1 {
 		return "", errors.New("Incorrect operands")
 	}

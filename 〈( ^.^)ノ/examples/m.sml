@@ -22,4 +22,5 @@ print(m("3 == 3"))
 print(m("3 != 3"))
 print(m("3 <= 3"))
 print(m("3 >= 3"))
-
+print(m("tan(2)"))
+print(m("tan(3)"))
