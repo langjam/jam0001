@@ -42,7 +42,13 @@ func (l *Lexer) makeIdentifierToken() (shared.Token, error) {
 		return shared.Token{Type: shared.TTinstruction, Value: II_inz, Pos: l.pos}, nil
 	}
 
-	for i := instruction_size_min; i < instruction_size_max; i++ {
+	inst = append(inst, l.currentChar)
+	l.advance()
+	if string(inst) == II_true {
+		return shared.Token{Type: shared.TTconst, Value: II_true, Pos: l.pos}, nil
+	}
+
+	for i := len(inst); i < instruction_size_max; i++ {
 		inst = append(inst, l.currentChar)
 		l.advance()
 	}
@@ -53,8 +59,6 @@ func (l *Lexer) makeIdentifierToken() (shared.Token, error) {
 		return shared.Token{Type: shared.TTwhile, Value: II_while, Pos: l.pos}, nil
 	} else if string(inst) == II_false {
 		return shared.Token{Type: shared.TTconst, Value: II_false, Pos: l.pos}, nil
-	} else if string(inst)[:4] == II_true {
-		return shared.Token{Type: shared.TTconst, Value: II_true, Pos: l.pos}, nil
 	} else if string(inst) == II_smile {
 		return shared.Token{Type: shared.TTinstruction, Value: II_smile, Pos: l.pos}, nil
 	}

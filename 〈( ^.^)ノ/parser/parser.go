@@ -191,7 +191,7 @@ func (p *Parser) parseComment(content string, add bool, value []shared.Node) {
 
 func (p *Parser) parseWhile(args []shared.Node) {
 	if len(args) != 2 {
-		log.Fatal(IncorrectSignatureError{"while", args[0].Val.Pos})
+		log.Fatal(&IncorrectSignatureError{"while", args[0].Val.Pos})
 	}
 
 	if !(args[0].IsExpression && args[1].IsExpression) {

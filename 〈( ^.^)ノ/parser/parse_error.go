@@ -28,14 +28,14 @@ type UnexpectedError struct {
 }
 
 func (ue *UnexpectedError) Error() string {
-	return fmt.Sprintf("Unexpected %s (at line %d)", ue.value, ue.pos)
+	return fmt.Sprintf("UnexpectedError: Unexpected %s (at line %d)", ue.value, ue.pos)
 }
 
 type IncorrectSignatureError struct {
-	keyword string
+	message string
 	pos     shared.Position
 }
 
 func (ise *IncorrectSignatureError) Error() string {
-	return fmt.Sprintf("Incorrect %s signature (at line %d)", ise.keyword, ise.pos)
+	return fmt.Sprintf("IncorrectSignatureError: Incorrect %s signature (at line %d)", ise.message, ise.pos)
 }
