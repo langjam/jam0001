@@ -14,7 +14,7 @@ CommentSelector := count='[0-9]+' _ 'comments' _ dir={'above' | 'below'}
 
 IfComment := 'if' _ condition=Expression _ ':'
 
-AssignmentComment := varName=VarName _ 'is' _ rhsExpr=Expression
+AssignmentComment := varName=VarName indexPart={_ '\[' _ index=Expression _ '\]'}? _ 'is' _ rhsExpr=Expression
 
 VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
 Expression := ComparisionExpression
@@ -33,9 +33,12 @@ DotExpression := MulExpression | DivExpression | PostfixExpression
 MulExpression := lhs=DotExpression _ '\*' _ rhs=PostfixExpression
 DivExpression := lhs=DotExpression _ '\/' _ rhs=PostfixExpression
 
-PostfixExpression := FunctionCall | AtomicExpression
+PostfixExpression := FunctionCall | GetLengthExpression | IndexExpression | AtomicExpression
 
 FunctionParameters := value=Expression _ next={',' _ nextParam=FunctionParameters}?
 FunctionCall := funcName=AtomicExpression _ '\(' _ params=FunctionParameters? _ '\)'
 
-AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)'
+GetLengthExpression := list=AtomicExpression _ '.length'
+IndexExpression := list = AtomicExpression _ '\[' _ index=Expression _ '\]'
+
+AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)' | '\[' listParams=FunctionParameters? '\]'

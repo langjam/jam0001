@@ -11,6 +11,20 @@ model.addPost({
     date: 100,
     children: [
         {
+            id: "10",
+            content: "l is [1, 2, 3]",
+            upvotes: -5,
+            date: 100,
+            children: []
+        },
+        {
+            id: "12",
+            content: "l[5] is 10",
+            upvotes: -5,
+            date: 100,
+            children: []
+        },
+        {
             id: "31",
             content: "x is 0",
             upvotes: -5,
@@ -31,7 +45,7 @@ model.addPost({
                     children: [
                         {
                             id: "33",
-                            content: "log(x, sqrt(x))",
+                            content: "log(x, sqrt(x), l.length)",
                             upvotes: -5,
                             date: 400,
                             children: []

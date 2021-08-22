@@ -11,7 +11,7 @@
 * ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
 * CommentSelector := count='[0-9]+' _ 'comments' _ dir={'above' | 'below'}
 * IfComment := 'if' _ condition=Expression _ ':'
-* AssignmentComment := varName=VarName _ 'is' _ rhsExpr=Expression
+* AssignmentComment := varName=VarName indexPart={_ '\[' _ index=Expression _ '\]'}? _ 'is' _ rhsExpr=Expression
 * VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
 * Expression := ComparisionExpression
 * ComparisionExpression := LessThanExpression | MoreThanExpression | LessEqualExpression | MoreEqualExpression | LineExpression
@@ -25,10 +25,12 @@
 * DotExpression := MulExpression | DivExpression | PostfixExpression
 * MulExpression := lhs=DotExpression _ '\*' _ rhs=PostfixExpression
 * DivExpression := lhs=DotExpression _ '\/' _ rhs=PostfixExpression
-* PostfixExpression := FunctionCall | AtomicExpression
+* PostfixExpression := FunctionCall | GetLengthExpression | IndexExpression | AtomicExpression
 * FunctionParameters := value=Expression _ next={',' _ nextParam=FunctionParameters}?
 * FunctionCall := funcName=AtomicExpression _ '\(' _ params=FunctionParameters? _ '\)'
-* AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)'
+* GetLengthExpression := list=AtomicExpression _ '.length'
+* IndexExpression := list = AtomicExpression _ '\[' _ index=Expression _ '\]'
+* AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)' | '\[' listParams=FunctionParameters? '\]'
 */
 type Nullable<T> = T | null;
 type $$RuleType<T> = () => Nullable<T>;
@@ -59,6 +61,7 @@ export enum ASTKinds {
     CommentSelector_$0_2 = "CommentSelector_$0_2",
     IfComment = "IfComment",
     AssignmentComment = "AssignmentComment",
+    AssignmentComment_$0 = "AssignmentComment_$0",
     VarName = "VarName",
     Expression = "Expression",
     ComparisionExpression_1 = "ComparisionExpression_1",
@@ -82,14 +85,19 @@ export enum ASTKinds {
     DivExpression = "DivExpression",
     PostfixExpression_1 = "PostfixExpression_1",
     PostfixExpression_2 = "PostfixExpression_2",
+    PostfixExpression_3 = "PostfixExpression_3",
+    PostfixExpression_4 = "PostfixExpression_4",
     FunctionParameters = "FunctionParameters",
     FunctionParameters_$0 = "FunctionParameters_$0",
     FunctionCall = "FunctionCall",
+    GetLengthExpression = "GetLengthExpression",
+    IndexExpression = "IndexExpression",
     AtomicExpression_1 = "AtomicExpression_1",
     AtomicExpression_2 = "AtomicExpression_2",
     AtomicExpression_3 = "AtomicExpression_3",
     AtomicExpression_4 = "AtomicExpression_4",
     AtomicExpression_5 = "AtomicExpression_5",
+    AtomicExpression_6 = "AtomicExpression_6",
     $EOF = "$EOF",
 }
 export interface start {
@@ -150,7 +158,12 @@ export interface IfComment {
 export interface AssignmentComment {
     kind: ASTKinds.AssignmentComment;
     varName: VarName;
+    indexPart: Nullable<AssignmentComment_$0>;
     rhsExpr: Expression;
+}
+export interface AssignmentComment_$0 {
+    kind: ASTKinds.AssignmentComment_$0;
+    index: Expression;
 }
 export type VarName = string;
 export type Expression = ComparisionExpression;
@@ -208,9 +221,11 @@ export interface DivExpression {
     lhs: DotExpression;
     rhs: PostfixExpression;
 }
-export type PostfixExpression = PostfixExpression_1 | PostfixExpression_2;
+export type PostfixExpression = PostfixExpression_1 | PostfixExpression_2 | PostfixExpression_3 | PostfixExpression_4;
 export type PostfixExpression_1 = FunctionCall;
-export type PostfixExpression_2 = AtomicExpression;
+export type PostfixExpression_2 = GetLengthExpression;
+export type PostfixExpression_3 = IndexExpression;
+export type PostfixExpression_4 = AtomicExpression;
 export interface FunctionParameters {
     kind: ASTKinds.FunctionParameters;
     value: Expression;
@@ -225,7 +240,16 @@ export interface FunctionCall {
     funcName: AtomicExpression;
     params: Nullable<FunctionParameters>;
 }
-export type AtomicExpression = AtomicExpression_1 | AtomicExpression_2 | AtomicExpression_3 | AtomicExpression_4 | AtomicExpression_5;
+export interface GetLengthExpression {
+    kind: ASTKinds.GetLengthExpression;
+    list: AtomicExpression;
+}
+export interface IndexExpression {
+    kind: ASTKinds.IndexExpression;
+    list: AtomicExpression;
+    index: Expression;
+}
+export type AtomicExpression = AtomicExpression_1 | AtomicExpression_2 | AtomicExpression_3 | AtomicExpression_4 | AtomicExpression_5 | AtomicExpression_6;
 export interface AtomicExpression_1 {
     kind: ASTKinds.AtomicExpression_1;
     value: string;
@@ -245,6 +269,10 @@ export interface AtomicExpression_4 {
 export interface AtomicExpression_5 {
     kind: ASTKinds.AtomicExpression_5;
     sub: Expression;
+}
+export interface AtomicExpression_6 {
+    kind: ASTKinds.AtomicExpression_6;
+    listParams: Nullable<FunctionParameters>;
 }
 export class Parser {
     private readonly input: string;
@@ -484,16 +512,36 @@ export class Parser {
         return this.run<AssignmentComment>($$dpth,
             () => {
                 let $scope$varName: Nullable<VarName>;
+                let $scope$indexPart: Nullable<Nullable<AssignmentComment_$0>>;
                 let $scope$rhsExpr: Nullable<Expression>;
                 let $$res: Nullable<AssignmentComment> = null;
                 if (true
                     && ($scope$varName = this.matchVarName($$dpth + 1, $$cr)) !== null
+                    && (($scope$indexPart = this.matchAssignmentComment_$0($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.regexAccept(String.raw`(?:is)`, $$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$rhsExpr = this.matchExpression($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.AssignmentComment, varName: $scope$varName, rhsExpr: $scope$rhsExpr};
+                    $$res = {kind: ASTKinds.AssignmentComment, varName: $scope$varName, indexPart: $scope$indexPart, rhsExpr: $scope$rhsExpr};
+                }
+                return $$res;
+            });
+    }
+    public matchAssignmentComment_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<AssignmentComment_$0> {
+        return this.run<AssignmentComment_$0>($$dpth,
+            () => {
+                let $scope$index: Nullable<Expression>;
+                let $$res: Nullable<AssignmentComment_$0> = null;
+                if (true
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:\[)`, $$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$index = this.matchExpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:\])`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.AssignmentComment_$0, index: $scope$index};
                 }
                 return $$res;
             });
@@ -786,12 +834,20 @@ export class Parser {
         return this.choice<PostfixExpression>([
             () => this.matchPostfixExpression_1($$dpth + 1, $$cr),
             () => this.matchPostfixExpression_2($$dpth + 1, $$cr),
+            () => this.matchPostfixExpression_3($$dpth + 1, $$cr),
+            () => this.matchPostfixExpression_4($$dpth + 1, $$cr),
         ]);
     }
     public matchPostfixExpression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<PostfixExpression_1> {
         return this.matchFunctionCall($$dpth + 1, $$cr);
     }
     public matchPostfixExpression_2($$dpth: number, $$cr?: ErrorTracker): Nullable<PostfixExpression_2> {
+        return this.matchGetLengthExpression($$dpth + 1, $$cr);
+    }
+    public matchPostfixExpression_3($$dpth: number, $$cr?: ErrorTracker): Nullable<PostfixExpression_3> {
+        return this.matchIndexExpression($$dpth + 1, $$cr);
+    }
+    public matchPostfixExpression_4($$dpth: number, $$cr?: ErrorTracker): Nullable<PostfixExpression_4> {
         return this.matchAtomicExpression($$dpth + 1, $$cr);
     }
     public matchFunctionParameters($$dpth: number, $$cr?: ErrorTracker): Nullable<FunctionParameters> {
@@ -845,6 +901,41 @@ export class Parser {
                 return $$res;
             });
     }
+    public matchGetLengthExpression($$dpth: number, $$cr?: ErrorTracker): Nullable<GetLengthExpression> {
+        return this.run<GetLengthExpression>($$dpth,
+            () => {
+                let $scope$list: Nullable<AtomicExpression>;
+                let $$res: Nullable<GetLengthExpression> = null;
+                if (true
+                    && ($scope$list = this.matchAtomicExpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:.length)`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.GetLengthExpression, list: $scope$list};
+                }
+                return $$res;
+            });
+    }
+    public matchIndexExpression($$dpth: number, $$cr?: ErrorTracker): Nullable<IndexExpression> {
+        return this.run<IndexExpression>($$dpth,
+            () => {
+                let $scope$list: Nullable<AtomicExpression>;
+                let $scope$index: Nullable<Expression>;
+                let $$res: Nullable<IndexExpression> = null;
+                if (true
+                    && ($scope$list = this.matchAtomicExpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:\[)`, $$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$index = this.matchExpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:\])`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.IndexExpression, list: $scope$list, index: $scope$index};
+                }
+                return $$res;
+            });
+    }
     public matchAtomicExpression($$dpth: number, $$cr?: ErrorTracker): Nullable<AtomicExpression> {
         return this.choice<AtomicExpression>([
             () => this.matchAtomicExpression_1($$dpth + 1, $$cr),
@@ -852,6 +943,7 @@ export class Parser {
             () => this.matchAtomicExpression_3($$dpth + 1, $$cr),
             () => this.matchAtomicExpression_4($$dpth + 1, $$cr),
             () => this.matchAtomicExpression_5($$dpth + 1, $$cr),
+            () => this.matchAtomicExpression_6($$dpth + 1, $$cr),
         ]);
     }
     public matchAtomicExpression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<AtomicExpression_1> {
@@ -917,6 +1009,21 @@ export class Parser {
                     && this.regexAccept(String.raw`(?:\))`, $$dpth + 1, $$cr) !== null
                 ) {
                     $$res = {kind: ASTKinds.AtomicExpression_5, sub: $scope$sub};
+                }
+                return $$res;
+            });
+    }
+    public matchAtomicExpression_6($$dpth: number, $$cr?: ErrorTracker): Nullable<AtomicExpression_6> {
+        return this.run<AtomicExpression_6>($$dpth,
+            () => {
+                let $scope$listParams: Nullable<Nullable<FunctionParameters>>;
+                let $$res: Nullable<AtomicExpression_6> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:\[)`, $$dpth + 1, $$cr) !== null
+                    && (($scope$listParams = this.matchFunctionParameters($$dpth + 1, $$cr)) || true)
+                    && this.regexAccept(String.raw`(?:\])`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.AtomicExpression_6, listParams: $scope$listParams};
                 }
                 return $$res;
             });

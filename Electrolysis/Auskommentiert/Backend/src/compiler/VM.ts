@@ -18,7 +18,7 @@ class VMFunction {
     }
 }
 
-type VMValue = number | string | boolean | null | VMFunction;
+type VMValue = number | string | boolean | null | VMFunction | VMValue[];
 
 export class VM {
     private mASTProvider : CommentProvider;
@@ -44,8 +44,14 @@ export class VM {
                 this.evaluteChildren(comment);
             }
         } else if(comment.ast.kind === AST.ASTKinds.AssignmentComment) {
-            //console.log("Set " + comment.ast.varName);
-            this.mVariables[this.mVariables.length - 1].set(comment.ast.varName, this.evaluateExpression(comment.ast.rhsExpr));
+            // check for index
+            if(comment.ast.indexPart === null) {
+                this.mVariables[this.mVariables.length - 1].set(comment.ast.varName, this.evaluateExpression(comment.ast.rhsExpr));
+                return;
+            }
+            let list = this.mVariables[this.mVariables.length - 1].get(comment.ast.varName) as VMValue[];
+            let index = this.evaluateExpression(comment.ast.indexPart.index);
+            list[Number(index)] = this.evaluateExpression(comment.ast.rhsExpr);
         } else if(comment.ast.kind === AST.ASTKinds.FunctionCall) {
             this.evalFunction(comment.ast);
         } else if(comment.ast.kind === AST.ASTKinds.IfComment) {
@@ -78,7 +84,10 @@ export class VM {
     private evalFunction(funcCall : AST.FunctionCall) : VMValue {
         let func = this.evaluateExpression(funcCall.funcName);
         let params = this.evalFunctionParams(funcCall.params);
-        return (func as any).callback(params);
+        if(func instanceof VMFunction) {
+            return func.callback(params);
+        }
+        throw new Error(func + " is not a function!");
     }
     private evaluateExpression(expression : AST.Expression) : VMValue {
         if(expression.kind === AST.ASTKinds.AtomicExpression_1) {
@@ -101,9 +110,14 @@ export class VM {
             }
             return val;
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_4) {
+            // numeric literal
             return Number(expression.num);
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_5) {
+            // sub expression
             return this.evaluateExpression(expression.sub);
+        } else if(expression.kind === AST.ASTKinds.AtomicExpression_6) {
+            // list creation
+            return this.evalFunctionParams(expression.listParams);
         } else if(expression.kind === AST.ASTKinds.AddExpression) {
             return this.evaluateExpression(expression.lhs) as any + (this.evaluateExpression(expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.SubExpression) {
@@ -122,6 +136,13 @@ export class VM {
             return this.evaluateExpression(expression.lhs) as any >= (this.evaluateExpression(expression.rhs) as any);
         } else if(expression.kind == AST.ASTKinds.FunctionCall) {
             return this.evalFunction(expression);
+        } else if(expression.kind == AST.ASTKinds.GetLengthExpression) {
+            let l = this.evaluateExpression(expression.list);
+            return (l as VMValue[]).length;
+        } else if(expression.kind == AST.ASTKinds.IndexExpression) {
+            let l = this.evaluateExpression(expression.list) as VMValue[];
+            let index = this.evaluateExpression(expression.index);
+            return l[Number(index)];
         }
         throw new Error("Unknown kind " + expression["kind"]);
         return false;
