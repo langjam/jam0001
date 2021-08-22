@@ -1,0 +1,28 @@
+/**************************
+ * Example 7: Strings     *
+ **************************/
+h = "Hello, World!"?
+
+out("Initial String: " : h)?
+
+out("String starts with Hello: " : string_startswith(h : "Hello"))?
+
+out("String ends with !: " : string_endswith(h : "!"))?
+
+out("String is lower case: " : string_islower(h))?
+
+out("String is upper case: " :  string_isupper(h))?
+
+out("String in lower case: " : string_lower(h))?
+
+out("String in upper case: " : string_upper(h))?
+
+out("String without Hello, :" : string_removeprefix(h : "Hello, "))?
+
+out("String without , World!:" : string_removesuffix(h : ", World!"))?
+
+out("String saying Bye instead of Hello: " : string_replace(h : "Hello" : "Bye"))?
+
+out("String splitted by ,:" : string_split(h : ","))?
+
+out("String contains Hello: " : string_contains(h : "Hello"))?

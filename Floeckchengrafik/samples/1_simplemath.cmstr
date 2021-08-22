@@ -1,0 +1,18 @@
+/********************
+ * Example 1: Math  *
+ ********************/
+
+2?  \\ Just a statement
+
+a = 3? \\ Declare a variable
+
+b = 3 + a? \\ Calculate something
+
+c = 2? \\ Declare another variable
+d = 19? \\ Declare another variable
+
+d = d + 1?
+
+the_answer_to_everything = (2*d)+c? \\ Calculate 42
+
+out("The answer to everything: " : the_answer_to_everything)? \\ Print it to the screen

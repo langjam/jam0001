@@ -1,0 +1,19 @@
+/**********************************
+ * Example 5: Function Signatures *
+ **********************************/
+
+print = function({
+	/*
+	 * This function is used to print a string to the terminal:
+     * - param text is defined to get the String for the console
+     *
+     * This function
+     * - returns an integer
+     */
+	out(text)?
+
+	2? \\ Returns 2
+})?
+
+/* Print out "yeet" */
+out(print("YEET"))?

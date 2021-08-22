@@ -1,0 +1,31 @@
+/**********************
+ * Example 6: Classes *
+ **********************/
+
+myclass = class({
+    /*
+     * This is just an example Class to explain classes in comstruct.
+     * It can
+     * - returns its own value
+     */
+
+    comment = function({
+        /*
+         * This is the Constructor of the myclass-Class
+         * - param hello , a String to print first
+         */
+         hw = hello + " World!"?
+    })?
+
+    hworld = function({
+        /*
+         * This is the hworld-function of the myclass-Class
+         */
+
+         out(hw)?
+    })?
+})?
+
+inst = myclass("Hello")?
+inst.hworld()?
+
