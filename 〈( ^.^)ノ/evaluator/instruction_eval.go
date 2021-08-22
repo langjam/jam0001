@@ -2,7 +2,7 @@ package evaluator
 
 import (
 	"fmt"
-	"os"
+	"log"
 
 	"github.com/grossamos/jam0001/evaluator/m"
 	"github.com/grossamos/jam0001/lexer"
@@ -19,8 +19,7 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 		set_values := e.eval_children(instruction_args[1:])
 
 		if set_ref.Val.Type != shared.TTref {
-			fmt.Println("Cannot set non ref value.")
-			os.Exit(1)
+			log.Fatal(EvalError{message: "set can only be used on tape", pos: expr.Val.Pos})
 		}
 
 		e.setRefValue(
@@ -39,8 +38,7 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 		mathInput = e.unrefString(mathInput)
 		mResult, err := m.Do(mathInput)
 		if err != nil {
-			fmt.Println("MathError: expression invalid: ", mathInput)
-			os.Exit(1)
+			log.Fatal(MathEvalError{message: "expression: \"" + mathInput + "\"produced error: " + err.Error(), pos: expr.Val.Pos})
 		}
 		return makeNumberNode(mResult)
 	}
