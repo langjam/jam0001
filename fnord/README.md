@@ -87,7 +87,7 @@ any fields listed in the comments are extracted for use.
 	# NAME: Bort
 	x = {};
 
-	result = x!NAME;
+	result = "We need more " + x!NAME + " license plates in the gift shop.";
 
 extending it
 ------------
