@@ -1,0 +1,11 @@
+pv := proc (name : string ; val : int) void {
+    print(name; val);
+};
+
+main := proc() int {
+    i := 0;
+    while (i < 10) {
+        pv("i:"; i);
+        i = i + 1;
+    };
+};

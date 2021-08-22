@@ -178,7 +178,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
     
     struct Interpreter_Value ret = void_val(); 
     switch (node->kind) {
-        case PN_TOPLEVEL:
+        case PN_TOPLEVEL: case PN_BODY:
             ret = execute(node, should_return);
         break;
         case PN_ASSIGN:
@@ -191,11 +191,22 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
             ret = intrp_run(pnode_uvalue(node), should_return);
             *should_return = true;
         break;
-        case PN_IF: {
-            struct Interpreter_Value cond = intrp_run(pnode_left(node), should_return);
-            if (cond.data.intg.val)
-                ret = execute(pnode_right(node), should_return);
-        } break;
+        case PN_IF:
+
+            if (node->addressing == PA_BINARY) {
+                struct Interpreter_Value cond = intrp_run(pnode_left(node), should_return);
+                if (cond.data.intg.val)
+                    ret = execute(pnode_right(node), should_return);
+            } else {
+                struct Interpreter_Value cond = intrp_run(pnode_cond(node), should_return);
+                if (cond.data.intg.val)
+                    ret = intrp_run(pnode_body(node), should_return);
+                else
+                    ret = intrp_run(pnode_alt(node), should_return);
+
+            }
+
+        break;
         case PN_WHILE:
             while (1) {
                 struct Interpreter_Value cond = intrp_run(pnode_left(node), should_return);
