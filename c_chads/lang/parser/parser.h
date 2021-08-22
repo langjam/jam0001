@@ -57,6 +57,7 @@ enum Parser_Node_Kind {
 struct Parser_Node {
     enum Parser_Node_Addressing addressing;
     enum Parser_Node_Kind kind;
+    usize pos;
     // e.g. comments
     struct Vec OF(struct Parser_Node) children;
     union {
