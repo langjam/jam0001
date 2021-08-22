@@ -1,8 +1,8 @@
 # 〈( \^.\^)ノ
 
-〈( \^.\^)ノ the best think that happened since [blank](https://www.youtube.com/watch?v=dQw4w9WgXcQ) and an interpreted, **not** esoteric langanguage for writing complex **safety** oriented applications in large environments.
+〈( \^.\^)ノ the best think that happened since [blank](https://www.youtube.com/watch?v=dQw4w9WgXcQ) and an interpreted, **not** esoteric langanguage for writing complex **safety** oriented applications in large production environments.
 It was created for [langjam0001](https://github.com/langjam/jam0001) by team ``〈( ^.^)ノ``.
-It is based around two tapes of registers for accessing variables, arguments, etc. and an interesting comment-first function approach, that allows for the dynamic creation of functions.
+It is based around two tapes for accessing variables, arguments, etc. and an interesting comment-first function approach, that allows for the dynamic creation of functions.
 
 ## How to set up 〈( \^.\^)ノ
 〈( \^.\^)ノ is written in go and will thus require the standard golang tools to be installed.
