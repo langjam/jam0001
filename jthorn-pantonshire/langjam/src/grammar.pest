@@ -54,21 +54,12 @@ consStmt = { ^"constant" ~ hws+ ~ ident ~ hws+ ~ ^"is" ~ hws+ ~ expr}
 returnStmt = { (^"outputs" | ^"returns") ~ hws+ ~ expr }
 stmt = { argsStmt | varStmt | loopStmt | condStmt | consStmt | returnStmt | callStmt }
 comment = { stmt ~ ((hws | ",") ~ hws* ~ "then" ~ hws+ ~ stmt)* }
-commentStmt = { "//" ~ hws* ~ (fnIntro ~ hws+)? ~ comment ~ vws+ ~ ^"function" ~ hws+ ~ ident ~ hws* ~ "(" ~ hws* ~ (ident ~ (hws* ~ "," ~ hws* ~ ident)*)? ~ hws* ~ ")" }
+commentStmt = { "//" ~ hws* ~ (fnIntro ~ hws+)? ~ comment ~ vws+ ~ ^"function" ~ hws+ ~ ident ~ hws* ~ "(" ~ hws* ~ (ident ~ (hws* ~ "," ~ hws* ~ ident)*)? ~ hws* ~ ")" ~ (hws* ~ dummyBlock)? }
 semanticBody = {commentStmt ~ (vws+ ~ semanticBody)*}
 syntaxBody = {"\n" ~ ("\n"|" ")* ~ "main {" ~ (("\n")*~mainStmt~("\n")*)* ~ "}"}
 mainStmt = { ident ~"<-"~ mainStmt | ident ~ "(" ~ mainStmt ~ ")" | ident }
-program = { vws* ~ semanticBody ~ syntaxBody|semanticBody ~ vws* }
+program = { vws* ~ semanticBody ~ vws* ~ EOI }
 
 fnIntro = _{ (^"a" ~ hws+ ~ ^"function" ~ hws+ ~ ^"which") | (^"this" ~ hws+ ~ ^"function") }
 
-
-
-
-
-
-
-
-
-
-
+dummyBlock = _{ "{" ~ (dummyBlock | !("}") ~ ANY)* ~ "}" }

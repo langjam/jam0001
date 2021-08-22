@@ -106,9 +106,18 @@ impl Interpreter {
                     .map(|expr| self.eval_expr(&local, expr))
                     .collect::<RuntimeResult<Vec<_>>>()?;
 
-                let call_out = if let Some(function) = self.functions.get(&call_stmt.function) {
+                let function_name = local
+                    .get(&call_stmt.function)
+                    .map(|(val, _)| match val {
+                        Value::Function(name) => Ok(name),
+                        _ => Err(RuntimeErrorCause::TypeError.error(call_stmt.span))
+                    })
+                    .transpose()?
+                    .unwrap_or(&call_stmt.function);
+
+                let call_out = if let Some(function) = self.functions.get(function_name) {
                     self.exec_fn(function, call_args)?
-                } else if let Some(out) = stdlib::call_std_fn(&call_stmt.function, &call_args) {
+                } else if let Some(out) = stdlib::call_std_fn(function_name, &call_args) {
                     out
                 } else {
                     return Err(RuntimeErrorCause::MissingFunction.error(call_stmt.span));
@@ -165,9 +174,14 @@ impl Interpreter {
                 self.visit_binary(expr.span, op, lhs, rhs)
             },
             
-            ExprKind::Variable(variable ) => local
+            ExprKind::Variable(variable) => local
                 .get(variable)
                 .map(|(val, _) | val.clone())
+                .or_else(|| if self.functions.contains_key(variable) || stdlib::is_std_fn(variable) {
+                    Some(Value::Function(variable.clone()))
+                } else {
+                    None
+                })
                 .ok_or_else(|| RuntimeErrorCause::MissingVariable.error(expr.span)),
         }
     }

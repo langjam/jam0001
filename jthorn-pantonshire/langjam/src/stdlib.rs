@@ -2,6 +2,13 @@ use std::io::{self, Write};
 
 use crate::value::Value;
 
+pub fn is_std_fn(name: &str) -> bool {
+    match name {
+        "print" => true,
+        _ => false,
+    }
+}
+
 pub fn call_std_fn(name: &str, args: &[Value]) -> Option<Value> {
     match name {
         "print" => Some(print(args)),

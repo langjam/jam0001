@@ -1,0 +1,6 @@
+//twices print, "hello"
+function main()
+
+//fs a then fs a
+function twice(f, a)
+

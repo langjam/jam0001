@@ -155,6 +155,8 @@ pub fn parse(source: &str) -> anyhow::Result<Program> {
 
             Rule::syntaxBody => todo!(),
 
+            Rule::EOI => (),
+
             _ => unreachable!(),
         }
     }
