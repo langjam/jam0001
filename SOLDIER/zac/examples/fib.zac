@@ -1,0 +1,22 @@
+// The code in this file produced and wrote the fibonacci sequence you see below:
+
+// #fib
+
+let counter = 0
+let end = 10
+
+let #fib = // Here are the first few numbers:
+//
+
+let a = 1
+let b = 1
+let temp = 1
+
+while (not(eq(counter, end))) {
+  let counter = add(counter, 1)
+  let temp = add(a, b)
+  let a = b
+  let b = temp
+
+  let #fib = cat(#fib, show(a), chr(10))
+}

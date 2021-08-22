@@ -1,0 +1,111 @@
+// Conway's Game of Life
+//
+// Play below by running: zac GoL.zac
+
+// #grid
+// |                  * *  ****            |
+// |                 *   *******           |
+// |                 *   **   * **         |
+// |                   ** *    *** *       |
+// |                 ** **      *   *      |
+// |    *       *          **    ***       |
+// |  ***      **          ***  *          |
+// | ****       *         **    **         |
+// |**                   * * * *           |
+// | *    * *            *  *****          |
+// |  *    * ***          ** **  *         |
+// |          **           ** *       *    |
+// |       *                  *   *  * *   |
+// |        **               **  **  * *   |
+// |                           **     *    |
+// |                                       |
+
+let pipe = // |
+let star = // *
+let space = chr(32)
+
+let width = 1
+while (not(eq(#grid(width), pipe))) {
+  let width = add(width, 1)
+}
+let width = add(width, -1)
+
+defn calc_offset(x, y) {
+  // 1 for the first left bar
+  let offset = 1
+  // 1 offset for each left, right pipe and each newline if y > 0
+  if (gt(y, 0)) {
+    let offset = add(offset, mul(y, 3))
+  }
+  let offset = add(offset, mul(y, width))
+  add(offset, x)
+}
+
+defn get_cell(x, y) {
+  #grid(calc_offset(x, y))
+}
+
+let height = 0
+while (not(eq(false, get_cell(0, height)))) {
+  let height = add(height, 1)
+}
+
+defn get_coord(x, y) {
+  let ret = 0
+  let char = get_cell(x, y)
+  if (eq(char, star)) {
+    let ret = 1
+  }
+  ret
+}
+
+defn neighbors(x, y) {
+  let num_alive_neighbs = 0
+  let dx = -1
+  while (lt(dx, 2)) {
+    let dy = -1
+    while (lt(dy, 2)) {
+      if (not(and(eq(dx, 0), eq(dy, 0)))) {
+        let new_x = add(dx, x)
+        let new_y = add(dy, y)
+        let num_alive_neighbs = add(num_alive_neighbs, get_coord(new_x, new_y))
+      }
+      let dy = add(dy, 1)
+    }
+    let dx = add(dx, 1)
+  }
+  num_alive_neighbs
+}
+
+let new_grid = #grid
+let x = 0
+let y = 0
+while (lt(y, height)) {
+  let x = 0
+  while (lt(x, width)) {
+    let next_char = space
+
+    let this = get_coord(x, y)
+    let num_neighbors = neighbors(x, y)
+
+    // Any live cell with two or three live neighbours survives.
+    // Any dead cell with three live neighbours becomes a live cell.
+    // All other live cells die in the next generation. Similarly, all other dead cells stay dead.
+    if (and(eq(this, 1), or(eq(num_neighbors, 2), eq(num_neighbors, 3)))) {
+      let next_char = star
+    }
+
+    if (and(eq(this, 0), eq(num_neighbors, 3))) {
+      let next_char = star
+    }
+
+    // we don't have to set every cell, an option to fix here if it's too slow
+    let offset = calc_offset(x, y)
+    let new_grid = set(new_grid, offset, next_char)
+
+    let x = add(x, 1)
+  }
+  let y = add(y, 1)
+}
+
+let #grid = new_grid

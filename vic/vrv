@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec ./coursier launch mill-interactive -- -i -j 0 vrv.run "$@"

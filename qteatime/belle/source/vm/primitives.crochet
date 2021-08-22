@@ -1,0 +1,332 @@
+% crochet
+
+open crochet.debug;
+local singleton ast;
+
+command vm current-program-as-stream =
+  new b-stream((self.program value map: (_ as value)) as stream);
+
+command vm pop-stack do
+  let Stack = self.stack value;
+  self.stack <- Stack rest;
+  Stack first;
+end
+
+command vm set: Name to: Value do
+  self.bindings <- self.bindings value at: Name put: Value;
+end
+
+command vm unshift-program: Contents do
+  self.program <- Contents ++ self.program value;
+end
+
+
+command vm rewrite: (Word is text) arity: (N is integer) with: (Fun is ((vm, text) -> vm)) do
+  self.rules <- self.rules value append: new native-rewrite-rule(new native-word-pattern(Word), N, Fun);
+  self;
+end
+
+command vm add-primitive-rules do
+  self
+    // VM manipulation
+    | rewrite: "@set" arity: 2 with: { VM, _ in
+        let Name = VM pop-stack;
+        assert Name is b-atom;
+        let Value = VM pop-stack;
+        VM set: (Name as text) to: Value;
+      }
+    
+    | rewrite: "@put-back" arity: 1 with: { VM, _ in
+        let Value = VM pop-stack;
+        VM unshift-program: [new native-value-form(Value)];
+      }
+
+    | rewrite: "@drop" arity: 0 with: { VM, _ in
+        VM pop-stack;
+      }
+
+    | rewrite: "@dip" arity: 0 with: { VM, _ in
+        let V1 = VM pop-stack;
+        let V2 = VM pop-stack;
+        VM push-on-stack-without-applying: V1;
+        VM push-on-stack: V2;
+      }
+
+    | rewrite: "@swap" arity: 0 with: { VM, _ in
+        let V1 = VM pop-stack;
+        let V2 = VM pop-stack;
+        VM push-on-stack-without-applying: V1;
+        VM push-on-stack-without-applying: V2;
+      }
+
+    // Control flow
+    | rewrite: "@if" arity: 3 with: { VM, _ in
+        let Test = VM pop-stack;
+        assert Test is b-atom;
+        let True = VM pop-stack;
+        assert True is b-block;
+        let False = VM pop-stack;
+        assert False is b-block;
+
+        condition
+          when Test as boolean => VM unshift-program: True.forms;
+          when not (Test as boolean) => VM unshift-program: False.forms;
+        end
+      }
+
+    // Common functions on values
+    | rewrite: "@eq" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        let V2 = VM pop-stack;
+        VM push-on-stack: ((V1 === V2) as b-atom);
+      }
+
+    | rewrite: "@neq" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        let V2 = VM pop-stack;
+        VM push-on-stack: ((V1 =/= V2) as b-atom);
+      }
+
+    // Boolean functions
+    | rewrite: "@and" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-atom;
+        let V2 = VM pop-stack;
+        assert V2 is b-atom;
+        VM push-on-stack: (V1 and V2);
+      }
+
+    | rewrite: "@or" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-atom;
+        let V2 = VM pop-stack;
+        assert V2 is b-atom;
+        VM push-on-stack: (V1 or V2);
+      }
+
+    | rewrite: "@not" arity: 1 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-atom;
+        VM push-on-stack: (not V1);
+      }
+
+    // Integer functions
+    | rewrite: "@add" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 + V2);
+      }
+
+    | rewrite: "@sub" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 - V2);
+      }
+
+    | rewrite: "@div" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 / V2);
+      }
+
+    | rewrite: "@rem" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 % V2);
+      }
+
+    | rewrite: "@mul" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 * V2);
+      }
+
+    | rewrite: "@pow" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 ** V2);
+      }
+
+    | rewrite: "@lt" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 < V2);
+      }
+
+    | rewrite: "@lte" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 <= V2);
+      }
+
+    | rewrite: "@gt" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 > V2);
+      }
+
+    | rewrite: "@gte" arity: 2 with: { VM, _ in
+        let V1 = VM pop-stack;
+        assert V1 is b-integer;
+        let V2 = VM pop-stack;
+        assert V2 is b-integer;
+        VM push-on-stack: (V1 >= V2);
+      }
+
+    // List functions
+    | rewrite: "@cons" arity: 2 with: { VM, _ in
+        let Head = VM pop-stack;
+        let Tail = VM pop-stack;
+        assert Tail is b-stream;
+        VM push-on-stack: (Tail prepend: Head);
+      }
+    
+    | rewrite: "@head" arity: 1 with: { VM, _ in
+        let List = VM pop-stack;
+        assert List is b-stream;
+        VM push-on-stack: (List first);
+      }
+
+    | rewrite: "@nil" arity: 0 with: { VM, _ in
+        VM push-on-stack: new b-stream([] as stream);
+      }
+
+    | rewrite: "@tail" arity: 1 with: { VM, _ in
+        let List = VM pop-stack;
+        assert List is b-stream;
+        VM push-on-stack: (List rest);
+      }
+
+    | rewrite: "@last" arity: 1 with: { VM, _ in
+        let List = VM pop-stack;
+        assert List is b-stream;
+        VM push-on-stack: List last;
+      }
+    
+    | rewrite: "@reverse" arity: 1 with: { VM, _ in
+        let List = VM pop-stack;
+        assert List is b-stream;
+        VM push-on-stack: List reverse;
+      }
+
+
+    // String functions
+    | rewrite: "@uppercase" arity: 1 with: { VM, _ in
+        let Value0 = VM pop-stack;
+        assert Value0 is b-string;
+        let Value = (Value0 as text) ascii to-upper-case to-text;
+        VM push-on-stack: new b-string(Value);
+      }
+
+    | rewrite: "@lowercase" arity: 1 with: { VM, _ in
+        let Value0 = VM pop-stack;
+        assert Value0 is b-string;
+        let Value = (Value0 as text) ascii to-lower-case to-text;
+        VM push-on-stack: new b-string(Value);
+      }
+    
+    // Block functions
+    | rewrite: "@apply" arity: 1 with: { VM, _ in
+        let Block = VM pop-stack;
+        assert Block is b-block;
+        VM unshift-program: Block.forms;
+      }
+
+    // Display functions
+    | rewrite: "@display" arity: 1 with: { VM, _ in
+        let Value = VM pop-stack;
+        perform belle.display(Value);
+      }
+
+    | rewrite: "@pretty-print" arity: 1 with: { VM, _ in
+        let Value = VM pop-stack;
+        VM push-on-stack: new b-string(Value to-pretty-output flatten-into-plain-text)
+      }
+
+    | rewrite: "@line-break" arity: 0 with: { VM, _ in
+        perform belle.display(new b-string("\n"));
+      }
+
+    | rewrite: "@inspect" arity: 2 with: { VM, _ in
+        let Tag = VM pop-stack as text;
+        let Value = VM pop-stack;
+        transcript inspect: Value tag: Tag;
+      }
+
+    // HTML display functions
+    | rewrite: "@push" arity: 1 with: { VM, _ in
+        let Tag = VM pop-stack as text;
+        perform belle.push-element(Tag);
+      }
+
+    | rewrite: "@set-attribute" arity: 2 with: { VM, _ in
+        let Element = perform belle.current-element();
+        let Name = VM pop-stack as text;
+        let Value = VM pop-stack as text;
+        Element.box set-attribute: Name to: Value;
+      }
+
+    | rewrite: "@pop" arity: 0 with: { VM, _ in
+        perform belle.pop-element();
+      }    
+end
+
+command vm add-prelude do
+  let Prelude = belle parse: belle-prelude;
+  let Rules = Prelude.forms
+                | keep-if: { X in X is form--rule }
+                | map: (_ as rewrite-rule);
+  self.rules <- Rules ++ self.rules value;
+  self;
+end
+
+define belle-prelude = "
+:rule @box/0 = @push #div.
+
+:rule @typeset/1 = @set #class @dip
+                   @set-attribute #class %class.
+
+:rule @mono/0 = @box @typeset #belle-monospaced.
+
+:rule @title/1 = @set #title @dip
+                 @push #h1
+                 @typeset #belle-title
+                 @display %title
+                 @pop.
+
+:rule @subtitle/1 = @set #title @dip
+                    @push #h2
+                    @typeset #belle-subtitle
+                    @display %title
+                    @pop.
+
+:rule @code/0 = @push #code
+                @typeset #belle-code.
+
+:rule @paragraph/0 = @push #p
+                     @typeset #belle-paragraph.
+
+:rule @collapse-spaces = @box @typeset #documentation.
+
+:rule @list/0 = @push #ul.
+:rule @item/0 = @push #li.
+:rule @bold/0 = @push #b.
+";

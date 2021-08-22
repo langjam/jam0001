@@ -1,0 +1,50 @@
+let x: int = 42;
+let y: string = 42;
+let z = record { i: int };
+let w = x: record { x: z };
+
+print("y is" y "and the answer is" w.x.i);
+
+let not = { |x|: y
+    let y = cond(x 0 1);
+};
+
+// linked list template whooooa
+let LinkedList = { |T max|: ll
+    let acc = record { type index };
+    let step = { |t|: res let res = acc(record { head: T tail: t.type }, add(t.index 1)); };
+    let stop = { |t|: res let res = eq(t.index max); };
+    let ll = loop(acc(record {}, 0) step stop).type;
+};
+
+let llfold = { |ll op|: res
+    let acc = record { list acc };
+    let step = { |a|: res
+        let res = acc(a.list.tail, op(a.list.head a.acc));
+    };
+    let stop = { |a|: res
+        let res = not(a.list.head);
+    };
+    let res = loop(acc(ll.tail ll.head) step stop).acc;
+};
+
+let L = LinkedList(int 3);
+let ll = L(1 L(2 3))
+print(
+    ll.head
+    ll.tail.head
+    ll.tail.tail.head
+    ll.tail.tail.tail
+);
+
+print(llfold(ll add));
+
+let FreeLinkedList = { |T|: ll
+    let ll = record { head: T tail: FreeLinkedList(T) };
+};
+
+let L2 = FreeLinkedList(int);
+let ll2 = L2(2 L2(3 L2(4 L2(5))));
+print(ll2);
+
+print(llfold(ll2 mul));

@@ -1,0 +1,39 @@
+// the name of a print function
+add("p" "r" "i" "n" "t");
+
+// fibonacci function
+{ |n|: res
+    // accumulator type
+    record { i a b };
+
+    // step function
+    { |rec|: res
+        let res = <accumulator type>(
+            add(rec.i 1)
+            rec.b
+            add(rec.a rec.b)
+        );
+    };
+
+    // stop condition
+    { |rec|: res
+        let res = eq(rec.i n);
+    };
+
+    let res = loop(
+        <accumulator type>(0 0 1)
+        <step func>
+        <stop cond>).a;
+};
+
+// one option
+{:x let x = <fib>(2); };
+// one option
+{:x let x = <fib>(5); };
+// one option
+{:x let x = <fib>(13); };
+// one option
+{:x let x = <fib>(10); };
+
+// Can't resist having randomness?
+!<add(<name of print> " native")>(collapse(<one option>()));

@@ -1,0 +1,24 @@
+macro debug 1 [ println << ',0 ": " ,0 >> ]
+
+bind 'foo 27
+debug foo
+
+macro count-tokens 1 [ println << ,len 0 " tokens" >> ]
+count-tokens (1 2 a b ')
+
+macro func 3 [
+	bind ',0 [ ,2 ]
+	assoc ',0 'arity ,len 1
+	,for 1 [
+        store ',0 + [ bind ',3 getparam ,4 ] &,0
+    ]
+]
+
+func cube (x) [ * * x x x]
+println assoclist 'cube
+println &cube
+
+func add (a b) [ + a b]
+println add 1 2
+println assoclist 'add
+println &add

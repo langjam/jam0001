@@ -1,0 +1,13 @@
+//a comment
+a = function (a, b) (
+    //assert $isnum(a)$
+    print a; //when $a>0$
+    print b; //otherwise
+    6;
+);
+print a(0, 2);
+
+s = "multiline// comments are excluded from string literals
+string";
+
+print s;
