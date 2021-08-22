@@ -1,0 +1,11 @@
+[package]
+name = "gold-standard"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+libc = "^0.2"
+cranelift-jit = "^0.76.0"
+cranelift = "^0.76.0"
+cranelift-module = "^0.76.0"
+target-lexicon = "^0.12.2"

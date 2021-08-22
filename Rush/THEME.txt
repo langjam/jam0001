@@ -1,0 +1,39 @@
+THEME: First class comments
+
+-- Some comment --
+/* Some Comment */
+
+# Foo is a function
+#
+
+
+/*
+This is my function
+
+function foo() {
+
+}
+*/
+
+
+// Static: Integer
+var some_var // Static: Integer = 23
+
+fn something = param if  /* match  [$:number + ["," | "" | " "|]]+ */
+{
+  parse param /* 
+
+  */
+
+}
+
+
+something!("1, 2, 3, 4, 5")
+
+
+fn something(param) {
+  --
+    $ executed first
+    for --
+  --
+}
