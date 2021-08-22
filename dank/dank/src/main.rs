@@ -11,6 +11,8 @@ use clap::{AppSettings, Clap};
 struct Opts {
     #[clap(name = "file.dk")]
     input: String,
+    #[clap(short = 'a', long = "print-ast")]
+    print_ast: bool,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -22,7 +24,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // TODO: report the error properly
     let mut ast = parser::file(&source)?;
 
-    println!("{}", ast.ast_to_str());
+    if opts.print_ast {
+        println!("{}", ast.ast_to_str());
+    }
 
     let mut eval = dank::eval::Evaluator::with_env(
         {
