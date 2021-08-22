@@ -145,6 +145,7 @@ class World:
 
         for station in self.stations:
             for port, goal in enumerate(station.to):
+                print(f"Scheduling: {station.id} {port} to {goal}")
                 if station.id == goal[0]:
                     continue
                 self.roads.append((station.id, port, goal[0], self.a_star(station, goal)))
@@ -196,7 +197,7 @@ class World:
             open_set.remove(current)
 
             if (current[0] + 1, current[1]) not in self.filled or self.filled[(current[0] + 1, current[1])][
-                                                                  1:] == [goal.id, port] or (
+                                                                  1:] == (goal.id, port) or (
             current[0] + 1, current[1]) in goal_set:
                 neighbour = (current[0] + 1, current[1], 1)
                 cost = [0, 1, 2, 3][current[2]]
@@ -221,7 +222,7 @@ class World:
                         open_set.add(neighbour)
 
             if (current[0] - 1, current[1]) not in self.filled or self.filled[(current[0] - 1, current[1])][
-                                                                  1:] == [goal.id, port] or (
+                                                                  1:] == (goal.id, port) or (
             current[0] - 1, current[1]) in goal_set:
                 neighbour = (current[0] - 1, current[1], 1)
                 cost = [0, 1, 2, 3][current[2]]
@@ -246,7 +247,7 @@ class World:
                         open_set.add(neighbour)
 
             if (current[0], current[1] + 1) not in self.filled or self.filled[(current[0], current[1] + 1)][
-                                                                  1:] == [goal.id, port] or (
+                                                                  1:] == (goal.id, port) or (
             current[0], current[1] + 1) in goal_set:
                 neighbour = (current[0], current[1] + 1, 2)
                 cost = [0, 2, 1, 3][current[2]]
@@ -271,7 +272,7 @@ class World:
                         open_set.add(neighbour)
 
             if (current[0], current[1] - 1) not in self.filled or self.filled[(current[0], current[1] - 1)][
-                                                                  1:] == [goal.id, port] or (
+                                                                  1:] == (goal.id, port) or (
             current[0], current[1] - 1) in goal_set:
                 neighbour = (current[0], current[1] - 1, 2)
                 cost = [0, 2, 1, 3][current[2]]
@@ -350,19 +351,21 @@ class World:
 
         for route in self.roads:
             exit_loc = route[3][1]
+            try:
+                exit_ind = [
+                    (self.stations[route[0]].x, self.stations[route[0]].y + 2),
+                    (self.stations[route[0]].x + 1, self.stations[route[0]].y + 2),
+                    (self.stations[route[0]].x + 2, self.stations[route[0]].y + 1),
+                    (self.stations[route[0]].x + 2, self.stations[route[0]].y),
+                    (self.stations[route[0]].x + 1, self.stations[route[0]].y - 1),
+                    (self.stations[route[0]].x, self.stations[route[0]].y - 1),
+                    (self.stations[route[0]].x - 1, self.stations[route[0]].y),
+                    (self.stations[route[0]].x - 1, self.stations[route[0]].y + 1),
+                ].index(exit_loc)
 
-            exit_ind = [
-                (self.stations[route[0]].x, self.stations[route[0]].y + 2),
-                (self.stations[route[0]].x + 1, self.stations[route[0]].y + 2),
-                (self.stations[route[0]].x + 2, self.stations[route[0]].y + 1),
-                (self.stations[route[0]].x + 2, self.stations[route[0]].y),
-                (self.stations[route[0]].x + 1, self.stations[route[0]].y - 1),
-                (self.stations[route[0]].x, self.stations[route[0]].y - 1),
-                (self.stations[route[0]].x - 1, self.stations[route[0]].y),
-                (self.stations[route[0]].x - 1, self.stations[route[0]].y + 1),
-            ].index(exit_loc)
-
-            station_data[route[0]][exit_ind] = True
+                station_data[route[0]][exit_ind] = True
+            except:
+                print("exit problem..")
 
             inp_locs = [
                 (self.stations[route[2]].x, self.stations[route[2]].y + 2),
@@ -396,7 +399,8 @@ class World:
             for i in range(1, len(path) - 1):
                 for j in range(id):
                     if path[i] in self.roads[j][3]:
-                        tiles.remove(Tile(path[i][0], path[i][1], "X"))
+                        if Tile(path[i][0], path[i][1], "X") in tiles:
+                            tiles.remove(Tile(path[i][0], path[i][1], "X"))
                         tiles.add(Tile(path[i][0], path[i][1], "CROSSING"))
                         break
                 else:
@@ -475,8 +479,9 @@ if __name__ == '__main__':
     stations = [Station(id, d["inputs"], d["to"], d["type"], d["name"]) for id, d in enumerate(data)]
     stations = StationGroup.build(stations)
     # stations.plot()
-    stations.scale(5)
+    stations.scale(2)
     # stations.plot()
+    print("Stations placed")
 
     world = World(stations.stations)
     world.build()

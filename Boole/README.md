@@ -30,8 +30,8 @@ Imagine you are a Dutch student. You don't live in the same city as where your u
 must travel via train every morning. One morning before you board the train you get handed a card with
 the number 16 on it, but are not informed what that number means. You do however notice that you are the
 first person to board the train in second class. At the other side of the wall you can hear some people
-talking about the train, "What a nice lime green color this train has." Someone else responded "The
-yellow details are a nice addition as well yeah!" Confused you find a spot, and sit down.
+in **first class** **commenting** on the train, "What a nice lime green color this train has." Someone else
+responded "The yellow details are a nice addition as well yeah!" Confused you find a spot, and sit down.
 
 At the first station, next to the name you see a big sign saying `ADD` underneath the station name. 
 Suddenly a man runs at you from the train standing on track 2, he shouts: "Add 7 to your card!
