@@ -70,10 +70,7 @@ class Variable(Operand):
         return f"VAR {self.varname}"
 
     def evaluate(self):
-        if self.varname in defined_variables:
-            return defined_variables[self.varname]
-        else:
-            raise UndefinedVariableError(self.varname)
+        return get_var(self.varname)
 
 
 class Parameter(Expr):
