@@ -51,6 +51,32 @@ sema.addOperation('consteval', {
     },
 })
 let variables = new Map<string, Ref>()
+sema.addOperation('buildgetter', {
+    lval(ident, _dots, props) {
+        let vrf = variables.get(ident.sourceString)
+        for (let cn of props.children) {
+            vrf = backend.getprop(vrf, cn.sourceString)
+        }
+        return vrf
+    }
+})
+sema.addOperation('buildsetter', {
+    lval(ident, _dots, props) {
+        let vrf = variables.get(ident.sourceString), vsf = vrf, vlf = false, vlfs = ''
+        for (let cn of props.children) {
+            vlf = true
+            vlfs = cn.sourceString
+            vsf = vrf
+            vrf = backend.getprop(vrf, cn.sourceString)
+        }
+        if (!vlf) return (nv: Ref) => {
+            backend.setvar(vrf, nv)
+        }
+        return (v: Ref) => {
+            backend.setprop(vsf, vlfs, v)
+        }
+    }
+})
 sema.addOperation('build', {
     ThreadDecl(_atthread, _fn, name, _brackets, body) {
         backend.declarethread(name.sourceString, () => {
@@ -109,7 +135,7 @@ sema.addOperation('build', {
         return backend.pubwork(work.build())
     },
     Expression_variable(ident) {
-        return variables.get(ident.sourceString) || backend.nilliteral()
+        return ident.buildgetter() || backend.nilliteral()
     },
     RFCExpression(_atrfc, _open, work, _close) {
         return backend.rfc(work.build())
@@ -137,10 +163,7 @@ sema.addOperation('build', {
         return backend.symbol(atom.sourceString)
     },
     AssignStatement_add(tgd, _peq, expr, _sc) {
-        backend.setvar(
-            variables.get(tgd.sourceString),
-            backend.add(variables.get(tgd.sourceString), expr.build())
-        )
+        tgd.buildsetter()(backend.add(tgd.buildgetter(), expr.build()))
     },
     SeeWorkExpression(_seework, _obr, worker, _cbr) {
         return backend.seework(worker.consteval())
@@ -150,6 +173,17 @@ sema.addOperation('build', {
     },
     BreakStatement(_break, _sc) {
         backend.break();
+    },
+    Expression_obj(_ocbr, fields, _ccbr) {
+        const fieldnodes: ohm.Node[] = fields.collectNodes()
+        const obj = backend.obj()
+        for (let [key, vref] of fieldnodes.map(e => e.build())) {
+            backend.setprop(obj, key, vref)
+        }
+        return obj
+    },
+    ObjectField(key, _colon, val) {
+        return [key.sourceString, val.build()]
     }
 })
 

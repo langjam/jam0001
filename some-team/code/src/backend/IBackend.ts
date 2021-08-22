@@ -23,4 +23,7 @@ export interface IBackend {
     comment(work: Ref, comment: Ref): Ref;
     interpolate(items: (string | Ref)[]): Ref;
     break(): void;
+    obj(): Ref;
+    setprop(r: Ref, prop: string, val: Ref): void;
+    getprop(r: Ref, prop: string): Ref;
 }
