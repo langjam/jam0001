@@ -3,17 +3,27 @@ const TILE_SIZE = 50;
 const OP_SIZE = TILE_SIZE * 3/4
 const TRAIN_SPEED = .3;
 
+const DIRECTION = {
+    North: "north",
+    East: "east",
+    South: "south",
+    West: "west",
+}
+
 const TILE_TYPE = {
-    Horizontal: {name: "track_straight_EW.png", img: null},
-    Vertical: {name: "track_straight_NS.png", img: null},
+    Horizontal: {name: "track_straight_EW.png", img: null, rot: DIRECTION.North},
+    Vertical: {name: "track_straight_NS.png", img: null, rot: DIRECTION.North},
 
-    NE: {name: "track_corner_NE.png", img: null},
-    ES: {name: "track_corner_ES.png", img: null},
-    SW: {name: "track_corner_SW.png", img: null},
-    WN: {name: "track_corner_WN.png", img: null},
+    NE: {name: "track_corner_NE.png", img: null, rot: DIRECTION.North},
+    ES: {name: "track_corner_ES.png", img: null, rot: DIRECTION.North},
+    SW: {name: "track_corner_SW.png", img: null, rot: DIRECTION.North},
+    WN: {name: "track_corner_WN.png", img: null, rot: DIRECTION.North},
 
-    T_LEFT: {name: "T_crossing_left.png", img: null},
-    CROSSING: {name: "crossing.png", img: null}
+    T_WEST: {name: "T_crossing_left.png", img: null, rot: DIRECTION.North},
+    T_NORTH: {name: "T_crossing_left.png", img: null, rot: DIRECTION.East},
+    T_EAST: {name: "T_crossing_left.png", img: null, rot: DIRECTION.South},
+    T_SOUTH: {name: "T_crossing_left.png", img: null, rot: DIRECTION.West},
+    CROSSING: {name: "crossing.png", img: null, rot: DIRECTION.North}
 }
 
 const COLOR = {
@@ -52,13 +62,6 @@ const STATION_TYPE = {
     "switch_empty": "op_switch%20empty.png",
 }
 
-const DIRECTION = {
-    North: "north",
-    East: "east",
-    South: "south",
-    West: "west",
-}
-
 let locomotiveBackground;
 let locomotiveForeground;
 let locomotiveAccent = {}
@@ -66,8 +69,10 @@ let locomotiveAccent1 = {}
 let stationForeground;
 let stationBackground;
 let stopper;
+let cloud;
 let stationTypeImages = {}
 let lineLookup = new Map();
+
 
 
 function preloadTrain() {
@@ -83,6 +88,7 @@ function preloadTrain() {
     stationBackground = loadImage("tiles/station_bottom.png")
     stationForeground = loadImage("tiles/station_top.png")
     stopper = loadImage("tiles/stopper.png")
+    cloud = loadImage("tiles/cloud.png");
 
     for (const i in STATION_TYPE) {
         const station = STATION_TYPE[i];
@@ -106,8 +112,8 @@ class Grid {
     }
 
 
-    addTile(coordinate, tile, rotation=DIRECTION.North) {
-        this.grid.set(coordinate, {tile: tile, rotation: rotation})
+    addTile(coordinate, tile) {
+        this.grid.set(coordinate, {tile: tile, rotation: tile.rot})
     }
 
     addTrain(train) {
@@ -163,6 +169,46 @@ class Grid {
     }
 }
 
+function getRandom(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+
+class Cloud {
+    location
+    size
+    fadespeed
+    trajectory
+    opacity
+
+    constructor(location) {
+        this.location = location;
+
+        this.size = getRandom(0.5, 0.8);
+        const trajx = getRandom(-2, 2);
+        const trajy = getRandom(-2, 2);
+        this.fadespeed = getRandom(0.1, 0.2);
+
+        this.trajectory = createVector(trajx, trajy);
+        this.opacity = 0.7;
+    }
+
+    draw() {
+        this.location.x += this.trajectory.x * TRAIN_SPEED;
+        this.location.y += this.trajectory.y * TRAIN_SPEED;
+        this.opacity -= this.fadespeed * TRAIN_SPEED;
+        if (this.opacity <= 0) {
+            return false;
+        }
+        push()
+        translate(this.location.x, this.location.y);
+        tint(255, this.opacity * 255);
+        image(cloud, 0, 0, TILE_SIZE * this.size, TILE_SIZE * this.size);
+        pop()
+        return true;
+    }
+}
+
 class Train {
     location
     accent
@@ -186,6 +232,9 @@ class Train {
         this.animation_count = 0;
         this.traveling_to = null;
         this.traveling_from = null;
+
+        this.clouds = []
+        this.ticks_since_last_cloud = 0;
     }
 
     travelAlongPath(path) {
@@ -228,7 +277,7 @@ class Train {
         const x = lerp(this.traveling_from[0], this.traveling_to[0], this.animation_count)
         const y = lerp(this.traveling_from[1], this.traveling_to[1], this.animation_count)
 
-        console.log(x, y, this.traveling_from, this.traveling_to, this.animation_count)
+        // console.log(x, y, this.traveling_from, this.traveling_to, this.animation_count)
 
         this.location.x = x;
         this.location.y = y;
@@ -242,8 +291,6 @@ class Train {
         }
 
         push()
-
-
         translate(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE)
 
         translate(TILE_SIZE / 2, TILE_SIZE / 2);
@@ -260,7 +307,23 @@ class Train {
         image(locomotiveAccent[this.accent], 0, 0, TILE_SIZE, TILE_SIZE)
         image(locomotiveAccent1[this.accent1], 0, 0, TILE_SIZE, TILE_SIZE)
         image(locomotiveForeground, 0, 0, TILE_SIZE, TILE_SIZE)
+        pop()
 
+        push()
+        if (this.path !== null) {
+            this.ticks_since_last_cloud += 1;
+            if (this.ticks_since_last_cloud > 5) {
+                this.ticks_since_last_cloud = 0;
+                this.clouds.push(new Cloud(createVector(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE)));
+            }
+        }
+        const new_clouds = []
+        for (const cloud of this.clouds) {
+            if (cloud.draw()) {
+                new_clouds.push(cloud);
+            }
+        }
+        this.clouds = new_clouds;
         pop()
     }
 }
@@ -276,6 +339,7 @@ class Station {
         this.stopped = stopped;
         this.station_type = station_type;
         this.name = name;
+        this.last_print = "";
     }
 
     drawBackground() {
@@ -363,6 +427,17 @@ class Station {
         textAlign(CENTER, CENTER);
         text(this.name, 0, 0)
         pop()
+
+        if (this.last_print !== "") {
+            push();
+            translate(TILE_SIZE, -TILE_SIZE * (5 / 8));
+            fill(255);
+            stroke(255);
+            textAlign(CENTER, CENTER);
+            textSize(18);
+            text(this.last_print, 0, 0);
+            pop();
+        }
 
         pop()
     }

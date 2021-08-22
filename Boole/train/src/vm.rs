@@ -39,6 +39,7 @@ impl TrainData {
         Arc::new(Mutex::new(td))
     }
 
+    #[cfg(test)]
     fn first_passenger_value(&self) -> Option<i64> {
         let data = self.train.second_class_passengers.first()?.data;
         Some(data)
@@ -67,6 +68,7 @@ impl Deref for StationData {
     }
 }
 
+#[allow(dead_code)]
 pub struct Data {
     stations: HashMap<String, Arc<Mutex<StationData>>>,
     trains: Vec<Arc<Mutex<TrainData>>>,
@@ -119,6 +121,7 @@ impl Data {
                     if let Some(x) = station.trains[0].front() {
                         let zz = x.lock().await;
                         if let Ok(_) = interface.print(
+                            station.station.clone(),
                             zz.train
                                 .second_class_passengers
                                 .iter()
@@ -135,6 +138,7 @@ impl Data {
                     if let Some(x) = station.trains[0].front() {
                         let zz = x.lock().await;
                         if let Ok(_) = interface.print_char(
+                            station.station.clone(),
                             zz.train
                                 .second_class_passengers
                                 .iter()
@@ -152,7 +156,7 @@ impl Data {
                         let mut t = x.lock().await;
                         if let Ok(other) = interface.ask_for_input().await {
                             for num in other {
-                                t.train.second_class_passengers.push(SecondClassPassenger{ name: String::from("input"), data: num });
+                                t.train.second_class_passengers.push(SecondClassPassenger { name: String::from("input"), data: num });
                                 t.train.second_class_passengers.rotate_right(1);
                             }
                             did_work = true;
@@ -219,8 +223,9 @@ impl Data {
                 }
                 Operation::Duplicate => {
                     if let Some(x) = station.trains[0].front().cloned() {
-                        let train = x.lock().await;
-                        let t2 = train.clone();
+                        let train = x.lock()?;
+                        let mut t2 = train.clone();
+                        t2.train.identifier = rand::random();
                         station.trains[1].push_back(Arc::new(Mutex::new(t2)));
                         did_work = true;
                     }
@@ -417,20 +422,22 @@ impl Data {
 
 #[cfg(test)]
 mod tests {
-    
-
     use crate::ast::{Program, SecondClassPassenger, Station, Target, Train};
     use crate::interface::{Communicator, CommunicatorError};
     use crate::operations::Operation;
     use crate::parse::parser::Span;
     use crate::vm::Data;
     use crate::wishes::{ColorChoice, TrainConfig};
-    
 
-    struct VMInterface;
+
+    struct VMInterface(bool);
+
     impl VMInterface {
         fn new() -> Self {
-            Self
+            Self(false)
+        }
+        fn new_print() -> Self {
+            Self(true)
         }
     }
 
@@ -439,11 +446,11 @@ mod tests {
             Ok(vec![0])
         }
 
-        fn print(&self, _data: Vec<i64>) -> Result<(), CommunicatorError> {
+        fn print(&self, _: Station, _data: Vec<i64>) -> Result<(), CommunicatorError> {
             Ok(())
         }
 
-        fn print_char(&self, _data: Vec<i64>) -> Result<(), CommunicatorError> {
+        fn print_char(&self, _: Station, _data: Vec<i64>) -> Result<(), CommunicatorError> {
             Ok(())
         }
 
@@ -960,21 +967,37 @@ mod tests {
                 output: vec![
                     Target {
                         span: Span::from_length(0, 1),
-                        station: "Test".to_string(),
+                        station: "Test2".to_string(),
                         track: 0,
                     },
                     Target {
                         span: Span::from_length(0, 1),
-                        station: "Test".to_string(),
+                        station: "Test2".to_string(),
                         track: 1,
                     },
                 ],
-            }],
+            },
+                           Station {
+                               name: "Test2".to_string(),
+                               operation: Operation::Duplicate,
+                               output: vec![
+                                   Target {
+                                       span: Span::from_length(0, 1),
+                                       station: "Test".to_string(),
+                                       track: 0,
+                                   },
+                                   Target {
+                                       span: Span::from_length(0, 1),
+                                       station: "Test".to_string(),
+                                       track: 1,
+                                   },
+                               ],
+                           }],
         };
         let i = VMInterface::new();
         let mut pp = Data::new(program);
         pp.do_current_step(&i).unwrap();
-        let station = pp.stations.get("Test").unwrap().lock().unwrap();
+        let station = pp.stations.get("Test2").unwrap().lock().unwrap();
         assert_eq!(station.trains[0].len(), station.trains[1].len());
         let t1 = {
             station.trains[0]
@@ -985,7 +1008,8 @@ mod tests {
                 .train
                 .clone()
         };
-        assert_eq!(t1, station.trains[1].front().unwrap().lock().unwrap().train);
+        assert_eq!(t1.second_class_passengers, station.trains[1].front().unwrap().lock().unwrap().train.second_class_passengers);
+        assert_ne!(t1.identifier, station.trains[1].front().unwrap().lock().unwrap().train.identifier);
     }
 
     #[test]

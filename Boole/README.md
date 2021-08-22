@@ -22,8 +22,31 @@ variable to your preferred python executable that's at least python3.8.
 # LangJam
 
 This programming language was written as a submission to the first LangJam
-in the weekend of saturday the 21st of august by Noah Jadoenathmisier, 
-Julius de Jeu, Jonathan Brouwer and Jonathan Dönszelmann.
+in the weekend of saturday the 21st of august by Jonathan Brouwer, Jonathan Dönszelmann,
+Noah Jadoenathmisier, and Julius de Jeu.
 
 # Additional Documentation
-We are Dutch students, so obviously we travel a lot by train. As you know, you can do a lot of things at train stations. 
+Imagine you are a Dutch student. You don't live in the same city as where your university is, and thus
+must travel via train every morning. One morning before you board the train you get handed a card with
+the number 16 on it, but are not informed what that number means. You do however notice that you are the
+first person to board the train in second class. At the other side of the wall you can hear some people
+talking about the train, "What a nice lime green color this train has." Someone else responded "The
+yellow details are a nice addition as well yeah!" Confused you find a spot, and sit down.
+
+At the first station, next to the name you see a big sign saying `ADD` underneath the station name. 
+Suddenly a man runs at you from the train standing on track 2, he shouts: "Add 7 to your card!
+It's important!" Not knowing what is going on, you sheepishly add 7 to your number, and the train
+continues to the next station. 
+
+At the second station you again see a big sign underneath the station name, this one saying `MUL`. 
+you hear a man shout at you to multiply your number by 3. Again, not really knowing why you do this, 
+you multiply your number. The train departs again, not really knowing what to expect. 
+
+Just before you arrive at the station where you have to get off of the train, you notice something.
+There is no one else in the train? How did you not see this before? "That's pretty weird" you say to 
+yourself. 
+
+At your destination you again see a weird sign, this one saying `PRINT NUMBER`. When you get off of
+the train, a woman walks up to you, and asks you what your number is. "69?" you say. Suddenly the woman
+shouts as loud as she can: "69!" Still not having any idea what this was about, you go on with your day. 
+

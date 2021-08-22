@@ -23,13 +23,13 @@ impl Display for ParserError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         //Find before
         let mut line_start = self.span.start;
-        while line_start > 0 && self.input[(line_start - 1)..].chars().next().unwrap() != '\n' {
+        while line_start > 0 && self.input[(line_start - 1)..].chars().next().unwrap() != '\n' && self.input[(line_start - 1)..].chars().next().unwrap() != '\r' {
             line_start -= 1;
         }
 
         //Find after
         let mut line_end = self.span.end;
-        while line_end < self.input.len() && self.input[line_end..].chars().next().unwrap() != '\n' {
+        while line_end < self.input.len() && self.input[line_end..].chars().next().unwrap() != '\n' && self.input[line_end..].chars().next().unwrap() != '\r' {
             line_end += 1;
         }
 
