@@ -8,6 +8,10 @@ This language celebrates the multitude of comment syntaxes in programming langua
 
 This project requires a recent version of node/npm to be installed (developed on 7.20.3), see https://nodejs.org/en/download/
 
+After you first check out this code make sure you run:
+
+`npm install`
+
  * To run tests issue the following command:
 
 `npm t`
