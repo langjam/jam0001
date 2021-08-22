@@ -1,0 +1,17 @@
+# test({ in: [3, 4], out: 7 })
+y = function (x, y) {
+    x + y
+};
+
+p = {
+    x: 3.5,
+    y: 7
+};
+
+Point = {
+    length: function(p) { p.x^2 + p.y^2 }
+};
+
+print(p);
+
+Point.length(p)

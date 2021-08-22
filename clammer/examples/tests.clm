@@ -1,0 +1,45 @@
+tests = function(tests) {
+    function(block) {
+        failures = [];
+        if block.type == "assignment" write(block.lhs + ": ");
+
+        forEach(tests, function (t) {
+            if t == false {
+                write("❌ ");
+                push(failures, t)
+            }
+            else write("✅ ")
+        });
+
+        # "newline"
+        print("");
+
+        forEach(failures, function(f) {
+            block = getBlock(f);
+            # "TODO: LHS/RHS doesn't work :("
+            print("❌ " + block.sourceString)
+        })
+    }
+};
+
+# tests([
+    square(3) == 9,
+    square(4) == 12
+])
+square = function(x) { x^2 };
+
+# tests([
+    is_even(0) == true,
+    is_even(1) == true,
+    is_even(2) == true
+])
+is_even = function(n) { n % 2 == 0 };
+
+# tests([
+    sum_range(0, 5, 0) == 15
+])
+sum_range = function (start, end, sum) {
+    if start >= end sum else sum_range(start + 1, end, sum + start)
+};
+
+print("tests.clm")

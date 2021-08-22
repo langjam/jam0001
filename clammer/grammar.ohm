@@ -1,0 +1,95 @@
+Arithmetic {
+  Code = ListOf<CommentedExp, ";">
+
+  ObjectExpression = "{" ListOf<ObjectEntries, ","> "}"
+  ObjectEntries = ident ":" Exp
+  ObjectField = PriExp "." ident
+  
+  Array = "[" ListOf<Exp, ","> "]"
+
+  FunctionExpression
+  = "function" "(" Args ")" "{" Code "}"
+  
+  Args
+  = ListOf<ident, ",">
+
+  Comment = "#" Exp
+  CommentedExp = ListOf<Comment, "\n"> Exp
+  
+  Exp = ComparisonExp
+
+  FunctionCall
+  = PriExp "(" ListOf <Exp, ","> ")"
+
+  CodeBlock
+  = Exp --single_line
+  | "{" Code "}" --multiline
+
+	ElseIf = "else if" Exp CodeBlock
+
+    IfExp
+  = "if" Exp CodeBlock ElseIf* "else" CodeBlock  --ifelse
+  | "if" Exp CodeBlock  --if
+
+  DoWhile
+  = "do" CodeBlock "while" Exp CodeBlock? "else" CodeBlock --elsecase
+  | "do" CodeBlock "while" Exp CodeBlock  --whilecase
+  | "do" CodeBlock "while" Exp  -- simple
+
+  ComparisonExp
+  = AssignmentExp "==" AssignmentExp --equal
+  | AssignmentExp ">=" AssignmentExp --ge
+  | AssignmentExp "<=" AssignmentExp --le
+  | AssignmentExp ">" AssignmentExp --gt
+  | AssignmentExp "<" AssignmentExp --lt
+  | AssignmentExp
+
+  AssignmentExp
+    = ident "=" AddExp  -- assignment
+    | AddExp
+
+  AddExp
+    = AddExp "+" MulExp  -- plus
+    | AddExp "-" MulExp  -- minus
+    | MulExp
+
+  MulExp
+    = MulExp "*" ExpExp  -- times
+    | MulExp "/" ExpExp  -- divide
+    | MulExp "%" ExpExp  -- modulo
+    | ExpExp
+
+  ExpExp
+    = PriExp "^" PriExp  -- power
+    | PriExp
+
+  PriExp
+    = IfExp
+    | DoWhile
+    | FunctionExpression
+    | Array
+    | ObjectExpression
+    | FunctionCall
+    | ObjectField
+    | ident
+    | boolLiteral
+    | stringLiteral
+    | numericLiteral
+    | "+" PriExp   -- pos
+    | "-" PriExp   -- neg
+    | "(" Exp ")"  -- paren
+
+  ident  (an identifier)
+    = ~keyword (letter | "_") (alnum | "_")*
+
+  keyword = "function" | "if" | "else" | "do" | "while" | boolLiteral
+
+  boolLiteral = "true" | "false"
+
+  stringLiteral = "\"" (~"\\" ~"\"" any | escape)* "\""
+  escape = "\\" ("\\" | "\"" | "n")
+  
+  numericLiteral  (a number)
+    = digit* "." digit+  -- float
+    | digit+             -- whole
+}
