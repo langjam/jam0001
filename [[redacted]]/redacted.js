@@ -494,7 +494,10 @@ add_primitive('comments', new (class RedactedCommentsController extends Redacted
 			return redactify((category, maybe_handler) => {
 				if (maybe_handler === undefined)
 					return comment_handlers.get(category.to_str()) || RedactedNone
-				comment_handlers.set(category.to_str(), maybe_handler)
+				else if (maybe_handler === RedactedNone)
+					comment_handlers.delete(category.to_str())
+				else
+					comment_handlers.set(category.to_str(), maybe_handler)
 				return RedactedNone
 			})
 		return RedactedNone
