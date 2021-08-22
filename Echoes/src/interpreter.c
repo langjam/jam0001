@@ -158,19 +158,7 @@ static struct Value *expr_eval(struct Interpreter* const interp, struct Expr* co
         if (lhs->type == rhs->type == ValueTypeNumber) {
             value->type = ValueTypeNumber;
             value->as.number = number_add(lhs->as.number, rhs->as.number);
-        }/* else if (lhs->type == rhs->type == ValueTypeString) {
-            printf("aaa3");
-            size_t len_lhs, len_rhs;
-            // TODO: optimise this!!!
-            value->type = ValueTypeString;
-            value->as.string = malloc(((len_lhs=strlen(lhs->as.string))+(len_rhs=strlen(rhs->as.string))+1)*sizeof(char));
-            if (!value->as.string)
-                runtime_error("Allocation failure when adding up two strings");
-            printf("%s %s", lhs->as.string, rhs->as.string);
-            strcpy(value->as.string, lhs->as.string);
-            strcpy(value->as.string+len_lhs, rhs->as.string);
-            value->as.string[len_lhs+len_rhs] = '\0';
-        }*/ else {
+        } else {
             runtime_error("Invalid operation (+) on types");
         }
         return value;
@@ -329,13 +317,9 @@ static void interpreter_interpret_node(struct Interpreter* const interp, struct 
     case NodeTypeLoop:
         while (value_as_bool(expr_eval(interp, node->value.if_stat.condition))) {
             for (size_t i = 0; node->value.if_stat.block[i]; ++i) {
-                if (node->value.if_stat.block[i]->type == NodeTypeBreak)
-                    goto loop_end;
-                else
-                    interpreter_interpret_node(interp, node->value.if_stat.block[i]);
+                interpreter_interpret_node(interp, node->value.if_stat.block[i]);
             }
         }
-    loop_end:
         break;
     default:
         // FIXME: again, wtf??

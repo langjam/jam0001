@@ -63,7 +63,6 @@ enum NodeType {
     NodeTypeSet,
     NodeTypeIf,
     NodeTypeLoop,
-    NodeTypeBreak
 };
 
 struct IfStatementNode {

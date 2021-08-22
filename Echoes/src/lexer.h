@@ -25,8 +25,7 @@ enum TokenName {
     TokenNameBiggerThan,
     TokenNameIf,
     TokenNameElse,
-    TokenNameLoop,
-    TokenNameBreak
+    TokenNameLoop
 };
 
 struct Token {

@@ -431,22 +431,6 @@ end:
     return node;
 }
 
-static struct Node *parser_parse_break(struct Parser* const parser) {
-    struct Node *node;
-    struct Lexer old_state = parser->lexer;
-    // is there something?
-    if (!lexer_tokenize(&parser->lexer))
-        return NULL;
-    // verify it starts with 'if'
-    if (parser->lexer.token.name != TokenNameBreak) {
-        parser->lexer = old_state;
-        return NULL;
-    }
-    node = malloc(sizeof(struct Node));
-    node->type = NodeTypeBreak;
-    return node;
-}
-
 static struct Node *parser_parse_loop(struct Parser* const parser) {
     struct Node *node;
     struct Lexer old_state = parser->lexer;
