@@ -148,6 +148,15 @@ impl Env {
                     }
                 }
             }
+            ValueAst::CommentGet(source) => {
+                match self.evaluate(source)? {
+                    Value::Unit => Err("unit has no comments (why?)".into()),
+                    Value::Number(_) => Err("number has no comments (why?)".into()),
+                    Value::Text(_) => Err("text has no comments (why?)".into()),
+                    Value::Comment(c) => Err("comment has no comments (why?)".into()),
+                    Value::Struct(s) => Ok(Value::Comment(s.comment.clone())),
+                }
+            }
         }
     }
 }

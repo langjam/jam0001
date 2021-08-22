@@ -19,6 +19,7 @@ pi = Rational {
 };
 
 result = pi.numerator;
+picomment = pi!!;
 verified = pi!VERIFIED;
 ",
     ).unwrap();

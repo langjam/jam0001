@@ -163,6 +163,7 @@ pub fn field_value(input: &str) -> IResult<&str, FieldValueAst> {
 
 pub fn parse_value(input: &str) -> IResult<&str, ValueAst> {
     use nom::branch::alt;
+    use nom::bytes::complete::tag;
     use nom::character::complete::{char, one_of};
     use nom::sequence::preceded;
 
@@ -182,11 +183,18 @@ pub fn parse_value(input: &str) -> IResult<&str, ValueAst> {
         ws(char('!')),
         identifier,
     );
+    let mut parse_comment_get = ws::<_, _, ()>(tag("!!"));
 
     let mut prior = first;
 
     while access_following(prior.0).is_ok() {
-        if let Ok(second) = parse_field_access(prior.0) {
+        if let Ok(another) = parse_comment_get(prior.0) {
+            prior = (
+                another.0,
+                ValueAst::CommentGet(Box::new(prior.1)),
+            );
+        }
+        else if let Ok(second) = parse_field_access(prior.0) {
             prior = (
                 second.0, 
                 ValueAst::FieldAccess(Box::new(prior.1), second.1.to_string()),
