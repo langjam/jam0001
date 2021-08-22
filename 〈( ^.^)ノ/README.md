@@ -86,9 +86,84 @@ print($1)
 
 
 ### Comments
+Goal of the langjam was to create a language with ``first-class comments``, our implementation of comment-functions was the attempt to accomplish exactly this.
+With the comments in insert-name-here, you can annotate and chain together statements.
+Using the identifiers in the comments you can then actually reference, assign and pass around the statements annotated by a comment.
+
+Statements can be annotated by comments by just writing a comment after a statement:
+```go
+set($-3 $-2) // save
+```
+
+If you wish to annotate multiple statements, you have to make this clear by using the ``and`` instcuction:
+```go
+set($-3 $-2) // save
+and(print($-3)) // save
+```
+The interesting part here is that this can be done dynamically and at runtime!
+
+Furtherly, like any first-class citizen, these functions can be stored in variables:
+
+```go
+set($-1 "save")
+$-1()
+```
+
+As can be seen in the fib example, you can also chain together comments using ``,`` or ``and`` while calling them:
+```go
+set($-3 $-2) // save
+set($-2 m("$-2 + $-1")) // load
+set($-1 $-3) // calc
+
+// MAGIC happens right here:
+"save, calc, load"() // fib
+```
 
 ### Loops
+insert-name-here only needs while loops to fuction.
+Simmilarly to many other languages, while loops are declared by writing the while keyword followed, by an expression in parenthesis and a block of statements in curly brackets:
+
+```go
+while (TRUE) {
+  "fib"()
+  print($-1)
+}
+```
+
+#### Break
+Sometimes however, you may want a loop to end.
+For these cases, you can use the ``break()`` instuction.
+
+Unlike other instructions, this one *allways* executes at the end of the loop, regardless of where you write it
+```go
+while (TRUE) {
+    print("hello")
+    break()
+}
+
+// is the same as:
+
+while (TRUE) {
+    break()
+    print("hello")
+}
+```
+#### Conditional loops
+Using a these break instructions, you can implement if-statement-like conditional loops:
+```go
+while (m("1 > 2")) {
+    print("2 is bigger than 1")
+    break()
+}
+```
 
 ### Constants
+As can be seen in the many examples above, we also happen to have two constants ``TRUE`` and ``FALSE``. 
+Not much to explain here, but you can use them in while statements:
+```go
+while (TRUE) {
+// To infinity and beyond
+}
+```
 
 ### Arrays
