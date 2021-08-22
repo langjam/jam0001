@@ -73,9 +73,10 @@ let split_kw (kw : string) (comment : tok list) : tok list list =
       else split res (t::curr_expr) q
   in split [] [] comment
 
-let parse_value (comment : tok list) : value =
+let parse_value (decl : (string * expr) list) (comment : tok list) : value =
   let rec build_value res = function
-  | [] -> Var res
+  | [] -> if List.mem_assoc res decl then Var res
+  else print_syntax_error (tok_pos (List.hd comment)) ("no variable named " ^ res)
   | t::q ->
     begin match string_of_tok t with
     | "something" -> Hole
@@ -93,10 +94,9 @@ let parse_value (comment : tok list) : value =
       end
     | "something" -> Hole
     | s -> build_value s q
-    (* TODO check variable name *)
 
-let parse_operation (comment : tok list) : operation =
-  let f = parse_value in
+let parse_operation (decl : (string * expr) list) (comment : tok list) : operation =
+  let f = parse_value decl in
   let rec search (prev : tok list) = function
     | [] -> failwith "no operation"
     | t::q -> (
@@ -142,8 +142,8 @@ let parse_operation (comment : tok list) : operation =
       )
   in search [] comment
 
-let rec parse_statement (comment : tok list) : cconstraint =
-  let f x = try Node (parse_operation x) with _ -> Leaf (parse_value x) in
+let rec parse_statement (decl : (string * expr) list) (comment : tok list) : cconstraint =
+  let f x = try Node (parse_operation decl x) with _ -> Leaf (parse_value decl x) in
   match comment with
   | [] -> Nothing
   | t::q ->
@@ -159,14 +159,14 @@ let rec parse_statement (comment : tok list) : cconstraint =
       with Failure msg -> print_syntax_error (tok_pos t) msg end
     | "return" | "returns" -> Returns (f q)
     | "use" | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
-    | _ -> parse_statement q
+    | _ -> parse_statement decl q
 
 let generate_function (Spec (_, name, comment)) =
   let comments = split_lines comment in
   let rec build_function (f : comment_function) = function
     | [] -> f
     | c::q ->
-      match parse_statement c with
+      match parse_statement f.declarations c with
       | Nothing -> build_function f q
       | Takes n -> build_function {f with n_args = n} q
       | Let (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
