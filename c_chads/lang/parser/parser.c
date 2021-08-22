@@ -28,11 +28,11 @@ struct Vec OF(strview_t) preceding_comments;
 
 static void add_comments() {
     // Nocom
-    struct Span spn = lex_get_comment(&parser.lexer);
+    struct Span spn = lex_get_comment(&parser.lexer, parser.current_token.span.from+parser.current_token.span.size);
     while (!(spn.from == 0 && spn.size == 0)) {
         strview_t view = strview_span(spn, parser.lexer.src);
         vec_push(&preceding_comments, &view);
-        spn = lex_get_comment(&parser.lexer);
+        spn = lex_get_comment(&parser.lexer, parser.lexer.pos);
     }
 }
 
@@ -286,7 +286,7 @@ pnode_t *pnode_right(pnode_t *of) {
     return vec_get(&of->children, 1);
 }
 
-static pnode_t pnode_endpoint(usize pos, pnode_kind_t kind) {
+pnode_t pnode_endpoint(usize pos, pnode_kind_t kind) {
     return (pnode_t) {
         .pos = pos,
         .kind = kind,
@@ -298,6 +298,7 @@ static pnode_t delimited(pnode_kind_t kind, const string open, enum Token_Type b
     if (kind == PN_TYPELIST) 
         setexpect("Did you mean to create a parameter list?");
     pnode_t node = pnode_listing(pos(), kind);
+    add_comments();
     skip_v(open);
     setexpect(NULL);
     rune delim = begindelim(*open);
@@ -350,6 +351,7 @@ static pnode_t maybe_call() {
         return node;
     }
     else if (check("'")) {
+        setexpect("If you want array access, use a{index} syntax");
         pull();
         tok_t name = pull();
         assert_tt(&name, TT_IDENT);

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../lang/parser/parser.h"
+#include "../lang/parser/checker.h"
 #include "../lang/interpreter/interpreter.h"
 #include "../aid/sfio/sfio.h"
 
@@ -150,10 +151,11 @@ int main(int argc, char *argv[]) {
     eh_set_file(argv[1]);
     eh_init();
     parser_init(src);
-    printf("------\n%s\n------\n", parser_get_state()->lexer.src);
+    //printf("------\n%s\n------\n", parser_get_state()->lexer.src);
     struct Parser_Node result = parser_parse_toplevel();
-    print_ast(&result, 0);
-    printf("------Running------\n");
+    checker_run(&result);
+    //print_ast(&result, 0);
+    //printf("------Running------\n");
 
     intrp_init();
 
@@ -162,7 +164,6 @@ int main(int argc, char *argv[]) {
 
     intrp_deinit();
 
-    printf("------\n");
 
     vec_drop(&result.children);
     parser_deinit();

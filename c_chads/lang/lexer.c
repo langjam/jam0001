@@ -290,7 +290,9 @@ static void lex_skip_stuff(struct Lexer_State *self) {
     while (lex_skip_blank(self) || lex_skip_comment(self));
 }
 
-struct Span lex_get_comment(struct Lexer_State *self) {
+struct Span lex_get_comment(struct Lexer_State *self, usize pos) {
+    struct Lexer_State old = *self;
+    self->pos = pos;
     while (lex_skip_blank(self));   
     usize startpos = self->pos;
     lex_skip_comment(self);
@@ -298,6 +300,7 @@ struct Span lex_get_comment(struct Lexer_State *self) {
     // Empty span, means no comment exists
     if (size == 0) return (struct Span) { 0 };
     return (struct Span) { .from = startpos+1, .size = size-1 };
+    *self = old;
 }
 
 struct Token lex_determine(struct Lexer_State *self) {
