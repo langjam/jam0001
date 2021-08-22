@@ -5,11 +5,11 @@ vws = _{ hws* ~ NEWLINE ~ hws* }
 
 //basic definitions
 digit = { '0'..'9' }
-alpha = { ('a'..'z'|'A'..'Z')+ }
+alpha = { 'a'..'z' | 'A'..'Z' }
 number = { digit+ }
-alphanumeric = { (alpha | number | "_" | "-")+ }
-identAny = { alpha | alpha ~ alphanumeric }
-ident = { !((^"then" | ^"as" | ^"storing") ~ (hws | NEWLINE | EOI)) ~ identAny }
+alphanumeric = { alpha ~ (alpha | digit | "_" | "-")* }
+reserved = { ^"then" | ^"as" | ^"storing" | ^"if" | ^"else" | ^"otherwise" }
+ident = { !(reserved ~ (hws | NEWLINE | EOI)) ~ alphanumeric }
 
 stringContents = { (!("\"") ~ ANY)* }
 string = { "\"" ~ stringContents ~ "\"" }

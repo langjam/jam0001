@@ -1,5 +1,9 @@
-//This function adds 3, 4, 5 storing the result in sum, then prints sum
+//This function adds 3, 4, 5 storing the result in sum, then increments sum, then prints it
 function main()
 
-//A function which stores a + b + c in sum then returns sum
+//A function which outputs a + b + c
 function add(a, b, c)
+
+//This function returns a + 1
+function increment(a)
+
