@@ -70,7 +70,7 @@ Note: operation can be one of the following characters: +, -, *, /, %
 ### Function Definition: <br>
 |Format|Example|
 |---|---|
-|`<name> = function({ /* function body */ } [ : ARG_1 : ARG_2 : ARG_3 : ...] )?`|`foo = function({out("I am here!!1!")?})?`|
+|`<name> = function({ /* function body */ })?`|`foo = function({out("I am here!!1!")?})?`|
 
 ### Function Calling: <br>
 |Format|Example|
@@ -80,7 +80,7 @@ Note: operation can be one of the following characters: +, -, *, /, %
 ### For Loops: <br>
 |Format|Example|
 |---|---|
-|`for("<name>" : <operation> : { /* loop body */ })?`|`for ("x" : intrange(0:20) : { out("This is test nr. " : y)? }?)`|
+|`for("<name>" : <operation> : { /* loop body */ })?`|`for ("x" : intrange(0:20) : { out("This is test nr. " : y)? })?`|
 
 ### Forever Loops: <br>
 |Format|Example|
@@ -126,7 +126,7 @@ Note: operation can be one of the following characters: +, -, *, /, %
 - args:
   1. The list that should be extended
   2. The element that the list should be extended with
-#### list-pop
+#### list_pop()
   
 - Takes out the given element of the list, when nothing is given, it pops the first element
 - args:
@@ -272,5 +272,5 @@ You name the constructor comment, because the theme of [this jam](https://github
 For a single-line-comment, write `\\`
 To start a multi-line-comment, write `/*`. To end it, write `*/`
 
-Function Signatures are nedded when you want to pass a variable to a class or method.
+Function Signatures are needed when you want to pass a variable to a class or method.
 You can start a Function Signature with `/*` and end it with `*/`. To pass an argument to a class / function, you write `- param <name>` in a new line
