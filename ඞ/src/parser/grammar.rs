@@ -157,7 +157,7 @@ where
                 AST::IfStmt {
                     condition: Box::new(condition),
                     body,
-                    elses: vec![],
+                    elses,
                 }
             }
             T![for] => {
@@ -183,7 +183,7 @@ where
                 }
             }
             T![ident] => {
-                // allow assignments and function calls as statements
+                // allow assignments and function and method calls as statements
                 let position = self.position();
                 let expr = self.parse_expr()?;
                 match &expr {
@@ -191,6 +191,13 @@ where
                         self.try_consume(T![;]);
                         expr
                     }
+                    AST::BinaryExpr { op, rhs, .. } if op == "." => match rhs.as_ref() {
+                        AST::FnCall { .. } => {
+                            self.try_consume(T![;]);
+                            expr
+                        }
+                        _ => return Err(ParseError::InvalidExpressionStatement { position }),
+                    },
                     AST::FnCall { .. } => {
                         self.try_consume(T![;]);
                         expr
@@ -212,7 +219,10 @@ where
 
     fn parse_if(&mut self) -> Result<(AST, Vec<AST>)> {
         self.consume(T![if])?;
+        let current_allow_obj_literals = self.allow_object_literals;
+        self.allow_object_literals = false;
         let condition = self.parse_expr()?;
+        self.allow_object_literals = current_allow_obj_literals;
         self.consume(T!['{'])?;
         let mut body = Vec::new();
         while !self.at(T!['}']) {
@@ -335,6 +345,13 @@ where
                 self.consume(T![class])?;
                 AST::Ident {
                     name: "class".to_string(),
+                }
+            }
+            T![ref] => {
+                self.consume(T![ref])?;
+                let value = self.parse_expr_bp(18)?;
+                AST::RefExpr {
+                    value: Box::new(value),
                 }
             }
             T!['('] => {

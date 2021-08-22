@@ -53,6 +53,7 @@ impl Evaluator {
             declare_builtin!("ASTIdent"; "name"),
             declare_builtin!("ASTListLiteral"; "elements"),
             declare_builtin!("ASTBinaryExpr"; "op", "lhs", "rhs"),
+            declare_builtin!("ASTRefExpr"; "value"),
             declare_builtin!("ASTObjectLiteral"; "class", "fields"),
             declare_builtin!("ASTFieldLiteral"; "name", "value"),
             declare_builtin!("ASTForLoop"; "var_name", "target", "body"),
@@ -103,6 +104,13 @@ impl Evaluator {
                 _ => unreachable!(),
             },
             "ASTBinaryExpr" => self.eval_bin_op(obj)?,
+            "ASTRefExpr" => match &mut self.eval_ast(obj.get_field_mut("value")?)? {
+                Value::VarRef { name } => {
+                    Value::ObjectRef(Box::new(Value::Ptr(self.get_var(name.as_str())?)))
+                }
+                v @ Value::Ptr(_) => Value::ObjectRef(Box::new(v.clone())),
+                v => return Err(format!("Cannot take a reference to value {}", v)),
+            },
             "ASTLetStmt" => {
                 let name = match obj.get_field("var_name")? {
                     Value::String(s) => s,
@@ -122,8 +130,9 @@ impl Evaluator {
                 let mut current_if = obj;
                 let mut i = 0;
                 loop {
-                    let condition = match self.eval_ast(current_if.get_field_mut("condition")?)? {
-                        Value::Bool(b) => b,
+                    let mut condition = self.eval_ast(current_if.get_field_mut("condition")?)?;
+                    let condition = match self.deref_val(&mut condition)? {
+                        Value::Bool(b) => *b,
                         _ => unreachable!(),
                     };
                     if !condition {
@@ -231,20 +240,7 @@ impl Evaluator {
                 Value::Unit
             }
             "ASTFnCall" => {
-                let name = match obj.get_field("name")? {
-                    Value::String(s) => s,
-                    _ => unreachable!(),
-                };
-                let args = match obj.get_field_mut("args")? {
-                    Value::List { elems } => elems,
-                    _ => unreachable!(),
-                };
-                let mut eval_args = Vec::with_capacity(args.len());
-                for arg in args {
-                    let mut val = self.eval_ast(arg)?;
-                    let val = self.deref_val(&mut val)?;
-                    eval_args.push(val.clone());
-                }
+                let (name, mut eval_args) = self.extract_fn_info(obj)?;
                 match self.get_fn(&name) {
                     Ok(mut f) => {
                         // user-defined
@@ -429,6 +425,24 @@ impl Evaluator {
         Ok(result)
     }
 
+    fn extract_fn_info(&mut self, obj: &mut Object) -> Result<(String, Vec<Value>), String> {
+        let name = match obj.get_field("name")? {
+            Value::String(s) => s,
+            _ => unreachable!(),
+        };
+        let args = match obj.get_field_mut("args")? {
+            Value::List { elems } => elems,
+            _ => unreachable!(),
+        };
+        let mut eval_args = Vec::with_capacity(args.len());
+        for arg in args {
+            let mut val = self.eval_ast(arg)?;
+            let val = self.deref_val(&mut val)?;
+            eval_args.push(val.clone());
+        }
+        Ok((name, eval_args))
+    }
+
     fn eval_class_def(&mut self, obj: &Object) -> EvalResult {
         assert_eq!(obj.class, "ASTClassDef");
         let name = match obj.get_field("name")? {
@@ -508,7 +522,16 @@ impl Evaluator {
         };
 
         let mut lhs = &mut self.eval_ast(obj.get_field_mut("lhs")?)?;
-        let mut rhs = &mut self.eval_ast(obj.get_field_mut("rhs")?)?;
+        let mut rhs = obj.get_field_mut("rhs")?;
+        let mut maybe_eval_rhs;
+        rhs = match (op.as_str(), &rhs) {
+            // Don't try to resolve method calls without their target
+            (".", Value::Object(o)) if o.class == "ASTFnCall" => rhs,
+            _ => {
+                maybe_eval_rhs = self.eval_ast(obj.get_field_mut("rhs")?)?;
+                &mut maybe_eval_rhs
+            }
+        };
 
         // Depending on the type of op, we need to resolve variables to their values
         match op.as_str() {
@@ -595,28 +618,171 @@ impl Evaluator {
             "." => {
                 let target = match self.deref_val(lhs)? {
                     Value::Object(o) => o,
+                    r @ Value::ObjectRef(_) => match self.eval_ast(r)? {
+                        Value::Ptr(ptr) => match self.deref_val(unsafe { &mut *ptr })? {
+                            Value::Object(o) => o,
+                            Value::ObjectRef(o) => match o.as_mut() {
+                                Value::Object(o) => o,
+                                _ => unreachable!(),
+                            },
+                            _ => unreachable!(),
+                        },
+                        _ => unreachable!(),
+                    },
                     v => {
-                        if let Value::VarRef { name } = rhs {
-                            if name == "class" {
-                                let class = match v {
-                                    Value::None => "None",
-                                    Value::Unit => "Unit",
-                                    Value::Bool(_) => "Bool",
-                                    Value::Int(_) => "Int",
-                                    Value::Float(_) => "Float",
-                                    Value::String(_) => "String",
-                                    Value::VarRef { .. } => "VarRef",
-                                    Value::Ptr(_) => "Ptr",
-                                    Value::Comment { .. } => "Comment",
-                                    Value::List { .. } => "List",
-                                    Value::Object(_) | Value::ObjectRef(_) => unreachable!(),
-                                };
-                                return Ok(Value::String(class.to_string()));
-                            } else {
+                        match rhs {
+                            Value::VarRef { name } => {
+                                if name == "class" {
+                                    let class = match v {
+                                        Value::None => "None",
+                                        Value::Unit => "Unit",
+                                        Value::Bool(_) => "Bool",
+                                        Value::Int(_) => "Int",
+                                        Value::Float(_) => "Float",
+                                        Value::String(_) => "String",
+                                        Value::VarRef { .. } => "VarRef",
+                                        Value::Ptr(_) => "Ptr",
+                                        Value::Comment { .. } => "Comment",
+                                        Value::List { .. } => "List",
+                                        Value::Object(_) | Value::ObjectRef(_) => unreachable!(),
+                                    };
+                                    return Ok(Value::String(class.to_string()));
+                                } else {
+                                    return Err(format!("Cannot access a field of type {:?}", v));
+                                }
+                            }
+                            Value::Object(o) if o.class == "ASTFnCall" => {
+                                // check for intrinsic function
+                                let (name, eval_args) = self.extract_fn_info(o)?;
+                                match v {
+                                    Value::String(s) => match name.as_str() {
+                                        "len" => {
+                                            if eval_args.len() != 0 {
+                                                return Err(format!(
+                                                    "Expected 0 arguments for method `string::len`, but got {}",
+                                                    eval_args.len()
+                                                ));
+                                            }
+                                            return Ok(Value::Int(s.len() as isize));
+                                        }
+                                        "contains" => {
+                                            if eval_args.len() != 1 {
+                                                return Err(format!(
+                                                    "Expected 1 argument for method `string::contains`, but got {}",
+                                                    eval_args.len()
+                                                ));
+                                            }
+                                            let pattern = match &eval_args[0] {
+                                                Value::String(s) => s,
+                                                v => {
+                                                    return Err(format!(
+                                                        "Argument to `string::contains` must be a string (found {})",
+                                                        v
+                                                    ))
+                                                }
+                                            };
+                                            return Ok(Value::Bool(s.contains(pattern)));
+                                        }
+                                        "starts_with" => {
+                                            if eval_args.len() != 1 {
+                                                return Err(format!(
+                                                    "Expected 1 argument for method `string::starts_with`, but got {}",
+                                                    eval_args.len()
+                                                ));
+                                            }
+                                            let pattern = match &eval_args[0] {
+                                                Value::String(s) => s,
+                                                v => {
+                                                    return Err(format!(
+                                                        "Argument to `string::starts_with` must be a string (found {})",
+                                                        v
+                                                    ))
+                                                }
+                                            };
+                                            return Ok(Value::Bool(s.starts_with(pattern)));
+                                        }
+                                        "split" => {
+                                            if eval_args.len() == 0 {
+                                                return Ok(Value::List {
+                                                    elems: s
+                                                        .split_whitespace()
+                                                        .map(str::to_string)
+                                                        .map(Value::String)
+                                                        .collect(),
+                                                });
+                                            } else if eval_args.len() == 1 {
+                                                let pattern = match &eval_args[0] {
+                                                    Value::String(s) => s,
+                                                    v => {
+                                                        return Err(format!(
+                                                            "Argument to `string::split` must be a string (found {})",
+                                                            v
+                                                        ))
+                                                    }
+                                                };
+                                                return Ok(Value::List {
+                                                    elems: s
+                                                        .split(pattern)
+                                                        .map(str::to_string)
+                                                        .map(Value::String)
+                                                        .collect(),
+                                                });
+                                            } else {
+                                                return Err(format!(
+                                                    "Expected 0 or 1 arguments for method `string::split`, but got {}",
+                                                    eval_args.len()
+                                                ));
+                                            }
+                                        }
+                                        _ => {
+                                            return Err(format!(
+                                                "Unknown method on string: {}",
+                                                name
+                                            ))
+                                        }
+                                    },
+                                    Value::List { elems } => match name.as_str() {
+                                        "len" => {
+                                            if eval_args.len() != 0 {
+                                                return Err(format!(
+                                                    "Expected 0 arguments for method `list::len`, but got {}",
+                                                    eval_args.len()
+                                                ));
+                                            }
+                                            return Ok(Value::Int(elems.len() as isize));
+                                        }
+                                        "contains" => {
+                                            if eval_args.len() != 1 {
+                                                return Err(format!(
+                                                    "Expected 1 argument for method `list::contains`, but got {}",
+                                                    eval_args.len()
+                                                ));
+                                            }
+                                            return Ok(Value::Bool(elems.contains(&eval_args[0])));
+                                        }
+                                        "add" => {
+                                            if eval_args.len() != 1 {
+                                                return Err(format!(
+                                                    "Expected 1 argument for method `list::add`, but got {}",
+                                                    eval_args.len()
+                                                ));
+                                            }
+                                            elems.push(eval_args[0].clone());
+                                            return Ok(Value::Unit);
+                                        }
+                                        _ => {
+                                            return Err(format!(
+                                                "Unknown method on string: {}",
+                                                name
+                                            ))
+                                        }
+                                    },
+                                    _ => todo!("intrinsic methods"),
+                                }
+                            }
+                            _ => {
                                 return Err(format!("Cannot access a field of type {:?}", v));
                             }
-                        } else {
-                            return Err(format!("Cannot access a field of type {:?}", v));
                         }
                     }
                 };
@@ -626,7 +792,10 @@ impl Evaluator {
                         Value::String(target.class.clone())
                     }
                     Value::VarRef { name } => Value::Ptr(target.get_field_mut(&name)?),
-                    _ => todo!("function calls"),
+                    Value::Object(o) if o.class == "ASTFnCall" => {
+                        todo!("function calls");
+                    }
+                    v => return Err(format!("Cannot access field {:?}", v)),
                 }
             }
             _ => unreachable!(),

@@ -125,8 +125,8 @@ impl fmt::Display for Value {
             Value::Ptr(ptr) => write!(f, "*{}", unsafe { &**ptr }),
             Value::Comment { content } => write!(f, "/* {} */", content),
             Value::List { elems } => f.debug_list().entries(elems).finish(),
-            Value::Object(o) => write!(f, "{:?}", o),
-            Value::ObjectRef(o) => write!(f, "ref {:?}", o),
+            Value::Object(o) => write!(f, "{}", o),
+            Value::ObjectRef(o) => write!(f, "ref {}", o),
         }
     }
 }

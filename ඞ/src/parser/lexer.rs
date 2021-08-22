@@ -151,7 +151,7 @@ pub enum TokenKind {
     String,
     #[regex(r#"'(\w| |\\[trnb\\']|"|[[:punct:]&&[^'\\]])'"#)]
     Char,
-    #[regex(r#"//[^\n;]*"#)]
+    #[regex(r#"//[^\r\n;]*"#)]
     LineComment,
     #[token("/*", block_comment)]
     BlockComment,
@@ -194,6 +194,8 @@ pub enum TokenKind {
     KwMod,
     #[token("class")]
     KwClass,
+    #[token("ref")]
+    KwRef,
     #[regex(r"[ \t\r\n\f]+")]
     Ws,
     #[error]
@@ -407,6 +409,9 @@ macro_rules! T {
     [class] => {
         TokenKind::KwClass
     };
+    [ref] => {
+        TokenKind::KwRef
+    };
     [error] => {
         TokenKind::Error
     };
@@ -507,6 +512,7 @@ impl TokenKind {
             T![return] => "return",
             T![mod] => "mod",
             T![class] => "class",
+            T![ref] => "ref",
             // Operators
             T![&&] => "&&",
             T![||] => "||",

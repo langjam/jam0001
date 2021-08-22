@@ -28,6 +28,9 @@ pub enum AST {
         lhs: Box<AST>,
         rhs: Box<AST>,
     },
+    RefExpr {
+        value: Box<AST>,
+    },
     ObjectLiteral {
         class: String,
         fields: Vec<AST>,
@@ -103,6 +106,9 @@ impl AST {
                 "op" => Value::String(op),
                 "lhs" => Value::ObjectRef(Box::new(lhs.to_value())),
                 "rhs" => Value::ObjectRef(Box::new(rhs.to_value()))
+            },
+            AST::RefExpr { value } => ast_obj! { "ASTRefExpr";
+                "value" => Value::ObjectRef(Box::new(value.to_value()))
             },
             AST::ObjectLiteral { class, fields } => ast_obj! { "ASTObjectLiteral";
                 "class" => Value::String(class),
