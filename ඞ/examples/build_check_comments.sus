@@ -17,7 +17,7 @@ fn build(args) {
         let ast = get_ast(arg);
         print("Checking comments of '", arg, "'");
         for elem in ast.elements {
-            check_comments(ref elem, ref ast);
+            check_comments(ref elem);
         }
         print("Executing Source File '", arg, "'");
         eval(ast);
@@ -26,7 +26,7 @@ fn build(args) {
 
 let trace_next_fn = false;
 
-fn check_comments(ast, parent) {
+fn check_comments(ast) {
     if trace_next_fn && ast.class != "ASTFnDef" {
         trace_next_fn = false;
     }
@@ -44,42 +44,45 @@ fn check_comments(ast, parent) {
         if trace_next_fn {
             trace_next_fn = false;
             let new_body = [];
+            let msg = [
+                ASTStringLiteral { text: "Calling fn `" },
+                ASTStringLiteral { text: ast.name }, 
+                ASTStringLiteral { text: "` with " }, 
+            ];
             for param in ast.params {
-                new_body.add( ASTFnCall {
-                    name: "print",
-                    args: [ 
-                        ASTStringLiteral { text: "Calling fn `" }, 
-                        ASTStringLiteral { text: ast.name }, 
-                        ASTStringLiteral { text: "` with " }, 
-                        ASTStringLiteral { text: param }, 
-                        ASTStringLiteral { text: " = " }, 
-                        ASTIdent { name: param } 
-                    ]
-                });
+                 msg.add(ASTStringLiteral { text: "(" } );
+                 msg.add(ASTStringLiteral { text: param } );
+                 msg.add(ASTStringLiteral { text: " = " } );
+                 msg.add(ASTIdent { name: param } );
+                 msg.add(ASTStringLiteral { text: ") " });
             }
+            new_body.add( ASTFnCall {
+                name: "print",
+                args: msg,
+            });
             for stmt in ast.body {
                 new_body.add(stmt);
             }
             ast.body = new_body;
         }
         for stmt in ast.body {
-            check_comments(ref stmt, ref ast);
+            check_comments(ref stmt);
         }
     } else if ast.class == "ASTIfStmt" {
         for stmt in ast.body {
-            check_comments(ref stmt, ref ast);
+            check_comments(ref stmt);
         }
         for e in ast.elses {
-            check_comments(ref e, ref parent);
+            check_comments(ref e);
         }
     } else if ast.class == "ASTForLoop" {
         for stmt in ast.body {
-            check_comments(ref stmt, ref ast);
+            check_comments(ref stmt);
         }
     } else if ast.class == "ASTLetStmt" {
-        check_comments(ref ast.value, ref ast);
+        check_comments(ref ast.value);
     } else if ast.class == "ASTBinaryExpr" {
-        check_comments(ref ast.lhs, ref ast);
-        check_comments(ast.rhs, ast);
+        check_comments(ref ast.lhs);
+        check_comments(ref ast.rhs);
     }
 }
