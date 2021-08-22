@@ -1,5 +1,6 @@
 # DRUN
 DRUN is a toy programming language designed during first langjam of 2021. The theme of jam is `first class comments`.
+Currently in very WIP state so be aware ;) The future updates will be pushed to this repo [DRUN GH-REPO](https://github.com/kfirmanty/DRUN)
 
 DRUN implements this idea in a way that comments are:
 - describing and affecting runtime
@@ -52,3 +53,6 @@ It should also be possible to set comments using `env` variables. For example se
 ```
 #if author is ${SOME_AUTHOR}: RETURN NIL END
 ```
+
+## How to run it
+As of the end of the jam there is not much to run. If you are very inclined then in `langjam.vm` ns there is `test-parse` fn where you can replace test code with yours and execute it which should parse the code and execute `MAIN` fn. 
