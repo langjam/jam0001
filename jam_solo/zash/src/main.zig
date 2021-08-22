@@ -4,24 +4,23 @@ const Lexer = @import("Lexer.zig");
 const Parser = @import("Parser.zig");
 const Eval = @import("Eval.zig");
 
-const src =
-    \\ #: Comments can go to the end of the line...
-    \\ y := #: ...or can be assigned to a variable. :#
-    \\
-    \\ 2 * 4 #: ...or be embedded inline! :# / 2
-    \\
-    \\ #: This function concatenates comments.
-    \\ #: So it receives comments as args and 
-    \\ #: returns a coment. First-class baby!
-    \\ fn comment_concat(a #: comment :#, b #: comment :#) {
-    \\     a ++ b #: `++` is the comment concat operator.
-    \\  }
-    \\
-    \\ comment_concat(#: Hey :#, y)
-;
-
 pub fn main() anyerror!void {
+    var args = std.process.args();
     var allocator = std.testing.allocator;
+    _ = args.skip(); // program name.
+
+    const file_name = try args.next(allocator) orelse {
+        debug.print("usage: zash <zash_source_file>\n", .{});
+        std.os.exit(1);
+    };
+    defer allocator.free(file_name);
+
+    var file = try std.fs.cwd().openFile(file_name, .{});
+    defer file.close();
+    var reader = std.io.bufferedReader(file.reader()).reader();
+    const src = try reader.readAllAlloc(allocator, 100 * 1024 * 1024);
+    defer allocator.free(src);
+
     var lexer = Lexer{ .bytes = src };
     var parser = try Parser.init(allocator, &lexer);
     var eval = Eval.init(allocator, &parser);
