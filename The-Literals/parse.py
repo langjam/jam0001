@@ -157,10 +157,12 @@ class Parser:
         return Stmt(contents, contains_done)
 
     def parse_stmt_contents(self):
-        token, value = self.advance()
+        token, value = self.peek_lexeme()
         if token == Token.SETVAR:
+            self.advance()
             return self.parse_set_stmt()
         elif token == Token.IF_KEYWORD:
+            self.advance()
             return self.parse_if_stmt()
         elif token == Token.IDENTIFIER_WORD:
             return self.parse_func_call()
