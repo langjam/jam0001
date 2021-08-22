@@ -1,0 +1,8 @@
+[[TUTO:Assignment]]
+[[In REDACTED assignment uses the := operator and it returns the assigned value]]
+print salutation := 'Hello langjam'.
+[[This allows us to chain assignments]]
+message := obj>>call.
+message>>subject := '[[REDACTED]]'
+message>>from := message>>to := 'werid people'.
+print message>>subject '-' 'from' message>>from 'to' message>>to

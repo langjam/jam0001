@@ -1,0 +1,39 @@
+[[NOTE:This is the first program we wrote while trying to understand the scope of the language]]
+[[DOC:This program prints 'Hello World' in different ways]]
+salute := with someone do
+	print 'Hello' someone.
+	salutation := str_concat 'Hello ' someone.
+	print salutation.
+	print (str_concat 'Hello ' someone).
+	[[NOTE:The last statement is the return value!]]
+	str_concat 'Hello ' someone.
+done.
+
+print (salute 'langjam').
+
+if = (+ 1 1) 2 then
+	print 'Conditionals!'
+else
+	print 'Buggy???'.
+
+print 'This is a ''string'' with single quotes inside'.
+
+[[NOTE:We also have IIFE]]
+print '2*10 = ' ((with number do + number number. done) 10).
+
+arguments := array 0 1 2 3 4 5 6.
+print arguments>>length.
+print (arguments>>at 4).
+print>>with_args arguments.
+
+count_up_to := with limit do
+	[[LOG:These messages might be logged!]]
+	counter := 0.
+	while < counter limit holds print (counter := + counter 1).
+done.
+
+print 'Before setting the handler'.
+count_up_to 3.
+comments>>category 'LOG' with message do print message done.
+print 'After setting the handler'.
+count_up_to 3.

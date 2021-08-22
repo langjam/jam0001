@@ -1,0 +1,72 @@
+// a number
+let x = 4;
+// another number
+let y = 5;
+// yet another number
+let stuff = add(<number>);
+
+print(<number>);
+
+// some random bunch of results
+<arithmetic>(<number>);
+
+let fn = { |x y|: z
+    // arg0
+    x;
+    // arg1
+    y;
+    let z = add(<arg>);
+};
+
+let if = { |c|: res
+    let res = { |true false|: res
+        let res = cond(c true false);
+    };
+};
+
+print(fn(1 2));
+print(cond(
+    0 1
+    "" "test"
+    1 fn(1 2)));
+
+print(if(1)("yes" "no"));
+
+print(if(1)(<random bunch> <>))
+
+if(1)(print add)(1 2)
+
+// this is probably a string
+let some_string = add("print " "native");
+!<some_string>(123);
+
+print(<string>.length);
+
+print(<number>.negated);
+
+// templated types!
+let Vec3 = { |T|: res
+    // 3D vector of uniform type T
+    let res = record {
+        x: T y: T z: T
+    };
+};
+
+// (1 test 3)
+print(Vec3(any)(1 "test" 3));
+
+// (1 <empty> 3)
+print(Vec3(int)(1 "test" 3));
+
+// 1
+print(is(Vec3 "vector uniform"));
+
+// 0
+print(is(Vec3 "vector uniform 2D"));
+
+let step = { |a|: b let b = add(a 1); };
+let stop = { |a|: b
+   let b = gt(a 9);
+   print("iteration" a);
+};
+loop(0 step stop);

@@ -1,0 +1,143 @@
+
+use super::ast::{Expr, StmtBody, Stmt};
+use super::token::{self, Token};
+grammar;
+
+extern {
+    type Location = usize;
+
+    enum token::Token {
+        "(" => Token::LParen(..),
+        ")" => Token::RParen(..),
+
+        "+" => Token::Plus(..),
+        "-" => Token::Minus(..),
+        "*" => Token::Star(..),
+        "/" => Token::Slash(..),
+        "%" => Token::Modulo(..),
+
+        "=" => Token::Equals(..),
+        "==" => Token::EqualsEquals(..),
+        ">" => Token::GT(..),
+        ">=" => Token::GE(..),
+        "<" => Token::LT(..),
+        "<=" => Token::LE(..),
+        "!=" => Token::NE(..),
+
+        ";" => Token::Semicolon(..),
+        "," => Token::Comma(..),
+
+        "meh" => Token::Meh(..),
+        "print" => Token::Print(..),
+        "function" => Token::Function(..),
+        "goto" => Token::Goto(..),
+
+        Num => Token::Number(..),
+        Name => Token::Word(..),
+
+        String => Token::String(..)
+    }
+}
+
+pub Program: Vec<StmtBody> = {
+    <Stmt*> => <>
+}
+
+Stmt:StmtBody = {
+    <p:"print"> <e:Expr> ";"
+        => StmtBody::Print(p, e),
+    <n:Name> "=" <e:Expr> ";"
+        => StmtBody::Assign(n, e),
+    <e:Expr> ";" => StmtBody::ExprStmt(e),
+    <t:"goto"> <label:Name> ";" => StmtBody::Goto(t, label.unwrap_string().unwrap())
+};
+
+pub Expr:Expr = {
+
+    FunctionDeclaration,
+};
+
+FunctionDeclaration: Expr = {
+    <token:"function"> "(" <args:DeclArgList> ")" "(" <body: Stmt*> ")"
+        => {
+        let body = body.into_iter().map(|obj| Stmt(obj, vec![])).collect();
+        Expr::FunctionDeclaration(token, body, args)},
+
+    Equality,
+}
+
+DeclArgList:Vec<Token> = {
+    <n:Name> => vec![n],
+    <rest:DeclArgList> "," <n:Name> => {
+        let mut rest = rest.clone();
+        rest.push(n);
+        rest
+    }
+}
+
+Equality:Expr = {
+    <l:Equality> <op:EqOp> <r:Relation>
+        => Expr::BinaryExpression(op, Box::new(l), Box::new(r)),
+    Relation,
+};
+
+
+
+EqOp:Token = {"==", "!="}
+
+Relation:Expr = {
+    <l:Relation> <op:RelOp> <r:Add>
+        => Expr::BinaryExpression(op, Box::new(l), Box::new(r)),
+    Add,
+}
+
+RelOp:Token = { "<", "<=", ">", ">="};
+
+
+
+Add:Expr = {
+    <l:Add> <op:AddOp> <r:Mult>
+        => Expr::BinaryExpression(op, Box::new(l), Box::new(r)),
+    Mult,
+};
+
+AddOp:Token = {"+", "-"}
+
+Mult:Expr = {
+    <l:Mult> <op:MultOp> <r:UnaryMeh>
+        => Expr::BinaryExpression(op, Box::new(l), Box::new(r)),
+    UnaryMeh,
+};
+
+MultOp:Token = {"*", "/", "%"};
+
+UnaryMeh: Expr = {
+    <o:"meh"> <e:UnaryMeh> => Expr::UnaryExpression(o, Box::new(e)),
+    Call,
+}
+
+Call:Expr = {
+    <target:Call>  <args:ArgList>
+        => Expr::Call(Box::new(target), args),
+        Term,
+}
+
+ArgList: Vec<Expr> = {
+    "(" <CSList> ")" => <>,
+    "(" ")" => vec![]
+}
+
+CSList: Vec<Expr> = {
+    <e:Expr> => vec![e],
+    <l:CSList> "," <e:Expr> => {
+    let mut l = l.clone();
+    l.push(e); l}
+}
+
+Term: Expr = {
+    "(" <Expr> ")" => <>,
+
+    <Num> => Expr::Number(<>),
+    <Name> => Expr::Variable(<>),
+    <String> => Expr::String(<>)
+}
