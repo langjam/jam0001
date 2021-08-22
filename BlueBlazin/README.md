@@ -20,6 +20,7 @@ Stmt :: exprOrCommentStmt
 
 exprOrCommentStmt :: expressionOrComment ";"
 ifStmt :: "if" "(" expressionOrComment ")" statement
+                ( "else" statement )?
 printStmt :: "print" expressionOrComment ";"
 whileStmt :: "while" "(" expression ")" statement
 returnStmt :: "return" expressionOrComment? ";"
@@ -36,7 +37,7 @@ logic_and :: equality ( "and" equality )*
 equality :: comparison ( ( "!=" | "==" ) comparison )*
 comparison :: term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term :: factor ( ( "-" | "+" ) factor )*
-factor :: unary ( ( "/" | "_" ) unary )*
+factor :: unary ( ( "/" | "*" ) unary )*
 unary :: ( "!" | "-" ) unary | call
 call :: primary ( "(" arguments? ")" )*
 primary :: "true" | "false" | "null" | NUMBER

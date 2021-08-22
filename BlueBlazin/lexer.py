@@ -133,7 +133,7 @@ class Lexer:
 
     def is_keyword(self, ident):
         match ident:
-            case "if" | "while" | "return" | "let" | "function":
+            case "if" | "while" | "return" | "let" | "function" | "else":
                 return True
             case _:
                 return False

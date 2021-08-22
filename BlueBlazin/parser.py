@@ -20,6 +20,10 @@ class Ast(Enum):
     DICTIONARY = auto()
     CALL = auto()
     MEMBER = auto()
+    IF_STMT = auto()
+    WHILE_STMT = auto()
+    FUNCTION = auto()
+    PRINT_STMT = auto()
 
 
 class Parser:
@@ -47,7 +51,10 @@ class Parser:
                 return self.stmt()
 
     def function_dclr(self):
-        pass
+        line = self.advance()["line"]
+        name = self.identifier()
+        params = self.params()
+        body = self.block()
 
     def let_dclr(self):
         line = self.advance()["line"]
@@ -80,12 +87,38 @@ class Parser:
 
     def if_stmt(self):
         line = self.advance()["line"]
+        self.expect(TokenType.PUNCTUATOR, "(")
+        test = self.expression()
+        self.expect(TokenType.PUNCTUATOR, ")")
+        consequent = self.stmt()
+
+        alternative = None
+
+        token = self.peek()
+        if token["type"] == TokenType.KEYWORD and token["value"] == "else":
+            self.advance()
+            alternative = self.stmt()
+
+        return {"type": Ast.IF_STMT,
+                "test": test,
+                "consequent": consequent,
+                "alternative": alternative,
+                "line": line}
 
     def print_stmt(self):
         line = self.advance()["line"]
+        value = self.expression()
+        self.expect_semicolon()
+        return {"type": Ast.PRINT_STMT, "value": value, "line": line}
 
     def while_stmt(self):
         line = self.advance()["line"]
+        self.expect(TokenType.PUNCTUATOR, "(")
+        test = self.expression()
+        self.expect(TokenType.PUNCTUATOR, ")")
+        body = self.stmt()
+
+        return {"type": Ast.WHILE_STMT, "test": test, "body": body, "line": line}
 
     def return_stmt(self):
         line = self.advance()["line"]
@@ -103,8 +136,7 @@ class Parser:
         return {"type": Ast.RETURN_STMT, "value": value, "line": line}
 
     def block(self):
-        line = self.advance()["line"]
-        self.advance()
+        line = self.expect(TokenType.PUNCTUATOR, "{")
         body = []
         token = self.peek()
         while True:
@@ -266,8 +298,16 @@ class Parser:
                             "line": line}
                     token = self.peek()
                 case {"type": TokenType.PUNCTUATOR, "value": "["}:
-                    # TODO
-                    pass
+                    self.advance()
+                    token = self.advance()
+                    match token:
+                        case {"type": TokenType.NUMBER} | {"type": TokenType.STRING}:
+                            expr = {"type": Ast.MEMBER, "dictionary": expr,
+                                    "key": token, "line": line}
+                        case _:
+                            raise Exception(f"Illegal key. Expected "
+                                            f"Number or String on line: {token['line']}")
+                    self.expect(TokenType.PUNCTUATOR, "]")
                 case _:
                     return expr
 
@@ -288,6 +328,15 @@ class Parser:
                 return expr
             case {"type": TokenType.PUNCTUATOR, "value": "{"}:
                 return self.dictionary()
+            case {"type": TokenType.IDENTIFIER, "value": value}:
+                return {"type": Ast.IDENTIFIER, "value": value, "line": token["line"]}
+            case _:
+                raise Exception(f"Unidentified token: "
+                                f"{token['value']} on line: {token['line']}")
+
+    def identifier(self):
+        token = self.advance()
+        match token:
             case {"type": TokenType.IDENTIFIER, "value": value}:
                 return {"type": Ast.IDENTIFIER, "value": value, "line": token["line"]}
             case _:
