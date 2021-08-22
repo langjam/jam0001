@@ -143,6 +143,7 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 		"print": 1,
 		"not":   1,
 		"smile": 0,
+		"break": 0,
 		"inz":   4,
 		"dnz":   3,
 		"and":   2}[ins]) {
@@ -167,6 +168,10 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 }
 
 func (p *Parser) parseCall(args []shared.Node) error {
+	if len(args) == 0 {
+		return nil
+	}
+
 	if !args[0].IsExpression {
 		return &UnexpectedError{args[0].Val.Value, args[0].Val.Pos}
 	}

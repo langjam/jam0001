@@ -11,6 +11,7 @@ const II_while = "while"
 const II_true = "TRUE"
 const II_false = "FALSE"
 const II_smile = "smile"
+const II_break = "break"
 const II_inz = "inz"
 const II_dnz = "dnz"
 
@@ -61,6 +62,8 @@ func (l *Lexer) makeIdentifierToken() (shared.Token, error) {
 		return shared.Token{Type: shared.TTconst, Value: II_false, Pos: l.pos}, nil
 	} else if string(inst) == II_smile {
 		return shared.Token{Type: shared.TTinstruction, Value: II_smile, Pos: l.pos}, nil
+	} else if string(inst) == II_break {
+		return shared.Token{Type: shared.TTinstruction, Value: II_break, Pos: l.pos}, nil
 	}
 
 	return shared.Token{}, &IllegalInstructionError{string(inst), l.pos}

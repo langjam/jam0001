@@ -137,6 +137,7 @@ func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
 		split = append(split[:pos], split[pos+1:]...)
 
 		return makeStringNode(strings.Join(split, ",")), err
+		// TODO: add default which throws error
 	}
 	return shared.Node{}, err
 }

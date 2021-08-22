@@ -1,4 +1,9 @@
 while (TRUE) {
-    set($-1 8)
-    print(set(4 3))
+    print("world")
+    break()
+}
+
+while (FALSE) {
+    print("world")
+    break()
 }
