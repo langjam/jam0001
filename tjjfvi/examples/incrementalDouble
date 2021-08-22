@@ -1,0 +1,20 @@
+
+verboseDouble($input):
+  # Ok, we need to double $input.
+  # We're going to define an accumulator, named acc, and set it to 0.
+  $acc = 0
+  # Now we're going to enter a loop:
+  repeat:
+    # Are we there yet? acc is $acc.
+    if $acc == $input * 2:
+      # $acc is $input * 2!
+      break
+    else:
+      # Nope, $acc is not $input * 2.
+      # We'll add one to acc and try again.
+      $acc = $acc + 1
+  # We did it! acc is $acc, which is $input * 2.
+  return $acc
+
+# What's 5 * 2?
+return verboseDouble(5)

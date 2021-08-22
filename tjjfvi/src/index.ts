@@ -1,29 +1,10 @@
+import { readFileSync } from "fs"
 import { inspect } from "util"
 import * as p from "./parserCombinator"
 
-const sourceFile = `
-verboseDouble($input):
-  # Ok, we need to double $input.
-  # We're going to define an accumulator, named acc, and set it to 0.
-  $acc = 0
-  # Now we're going to enter a loop:
-  repeat:
-    # Are we there yet? acc is $acc.
-    if $acc == $input * 2:
-      # $acc is $input * 2!
-      break
-    else:
-      # Nope, $acc is not $input * 2.
-      # We'll add one to acc and try again.
-      $acc = $acc + 1
-  # We did it! acc is $acc, which is $input * 2.
-  return $acc
+run(readFileSync(process.argv[2], "utf8"), process.argv.slice(3).join(" "))
 
-# What's 5 * 2?
-return verboseDouble(5)
-`
-
-function run(text: string){
+function run(text: string, input: string){
   const indent = /^[ \t]+/m.exec(text)?.[0] ?? "  "
   const lines = groupLines(text.split("\n").filter(x => x.trim().length).map<[string, number]>(x => [
     x.trim(),
@@ -32,12 +13,12 @@ function run(text: string){
 
   const parseExpression = _parseExpression()
 
-  console.log(toString(executeFunc(
+  process.stdout.write(toString(executeFunc(
     -1,
-    { kind: "func", args: [], name: "_main", body: lines.map(parseLine) },
+    { kind: "func", args: ["$input"], name: "_main", body: lines.map(parseLine) },
     Object.create(null),
     Object.create(null),
-    [],
+    [input],
   )))
 
   type Scope = Record<string, { value: unknown } | undefined>
@@ -161,6 +142,14 @@ function run(text: string){
           return eq(a(), b())
         if(expression.op === "!=")
           return !eq(a(), b())
+        if(expression.op === ">")
+          return toNum(a()) > toNum(b())
+        if(expression.op === "<")
+          return toNum(a()) < toNum(b())
+        if(expression.op === "<=")
+          return toNum(a()) <= toNum(b())
+        if(expression.op === ">=")
+          return toNum(a()) >= toNum(b())
         if(expression.op === "&&")
           return isTruthy(a()) && isTruthy(b())
         if(expression.op === "||")
@@ -168,7 +157,7 @@ function run(text: string){
         if(expression.op === "%")
           return toNum(a()) % toNum(b())
         if(expression.op === "+")
-          return toNum(a()) + toNum(b())
+          return a() as never + b() as never
         if(expression.op === "-")
           return toNum(a()) - toNum(b())
         if(expression.op === "*")
@@ -241,14 +230,15 @@ function run(text: string){
     | { kind: "literal", value: unknown }
     | { kind: "variable", name: string }
     | { kind: "unaryOp", op: "0-" | "!", arg: Expression }
-    | { kind: "binaryOp", op: "+" | "-" | "*" | "/" | "%" | "&&" | "||" | "==" | "!=", args: [Expression, Expression] }
+    // eslint-disable-next-line max-len
+    | { kind: "binaryOp", op: "+" | "-" | "*" | "/" | "%" | "&&" | "||" | "==" | "!=" | ">" | "<" | ">=" | "<=", args: [Expression, Expression] }
     | { kind: "call", name: string, args: Expression[] }
     | { kind: "array", values: Expression[] }
   function _parseExpression(){
     const numberLiteral = p.map(p.regex(/\d+|\d+.\d*|\d*.\d+/), (x): Expression => (
       { kind: "literal", value: +x }
     ))
-    const stringLiteral = p.map(p.regex(/(["'`])((?:[^\\\n]|\\.)+?)\1/), (x): Expression => (
+    const stringLiteral = p.map(p.regex(/(["'`])((?:[^\\\n]|\\.)*?)\1/), (x): Expression => (
       { kind: "literal", value: x[2].replace(/\\./g, x => x === "\\n" ? "\n" : x[1]) }
     ))
     const variable = p.map(p.regex(/\$\w+/), (x): Expression => (
@@ -284,7 +274,9 @@ function run(text: string){
         ),
       ),
     ))
-    const op = p.ws(p.or(...(["+", "-", "*", "/", "%", "&&", "||", "==", "!=", "!"] as const).map(x => p.string(x))))
+    const op = p.ws(p.or(...([
+      "+", "-", "*", "/", "%", "&&", "||", "==", "!=", "!", "<=", ">=", ">", "<",
+    ] as const).map(x => p.string(x))))
     const expr: p.Parser<Expression> = p.map(
       p.multiple(p.or(val, op)),
       input => {
@@ -365,6 +357,4 @@ function run(text: string){
     return result
   }
 }
-
-run(sourceFile)
 
