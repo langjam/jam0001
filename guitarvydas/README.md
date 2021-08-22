@@ -341,24 +341,86 @@ Let's start by making separate diagrams for each of the view.
 "Red" boxes mean _synchronous_ code.  (The default is asynchronous code).
 
 # Emitters 3 & 4
+
+Emitters 3 and 4 create parts of the final _bash_ script from the _.json_ files.
+
 ## Create Basic Grammar
+
+The output from Drawio is XML, and is similar to SVG.
+
+The Drawio format is called *mxGraph*.
+
+To begin, I built a basic grammar for this format.  
+
+I tested the grammar using the [Ohm Editor](https://ohmlang.github.io/editor/).
+
 - basic.ohm
 - use ohm editor to test/develop against sequence.json and details.json
-[_Status: done_]
+
 ## Create Identity Emitter
 
 This is a step that reduces development time.
+
+An _identity_ emitter parses its input and outputs it as-is.
 
 Most compiler technologies - scanners and parsers - destroy information along the way.  They destroy spaces and newlines and *tokenize* the input.  Using such technologies, it is almost impossible to build an identity emitter.  
 
 Worse, it is almost *unimaginable* to build an identity emitter.
 
+Ohm-JS uses two kinds of rules
+
+1. The standard PEG rules (called _lexical_ rules)
+2. An extension of PEG, which skips whitespace (called _syntactic_ rules).
+
+_Syntactic_ rules make writing grammars easier (less noise, no need to worry about whitespace).  _Identity_ grammars built using _syntactic_ rules do not preserve whitespace, so some whitespace needs to be added back into the parsed code. _Syntactic_ rules do not *tokenize* the input, like most older compiler technologies.  _Syntactic_ rules can still produce *identity* grammars.  A true identity grammar would use _syntactic_ rules only. This is not necessary.
+
+Creating an *identity* grammar is only the first step in creating a transpiler.  Once an *identity* grammar has been created, it is easy to hack on the *identity* grammar to produce useful transpilers.
+
+The original identity emitter was built in HTML.  See files:
+
 - identity.glue
 - basic.html
-## Emitter 4 - Details
-- plan: (1) collect up all components (2) emit BASH functions for all components that have non-empty "synccode" fields
-- use Ohm-JS to grok details.json
-- use Glue (tool) to emit code
+## Overview of the Project
+
+The project consists of a pipeline of transpilers.
+
+Each transpiler is built in 2 parts
+
+- *grok* (the grammar)
+- *emit* (the code that "does something" with the matches from the *grok* phase) ; the emit code is built using the *glue* tool (Ohm-JS calls this code the *semantics* and expects programmers to write it manually (in JavaScript).  Instead, I built and use the *glue* tool to create the JavaScript for me.  *Glue* itself is built using Ohm-JS (a grammar and some JS semantics code)).
+
+The phases (parts) are:
+
+1. input raw, compressed, .drawio format and uncompress it into human-readable XML (mxGraph)
+2. Expand all "style=..." into separate attributes.  The mxGraph code contains HTML (XML) elements containing *attributes* and *bodies*.  The syntax of the attributes is inconsistent, some attributes are written explicitly, while others ("style") are lumped together into one string.  This 2nd phase normalizes all attributes to be explicit.
+3. Attribute Elider.  Most of the attributes pertain to the graphical editor.  This phase discards many attributes, leaving only those attributes which are needed by the transpiler inferencer.
+4. Symbol Table.  Drawio creates unique names for each element, but, the names are long and not human-readable.  This phase creates a mapping from Drawio long names to short names, such as "id8".
+5. Emit.  This phase is based on the input grammar and produces output, e.g. using JS *template* strings.  The *emit* phase is slightly different for each of the four transpilers.
+6. Sort. Transpilers1 and 2 produce facts[^fact] for a factbase in PROLOG format. PROLOG requires that PROLOG rules (and facts) be contiguous in the source code. *Sort* is suffiecient to produce such grouping.  This phase is quite simple - its input consists of triples (one triple per line) and its output consists of the same triples ordered alphabetically.
+7. Gotchas. The input source code may contain spaces and characters that are not allowed in JSON code.  Illegal characters are mapped to legal characters using very simple search-and-replace code. 
+8. Gotchas II. Transpilers that write transpilers often have problems representing simple string sequences such as newlines.  Most string escape sequences are good for only one level of transpilation.  If the transpiler wants to insert escape sequences containing escape sequences, then some kind of mapping needs to be employed.  In some cases (determined by trial and error) these problems are fixed by search-and-replacing the string sequences by "magic" characters during the phases of the transpiler and then expanded back to their original form for final output.  In this project, the details transpiler maps newlines to "~~" during processing. (Note that the mapping is one-to-many).  Dashes in the input source are mapped to double-underscores.
+
+[^fact]: A fact is a simple triple: { relation, subject, object }, written in PROLOG as `relation(subject,object)`.  Triples can be easily represent as s-exprs in Lisp and as user-defined data structures in many GPLs.  Note that interesting data structures can be devolved into triples, where _pointers_ are represented as explicit triples.
+
+### Transpiler 1 - Sequence Grok
+
+The first transpiler converts sequence.drawio into a JSON factbase (sequence.json).
+
+### Transpiler 2 - Details Grok
+
+The second transpiler converts details.drawio into a JSON factbase (details.json).
+
+### Transpiler 3 - Sequence Emitter
+
+The 3rd transpiler inputs .json code (sequence.json) and produces a file which contains pairs of component names, suitable for the *tsort* (topological sort) command (Unix, Linux).
+
+### Transpiler 4 - Details Emitter
+
+The 4th transpiler inputs .json code (details.json) and produces a file of _bash_ functions.
+
+This phase creates _dead code_ by emitting _bash_ functions that are not used.
+
+_Dead Code_ is not really an issue, but can be removed automatically at a later time. (See the Dead Code section of this document for further discussion).
 
 # Readability
 
@@ -375,6 +437,8 @@ Dead code ...
 - does not cost execution time
 - is a problem for human readability, but is not a problem for machine readability (machines don't care).
 
+_Dead Code_ is not really an issue, but can be removed automatically at a later time.  The dead code only takes up space but has very little impact on runtime performance, since the _bash_ interpreter skips the dead code.  Dead code is mostly an issue of human readability (whereas, this project concerns itself mostly with machine readability - see the Readability section).
+
 # Future
 
 - make this thing emit Python instead of BASH (I suspect that this is easy, hacking on emit*.html should be enough)
@@ -385,13 +449,12 @@ Dead code ...
 
 - feed this thing to itself ("self compile", "eat your own dogfood")
 
-- node-ify the whole thing, so that it all runs from the command line
+- [_done: node-ify the whole thing, so that it all runs from the command line_]
 
 - add hierarchical nodes, allow sub-sequences/details
 
-- strip out unneeded code from support.js
+- strip out unneeded code from support.js.
 
-- missing newlines
 
 # Appendix
 
