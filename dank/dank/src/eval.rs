@@ -16,6 +16,7 @@ pub struct Evaluator<'a, 'b: 'a> {
 pub enum EvalError<'a> {
     ArityMismatch(String),
     NotCallable(String),
+    TypeError(String),
     UndefinedProperty(Cow<'a, str>),
     DuplicatedLiteralField(Cow<'a, str>),
     UndefinedVariable(Cow<'a, str>),
@@ -178,8 +179,68 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 let fn_ref = crate::data::Ptr::new((&**f).clone());
                 Ok(Value::Fn(fn_ref))
             }
-            ExprKind::Binary(_, _, _) => todo!(),
-            ExprKind::Unary(_, _) => todo!(),
+            ExprKind::Binary(l, op, r) => {
+                macro_rules! bin_op {
+                    ($self:ident, $left:ident $op:tt $right:ident) => {{
+                        let left = $self.eval_expr($left)?;
+                        let right = $self.eval_expr($right)?;
+                        bin_op!(__internal $self, left $op right)
+                    }};
+                    (__internal $self:ident, $left:ident + $right:ident) => {{
+                        match ($left, $right) {
+                            (Value::Num(l), Value::Num(r)) => Ok(Value::Num(l + r)),
+                            (Value::Str(l), Value::Str(r)) => Ok(Value::Str(format!("{}{}", l, r).into())),
+                            (l, r) => Err($self.bin_op_type_error(&l, &r, "+")),
+                        }
+                    }};
+                    (__internal $self:ident, $left:ident $op:tt $right:ident) => {{
+                        match ($left, $right) {
+                            (Value::Num(l), Value::Num(r)) => Ok(Value::Num(l $op r)),
+                            (l, r) => Err($self.bin_op_type_error(&l, &r, stringify!($op))),
+                        }
+                    }};
+                }
+                match op {
+                    BinOpKind::Add => bin_op!(self, l + r),
+                    BinOpKind::Sub => bin_op!(self, l - r),
+                    BinOpKind::Div => bin_op!(self, l * r),
+                    BinOpKind::Mul => bin_op!(self, l / r),
+                    BinOpKind::Or => {
+                        let l = self.eval_expr(l)?;
+                        if self.is_truthy(&l) {
+                            Ok(l)
+                        } else {
+                            self.eval_expr(r)
+                        }
+                    }
+                    BinOpKind::And => {
+                        let l = self.eval_expr(l)?;
+                        let r = self.eval_expr(r)?;
+                        if !self.is_truthy(&l) {
+                            Ok(l)
+                        } else {
+                            Ok(r)
+                        }
+                    }
+                }
+            }
+            ExprKind::Unary(op, operand) => {
+                let operand = self.eval_expr(operand)?;
+                match op {
+                    UnOpKind::Not => Ok(Value::Bool(!self.is_truthy(&operand))),
+                    UnOpKind::Neg if matches!(operand, Value::Num(_)) => {
+                        let value = match operand {
+                            Value::Num(n) => n,
+                            _ => unreachable!(),
+                        };
+                        Ok(Value::Num(-value))
+                    }
+                    UnOpKind::Neg => Err(EvalError::TypeError(format!(
+                        "Cannot apply the operator `-` to {}",
+                        operand
+                    ))),
+                }
+            }
             ExprKind::Property(name, obj) => {
                 let obj = self.eval_expr(obj)?;
                 self.get_prop(&obj, name.clone())
@@ -298,6 +359,25 @@ impl<'a, 'b> Evaluator<'a, 'b> {
         } else {
             print!("{}", s)
         }
+    }
+
+    fn is_truthy(&self, value: &Value<'a>) -> bool {
+        match value {
+            Value::Num(n) => *n != 0.0,
+            Value::Bool(b) => *b,
+            Value::Null => false,
+            Value::Str(_) => true,
+            Value::Obj(_) => true,
+            Value::Fn(_) => true,
+            Value::NativeFn(_) => true,
+        }
+    }
+
+    fn bin_op_type_error(&self, l: &Value<'a>, r: &Value<'a>, op: &str) -> EvalError<'a> {
+        EvalError::TypeError(format!(
+            "Cannot apply the operator `{}` to {} and {}",
+            op, l, r,
+        ))
     }
 }
 

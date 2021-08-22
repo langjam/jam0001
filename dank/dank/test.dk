@@ -20,3 +20,9 @@ i_was_generated(7);
 
 
 print 'single quoted string';
+
+print 1 + 1;
+
+print -4838;
+
+print !0;
