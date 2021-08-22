@@ -11,7 +11,7 @@ It's inspired by [Refal](https://en.wikipedia.org/wiki/Refal).
 Leafr is written in Ruby 2.6.3.
 
   ```
-  Usage: ruby all_of_it.rb [options]
+  Usage: ruby leafr.rb [options]
     -r, --run FILE                   The path of a file to run
     -d, --debug                      Enable debug printing
     -p, --play                       Play a terminal animation of the code running
