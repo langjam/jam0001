@@ -19,6 +19,12 @@ python 3.8. However, if your operating system sucks and only provides python 2 f
 or defaults to python 2 when python is called: set the "PYTHON_EXECUTABLE" environment
 variable to your preferred python executable that's at least python3.8.
 
+In this python install, be sure to add the following libraries:
+
+* noise
+* matplotlib
+ 
+
 # LangJam
 
 This programming language was written as a submission to the first LangJam
