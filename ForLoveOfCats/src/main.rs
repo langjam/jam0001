@@ -192,10 +192,10 @@ fn parse_parameters(tokens: &mut TokenIterator) -> Vec<String> {
 fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 	assert!(matches!(tokens.next(), Some(Token::OpenParen)));
 
-	let ident = if let Some(Token::Ident(literal)) = tokens.next() {
-		literal
-	} else {
-		return TreeNode::Unit;
+	let ident = match tokens.next() {
+		Some(Token::Ident(ident)) => ident,
+		Some(Token::CloseParen) => return TreeNode::Unit,
+		_ => panic!("Expected close paren"),
 	};
 
 	match *ident {
