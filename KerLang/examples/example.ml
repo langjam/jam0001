@@ -33,5 +33,15 @@ let equals_10 = (fun x0 ->
     0
   else
     1)
-let gap_sum = 
-  0
+let gap_sum = (fun x0 x1 -> 
+  ((+) 
+    ((-) 
+      x0
+      10)
+    x1))
+let nani = (fun x0 -> 
+  ((+) 
+    ((+) 
+      3
+      7)
+    x0))
