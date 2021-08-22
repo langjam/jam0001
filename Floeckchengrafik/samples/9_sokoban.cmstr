@@ -103,8 +103,8 @@ ispospossible = function({
 
             for ("tile_behind" : movtiles : {
 
-                possible_behind_x = char_x + ((action_x) * 2)?
-                possible_behind_y = char_y + ((action_y) * 2)?
+                possible_behind_x = box_x?
+                possible_behind_y = box_y?
 
                 behind_x = list_get(tile_behind : 0)?
                 behind_y = list_get(tile_behind : 1)?
