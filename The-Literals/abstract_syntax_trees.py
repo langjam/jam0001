@@ -17,9 +17,22 @@ class UnknownFunctionError(Exception):
         return f"Unknown function: {self.func_name}"
 
 
+class DuplicateFunctionError(Exception):
+    def __init__(self, name):
+        self.func_name = name
+
+    def __str__(self):
+        return f"Duplicate function: {self.func_name}"
+
+
 # All of the functions, by name.
-# Q. Would builtins go here also?
 functions = {}
+
+
+def add_function(func_name: str, function):
+    if func_name in functions:
+        raise DuplicateFunctionError(func_name)
+    functions[func_name] = function
 
 
 def find_function(func_name: str):
@@ -34,7 +47,7 @@ environments = []
 
 def reset_env():
     environments.clear()
-    push_env()  # This may not be necessary.
+    push_env()
 
 
 def get_var(name):
@@ -210,6 +223,7 @@ class Function:
         self.params = params
         self.return_var = return_var
         self.body = body
+        add_function(func_name, self)
 
     def __repr__(self):
         return (
@@ -282,7 +296,26 @@ if __name__ == "__main__":
         except UnknownFunctionError:
             assert True
 
+    def it_adds_functions():
+        functions.clear()
+        body = Stmts([])
+        function = Function("Says hello", [], body)
+        result = find_function("Says hello")
+        assert function == result
+
+    def it_complains_about_duplicate_functions():
+        functions.clear()
+        body = Stmts([])
+        Function("Says hello", [], body)
+        try:
+            Function("Says hello", [], body)
+            assert False
+        except DuplicateFunctionError:
+            assert True
+
     it_sets_variables()
     it_pushes_and_pops_environments()
     it_complains_about_unknown_variables()
     it_complains_about_unknown_functions()
+    it_adds_functions()
+    it_complains_about_duplicate_functions()
