@@ -31,15 +31,16 @@ shell go to the Floeckchengrafik/src folder of the cloned repo and
 run `pyinstaller comstruct.py application_stack_utils.py executor.py internals.py lexer.py parser.py -c -F -p . --distpath ../dist --collect-all sly`
 .
 
-We have no idea if it'll run on other platforms too. We (Chris and Flo) both use arch btw. If you have any suggestions
+We have no idea if it'll run on other platforms too. We (Chris and Flo) both [use arch btw](https://i.redd.it/z22mv8adan771.png). If you have any suggestions
 or tests for other platforms, we'll be happy to add them to this readme. Don't hesitate to open an issue
 on [this repo](https://github.com/Floeckchengrafik/jam0001).
 
 ## Starting the Interpreter
-If you [compiled the Interpreter](#Compiling-the-Interpreter), you can run the binary file in dist/ like this:
-`comstruct.exe example.cmstr`<br>
+If you [compiled the Interpreter](#Compiling-the-Interpreter), you can run the binary file in `dist/` like this:
+`./comstruct example.cmstr`<br>
 If not, you can run `cd src && python comstruct.py example.cmstr`<br>
-Of course, replace example.cmstr with whatever your filename is
+Of course, replace example.cmstr with whatever your filename is.
+When you don´t have a .cmstr file to execute, you can also run `./comstruct` in `dist/` or `python comstruct.py` in `src`.
 
 # Code Documentation
 
@@ -69,7 +70,7 @@ Note: operation can be one of the following characters: +, -, *, /, %
 ### Function Definition: <br>
 |Format|Example|
 |---|---|
-|`<name> = function({ /* function body */ } [ : ARG_1 : ARG_2 : ARG_3 : ...] )?`|`foo = function({out("I am here!!1!")?})?`|
+|`<name> = function({ /* function body */ })?`|`foo = function({out("I am here!!1!")?})?`|
 
 ### Function Calling: <br>
 |Format|Example|
@@ -79,7 +80,7 @@ Note: operation can be one of the following characters: +, -, *, /, %
 ### For Loops: <br>
 |Format|Example|
 |---|---|
-|`for("<name>" : <operation> : { /* loop body */ })?`|`for ("x" : intrange(0:20) : { out("This is test nr. " : y)? }?)`|
+|`for("<name>" : <operation> : { /* loop body */ })?`|`for ("x" : intrange(0:20) : { out("This is test nr. " : y)? })?`|
 
 ### Forever Loops: <br>
 |Format|Example|
@@ -125,7 +126,7 @@ Note: operation can be one of the following characters: +, -, *, /, %
 - args:
   1. The list that should be extended
   2. The element that the list should be extended with
-#### list-pop
+#### list_pop()
   
 - Takes out the given element of the list, when nothing is given, it pops the first element
 - args:
@@ -271,5 +272,5 @@ You name the constructor comment, because the theme of [this jam](https://github
 For a single-line-comment, write `\\`
 To start a multi-line-comment, write `/*`. To end it, write `*/`
 
-Function Signatures are nedded when you want to pass a variable to a class or method.
+Function Signatures are needed when you want to pass a variable to a class or method.
 You can start a Function Signature with `/*` and end it with `*/`. To pass an argument to a class / function, you write `- param <name>` in a new line
