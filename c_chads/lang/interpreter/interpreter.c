@@ -126,7 +126,7 @@ static void declaration(struct Parser_Node* node) {
 }
 
 static struct Interpreter_Value assign(struct Parser_Node* node) {
-    struct Parser_Node* dst = vec_get(&node->children, 0); 
+    struct Parser_Node* dst = pnode_left(node); 
     strview_t dstname;
     if (dst->kind == PN_DECL) {
         declaration(dst);
@@ -134,7 +134,7 @@ static struct Interpreter_Value assign(struct Parser_Node* node) {
     } else
         dstname = dst->data.ident.val;
 
-    struct Interpreter_Value val = intrp_run(vec_get(&node->children, 1), NULL);
+    struct Interpreter_Value val = intrp_run(pnode_right(node), NULL);
     struct Interpreter_Value *var = get_var(dstname);
     if (val.type != var->type && var->type != IT_VOID)
         printf("Spank Spank! Bad Programmer! Mismatched type\n");
@@ -189,7 +189,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
         break;
         case PN_NUMBER:
             ret.type = IT_INT;
-            ret.data.intg.val = atoi(node->data.string.val.view);
+            ret.data.intg.val = atoi(node->data.number.val.view);
         break;
         case PN_IDENT: {
             ret = *get_var(node->data.ident.val);
@@ -248,5 +248,5 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
 }
 
 struct Interpreter_Value intrp_main() {
-    return execute(pnode_right(((struct Interpreter_Value*)map_get(&intrp.global, strview_from("main")))->data.func.ast));
+    return execute(pnode_right(get_var(strview_from("main"))->data.func.ast));
 }
