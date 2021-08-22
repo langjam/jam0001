@@ -138,8 +138,13 @@ class ComstructExecutor:
                     backup[arg[0]] = new_env[arg[0]] if arg[1] is not None else None
                 except KeyError:
                     to_delete.append(arg[0])
+                except TypeError:
+                    pass
 
-                new_env[arg[0]] = arg[1]
+                try:
+                    new_env[arg[0]] = arg[1]
+                except TypeError:
+                    pass
 
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(None)
 
