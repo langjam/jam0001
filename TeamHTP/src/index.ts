@@ -12,7 +12,7 @@ console.log(srcPath)
 const src = fs.readFileSync(srcPath).toString()
 const runtime = new Runtime(src)
 
-const list = <List>runtime.getTag('TodoList').getChild()
+const list = <List>runtime.getTag('TodoList').getTaggedElement()
 const updatedListItem = list.checkItem('**kick ass**')
 if (updatedListItem !== undefined) {
     console.log(list.getMdastContent().position)

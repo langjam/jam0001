@@ -106,6 +106,8 @@ class Runtime {
             if (wrappedObject instanceof Function && (body = wrappedObject.getBody())) {
                 const result = parser.parse(body)
                 console.log(result)
+                wrappedObject.setRawJs(result)
+                wrappedObject.evalRawJs()
             }
             this.wrappedElements.push(wrappedObject)
             if (wrappedObject instanceof Tag) {

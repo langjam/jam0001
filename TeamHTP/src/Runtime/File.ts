@@ -5,7 +5,7 @@ function serializeRuntime(runtime: Runtime) {
     let serialized = ''
     const wrappedElements = runtime.getWrappedElements()
     for (const element of wrappedElements) {
-        serialized += wrappedElementToMd(element)
+        serialized += wrappedElementToMd(element) + '\n'
     }
     return serialized
 }

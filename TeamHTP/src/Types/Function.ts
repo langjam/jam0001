@@ -5,6 +5,7 @@ import Tag from './Tag'
 class Function extends Base {
     private parent: Tag
     private rawMd: string
+    private rawJs: string | undefined
 
     constructor(mdastContent: Definition, parent: Tag, rawMd: string, tag?: Tag) {
         super(mdastContent, tag)
@@ -31,6 +32,22 @@ class Function extends Base {
 
     getRawMd() {
         return this.rawMd
+    }
+
+    setRawJs(rawJs:string) {
+        this.rawJs = rawJs
+    }
+
+    getRawJs(): string | undefined {
+        return this.rawJs
+    }
+
+    evalRawJs() {
+        if (this.rawJs !== undefined) {
+            return function (rawJs: string) {
+                return eval(rawJs)
+            }.call(this.getParent().getTaggedElement(), this.rawJs)
+        }
     }
 }
 

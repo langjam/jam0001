@@ -68,7 +68,7 @@ function wrap(runtime: Runtime, mdastContent: MdastContent, rawMd: string, tag?:
             throw new Error(`mdast type not mapped '${mdastContent.type}'`)
         }
         const wrappedContent = new type(mdastContent, tag)
-        tag?.setChild(wrappedContent)
+        tag?.setTaggedElement(wrappedContent)
         return wrappedContent
     }
 }

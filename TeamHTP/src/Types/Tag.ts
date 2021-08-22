@@ -4,22 +4,22 @@ import {Definition} from 'mdast'
 
 class Tag extends Base {
     private readonly members: Record<string, Function>
-    private child: Base | undefined
+    private taggedElement: Base | undefined
     private rawMd: string
 
     constructor(mdastContent: Definition, rawMd: string, tag?: Tag) {
         super(mdastContent, tag);
-        this.child = undefined
+        this.taggedElement = undefined
         this.rawMd = rawMd
         this.members = {}
     }
 
-    setChild(child: Base) {
-        this.child = child
+    setTaggedElement(child: Base) {
+        this.taggedElement = child
     }
 
-    getChild(): Base | undefined {
-        return this.child
+    getTaggedElement(): Base | undefined {
+        return this.taggedElement
     }
 
     getMdastContent(): Definition {
