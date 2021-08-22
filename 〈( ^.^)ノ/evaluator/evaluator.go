@@ -1,8 +1,6 @@
 package evaluator
 
 import (
-	"log"
-
 	"github.com/grossamos/jam0001/shared"
 )
 
@@ -18,7 +16,9 @@ type Evaluator struct {
 	comments map[string]shared.Node
 }
 
-func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
+func (e *Evaluator) eval_expr(expr shared.Node) (shared.Node, error) {
+
+	var err error
 
 	if !expr.IsExpression {
 		if expr.Val.Type == shared.TTref { // get reference
@@ -26,7 +26,7 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 			expr.Val.Value = e.getRefValue(expr.Val.Value)
 		}
 
-		return expr
+		return expr, err
 	}
 
 	for i := 0; i < len(expr.Children); i++ { // for all children
@@ -35,7 +35,10 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 			if i == len(expr.Children)-1 {
 				return e.eval_expr(expr.Children[i])
 			} else {
-				e.eval_expr(expr.Children[i])
+				_, err = e.eval_expr(expr.Children[i])
+				if err != nil {
+					return shared.Node{}, err
+				}
 			}
 		}
 
@@ -47,7 +50,7 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 			return e.eval_string_call(expr)
 
 		case shared.TTnumber, shared.TTconst, shared.TTref:
-			return expr.Children[i]
+			return expr.Children[i], err
 
 		case shared.TTwhile:
 			return e.eval_while(expr)
@@ -55,20 +58,24 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 		case shared.TTnull:
 
 		case shared.TTwcomment, shared.TTwcommentAnd: // skip comments
-			return shared.Node{}
+			return shared.Node{}, err
 
 		default:
-			log.Fatal(UnimplementedError{message: "opperation either doesn't exist or isn't implemented so far", pos: expr.Val.Pos})
-			return shared.Node{}
+			err = &UnimplementedError{message: "opperation either doesn't exist or isn't implemented so far", pos: expr.Val.Pos}
+			return shared.Node{}, err
 		}
 	}
 
-	return shared.Node{}
+	return shared.Node{}, err
 }
 
-func RunEvaluator(nodes []shared.Node, comments map[string]shared.Node) {
+func RunEvaluator(nodes []shared.Node, comments map[string]shared.Node) error {
 	evaluator := Evaluator{nodes, []string{"0", "0", "0", "0"}, []string{"0", "0", "0", "0"}, "0", 0, comments}
 	for _, node := range nodes {
-		evaluator.eval_expr(node)
+		_, err := evaluator.eval_expr(node)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
