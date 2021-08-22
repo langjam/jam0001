@@ -117,6 +117,18 @@ def generate_builtins():
     if err != None: return err
     return FloatValue(random.random())
 
+  def _read_input(throw_token, args):
+    err = ensure_arg_count(throw_token, args, 0, 1)
+    if err != None: return err
+    if len(args) == 1:
+      err = ensure_is_string(throw_token, args, 0)
+      if err != None: return err
+      prompt_str = args[0].value
+      value = input(prompt_str)
+    else:
+      value = input('? ')
+    return StringValue(value)
+
   def _sqrt(throw_token, args):
     err = ensure_arg_count(throw_token, args, 1)
     if err != None: return err
@@ -128,7 +140,6 @@ def generate_builtins():
     err = ensure_arg_count(throw_token, args, 0)
     if err != None: return err
     return FloatValue(time.time())
-
 
   def _game_create_window(throw_token, args):
     err = ensure_arg_count(throw_token, args, 4)
@@ -234,6 +245,7 @@ def generate_builtins():
     'parse_int': _parse_int,
     'print': _print,
     'random_float': _random_float,
+    'read_input': _read_input,
     'sqrt': _sqrt,
     'unix_time': _unix_time,
   }
