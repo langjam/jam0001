@@ -36,6 +36,6 @@ function nani;
 
 /*
     This function takes 0 arguments,
-	It uses 8 and 9.
+	It uses 1 and 9.
  */
 function main;

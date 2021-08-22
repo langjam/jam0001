@@ -9,11 +9,11 @@ open Kl_IR
 
 let emit_kl_ir (prog : spec list) : (string * ast) list =
   List.fold_left (fun ftable (Spec (_, fname, _) as s) ->
-    Printf.printf "\n[Processing function \x1b[1;36m%s\x1b[0m]\n" fname;
-    let res = (fname, generate_function s |> compile_function ftable)::ftable in
-    Printf.printf "[\x1b[1;32mOk\x1b[0m]\n";
-    res
-  ) [] prog |> List.rev
+      Printf.printf "\n[Processing function \x1b[1;36m%s\x1b[0m]\n" fname;
+      let res = (fname, generate_function s |> compile_function ftable)::ftable in
+      Printf.printf "[\x1b[1;32mOk\x1b[0m]\n";
+      res
+    ) [] prog |> List.rev
 
 module type TermRealizer = sig
   (** Realize an anonymous term *)
@@ -33,7 +33,17 @@ end
 module Realizer (X : TermRealizer) = struct
   include X
   let realize oc (prog_list : (string * ast) list) =
-    let has_main = List.exists (fun (name, _) -> name = "main") prog_list in
+    let has_main =
+      List.exists (fun (name, prog) ->
+          let is_main = (name = "main") in
+          if is_main then begin
+            let main_params_count = ast_count_params prog in
+            if main_params_count <> 0 then begin
+              Kl_errors.error "the main function must not take or use any parameter"
+            end
+          end;
+          is_main
+        ) prog_list in
     realize_header oc;
     List.iter (fun (name, prog) -> realize_decl oc name prog) prog_list;
     if has_main then realize_entrypoint_call oc
