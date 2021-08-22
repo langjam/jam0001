@@ -15,6 +15,7 @@ func (e *Evaluator) setRefValue(ref, value string) {
 
 	if varIndex == 0 {
 		e.zero = value
+		return
 	}
 
 	arr := e.positive

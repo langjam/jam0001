@@ -20,6 +20,8 @@ type Evaluator struct {
 }
 
 func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
+	//expr.Print("")
+
 	if !expr.IsExpression {
 		if expr.Val.Type == shared.TTref { // get reference
 			expr.Val.Type = shared.TTstring
