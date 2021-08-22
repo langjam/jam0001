@@ -21,14 +21,12 @@ if __name__ == '__main__':
             tokens = clexer.tokenize(text)
             tree = cparser.parse(tokens)
 
-            print(" » Begin Execution")
             try:
                 ComstructExecutor(tree)
             except Exception as e:
                 print(e)
 
             environment = executor.env
-            print(" » End Execution")
 
     file = open(argv[1]).read()
 
@@ -49,4 +47,4 @@ if __name__ == '__main__':
     ComstructExecutor(tree)
 
     environment = executor.env
-    print(" » End Execution")
+    print("")
