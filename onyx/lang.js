@@ -44,6 +44,7 @@ const re = new Map([
   ['symbol', /[:]/y],
   // no bitwise i guess. also no +=
   ['operator', /(?:>=|==|<=|!=|&&|\|\|)|[<>=+\-*\/%!]/y],
+  ['bad_symbol', /./y],
 ]);
 
 function lex(code) {
@@ -70,7 +71,7 @@ function lex(code) {
         // more of a weird s-expression but not s-expression thing
         // uhm
         // is it working? who knows
-      	if (type !== 'whitespace') {
+      	if (type !== 'whitespace' && type !== 'bad_symbol') {
           result.push({ ...match, type: type });
         }
         continue outer;
@@ -87,18 +88,18 @@ function lex(code) {
 // on the down side, that means negative numbers must be, say, 0-100
 const precs = {
   '!': 13,
-  /* '**': 12, */
+  // '**': 12,
   '*': 11, '/': 11, '%': 11,
   '+': 10, '-': 10,
   '==': 9, '!=': 9, '<': 9, '<=': 9, '>': 9, '>=': 9,
   // todo: xor precedence
-  /* '&': 6, */
-  /* '|': 5, */
+  // '&': 6,
+  // '|': 5,
   '&&': 4,
   '||': 3,
-  '=': 2,
+  // '=': 2,
   ',': 1,
-  /* ';': 0, */
+  // ';': 0, 
 };
 const isNonAssoc = { '=': true, '==': true, '!=': true, '<': true, '<=': true, '>': true, '>=': true };
 const isPrefix = { '!': true };
@@ -123,7 +124,7 @@ function parse(toks) {
     if (pos < toks.length && toks[pos].type === type) {
       pos += 1;
       // to make it conceptually simpler, we'll be using a lot of tokens directly in the parser
-      return { ...toks[pos - 1], start: pos - 1, end: pos };
+      return { ...toks[pos - 1], start: pos - 1, end: pos, error: null, directives: [] };
     } else {
     	return null;
     }
@@ -136,13 +137,6 @@ function parse(toks) {
     }
     return directives;
   }
-  function type() {
-    const start = pos;
-    const name = eatType('identifier');
-    if (!name) { pos = start; return; }
-    return { type: 'type', name: name, syntaxType: 'type' };
-    // todo: generics e.g. (an array of integers)
-  }
   function argumentDeclarations() {
     const start = pos;
     let error = null;
@@ -152,10 +146,10 @@ function parse(toks) {
       const name = eatType('identifier');
       if (!name) { break; }
       const dirs = directives();
-      args.push({ ...name, syntaxType: 'function_parameter', directives: dirs, end: pos });
+      args.push({ ...name, syntaxType: 'function_parameter', end: pos, error: null, directives: dirs });
     }
     if (!eat(']')) { error = 'expected <code>]</code>'; }
-    return { type: 'argument_declarations', arguments: args, start: start, end: pos, error: error };
+    return { type: 'argument_declarations', arguments: args, start: start, end: pos, error: error, directives: [] };
   }
   function arguments_() {
     const start = pos;
@@ -165,7 +159,7 @@ function parse(toks) {
     let expr;
     while ((expr = expression())) { args.push(expr); }
     if (!eat(']')) { error = 'expected <code>]</code>'; }
-    return { type: 'arguments', arguments: args, error: error, start: start, end: pos };
+    return { type: 'arguments', arguments: args, start: start, end: pos, error: error, directives: [] };
   }
   function simpleExpression() {
     const start = pos;
@@ -176,7 +170,8 @@ function parse(toks) {
       return literal;
     } else {
       // todo: destructure maybe idk
-      let expr = eatType('identifier');
+      let expr = function_() || eatType('identifier');
+      if (expr && expr.type === 'function_definition') {console.info('expr', expr);}
       if (expr) {
         while (true) {
           if (eat('.')) {
@@ -190,7 +185,7 @@ function parse(toks) {
             // [] is both array/dict access and call
             const args = arguments_();
             if (!args) { break; }
-            expr = { type: 'function_call', target: expr.type === 'identifier' ? { ...expr, syntaxType: 'function' } : expr, arguments: args };
+            expr = { type: 'function_call', target: expr.type === 'identifier' ? { ...expr, syntaxType: 'function' } : expr, arguments: args, error: null, directives: [] };
           }
         }
         return { ...expr, start: start, end: pos };
@@ -211,11 +206,11 @@ function parse(toks) {
     function handleOp(op) {
       if (isPrefix[op.value]) {
         const operand = exprs.pop();
-        exprs.push({ type: 'prefix', operator: op, operand: operand, start: operand.start, end: operand.end });
+        exprs.push({ type: 'prefix', operator: op, operand: operand, start: op.start, end: operand.end, error: null, directives: [] });
       } else {
         const right = exprs.pop();
         const left = exprs.pop();
-        exprs.push({ type: 'infix', operator: op, left: left, right: right, start: left.start, end: right.end });
+        exprs.push({ type: 'infix', operator: op, left: left, right: right, start: left.start, end: right.end, error: null, directives: [] });
       }
     }
     while (true) {
@@ -230,9 +225,9 @@ function parse(toks) {
         const op = eatType('operator');
         if (op) {
           if (expectExpr) {
-            if (!isPrefix[op.value]) { throw new Error('prefix operator expected, infix operator `' + op.value + '` found'); }
+            if (!isPrefix[op.value]) { throw new Error('expected prefix operator expected, found infix operator `' + op.value + '` instead'); }
           } else {
-            if (isPrefix[op.value]) { throw new Error('infix operator expected, prefix operator `' + op.value + '` found'); }
+            if (isPrefix[op.value]) { throw new Error('expected infix operator, found prefix operator `' + op.value + '` instead'); }
             expectExpr = true;
           }
           const thisIsRTL = isRTL[op.value];
@@ -266,6 +261,22 @@ function parse(toks) {
     let directiveType = null;
     let value = null;
     let error = null;
+    // nesting level of parentheses
+    let level = 1;
+    function eatUntilComment() {
+      while (toks[pos].value !== ':') {
+        if (pos >= toks.length) { error = 'expected <code>)</code>'; break; }
+        if (eat('(')) { level += 1; continue; }
+        else if (eat(')')) {
+          level -= 1;
+          // un-eat it - this is the final paren
+          if (level === 0) { pos -= 1; break; }
+          else { continue; }
+        } else {
+          pos += 1;
+        }
+      }
+    }
     switch (directive && directive.value) {
       case null: { break; } // it wasn't an identifier. oh no
       case 'if': case 'unless': case 'while': case 'until': {
@@ -275,37 +286,30 @@ function parse(toks) {
         if (!expr) { error = 'expected condition'; break; }
         break;
       }
-      case 'of': {
-        // function generic specifier
-        directiveType = 'generic';
-        const types = [];
-        let type_;
-        while ((type_ = type())) {
-          types.push(type_);
-        }
-        value = { types: types };
-        break;
-      }
       case 'call': {
-        directiveType = 'set';
-        if (!eat('this')) {
-          const text = [];
-          while (pos < toks.length && toks[pos].value !== ':' && (pos + 1 >= toks.length || toks[pos + 1].value !== ')')) {
-            text.push(toks[pos].value); pos += 1;
+        const subdirective = eatType('identifier');
+        switch (subdirective.value) {
+          case 'this': {
+            directiveType = 'set';
+            const name = eatType('identifier');
+            if (!name) { error = 'expected variable name for <code>call this</code>'; break; }
+            value = { name: name };
+            break;
           }
-          error = 'we only know how to `call this` - not `call ' + text.join(' ') + '`';
+          default: {
+            eatUntilComment();
+            error = 'expected <code>this</code> after <code>call</code>';
+            break;
+          }
         }
-        const name = eatType('identifier');
-        if (!name) { error = '`call this` needs a name, not `' + toks[pos].type + '(' + toks[pos].value + ')`'; break; }
-        value = { name: name };
         break;
       }
       case 'a': case 'an': {
         // specifies type
         directiveType = 'type';
-        const type_ = type();
-        if (!type_) { error = 'you need to specify a type when using the directive `' + directive.value + '`'; }
-        value = { valueType: type_ };
+        const type = expression();
+        if (!type) { error = 'expected type'; }
+        value = { valueType: type };
         break;
       }
       case 'for': {
@@ -318,11 +322,8 @@ function parse(toks) {
             break;
           }
           default: {
-            const text = subdirective !== null ? [subdirective.value] : [];
-            while (toks[pos].value !== ':') {
-              text.push(toks[pos].value); pos += 1;
-            }
-            error = 'we only understand `for example`, not `for ' + text.join(' ') + '`';
+            eatUntilComment();
+            error = 'expected <code>example</code> after <code>for</code>';
             break;
           }
         }
@@ -336,17 +337,14 @@ function parse(toks) {
         const subdirective = eatType('identifier');
         switch (subdirective.value) {
           case 'a': case 'an': {
-            const type_ = type();
+            const type_ = expression();
             if (!type_) { error = 'you need to specify a type when using the directive `' + directive.value + '`'; }
             value = { returnType: type_ };
             break;
           }
           default: {
-            const text = subdirective !== null ? [subdirective.value] : [];
-            while (toks[pos].value !== ':') {
-              text.push(toks[pos].value); pos += 1;
-            }
-            error = 'we only understand `returns a` and `returns an`, not `returns ' + text.join(' ') + '`';
+            eatUntilComment();
+            error = 'expected <code>a</code> or <code>an</code> after <code>returns</code>';
             break;
           }
         }
@@ -355,11 +353,8 @@ function parse(toks) {
       case 'return': {
       	directiveType = 'return';
         if (!eat('this')) {
-          const text = [];
-          while (pos < toks.length && toks[pos].value !== ':' && (pos + 1 >= toks.length || toks[pos + 1].value !== ')')) {
-            text.push(toks[pos].value); pos += 1;
-          }
-          error = 'we only know how to `return this` - not `return ' + text.join(' ') + '`';
+          eatUntilComment();
+          error = 'expected <code>this</code> after <code>return</code>';
         }
         break;
       }
@@ -384,33 +379,20 @@ function parse(toks) {
           }
           // throw errors only when we know backtracking is useless
           default: {
-            const text = subdirective !== null ? [subdirective.value] : [];
-            while (pos < toks.length && toks[pos].value !== ':' && (pos + 1 >= toks.length || toks[pos + 1].value !== ')')) {
-              text.push(toks[pos].value); pos += 1;
-            }
-            error = 'we only understand `should be`/`should equal` - not `should ' + text.join(' ') + '`';
+            eatUntilComment();
+            error = 'expected <code>be</code> or <code>equal</code> after <code>should</code>';
             break;
           }
         }
         break;
       }
+      case 'note': {
+        eatUntilComment();
+        break;
+      }
       default: {
-        let level = 1;
-        while (toks[pos].value !== ')') {
-          if (eat('(')) { level += 1; continue; }
-          if (eat(')')) {
-            level -= 1;
-            // un-eat it - this is the final paren
-            if (level === 0) { pos -= 1; break; }
-            else { continue; }
-          }
-          pos += 1;
-          if (pos >= toks.length) { error = 'you forgot to close a `(` comment with a `)` at ' + toks[start].start + ':' + toks[toks.length - 1].end; break; }
-        }
-        // todo: turn this into multiple errors maybe
-        if (!error) {
-          error = 'we don\'t know what directive `' + directive.value + '` is';
-        }
+        eatUntilComment();
+        error = 'unknown directive <code>' + directive.value + '</code>';
         break;
       }
     }
@@ -419,26 +401,22 @@ function parse(toks) {
     if (eat(':')) {
       // start of actual ignored comment. eat all tokens until matching )
       // (we support balanced ()!)
-      let level = 1;
-      // our break condition is inside the loop
       while (true) {
-        // todo: pair these up maybe
-        // so they can be highlighted together
-        if (eat('(')) { comment.push('('); level += 1; continue; }
-        if (eat(')')) {
+        if (pos >= toks.length) { error = 'expected <code>)</code>'; break; }
+        if (eat('(')) { level += 1; continue; }
+        else if (eat(')')) {
           level -= 1;
           // un-eat it - this is the final paren
           if (level === 0) { pos -= 1; break; }
-          else { comment.push(')'); continue; }
+          else { continue; }
+        } else {
+          pos += 1;
         }
-        comment.push(toks[pos].value);
-        pos += 1;
-        if (pos >= toks.length) { error = 'you forgot to close a `(` comment with a `)` at ' + toks[start].start + ':' + toks[toks.length - 1].end; break; }
       }
     }
-    if (!eat(')')) { error = 'you need a `)` at ' + toks[pos].start; }
+    if (!eat(')')) { error = 'expected <code>)</code>'; }
     // naturally, directives don't have their own directives
-    return { type: 'directive', directive: directiveType, ...value, comment: comment.length ? comment.join(' ') : null, start: start, end: pos, error: error || null, directives: [] };
+    return { type: 'directive', directive: directiveType, ...value, comment: comment.length ? comment.join(' ') : null, start: start, end: pos, error: error, directives: [] };
   }
   function statements() {
     const start = pos;
@@ -455,7 +433,7 @@ function parse(toks) {
     let current;
     // note: for now all control flow will be via directives
     // so statements *are* expressions
-    while ((current = function_() || expression() || block())) {
+    while ((current = expression() || block())) {
     	statements.push(current);
     }
     // no directives - trailing directive would just be associated with the last statement
@@ -475,14 +453,18 @@ function parse(toks) {
     const start = pos;
     let errors = [];
     if (!eat('function')) { pos = start; return; }
-    const name = eatType('identifier');
-    if (!name) { errors.push('expected function name'); }
+    const name = eatType('identifier') || { type: 'identifier', syntaxType: 'function', value: '', start: pos, end: pos, error: null, directives: [] };
     const args = argumentDeclarations();
     if (!args) { errors.push('expected function input list (<code>[first second]</code>)'); }
     const dirs = directives();
     const body = block();
     if (!body) { errors.push('expected function body (a block)'); }
-    dirs.push(...directives());
+    else {
+      console.info(body.directives);
+      dirs.push(...body.directives);
+      body.directives = [];
+      body.end = body.statements.statements.length ? body.statements.statements[body.statements.statements.length - 1].end : body.start + 1;
+    }
     return { type: 'function_definition', functionKeyword: { type: 'identifier', syntaxType: 'keyword', start: start, end: start + 1 }, name: { ...name, syntaxType: 'function' }, arguments: args, body: body, start: start, end: pos, error: errors.length ? errors.join(', ') : null, directives: dirs };
   }
  
@@ -510,18 +492,17 @@ function replacer(key, value) {
 // note: we could have nested { type: 'directive', inner: expr }
 // but 
 function applyDirectives(directives, fn) {
-  if (!Array.isArray(directives)) { return fn; }
   for (const directive of directives) {
     const fn_ = fn;
     switch (directive.directive) {
       case 'if': { // if
         const condFn = functionize(directive.condition);
-        fn = (scope) => { if (condFn(scope)) { return fn_(scope); } else { scope.set($SHORT_CIRCUIT, null); } }
+        fn = (scope) => { if (condFn(scope)) { return fn_(scope); } else { scope.set($SHORT_CIRCUIT, null); } };
         break;
       }
       case 'unless': { // unless
         const condFn = functionize(directive.condition);
-        fn = (scope) => { if (!condFn(scope)) { return fn_(scope); } else { scope.set($SHORT_CIRCUIT, null); } }
+        fn = (scope) => { if (!condFn(scope)) { return fn_(scope); } else { scope.set($SHORT_CIRCUIT, null); } };
         break;
       }
       case 'while': { // while
@@ -539,7 +520,7 @@ function applyDirectives(directives, fn) {
             }
           }
           scope.set($SHORT_CIRCUIT, null);
-        }
+        };
         break;
       }
       case 'until': {
@@ -557,7 +538,7 @@ function applyDirectives(directives, fn) {
             }
           }
           scope.set($SHORT_CIRCUIT, null);
-        }
+        };
         break;
       }
       case 'break': {
@@ -565,7 +546,7 @@ function applyDirectives(directives, fn) {
         fn = (scope) => { // break
           scope.set($BREAK, null);
           scope.set($SHORT_CIRCUIT, null);
-        }
+        };
         break;
       }
       case 'return': {
@@ -574,20 +555,26 @@ function applyDirectives(directives, fn) {
           if (scope.has($SHORT_CIRCUIT)) { return val; }
           scope.set($RETURN, val);
           scope.set($SHORT_CIRCUIT, null);
-        }
+        };
         break;
       }
-      // if_not, while, while_not
       case 'set': {
         fn = (scope) => { // set
           const val = fn_(scope);
           if (scope.has($SHORT_CIRCUIT)) { return val; }
           return scope.set(directive.name.value, val);
-        }
+        };
         break;
       }
-      case 'example': { // example
-        // do nothing for now
+      case 'type': {
+        const typeCheckFn = functionize(directive.valueType);
+        fn = (scope) => {
+          const val = fn_(scope);
+          if (scope.has($SHORT_CIRCUIT)) { return val; }
+          const typeCheck = typeCheckFn(scope);
+          if (!typeCheck(val)) { throw new Error('expected ' + typeCheck.name + ', found ' + typeOf(val) + ' ' + JSON.stringify(val, replacer) + ' instead'); }
+          return val;
+        };
         break;
       }
       case 'assert_equal': {
@@ -612,19 +599,14 @@ function applyDirectives(directives, fn) {
           const isEqual = deepEquals(actual, expected);
           console.error('assertion ' + (isEqual ? 'passed' : 'failed') + ': ' + JSON.stringify(actual, replacer) + (isEqual ? ' is ' : ' is not ') + JSON.stringify(expected, replacer) + '\n');
           return actual;
-          // throw new Error('assertion error: `' + JSON.stringify(actual) + '` is not `' + JSON.stringify(expected) + '`');
-        }
-        break;
-      }
-      case 'return_type': {
-        // impl
+        };
         break;
       }
       case null: {
         // do nothing
         break;
       }
-      default: throw new Error('we don\'t know how to handle directive `' + directive.directive + '`');
+      default: throw new Error('unknown directive `' + directive.directive + '`');
     }
     // ehh... this isn't strictly right but oh well
     fn.node = fn_.node;
@@ -632,6 +614,40 @@ function applyDirectives(directives, fn) {
   }
   const final = (scope) => { // final
     const val = fn(scope);
+    delete scope.lookup[$SHORT_CIRCUIT];
+    return val;
+  };
+  final.node = fn.node;
+  return final;
+}
+
+function applyFunctionDirectives(directives, fn, scope) {
+  for (const directive of directives) {
+    const fn_ = fn;
+    switch (directive.directive) {
+      case 'return_type': { // return type
+        const typeCheckFn = functionize(directive.returnType);
+        fn = (...args) => {
+          const val = fn_(...args);
+          if (scope.has($SHORT_CIRCUIT)) { return val; }
+          const typeCheck = typeCheckFn(scope);
+          if (!typeCheck(val)) { throw new Error('expected ' + typeCheck.name + ', found ' + typeOf(val) + ' ' + JSON.stringify(val, replacer) + ' instead'); }
+          return val;
+        };
+        break;
+      }
+      case 'example': { // example
+        // do nothing for now
+        break;
+      }
+      case 'set': {
+        scope.set(directive.name.value, fn);
+        break;
+      }
+    }
+  }
+  const final = (...args) => { // final
+    const val = fn(...args);
     delete scope.lookup[$SHORT_CIRCUIT];
     return val;
   };
@@ -751,23 +767,26 @@ function functionize(node) {
       // const argFns = node.args.map(functionize);
       const bodyFn = functionize(node.body);
       fn = (scope) => {
-        scope.set(node.name.value, (...args) => {
+        return scope.set(node.name.value, { [node.name.value]: applyFunctionDirectives(node.directives, (...args) => {
           const newScope = new Scope(scope);
           for (let i = 0; i < args.length; i += 1) {
-            newScope.set(node.arguments.arguments[i].value, args[i]);
+            const argNode = node.arguments.arguments[i];
+            newScope.set(argNode.value, applyDirectives(argNode.directives, (scope) => args[i])(scope));
           }
           bodyFn(newScope);
           // irl avoiding single line { foo } is nice
           if (newScope.has($RETURN)) { return newScope.get($RETURN); }
           // if (newScope.has($THROW)) { if (newScope.parent) { newScope.parent.set($THROW, newScope.get($THROW)); } return; }
-        });
+        }, scope) }[node.name.value]);
       };
       break;
     }
     default: throw new Error('unknown node type `' + node.type + '`');
   }
   fn.node = node;
-  fn = applyDirectives(node.directives, fn);
+  if (node.type !== 'function_definition') {
+    fn = applyDirectives(node.directives, fn);
+  }
   return fn;
 }
 
@@ -775,9 +794,32 @@ function print(value) {
   console.log(value);
 }
 
+function typeOf(value) {
+  if (value === null) { return 'null'; }
+  else if (typeof value === 'number') { return 'decimal'; }
+  else { return typeof value; }
+}
+
 const BUILTINS_SCOPE = new Scope(null, {
   'print': print,
   'println': (value) => print(value + '\n'),
+  'error': (message) => {
+    if (typeof message !== 'string') {
+      throw new Error('expected string, found ' + typeOf(message) + ' instead');
+    }
+    throw new Error(message);
+  },
   // todo: varargs are kinda nasty so i'll think about it later
   /* 'concat': (...args) => args.join(''), */
+  'integer': (value) => typeof value === 'bigint',
+  'decimal': (value) => typeof value === 'number',
+  'boolean': (value) => typeof value === 'boolean',
+  'null': (value) => value === null,
+  'string': (value) => typeof value === 'string',
 });
+
+// 'integer': { integer: (value) => typeof value === 'bigint' }.integer,
+// 'decimal': { decimal: (value) => typeof value === 'number' }.decimal,
+// 'boolean': { boolean: (value) => typeof value === 'boolean' }.boolean,
+// 'null': { null: (value) => value === null }.null,
+// 'string': { string: (value) => typeof value === 'string' }.string,

@@ -2,6 +2,9 @@
 <title>lang</title>
 <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==">
 <h2>input</h2>
+select an example: <select id="select_example"></select>
+<br>
+<br>
 <textarea id="input"></textarea><br>
 <h2>highlighted</h2>
 <pre id="highlight"></pre>
@@ -11,7 +14,7 @@
 <textarea id="output" readonly></textarea>
 <div id="tooltip"></div>
 <style>
-body, textarea, input {
+body, textarea, input, select {
   background-color: #222;
   color: white;
 }
@@ -89,6 +92,9 @@ const input = document.getElementById('input');
 const output = document.getElementById('output');
 const highlight = document.getElementById('highlight');
 const tooltip = document.getElementById('tooltip');
+/** @type {HTMLSelectElement} */
+// @ts-ignore
+const select_example = document.getElementById('select_example');
 // notes
 // we skip various steps like typechecking and semantic analysis (no break outside of loops)
 
@@ -203,24 +209,19 @@ input.oninput = debounce(() => {
     // @ts-ignore
     functionize(ast)(BUILTINS_SCOPE);
   } catch(e) {
-    // errors.value = e;
-    errors.value += e.stack + '\n';
+    console.error('error: ' + e.message);
+    // errors.value += e.stack + '\n';
   }
   // output.value = lex(input.value).map((obj) => prettyPrintToken(obj)).join('\n');
 }, 250);
 
-/*
-integer (call this int)
-neg (a function from a to b) = 
-foo (a function from a and b to c and d) =
-*/
+// todo: <return this> at top level is not erroring :/
 
-input.value = `\
-(:let int = integer)
-
+const defaultExample = input.value = `\
 (: no generics yet :/)
-function id[value] (: use this for grouping - () is taken) { value (return this) }
-function neg[value (: an integer or a decimal)] (returns an integer) {
+(note that i'm testing whether notes work)
+function id[value] { value (return this) }
+function neg[value (an integer)] (returns an integer) {
   0 - value (return this)
 }
 function not[value (a boolean)] (returns a boolean) {
@@ -233,8 +234,6 @@ function add[left (an integer) right (an integer)] (returns an integer: adds two
 
 print["add[1 2] is: "]
 println[add[1 2] (should be 3)]
-print["add[1.0 2.0] is: "]
-println[add[1.0 2.0] (should be 3.0)]
 
 function test[left (an integer)] (returns an integer: adds 1 to a number) {
   left + 1 (return this)
@@ -269,7 +268,55 @@ println["begin loop test"]
   println[i]
   i + 1 (call this i)
 } (while i < 10)
-println[id["end loop test"`;
+println[add["1" "2"]]
+println[id["end loop test"
+`;
+
+const examples = new Map([
+  ['example', defaultExample],
+  ['fibonacci', `\
+function fibonacci[n (an integer)] (returns an integer) {
+  n (if n <= 1) (return this)
+  fibonacci[n - 1] + fibonacci[n - 2] (return this)
+}
+
+println[fibonacci[10] (should be 55)]
+println[fibonacci[20] (should be 6765)]
+`],
+  ['hello world', `\
+println["Hello, World!"]
+`],
+  ['test error display', `\
+function id[value] { value (return this) }
+println[id["test"
+`],
+  ['test directive error', `\
+print["test"] (call bad directive)
+`],
+  ['test return type error', `\
+function foo[] (returns an integer) { "foo" (return this) }
+print[foo[]]
+`],
+  ['test lambda', `\
+print[function[n]{ n * 2 (return this) }[3]]
+`],
+  ['test named lambda', `\
+function[n]{ n * 3 (return this) } (call this triple)
+print[triple[3]]
+`],
+]);
+
+for (const [exampleName, _exampleValue] of examples) {
+  const option = document.createElement('option');
+  option.appendChild(document.createTextNode(exampleName));
+  select_example.appendChild(option);
+}
+
+select_example.oninput = () => {
+  input.value = examples.get(select_example.selectedOptions[0].innerText);
+  input.oninput(new Event('ignored'));
+};
+
 let handle = setInterval(() => {
   if (!('lex' in window)) { return; }
   clearInterval(handle);
