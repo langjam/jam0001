@@ -1,4 +1,4 @@
-{ Redirect the output of this program to a PPM file. }
+{* Redirect the output of this program to a PPM file. *}
 
 bind 'maxx 630
 bind 'maxy 360

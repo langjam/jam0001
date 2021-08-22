@@ -1,4 +1,4 @@
-{ square multiplies its argument by itself. }
+{* square multiplies its argument by itself. *}
 defun square x [ * x x ]
 
 println &square

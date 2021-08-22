@@ -16,7 +16,16 @@ bool operator!=(Atom a, Atom b) { return a.inner != b.inner; }
 
 Array<Slice<u8>> intern_pool = {.data = NULL, .count = 0, .capacity = 0, .arena = &arena};
 
+bool switch_uppercase;
+bool switch_hex;
+
 Atom intern(Slice<u8> n) {
+    if (switch_uppercase) {
+        Slice<u8> u = copy_slice_to_arena(&arena, n);
+        for (s64 i = 0; i < u.count; i++) u.data[i] = toupper(u.data[i]);
+        n = u;
+    }
+
     for (s32 i = 0; i < intern_pool.count; i++)
         if (intern_pool.data[i] == n)
             return {(s32)i};
@@ -31,9 +40,9 @@ Atom atom_doc, atom_len, atom_testwith, atom_source, atom_line, atom_col, atom_a
 enum { MAX_ARITY = 16 };
 
 enum TokenType {
-    Token_EOF = 1, Token_Int, Token_Float, Token_Ident, Token_Comment, Token_String, Token_Lparen, Token_Rparen,
-    Token_Lbracket, Token_Rbracket, Token_Quote, Token_Line, Token_Lstrlist, Token_Rstrlist, Token_Amp,
-    Token_Comma,
+    Token_EOF = 1, Token_Int, Token_Float, Token_Ident, Token_ValComment, Token_SwitchComment, Token_String,
+    Token_Lparen, Token_Rparen, Token_Lbracket, Token_Rbracket, Token_Quote, Token_Line, Token_Lstrlist,
+    Token_Rstrlist, Token_Amp, Token_Comma,
     Token_KwIf, Token_KwElse, Token_KwFor, Token_KwMacro, Token_KwReturn,
 };
 
@@ -43,7 +52,8 @@ const char *format_token_type(TokenType type) {
         case Token_Int: return "<int>";
         case Token_Float: return "<float>";
         case Token_Ident: return "<ident>";
-        case Token_Comment: return "<comment>";
+        case Token_ValComment: return "<value comment>";
+        case Token_SwitchComment: return "<switch comment>";
         case Token_String: return "<string>";
         case Token_Lparen: return "(";
         case Token_Rparen: return ")";
@@ -80,6 +90,7 @@ struct Token {
         f64 f;
         Slice<u8> s;
         Atom atom;
+        u8 swytch;
     };
 };
 
@@ -93,8 +104,8 @@ const char *format_token(Token tok) {
     } else if (tok.type == Token_String) {
         // TODO Escape
         return tprint("\"%.*s\"", STRFMT(tok.s));
-    } else if (tok.type == Token_Comment) {
-        return tprint("{ %.*s }", STRFMT(tok.s));
+    } else if (tok.type == Token_ValComment) {
+        return tprint("{* %.*s *}", STRFMT(tok.s));
     } else {
         return format_token_type(tok.type);
     }
@@ -105,7 +116,21 @@ bool is_ident_char(u8 ch) {
         (ch >= 'A' && ch <= 'Z') ||
         (ch >= 'a' && ch <= 'z') ||
         ch == '_' || ch == '+' || ch == '-' || ch == '*' || ch == '/' ||
-        ch == '<' || ch == '>' || ch == '=' || ch == '.';
+        ch == '<' || ch == '>' || ch == '=' || ch == '.' || ch == '?' ||
+        ch == '!';
+}
+
+bool digit2val(u8 ch, s32 *out) {
+    s32 val = -1;
+    if (switch_hex) {
+        if (ch >= '0' && ch <= '9') val = ch - '0';
+        if (ch >= 'a' && ch <= 'f') val = 10 + ch - 'a';
+        if (ch >= 'A' && ch <= 'F') val = 10 + ch - 'A';
+    } else {
+        if (ch >= '0' && ch <= '9') val = ch - '0';
+    }
+    if (out) *out = val;
+    return val != -1;
 }
 
 void source_advance(Slice<u8> *src, SourceLoc *loc, s32 n = 1) {
@@ -135,7 +160,7 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
     if (src->count >= 2 && (*src)[0] == '<' && (*src)[1] == '<') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Lstrlist, {}}; }
     if (src->count >= 2 && (*src)[0] == '>' && (*src)[1] == '>') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Rstrlist, {}}; }
 
-    if (((*src)[0] >= '0' && (*src)[0] <= '9') || ((*src)[0] == '-' && src->count > 1 && (*src)[1] >= '0' && (*src)[1] <= '9')) {
+    if (digit2val((*src)[0], NULL) || ((*src)[0] == '-' && src->count > 1 && digit2val((*src)[0], NULL))) {
         s64 sign = 1;
         if ((*src)[0] == '-') {
             sign = -1;
@@ -144,8 +169,9 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
         Token tok = {};
         tok.loc = *loc;
         tok.type = Token_Int;
-        while (src->count && ((*src)[0] >= '0' && (*src)[0] <= '9')) {
-            tok.i = 10 * tok.i + ((*src)[0] - '0');
+        s32 digit;
+        while (src->count && digit2val((*src)[0], &digit)) {
+            tok.i = (switch_hex ? 16 : 10) * tok.i + digit;
             source_advance(src, loc, 1);
         }
         if (!src->count || (*src)[0] != '.') {
@@ -156,12 +182,12 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
 
         tok.type = Token_Float;
         s64 dec = 0;
-        while (src->count && ((*src)[0] >= '0' && (*src)[0] <= '9')) {
-            dec = 10 * dec + ((*src)[0] - '0');
+        while (src->count && digit2val((*src)[0], &digit)) {
+            dec = (switch_hex ? 16 : 10) * dec + digit;
             source_advance(src, loc, 1);
         }
         f64 fdec = dec;
-        while (fdec >= 1) fdec *= 0.1;
+        while (fdec >= 1) fdec *= (switch_hex ? 1./16 : 0.1);
 
         tok.f = sign * (tok.i + fdec);
         return tok;
@@ -203,24 +229,43 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
         if ((*src)[0] == '"') source_advance(src, loc, 1);
         tok.s = array_slice(&s);
         return tok;
-    } else if ((*src)[0] == '{') {
+    } else if (slice_has_prefix(*src, lit_slice("{*"))) {
         Token tok = {};
         tok.loc = *loc;
-        tok.type = Token_Comment;
-        source_advance(src, loc, 1);
-        Array<u8> s = {};
-        s.arena = &arena;
+        tok.type = Token_ValComment;
+        source_advance(src, loc, 2);
+        tok.s.data = src->data;
         s32 balance = 1;
-        while (src->count) {
-            u8 ch = (*src)[0];
-            if (ch == '{') balance += 1;
-            if (ch == '}') balance -= 1;
-            source_advance(src, loc, 1);
-            if (balance == 0) break;
-            array_push(&s, ch);
+        while (src->count && balance != 0) {
+            if (slice_has_prefix(*src, lit_slice("{*"))) { source_advance(src, loc, 2); balance += 1; }
+            else if (slice_has_prefix(*src, lit_slice("*}"))) { source_advance(src, loc, 2); balance -= 1; }
+            else if (balance != 0) {
+                source_advance(src, loc, 1);
+                tok.s.count += 1;
+            }
         }
-        tok.s = array_slice(&s);
         trim(&tok.s);
+        return tok;
+    } else if (slice_has_prefix(*src, lit_slice("{-"))) {
+        Token tok = {};
+        tok.loc = *loc;
+        tok.type = Token_SwitchComment;
+        source_advance(src, loc, 2);
+        while (src->count && isspace((*src)[0]))
+            source_advance(src, loc, 1);
+        if (!src->count) {
+            fprintf(stderr, "%s:%d:%d: Unexpected end-of-file in switch comment.\n", LOCFMT(*loc));
+            exit(1);
+        }
+        tok.swytch = (*src)[0];
+        if (tolower(tok.swytch) != 't' && tolower(tok.swytch) != 'b' && tolower(tok.swytch) != 'u' && tolower(tok.swytch) != 'h') {
+            fprintf(stderr, "%s:%d:%d: Unknown switch: %c.\n", LOCFMT(*loc), tok.swytch);
+            exit(1);
+        }
+        source_advance(src, loc, 1);
+        while (src->count && isspace((*src)[0]))
+            source_advance(src, loc, 1);
+        if (slice_has_prefix(*src, lit_slice("-}"))) source_advance(src, loc, 2);
         return tok;
     } else if ((*src)[0] == '(') {
         source_advance(src, loc, 1);
@@ -256,14 +301,19 @@ Slice<Token> tokenize(const char *srcname, Slice<u8> src) {
     while (src.count) {
         Token tok = gettoken(&src, &loc);
         if (tok.type == Token_EOF) break;
+        if (tok.type == Token_SwitchComment) {
+            if (tolower(tok.swytch) == 'u') switch_uppercase = tok.swytch == 'U';
+            if (tolower(tok.swytch) == 'h') switch_hex = tok.swytch == 'H';
+            continue;
+        }
         array_push(&tokens, tok);
     }
     return array_slice(&tokens);
 }
 
 enum ValueType {
-    Value_Bool = 1, Value_Int, Value_Float, Value_Ident, Value_String, Value_List, Value_Comment, Value_Builtin, Value_Block, Value_Macro,
-    Value_Return,
+    Value_Bool = 1, Value_Int, Value_Float, Value_Ident, Value_String, Value_List, Value_ValueComment, Value_SwitchComment,
+    Value_Builtin, Value_Block, Value_Macro, Value_Return,
 };
 
 struct Value;
@@ -299,6 +349,7 @@ struct Value {
         Slice<Token> body;
         ValMacro macro;
         Value *ret;
+        u8 swytch;
     };
 };
 
@@ -319,12 +370,13 @@ bool operator==(const Value &a, const Value &b) {
                     return false;
             return true;
         } break;
-        case Value_Comment: {
+        case Value_ValueComment: {
             if (strcmp(a.c.loc.srcname, b.c.loc.srcname) != 0) return false;
             if (a.c.loc.line != b.c.loc.line) return false;
             if (a.c.loc.col != b.c.loc.col) return false;
             return *a.c.value == *b.c.value;
         } break;
+        case Value_SwitchComment: return a.swytch == b.swytch;
         case Value_Block: return false;
         case Value_Macro: return false;
         case Value_Return: assert(!"Unreachable"); return false;
@@ -355,10 +407,16 @@ struct Env {
     EnvPage *first_page;
     Slice<Value> params;
     Value stashed_comment;
+    bool switch_testing;
+    bool switch_stepping;
 };
 
 Env new_environment(Env *super) {
-    return {.super = super, .first_page = NULL, .params = {}, .stashed_comment = {}};
+    return {
+        .super = super, .first_page = NULL, .params = {}, .stashed_comment = {},
+        .switch_testing = super ? super->switch_testing : true,
+        .switch_stepping = super ? super->switch_stepping : false,
+    };
 }
 
 void free_environment(Env *env) {
@@ -431,6 +489,18 @@ bool getassoc(Symbol *sym, Atom key, Value *out) {
     return false;
 }
 
+void set_switch(Env *env, u8 swytch) {
+    if (tolower(swytch) == 't') env->switch_testing = swytch == 'T';
+    if (tolower(swytch) == 'b') env->switch_stepping = swytch == 'B';
+}
+
+bool get_switch(Env *env, u8 swytch) {
+    if (tolower(swytch) == 't') return env->switch_testing;
+    if (tolower(swytch) == 'b') return env->switch_stepping;
+    assert(!"Unreachable");
+    return false;
+}
+
 const char *format_value_type(ValueType type) {
     switch (type) {
         case Value_Bool: return "bool";
@@ -439,7 +509,8 @@ const char *format_value_type(ValueType type) {
         case Value_Ident: return "ident";
         case Value_String: return "string";
         case Value_List: return "list";
-        case Value_Comment: return "comment";
+        case Value_ValueComment: return "value comment";
+        case Value_SwitchComment: return "switch comment";
         case Value_Builtin: return "builtin";
         case Value_Block: return "block";
         case Value_Macro: return "macro";
@@ -456,7 +527,8 @@ const char *format_value(Value val, bool inspect) {
         case Value_Float: return tprint("%g", val.f);
         case Value_Ident: return tprint("%s%.*s", inspect ? "'" : "", ATOMFMT(val.atom));
         case Value_String: return inspect ? tprint("\"%.*s\"", /* TODO Escape */ STRFMT(val.s)) : tprint("%.*s", STRFMT(val.s));
-        case Value_Comment: return tprint("{ %s }", format_value(*val.c.value, false));
+        case Value_ValueComment: return tprint("{* %s *}", format_value(*val.c.value, false));
+        case Value_SwitchComment: return tprint("{- %c *}", val.swytch);
         case Value_Builtin: return "<builtin>";
         case Value_List: {
             BucketArray<u8> buf = {};
@@ -488,7 +560,7 @@ const char *format_value(Value val, bool inspect) {
 }
 
 void stash_comment(Env *env, Value v) {
-    assert(v.type == Value_Comment);
+    assert(v.type == Value_ValueComment);
 
     if (!env->stashed_comment.type) {
         env->stashed_comment = v;
@@ -501,7 +573,7 @@ void stash_comment(Env *env, Value v) {
     news.data[strlen(s)] = '\n';
     copy_slice(news.data + strlen(s) + 1, str_slice(t));
     Value newc = {.type = Value_String, .s = news};
-    env->stashed_comment = {.type = Value_Comment, .c = {.loc = env->stashed_comment.c.loc, .value = copy_to_arena(&arena, newc)}};
+    env->stashed_comment = {.type = Value_ValueComment, .c = {.loc = env->stashed_comment.c.loc, .value = copy_to_arena(&arena, newc)}};
 }
 
 
@@ -760,7 +832,7 @@ Value b_tostring(Slice<Value> args, Env *env, SourceLoc loc) {
 
 Value b_getloc(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env;
-    CHECK_ARG("getloc", 0, Value_Comment);
+    CHECK_ARG("getloc", 0, Value_ValueComment);
 
     Array<Value> list = {};
     list.arena = &arena;
@@ -775,7 +847,7 @@ Value b_getloc(Slice<Value> args, Env *env, SourceLoc loc) {
 
 Value b_peel(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env;
-    CHECK_ARG("peel", 0, Value_Comment);
+    CHECK_ARG("peel", 0, Value_ValueComment);
     return *args[0].c.value;
 }
 
@@ -788,13 +860,30 @@ Value b_make_comment(Slice<Value> args, Env *env, SourceLoc loc) {
         .loc = {.srcname = to_c_string(&arena, args[0].s), .line = (s32)args[1].i, .col = (s32)args[2].i},
         .value = copy_to_arena(&arena, args[3])
     };
-    return {.type = Value_Comment, .c = c};
+    return {.type = Value_ValueComment, .c = c};
 }
 
 Value b_stash_comment(Slice<Value> args, Env *env, SourceLoc loc) {
-    CHECK_ARG("stash-comment", 0, Value_Comment);
+    CHECK_ARG("stash-comment", 0, Value_ValueComment);
     stash_comment(env, args[0]);
     return args[0];
+}
+
+Value b_switch_p(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("switch?", 0, Value_SwitchComment);
+    return {.type = Value_Bool, .b = args[0].swytch == toupper(args[0].swytch)};
+}
+
+Value b_switch_do(Slice<Value> args, Env *env, SourceLoc loc) {
+    CHECK_ARG("switch!", 0, Value_SwitchComment);
+    set_switch(env, args[0].swytch);
+    return {.type = Value_Bool, .b = get_switch(env, args[0].swytch)};
+}
+
+Value b_env_switch_p(Slice<Value> args, Env *env, SourceLoc loc) {
+    CHECK_ARG("env-switch?", 0, Value_SwitchComment);
+    return {.type = Value_Bool, .b = get_switch(env, args[0].swytch)};
 }
 
 Value b_testtable(Slice<Value> args, Env *env, SourceLoc loc) {
@@ -822,7 +911,7 @@ Value b_testtable(Slice<Value> args, Env *env, SourceLoc loc) {
         concat_bytes(&buf, 0);
         Value v = {.type = Value_String, .s = bucket_array_linearize(buf, &arena)};
         ValComment c = {.loc = loc, .value = copy_to_arena(&arena, v)};
-        stash_comment(env, {.type = Value_Comment, .c = c});
+        stash_comment(env, {.type = Value_ValueComment, .c = c});
     }
     return {.type = Value_Bool, .b = true};
 }
@@ -1009,10 +1098,13 @@ Value eval(Slice<Token> *tokens, Env *env) {
     } else if (tok.type == Token_String) {
         slice_advance(tokens, 1);
         return {.type = Value_String, .s = tok.s};
-    } else if (tok.type == Token_Comment) {
+    } else if (tok.type == Token_ValComment) {
         slice_advance(tokens, 1);
         Value s = {.type = Value_String, .s = tok.s};
-        return {.type = Value_Comment, .c = {.loc = tok.loc, .value = copy_to_arena(&arena, s)}};
+        return {.type = Value_ValueComment, .c = {.loc = tok.loc, .value = copy_to_arena(&arena, s)}};
+    } else if (tok.type == Token_SwitchComment) {
+        slice_advance(tokens, 1);
+        return {.type = Value_SwitchComment, .swytch = tok.swytch};
     } else if (tok.type == Token_Ident) {
         slice_advance(tokens, 1);
         Symbol *sym = lookup(env, tok.atom, tok.loc);
@@ -1120,8 +1212,62 @@ Value eval(Slice<Token> *tokens, Env *env) {
     }
 }
 
+void debugger_repl(Slice<Token> *tokens, Env *env) {
+    for (;;) {
+        fprintf(stderr, "%s:%d:%d> ", LOCFMT((*tokens)[0].loc));
+        fflush(stderr);
+        char buf[1024];
+        if (!fgets(buf, sizeof buf, stdin)) {
+            env->switch_stepping = false;
+            break;
+        }
+        char *p = buf;
+
+        while (*p && isspace(*p)) p += 1;
+        Slice<u8> cmd = {.data = (u8 *)p, .count = 0};
+        while (*p && !isspace(*p)) {
+            cmd.count += 1;
+            p += 1;
+        }
+
+        while (*p && isspace(*p)) p += 1;
+        Slice<u8> arg = str_slice(p);
+
+        if (cmd == lit_slice("n") || cmd == lit_slice("next")) {
+            break;
+        } else if (cmd == lit_slice("cont") || cmd == lit_slice("continue")) {
+            env->switch_stepping = false;
+            break;
+        } else if (cmd == lit_slice("exit")) {
+            exit(0);
+        } else if (cmd == lit_slice("peek")) {
+            s32 n = 0;
+            for (u8 ch : arg) {
+                if (!isdigit(ch)) break;
+                n = 10 * n + (ch - '0');
+            }
+            if (n > tokens->count) n = tokens->count;
+            for (s32 i = 0; i < n; i++)
+                fprintf(stderr, "%s\n", format_token((*tokens)[i]));
+        } else if (cmd == lit_slice("skip")) {
+            s32 n = 0;
+            for (u8 ch : arg) {
+                if (!isdigit(ch)) break;
+                n = 10 * n + (ch - '0');
+            }
+            slice_advance(tokens, n);
+        } else if (cmd == lit_slice("p") || cmd == lit_slice("print")) {
+            Slice<Token> toks = tokenize("<debug>", arg);
+            Value result = eval(&toks, env);
+            fprintf(stderr, "%s\n", format_value(result, true));
+        }
+    }
+}
+
 Value exec_stmt(Slice<Token> *tokens, Env *env) {
     if (!tokens->count) return {};
+
+    if (env->switch_stepping) debugger_repl(tokens, env);
 
     if ((*tokens)[0].type == Token_Line) {
         slice_advance(tokens, 1);
@@ -1224,10 +1370,11 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
         return result;
     } else {
         SourceLoc loc = (*tokens)[0].loc;
-        if (env->stashed_comment.type == Value_Comment &&
+        if (env->switch_testing &&
+            env->stashed_comment.type == Value_ValueComment &&
             env->stashed_comment.c.value->type == Value_String &&
             slice_has_prefix(env->stashed_comment.c.value->s, lit_slice("TESTWITH ")) &&
-            (*tokens)[0].type != Token_Comment)
+            (*tokens)[0].type != Token_ValComment)
         {
             Slice<Token> tests = tokenize("<TESTWITH>", env->stashed_comment.c.value->s);
             Slice<Token> stmt;
@@ -1264,9 +1411,12 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
             return have;
         } else {
             Value v = eval(tokens, env);
-            if (v.type == Value_Comment) {
+            if (v.type == Value_ValueComment) {
                 stash_comment(env, v);
-            } else if (env->stashed_comment.type == Value_Comment &&
+            } else if (v.type == Value_SwitchComment) {
+                set_switch(env, v.swytch);
+            } else if (env->switch_testing &&
+                env->stashed_comment.type == Value_ValueComment &&
                 env->stashed_comment.c.value->type == Value_String &&
                 slice_has_prefix(env->stashed_comment.c.value->s, lit_slice("TEST "))
             ) {
@@ -1297,10 +1447,20 @@ Value exec_block(Slice<Token> tokens, Env *env) {
 
 int main(int argc, char **argv) {
     if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
-        fprintf(stderr, "Usage: flamingo [FILE]\n");
+        fprintf(stderr, "Usage: flamingo [-U] [FILE]\n");
         fprintf(stderr, "Call flamingo without an argument to start the REPL.\n");
         fprintf(stderr, "Call it with a file argument to execute that file.\n");
+        fprintf(stderr, "-U: Enable uppercase normalization of identifiers.\n");
         exit(1);
+    }
+
+    const char *input = NULL;
+    for (s32 i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-U") == 0) {
+            switch_uppercase = true;
+        } else {
+            input = argv[i];
+        }
     }
 
     intern(lit_slice("</>")); // Make Atom(0) invalid.
@@ -1345,6 +1505,9 @@ int main(int argc, char **argv) {
     BIND_BUILTIN(peel, 1);
     BIND_BUILTIN1("make-comment", b_make_comment, 4);
     BIND_BUILTIN1("stash-comment", b_stash_comment, 1);
+    BIND_BUILTIN1("switch?", b_switch_p, 1);
+    BIND_BUILTIN1("switch!", b_switch_do, 1);
+    BIND_BUILTIN1("env-switch?", b_env_switch_p, 1);
     BIND_BUILTIN(testtable, 3);
     BIND_BUILTIN(iota, 1);
     BIND_BUILTIN1("iota+", b_iota_plus, 2);
@@ -1407,7 +1570,7 @@ int main(int argc, char **argv) {
         bind(&env, intern(lit_slice("defun")))->value = {.type = Value_Macro, .macro = {.param_count = 3, .body = {.data = body, .count = ARRAY_COUNT(body)}}};
     }
 
-    if (argc == 1) {
+    if (!input) {
         printf("Entering Flamingo REPL.\nExit by pressing Ctrl-C whenever, Ctrl-D on an empty line, or typing .quit.\n\n");
         for (;;) {
             char line[1024];
@@ -1424,7 +1587,6 @@ int main(int argc, char **argv) {
             printf("%s\n", format_value(v, true));
         }
     } else {
-    const char *input = argv[1];
         Slice<u8> src;
         if (!read_entire_file(input, &arena, &src)) {
             fprintf(stderr, "Could not read input file: %s.\n", input);

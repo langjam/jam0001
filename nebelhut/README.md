@@ -54,38 +54,38 @@ println assoclist 'result
 Note that the assoc-list is stored with the variable, *not* the value stored in the variable. Whenever you bind a value to a variable, `bind` clears the assoc-list to prevent stale assocs. If you want to keep the assoc-list, use the builtin function `store` instead.
 
 
-Comments
+Value Comments
 --------
 
-Comments are surrounded by braces (`{` and `}`) and can be nested. Comments are first-class citizens and can be printed or bound to a variable just like any other value.
+Value comments are surrounded by `{*` and `*}` and can be nested. Comments are first-class citizens and can be printed or bound to a variable just like any other value.
 
 ```
-bind 'comment { Looking good. }
+bind 'comment {* Looking good. *}
 println comment
 ```
 
-You can even create your own comments at runtime via the builtin function `make-comment`. It expects 4 arguments since a comment isn’t just a fancy string. It stores information about where in the source code it is located. The first three arguments to `make-comment` are a string representing the name of the source file, an integer representing the line, and an integer representing the column. The last argument is the contents of the comment. While you might assume that this argument must be a string, it, in fact, can be a value of any type. Comments you type directly into a source file contain strings but you are not restricted like that when creating comments.
+You can even create your own value comments at runtime via the builtin function `make-comment`. It expects 4 arguments since a value comment isn’t just a fancy string. It stores information about where in the source code it is located. The first three arguments to `make-comment` are a string representing the name of the source file, an integer representing the line, and an integer representing the column. The last argument is the contents of the comment. While you might assume that this argument must be a string, it, in fact, can be a value of any type. Value comments you type directly into a source file contain strings but you are not restricted like that when creating comments.
 
 ```
 make-comment "make-comment" 1 1 "My first comment."
 make-comment "included_file.fl" 10 13 (1 3 5)
 ```
 
-Flamingo provides a few builtin functions to operate on comment values: `getloc` to retrieve the source location in form of an assoc list (`('source "included_file.fl" 'line 10 'col 13)`) and `peel` to retrieve the stored value.
+Flamingo provides a few builtin functions to operate on value comments: `getloc` to retrieve the source location in form of an assoc list (`('source "included_file.fl" 'line 10 'col 13)`) and `peel` to retrieve the stored value.
 
-Furthermore, there is the concept of a stashed comment. If a statement (basically, a line of code) contains only a comment, Flamingo doesn’t just throw it away like it would do with integers or strings; it stores it. Functions can access this stashed comment to do whatever they want. `bind` uses this to store comments as documentation in variables if they are preceded by comments.
+Furthermore, there is the concept of a stashed comment. If a statement (basically, a line of code) contains only a value comment, Flamingo doesn’t just throw it away like it would do with integers or strings; it stores it. Functions can access this stashed comment to do whatever they want. `bind` uses this to store comments as documentation in variables if they are preceded by comments.
 
 ```
-{ The anwer to life, the universe, and everything. }
+{* The anwer to life, the universe, and everything. *}
 bind 'answer 42
 println assoclist 'answer
 ```
 
-If you split a comment across several lines, they are automatically concatenated.
+If you split a value comment across several lines, they are automatically concatenated.
 
 ```
-{ There is much to say about the variable foo. }
-{ But we don’t want to dwell on it. }
+{* There is much to say about the variable foo. *}
+{* But we don’t want to dwell on it. *}
 bind 'foo 15
 println assoclist 'foo
 ```
@@ -93,9 +93,9 @@ println assoclist 'foo
 The stashed comment is cleared, when an empty line is encountered. Note that a comment is stashed in the current scope.
 
 ```
-{ Just a wasted comment. }
+{* Just a wasted comment. *}
 
-{ foo is alright. }
+{* foo is alright. *}
 bind 'foo "foo"
 println assoclist 'foo
 ```
@@ -109,7 +109,7 @@ Test comments
 If a statement is executed while a string comment is stashed that begins with "TEST ", Flamingo evaluates the expression after "TEST " and checks whether the expression the statement produces matches the test expression. If they are not equal, an error is raised and execution stops.
 
 ```
-{ TEST 13 } + 1 * 2 6
+{* TEST 13 *} + 1 * 2 6
 ```
 
 The stashed comment is cleared afterwards.
@@ -117,11 +117,11 @@ The stashed comment is cleared afterwards.
 Another comment test directive is `TESTWITH`. It expects an identifier and two values (separated by whitespace). It binds the first value to the given identifier and afterwards compares the second expression with the statement result. What makes `TESTWITH` special is that a comment can contain several `TESTWITH` directives and the statement is executed for every directive. Imagine, for example, you really wanted to make sure that Flamingo doesn’t mess up multiplication with 0. You can test it like this:
 
 ```
-{ TESTWITH x 0 0 }
-{ TESTWITH x 1 0 }
-{ TESTWITH x 2 0 }
-{ TESTWITH x 7 0 }
-{ TESTWITH x 12 0 }
+{* TESTWITH x 0 0 *}
+{* TESTWITH x 1 0 *}
+{* TESTWITH x 2 0 *}
+{* TESTWITH x 7 0 *}
+{* TESTWITH x 12 0 *}
 * x 0
 ```
 
@@ -142,6 +142,29 @@ testtable 'x (0 1 2 3 4) (yes no yes no yes)
 ```
 
 For the specific case of number ranges the first list could be more easily generated with the builtin functions `iota` and `iota+`.
+
+
+Switch comments
+---------------
+
+Another kind of comment in Flamingo is the switch comment. Switch comments are a single character surrounded by `{-` and `-}` (an optional whitespace). These switches are flags that govern the execution of Flamingo programs. The `T` switch for example enables the testing comments we’ve just seen (which is the default). If you use the `t` switch, testing is disabled.
+
+```
+{* TEST 5 *}
++ 2 3
+
+{- t -}
+{* TEST 6 *}
++ 2 3
+
+{- T -}
+{* TEST 5 *}
++ 2 3
+```
+
+There are two kinds of switch comments. The ones that govern the lexing and are enabled/disabled as soon as they are encountered, and the ones that produce tokens and are only acted on when executed. `u`/`U` is an example of a lexing switch. When enabled, it normalizes every identifier to be uppercase. Note that this will make identifiers (and therefore variables and builtins) that were created with lowercase letters unavailable. Further note that the builtins are lowercase. If you would like to work completely in uppercase, use the `-U` command line switch.
+
+For every switch the uppercase version enables something while the lowercase version disables it. There is also a debugger available via the `b`/`B` switch. See the reference for information about the debugger and a list of all avaiable switches.
 
 
 Control structures
@@ -298,19 +321,22 @@ We iterate over the list of the parameters and add some code to the already stor
 Reference
 ---------
 
-There are 20 types of tokens in Flamingo:
+There are 21 types of tokens in Flamingo:
 
-> ints floats identifiers comments strings `(` `)` `[` `]` `'` `<<` `>>` `&` `,` `if` `else` `for` `macro` `return` an empty line
+> ints, floats, identifiers, value comments, switch comments, strings, an empty line <br>
+> `(` `)` `[` `]` `'` `<<` `>>` `&` `,` `if` `else` `for` `macro` `return`
 
 Ints and floats can only be written in decimal notation with an optional leading `-`. Floats must start with a minus sign or a digit (`.5` is not a valid float literal).
 
-Identifiers consist of A–Z, a–z, `_`, `+`, `-`, `*`, `/`, `<`, `>`, `=`, `.` and 0–9 but they cannot start with a digit. Note that `<<` and `>>` are not identifiers but their own token types.
+Identifiers consist of A–Z, a–z, `_`, `+`, `-`, `*`, `/`, `<`, `>`, `=`, `.`, `?`, `!` and 0–9 but they cannot start with a digit. Note that `<<` and `>>` are not identifiers but their own token types.
 
-Comments are text enclosed in `{` and `}`. The text is arbitrary as long as `{` and `}` are balanced.
+Value Comments are text enclosed in `{*` and `*}`. The text is arbitrary as long as `{*` and `*}` are balanced.
+
+Switch comments are a single character enclosed in `{-` and `-}` (with optional whitespace). There are lexing switches that are enabled/disabled as soon as they are lexed, and there are regular switches that must be executed to be enabled/disabled. Lexing switches do not appear in the list of tokens. Non-lexing switch comments evaluate to values.
 
 Strings are enclosed in `"`. Available escape sequences are: `\n`, `\t` and `\"`. Strings can contain newlines.
 
-An expression consists of a value literal (ints, floats, strings, comments), an identifier, a list (several expressions surrounded by `(` and `)` separated by whitespace), a block (several statements surrounded by `[` and `]`) or a string-list (several expressions surrounded by `<<` and `>>`).
+An expression consists of a value literal (ints, floats, strings, value comments), an identifier, a list (several expressions surrounded by `(` and `)` separated by whitespace), a block (several statements surrounded by `[` and `]`) or a string-list (several expressions surrounded by `<<` and `>>`).
 
 The expressions in a list are evaluated and a list value is created.
 
@@ -332,13 +358,27 @@ A `macro` statement is followed by an identifier, an integer token and a block. 
 
 A `return` is followed by an expression and ends the execution of an function call early resulting in the expression value. An execution of a code block constitutes a function call if: its origin is `eval`, its origin is `apply`, its origin is a parsed function call due to a bound block value having an associated `'arity`.
 
-If a statement is an expression that results in a comment, this comment is stashed. See `stash-comment` for further semantics.
+If a statement is an expression that results in a value comment, this comment is stashed. See `stash-comment` for further semantics.
 
-If a statment is an expression and there is a stashed string comment beginning with "`TEST `" the expression following "`TEST `" is evaluated in the current scope and this test expression is tested for equality with the result of the statement of expression. If they are not equal, execution halts and a failure is displayed. If there is a stashed string comment beginning with "`TESTWITH `", the statement is executed for every `TESTWITH` clause in the comment. A `TESTWITH` clause is followed by an identifier and two expressions. Both expressions are evaluated in the current scope. The result of the first expression is bound to the identifier in the current scope before the statement is executed. The result of statement is compared with the second expression for equality. If they are not equal, execution halts and a failure is displayed.
+If a statement is an expression that results in a switch comment, the corresponding switch is set in the current scope. A new scope inherits the switch values of its parent. Available switches are:
+
+- `u`/`U`: Lexing switch that normalizes every identifier to be uppercase.
+- `h`/`H`: Lexing switch that sets the integer base to 16.
+- `t`/`T`: Enable or disable testing
+- `b`/`B`: Enable or disable step debugging.
+
+If a statment is an expression and there is a stashed string comment beginning with "`TEST `" and testing is enabled, the expression following "`TEST `" is evaluated in the current scope and this test expression is tested for equality with the result of the statement of expression. If they are not equal, execution halts and a failure is displayed. If there is a stashed string comment beginning with "`TESTWITH `" and testing is enabled, the statement is executed for every `TESTWITH` clause in the comment. A `TESTWITH` clause is followed by an identifier and two expressions. Both expressions are evaluated in the current scope. The result of the first expression is bound to the identifier in the current scope before the statement is executed. The result of statement is compared with the second expression for equality. If they are not equal, execution halts and a failure is displayed.
 
 When a variable that has a macro value bound to it is encountered, the parser consumes as many macro arguments as the macro has designated parameters. A macro argument is a regular token or several tokens enclosed between balanced parentheses and brackets. The outer parentheses/brackets are not part of the argument. To insert the arguments into the macro body every token that is not preceded by a `,` (comma) is copied to the output. A comma followed by an integer token copies the corresponding argument into the output. A comma followed by the identifier `len` and an integer token, writes an integer token to the output that is the length of the corresponding argument. A comma followed by the identifier `for`, an integer token and a body evaluates the body for every token in the argument. Two additional parameters are made available to the body: the token and the loop index as an integer token. When the output list of tokens is finished, it is executed as a block in the current environment.
 
-There are 10 types of values in Flamingo: bools, ints, floats, identifiers, strings, lists, comments, builtins, blocks and macros.
+When a statement is about to be executed and step debugging is disabled, a debugger command line is launched allowing you to introspect and manipulate the program state. The command and the singular argument are separated by spaces. The following commands are available:
+
+- `p`/`print`: Takes an expression as argument. Print the result of an expression in the current scope.
+- `peek`: Takes a number as argument. Print that many tokens that are next to be executed.
+- `skip`: Takes a number as argument. Skip that many tokens that are next to be executed.
+- `n`/`next`: Execute the next statement but launch the debugger before the execution of the next statement.
+- `cont`/`continue`: Disable step debugging and continue the execution as normal.
+- `exit`: Halt the execution.
 
 ---
 
@@ -387,7 +427,7 @@ There are 10 types of values in Flamingo: bools, ints, floats, identifiers, stri
 > If both arguments are integers, return the modulus of an integer division. Otherwise return the modulus of a float division.
 
 `= a:value b:value`
-> If `a` and `b` are of different types, they are not equal. Integers, floats, strings, identifiers and lists have obvious equality. Comments compare their source location as well as their contained value. Blocks and macros are never equal to each other (not even to themselves).
+> If `a` and `b` are of different types, they are not equal. Integers, floats, strings, identifiers and lists have obvious equality. Value Comments compare their source location as well as their contained value. Blocks and macros are never equal to each other (not even to themselves).
 
 `<> a:value b:value`
 > Negation of `= a b`.
@@ -414,17 +454,26 @@ There are 10 types of values in Flamingo: bools, ints, floats, identifiers, stri
 `->string a:value`
 > Convert `a` to a string.
 
-`getloc c:comment`
+`getloc c:value-comment`
 > Return an assoc-list containing the source location of `c`. The keys are: `'source` (a string), `'line` (an integer) and `'col` (an integer).
 
-`peel c:comment`
+`peel c:value-comment`
 > Return the contained value of `c`.
 
 `make-comment src:string line:int col:int val:value`
-> Create a comment value.
+> Create a value comment.
 
-`stash-comment c:comment`
+`stash-comment c:value-comment`
 > Stash `c` in the current scope. If `c` already contains a comment, the values of both comments are converted to string, concatenated with a newline character in between, and a new comment with the source location of the first comment and the combined value is stashed.
+
+`switch? c:switch-comment`
+> Return a bool whether `c` contains an enabled or disalbed (non-lexing) switch. This does not query the environment but just `c`.
+
+`switch! c:switch-comment`
+> Set the (non-lexing) switch in the current scope (depending whether `c` is upper- or lowercase). Return a bool whether the switch is enabled in the current scope.
+
+`env-switch? c:switch-comment`
+> Return a bool whether the (non-lexing) switch corresponding to `c` in the current scope is enabled. The state of `c` is ignored.
 
 `testtable name:ident inputs:list expected:list`
 > `inputs` and `expected` must match in size. Create and stash a `TESTWITH` comment for the given and name and every pair of elements of `inputs` and `expected`.
