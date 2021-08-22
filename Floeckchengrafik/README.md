@@ -93,6 +93,8 @@ Note: operation can be one of the following characters: +, -, *, /, %
 |---|---|
 |`if(<condition> : { /* statement body */ }?`|`if (1 == 1 : {out("1 is 1!")? })?`|
 
+In If Statements you can use following operators for your operation: `==`, `!=`, `<`, `<=`, `>`, `>=`, `&&`, `||`, `!!`
+
 ### Internal Functions: <br>
 #### out()
 
