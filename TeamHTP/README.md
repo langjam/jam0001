@@ -67,12 +67,19 @@ $ npm run dev # run without building
 $ npm run build # build to js
 ```
 
-## Builtins
+## Mouthful Language & Builtins
 
 Many JavaScript features are already accessible, you should be able to 1-to-1 translate our Smalltalk-like Mouthful language to JavaScript.
 
 e.g. `console log: 'Hello, World!'`
 
+Most syntax follows smalltalk as close as possible. However, there are a few major departures. Such as:
+
+Arrays are written as: `@{ 1 2 3 4 5 }`
+
+Strings with single quotes: `'this is a string'`
+
+And a grouped expression as: `${4 + 4}`, not with parenthesis like many other languages.
 
 Here are some additions to overcome some things that can't be 1-to-1 translated:
 
