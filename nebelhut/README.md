@@ -329,7 +329,7 @@ There are 21 types of tokens in Flamingo:
 
 Ints and floats can only be written in decimal notation with an optional leading `-`. Floats must start with a minus sign or a digit (`.5` is not a valid float literal).
 
-Identifiers consist of A–Z, a–z, `_`, `+`, `-`, `*`, `/`, `<`, `>`, `=`, `.`, `?`, `!` and 0–9 but they cannot start with a digit. Note that `<<` and `>>` are not identifiers but their own token types.
+Identifiers consist of A—Z, a—z, `_`, `+`, `-`, `*`, `/`, `<`, `>`, `=`, `.`, `?`, `!` and 0–9 but they cannot start with a digit. Note that `<<` and `>>` are not identifiers but their own token types.
 
 Value Comments are text enclosed in `{*` and `*}`. The text is arbitrary as long as `{*` and `*}` are balanced.
 
@@ -377,6 +377,7 @@ When a variable that has a macro value bound to it is encountered, the parser co
 When a statement is about to be executed and step debugging is disabled, a debugger command line is launched allowing you to introspect and manipulate the program state. The command and the singular argument are separated by spaces. The following commands are available:
 
 - `p`/`print`: Takes an expression as argument. Print the result of an expression in the current scope.
+- `set`: Takes a name and an expression as arguments. Bind the result of evaluating the expression in the current scope to the name in the current scope.
 - `peek`: Takes a number as argument. Print that many tokens that are next to be executed.
 - `skip`: Takes a number as argument. Skip that many tokens that are next to be executed.
 - `n`/`next`: Execute the next statement but launch the debugger before the execution of the next statement.

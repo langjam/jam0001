@@ -37,6 +37,21 @@ Atom intern(Slice<u8> n) {
 #define ATOMFMT(a) STRFMT(intern_pool[(a).inner])
 Atom atom_doc, atom_len, atom_testwith, atom_source, atom_line, atom_col, atom_arity;
 
+const char *escape_string(Slice<u8> s) {
+    BucketArray<u8> buf = {};
+    buf.arena = &arena;
+    concat_bytes(&buf, '"');
+    while (s.count) {
+        if (s[0] == '\n') concat_bytes(&buf, '\\', 'n');
+        else if (s[0] == '\t') concat_bytes(&buf, '\\', 't');
+        else if (s[0] == '"') concat_bytes(&buf, '\\', '"');
+        else concat_bytes(&buf, s[0]);
+        slice_advance(&s, 1);
+    }
+    concat_bytes(&buf, '"', 0);
+    return (char *)bucket_array_linearize(buf, &arena).data;
+}
+
 enum { MAX_ARITY = 16 };
 
 enum TokenType {
@@ -107,8 +122,7 @@ const char *format_token(Token tok) {
     } else if (tok.type == Token_Ident) {
         return tprint("%.*s", ATOMFMT(tok.atom));
     } else if (tok.type == Token_String) {
-        // TODO Escape
-        return tprint("\"%.*s\"", STRFMT(tok.s));
+        return escape_string(tok.s);
     } else if (tok.type == Token_ValComment) {
         return tprint("{* %.*s *}", STRFMT(tok.s));
     } else {
@@ -575,7 +589,7 @@ const char *format_value(Value val, bool inspect) {
         case Value_Int: return tprint("%ld", val.i);
         case Value_Float: return tprint("%g", val.f);
         case Value_Ident: return tprint("%s%.*s", inspect ? "'" : "", ATOMFMT(val.atom));
-        case Value_String: return inspect ? tprint("\"%.*s\"", /* TODO Escape */ STRFMT(val.s)) : tprint("%.*s", STRFMT(val.s));
+        case Value_String: return inspect ? escape_string(val.s) : tprint("%.*s", STRFMT(val.s));
         case Value_ValueComment: return tprint("{* %s *}", format_value(*val.c.value, false));
         case Value_SwitchComment: return tprint("{- %c *}", val.swytch);
         case Value_Builtin: return "<builtin>";
@@ -1310,7 +1324,14 @@ void debugger_repl(Slice<Token> *tokens, Env *env) {
         }
 
         while (*p && isspace(*p)) p += 1;
-        Slice<u8> arg = str_slice(p);
+        Slice<u8> arg1 = {.data = (u8 *)p, .count = 0};
+        while (*p && !isspace(*p)) {
+            arg1.count += 1;
+            p += 1;
+        }
+
+        while (*p && isspace(*p)) p += 1;
+        Slice<u8> arg2 = str_slice(p);
 
         if (cmd == lit_slice("n") || cmd == lit_slice("next")) {
             break;
@@ -1321,7 +1342,7 @@ void debugger_repl(Slice<Token> *tokens, Env *env) {
             exit(0);
         } else if (cmd == lit_slice("peek")) {
             s32 n = 0;
-            for (u8 ch : arg) {
+            for (u8 ch : arg1) {
                 if (!isdigit(ch)) break;
                 n = 10 * n + (ch - '0');
             }
@@ -1330,18 +1351,31 @@ void debugger_repl(Slice<Token> *tokens, Env *env) {
                 fprintf(stderr, "%s\n", format_token((*tokens)[i]));
         } else if (cmd == lit_slice("skip")) {
             s32 n = 0;
-            for (u8 ch : arg) {
+            for (u8 ch : arg1) {
                 if (!isdigit(ch)) break;
                 n = 10 * n + (ch - '0');
             }
             slice_advance(tokens, n);
         } else if (cmd == lit_slice("p") || cmd == lit_slice("print")) {
             Error err = {};
-            Slice<Token> toks = tokenize("<debug>", arg, &err);
+            Slice<Token> toks = tokenize("<debug>", arg1, &err);
             if (!err.msg) {
                 Value result = eval(&toks, env);
                 if (result.type != Value_Failure)
                     fprintf(stderr, "%s\n", format_value(result, true));
+            }
+        } else if (cmd == lit_slice("set")) {
+            Error err = {};
+            Slice<Token> toks = tokenize("<debug>", arg2, &err);
+            if (!err.msg) {
+                Value result = eval(&toks, env);
+                if (result.type == Value_Failure) {
+                    fprintf(stderr, "An error occured while evaluating the expression:\n");
+                    fprintf(stderr, "%s:%d:%d: %s\n", LOCFMT(result.fail.loc), result.fail.msg);
+                } else {
+                    fprintf(stderr, "Binding %.*s to %s.\n", STRFMT(arg1), format_value(result, true));
+                    bind(env, intern(arg1))->value = result;
+                }
             }
         }
     }
