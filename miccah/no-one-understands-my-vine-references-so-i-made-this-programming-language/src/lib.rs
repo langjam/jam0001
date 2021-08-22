@@ -550,3 +550,56 @@ fn vm_if() {
     ]);
     assert_eq!(vm.primary, 911);
 }
+
+#[test]
+#[rustfmt::skip]
+fn vm_loop() {
+    let mut vm = Vm::new();
+    vm.run(vec![
+        TokenKind::Main,
+        TokenKind::Inc, TokenKind::Double, TokenKind::Double, // primary = 4
+        TokenKind::LoopStart,
+            TokenKind::Swap,
+            TokenKind::Inc, // secondary += 1
+            TokenKind::Swap,
+            TokenKind::Dec, // primary -= 1
+        TokenKind::LoopEnd,
+        TokenKind::Eof
+    ]);
+    assert_eq!(vm.primary, 0);
+    assert_eq!(vm.secondary, 4);
+
+    vm = Vm::new();
+    vm.run(vec![
+        TokenKind::Main,
+        TokenKind::Inc, TokenKind::Double, TokenKind::Double, // primary = 4
+        TokenKind::LoopStart,
+            TokenKind::Swap,
+            TokenKind::Inc, // secondary += 1
+            TokenKind::Swap,
+            TokenKind::Dec, // primary -= 1
+            TokenKind::Break,
+        TokenKind::LoopEnd,
+        TokenKind::Eof
+    ]);
+    assert_eq!(vm.primary, 3);
+    assert_eq!(vm.secondary, 1);
+
+    vm = Vm::new();
+    vm.run(vec![
+        TokenKind::Main,
+        TokenKind::Inc, TokenKind::Double, TokenKind::Double, // primary = 4
+        TokenKind::LoopStart,
+            TokenKind::Swap,
+            TokenKind::Inc, // secondary += 1
+            TokenKind::Swap,
+            TokenKind::Dec, // primary -= 1
+            TokenKind::Compare, TokenKind::If,
+                TokenKind::Break, // if primary == secondary
+            TokenKind::EndIf,
+        TokenKind::LoopEnd,
+        TokenKind::Eof
+    ]);
+    assert_eq!(vm.primary, 2);
+    assert_eq!(vm.secondary, 2);
+}
