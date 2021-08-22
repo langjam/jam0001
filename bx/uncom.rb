@@ -3,16 +3,18 @@
 # string.undump
 
 class UnFunc
-	def initialize(name, checks, func)
-		raise "type checks must match func arity" if checks.length != func.arity
+	def initialize(name, checks, func, arity: false)
 		@name = name
 		@checks = checks
 		@func = func
+		@arity = func.arity
+		@arity = arity if arity.is_a? Integer
+		raise "type checks must match func arity" if checks.length != @arity
 	end
 
 	def is_callable?(stack)
-		return false if stack.length < @func.arity
-		stack[-@func.arity, @func.arity].each_with_index do |item, idx|
+		return false if stack.length < @arity
+		stack[-@arity, @arity].each_with_index do |item, idx|
 			check = @checks[idx]
 			return false if check == :num and not item.is_a? Integer
 			return false if check == :bool and not (item.is_a?(FalseClass) or item.is_a?(TrueClass))
@@ -26,7 +28,7 @@ class UnFunc
 
 	def call(uncom)
 		# uncom.data.push(@func.call(*uncom.data.pop(@func.arity)))
-		val = (@func.call(*uncom.data.pop(@func.arity)))
+		val = (@func.call(*uncom.data.pop(@arity)))
 		uncom.data.push val if val != nil
 	end
 
@@ -48,10 +50,11 @@ $uncom_words = {}
 ["*", [:num, :num], lambda {|a, b| a * b }],
 ["/", [:num, :num], lambda {|a, b| a / b }],
 ["%", [:num, :num], lambda {|a, b| a % b }],
+["inv", [:num], lambda {|a| -a }],
+["neg", [:num], lambda {|a| -a }],
 
 [">", [:num, :num], lambda {|a, b| a > b }],
 ["<", [:num, :num], lambda {|a, b| a < b }],
-
 ["==", [:any, :any], lambda {|a, b| a == b }],
 
 ["and", [:bool, :bool], lambda {|a, b| a and b }],
@@ -70,6 +73,26 @@ $uncom_words = {}
 ].each {|word|
 	$uncom_words[word[0]] = UnFunc.new(*word)
 }
+
+$uncom_words["def"] = Class.new(UnFunc) do
+	def call(uncom)
+		body = uncom.data.pop
+		checks = uncom.data.pop.to_s.split(" ").map {|x| x.to_sym }
+		name = uncom.data.pop.to_s.split(" ")[0]
+
+		uncom.dict_set(name, Class.new(UnFunc) do
+			def initialize(name, checks, body)
+				@name = name
+				@body = body
+				@checks = checks
+				@arity = checks.length
+			end
+			def call(uncom)
+				uncom.call_quote(@body)
+			end
+		end.new(name, checks, body))
+	end
+end.new("def", [:quote, :quote, :quote], lambda {|a, b, c|})
 
 class UnComment
 	# NOTE: MAKE SURE THAT THE LENGTH OF THE SOURCE STRING NEVER GETS CHANGED
@@ -121,6 +144,7 @@ class UnQuote
 		@start = start
 		@len = len
 	end
+	def start() @start end
 
 	def to_s
 		@source[@start + 1, @len - 2]
@@ -130,12 +154,6 @@ class UnQuote
 		@source[@start, @len]
 	end
 end
-
-# TODO:
-# we need a way to set their check functions and arity
-# for simlicity let's not have any local functions
-
-# functions are declared with `def`, def takes 2 quotes, {name pred-1 pred-2 ...} { body }
 
 class Uncom
 	def initialize(source = "")
@@ -162,6 +180,10 @@ class Uncom
 		return @data_stacks.last
 	end
 
+	def dict_set(k, v)
+		@dict.first[k] = v
+	end
+
 	def run(steps: true, print_words: false)
 		while (steps.is_a? TrueClass or steps > 0) do
 			steps -= 1 if steps.is_a? Integer
@@ -177,6 +199,11 @@ class Uncom
 	end
 
 	# NOTE: WHEN WE DO A CALL, CHECK IF WE JUMPED INTO A COMMENT, IF SO COMEBACK FROM CALL
+
+	def call_quote(q)
+		@return_stack.push(@instruction_ptr)
+		@instruction_ptr = q.start + 1
+	end
 
 	def next_word
 		def cur_char() @source[@instruction_ptr] end
@@ -267,6 +294,17 @@ class Uncom
 			return do_word(word.name + "=")
 		end
 
+
+		# found local -> do word
+		if @dict.last.member? word then
+			func.push @dict.last[word]
+			return try_apply_stacks()
+		elsif word[0] != "$" and word.length > 1 and word[-1] == "=" then
+		# matches local= -> make local
+			@dict.last.merge! gen_variable_funcs(word[0..-2], @vars.last)
+			return do_word(word) # word we just made has to get pushed now
+		end
+
 		# found global -> do word
 		if @dict.first.member? word then
 			func.push @dict.first[word]
@@ -277,23 +315,10 @@ class Uncom
 			return do_word(word) # word we just made has to get pushed now
 		end
 
-		# found local -> do word
-		if @dict.last.member? word then
-			func.push @dict.last[word]
-			return try_apply_stacks()
-		elsif word.length > 1 and word[-1] == "=" then
-		# matches local= -> make local
-			@dict.last.merge! gen_variable_funcs(word[0..-2], @vars.last)
-			return do_word(word) # word we just made has to get pushed now
-		end
-
 		return do_word_special word
 	end
 
 	def do_word_special(word)
-		# TODO
-		# } to pop return stack, make sure to raise error on underflow
-
 		# ( -> push data + func stacks
 		if word == "(" then
 			@data_stacks.push([])
@@ -323,6 +348,15 @@ class Uncom
 			end
 			@dict.pop
 			@vars.pop
+			return false # no funcs called
+
+		# } -> pop return stack and return from quote
+		elsif word == "}" then
+			if @return_stack.length < 1 then
+				raise "UNBALENCED }"
+				return false
+			end
+			@instruction_ptr = @return_stack.pop()
 			return false # no funcs called
 
 		# . -> clear func and data stacks
@@ -366,11 +400,6 @@ def do_source(source)
 	#	f.close
 	#end
 end
-
-do_source("  dookie= $smokey= 42 -69 (1 + 2 + 3) # this is comment
-and #these are normal words
-#comment again
-0")
 
 # t e s t s #
 (lambda {
