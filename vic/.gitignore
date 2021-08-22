@@ -1,0 +1,6 @@
+out/
+*.iml
+.envrc
+.idea*
+.metals*
+.bloop*
