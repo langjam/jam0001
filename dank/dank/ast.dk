@@ -21,3 +21,23 @@ fn test(a, b, c) {
 
 print func(2, 2, 2);
 
+
+
+fn traverse(root) {
+    if !root { return; }
+
+    print root.val;
+    traverse(root.left);
+    traverse(root.right);
+}
+
+let tree = {
+    val: 5,
+    left: { val: 7, right: null, left: null  },
+    right: {
+        val: 3,
+        left: { val: 4, left: null, right: null },
+        right: { val: 2, left: null, right: null }
+    }
+};
+traverse(tree);

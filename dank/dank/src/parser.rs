@@ -216,7 +216,7 @@ peg::parser!(pub grammar dank() for str {
 
     pub rule object() -> Expr<'input>
         = start:position!()
-         "{" ___ entries:(k:ident() _ ":" _ v:expr() {(k, v)})  ** ("," _) ___ "}"
+         "{" ___ entries:(k:ident() _ ":" _ v:expr() {(k, v)})  ** ("," ___) ___ "}"
           end:position!() {
             Expr {
                 span: start..end,
