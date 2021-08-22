@@ -11,7 +11,6 @@ class ComstructLexer(Lexer):
         "AND",  # &&
         "NOT",  # !!
         "PLUS",  # +
-        "UMINUS",  # -
         "MINUS",  # -
         "MULTIPLY",  # *
         "DIVIDE",  # /
@@ -53,7 +52,6 @@ class ComstructLexer(Lexer):
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
     STRING = r'"[^\"^\n]+"|""'
     PLUS = r'\+'
-    UMINUS = r'-'
     MINUS = r'-'
     MULTIPLY = r'\*'
     DIVIDE = r'/'
