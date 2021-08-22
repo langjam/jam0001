@@ -1,0 +1,104 @@
+% crochet
+
+singleton h;
+local type element(box);
+local type html-event(box);
+
+
+command h element: (Tag is text) = new element(foreign belle.box(Tag));
+
+command element add: (Child is element) do
+  foreign belle.append(self.box, Child.box);
+  self;
+end
+
+command element add: (Child is text) do
+  foreign belle.append(self.box, foreign belle.text(Child));
+  self;
+end
+
+command element add: (Child is interpolation) do
+  for Part in Child parts do
+    self add: Part
+  end
+  self;
+end
+
+command element add: (Children is list) do
+  for X in Children do self add: X end
+  self;
+end
+
+command element set-attribute: (Name is text) to: (Value is text) do
+  foreign belle.set-attribute(self.box, Name, Value);
+  self;
+end
+
+command element set-attribute: Name to: (Value is interpolation) =
+  self set-attribute: Name to: Value flatten-into-plain-text;
+
+command element attribute: (Name is text) =
+  foreign belle.get-attribute(self.box, Name);
+
+command element class: Name = self set-attribute: "class" to: "[self attribute: "class"] [Name]";
+command element set-class: Name = self set-attribute: "class" to: Name;
+command element id: Name = self set-attribute: "id" to: Name;
+command element title: Text = self set-attribute: "title" to: Text;
+
+command element on: (Event is text) do: (Handler is (Event -> B)) do
+  foreign belle.add-listener(self.box, Event, { Ev in Handler(new html-event(Ev)) });
+  self;
+end
+
+command element input-content = foreign belle.get-contents(self.box);
+command element set-input-content: (Content is text) do
+  foreign belle.set-contents(self.box, Content);
+  self;
+end
+
+command h page: Name =
+  h box class: "belle-page [Name]";
+
+command h column =
+  h box class: "belle-column";
+
+command h row =
+  h box class: "belle-row";
+
+command h panel =
+  h box class: "belle-panel";
+
+command h title: Title =
+  h element: "h1"
+    | class: "belle-title"
+    | add: Title;
+
+command h paragraph =
+  h element: "p";
+
+command h box =
+  h element: "div";
+
+command h button =
+  h element: "button";
+
+command h program-button =
+  h button class: "belle-program-button";
+
+command h icon: (Name is text) =
+  h element: "i"
+    | class: "belle-icon fas [Name]";
+
+command h link =
+  h element: "a";
+
+command h menu-link: Content =
+  h link | class: "menu-link" | add: [Content];
+
+command h code-editor =
+  new element(foreign belle.code-editor())
+    | class: "belle-code-editor";
+
+command h text-input =
+  h element: "input"
+    | set-attribute: "type" to: "text";

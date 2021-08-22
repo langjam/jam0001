@@ -1,0 +1,80 @@
+<?xml  version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0" >
+<dict>
+  <key>fileTypes</key>
+  <array>
+    <string>aaa</string>
+   </array>
+  <key>name</key>
+  <string>aaa</string>
+  <key>patterns</key>
+  <array>
+    <dict>
+      <key>include</key>
+      <string>#main</string>
+    </dict>
+   </array>
+  <key>scopeName</key>
+  <string>source.aaa</string>
+  <key>uuid</key>
+  <string></string>
+  <key>repository</key>
+  <dict>
+    <key>main</key>
+    <dict>
+      <key>patterns</key>
+      <array>
+        <dict>
+          <key>match</key>
+          <string>(?:\b(let|record)\b)</string>
+          <key>name</key>
+          <string>keyword.control.aaa</string>
+        </dict>
+        <dict>
+          <key>match</key>
+          <string>([\x{003a}\x{0028}\x{0029}\x{007b}\x{007d}\x{003d}\x{003b}\x{002c}.\x{007c}])</string>
+          <key>name</key>
+          <string>punctuation.aaa</string>
+        </dict>
+        <dict>
+          <key>match</key>
+          <string>(\d+)</string>
+          <key>name</key>
+          <string>constant.numeric.aaa</string>
+        </dict>
+        <dict>
+          <key>match</key>
+          <string>(&quot;[^\x{0022}]*&quot;)</string>
+          <key>name</key>
+          <string>string.aaa</string>
+        </dict>
+        <dict>
+          <key>match</key>
+          <string>(\b\w+\b)</string>
+          <key>name</key>
+          <string>entity.name.aaa</string>
+        </dict>
+        <dict>
+          <key>match</key>
+          <string>(&lt;(?:\w+ ?)+&gt;)</string>
+          <key>name</key>
+          <string>entity.name.tag.aaa</string>
+        </dict>
+        <dict>
+          <key>match</key>
+          <string>(&lt;\s*&gt;)</string>
+          <key>name</key>
+          <string>entity.name.exception.aaa</string>
+        </dict>
+        <dict>
+          <key>match</key>
+          <string>(\/\/.*$)</string>
+          <key>name</key>
+          <string>comment.aaa</string>
+        </dict>
+       </array>
+    </dict>
+  </dict>
+</dict>
+</plist>

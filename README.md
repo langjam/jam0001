@@ -2,6 +2,10 @@
 
 Welcome to the first langjam! We're excited to get started.
 
+## Theme
+
+The theme of the jam is "first-class comments".
+
 ## Getting started
 
 To participate:

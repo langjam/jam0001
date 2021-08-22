@@ -1,0 +1,7 @@
+// Program to calculate factorial of numbers
+
+def f(x):
+    if x < 2: return 1   /* Return 1 if x is lower than 2 */
+    return x * f(x)  PLEASE NOTE that this is a recursive call
+
+print(f(10)) ⍝ Print the factorial of 10

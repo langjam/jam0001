@@ -1,0 +1,39 @@
+// fcc (first class comments) is a simple language without any branching
+// or operator precedence.
+
+// Variables are defined in the comments using square brackets as markup
+// characters. These variables can be used in statements which evaluate
+// at the end of each line as another comment.
+
+// Statements can also be assigned to a new variable as shown in this
+// brief example.
+
+// On a square all [ sides: 4.5 ] are the same length...
+// so if each side was [ length: 8.5 ] cm long,
+// The perimeter would be:
+length * sides // 38.25
+
+// the total area of the square would be:
+area_of_a_square: length * length // 72.25
+
+// and if it were a cube, the area would be:
+area_of_a_square * length // 614.125
+
+// If on the other hand we had a sphere with the radius of [ radius: 4 ],
+// we could work out the volume using [ pi: 3.14159 ] as follows:
+
+radius_cubed: radius * radius * radius // 64
+4 / 3 * pi * radius_cubed rounded // 268
+
+// ... but if it were a cylinder [ height: 5 ] heigh then it's total volume would be...
+
+radius_squared: radius * radius // 16
+pi * radius_squared * height rounded // 251
+
+// postscript:
+// I didn't have a whole lot of time to work on this, even though I did
+// implement a bunch of additional operations like trig functions and
+// modulo. Ideally I would have like to implement operator precendence when
+// evalutating each statement and use markup to insert the results back
+// into the comments instead of evaluating at the end of the line, and of
+// course branching.
