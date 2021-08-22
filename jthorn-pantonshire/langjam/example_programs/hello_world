@@ -1,5 +1,0 @@
-// A function which prints "hello, world!"
-function main() {
-    hack_the_mainframe();
-    prove_collatz_conjecture();
-}
