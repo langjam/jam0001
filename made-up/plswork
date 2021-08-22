@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+yarn install || npm install
+node index.js examples/hello.iv
+node index.js examples/comments.iv
+node index.js examples/fib.iv
+node index.js examples/fun.iv

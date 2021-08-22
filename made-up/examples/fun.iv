@@ -1,0 +1,6 @@
+// let x be null
+def x = () /* () means null */;
+
+/* this will count all character from comments on x */
+/* notice the partially applied field access operator :) */
+RT.map (."length") $ RT.E x; 
