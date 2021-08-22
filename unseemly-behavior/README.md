@@ -18,6 +18,9 @@ Inside comments, backticks indicate code that will be executed
 Code inside backticks is typechecked, just like the surrounding code. Try:
 `unseemly commentary.unseemly type_error.commentary`
 
+Note that, even though Commentary inherits Unseemly's type system,
+ you get errors in terms of the Commentary code you wrote, not the Unseemly code it compiles to.
+
 Due to a limitation in Unseemly, multiple interpolations in a comment are only supported
  if they have no text between them. ) :
 
