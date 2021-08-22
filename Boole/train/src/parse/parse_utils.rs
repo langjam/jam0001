@@ -66,7 +66,7 @@ impl<'a> Parser<'a> {
         let line = self.next_line()?;
         if line == exact {
             self.current += line.len();
-            self.current += 1; // Skip \n
+            self.skip_line()?;
             Ok(())
         } else {
             Err(ParserError {
@@ -75,5 +75,15 @@ impl<'a> Parser<'a> {
                 input: self.input.to_string(),
             })
         }
+    }
+
+    pub fn skip_line(&mut self) -> ParseResult<()> {
+        if self.rest().chars().next().unwrap() == '\r' {
+            self.current += 1;
+        }
+        if self.rest().chars().next().unwrap() == '\n' {
+            self.current += 1;
+        }
+        Ok(())
     }
 }

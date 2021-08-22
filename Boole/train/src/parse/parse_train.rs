@@ -34,7 +34,7 @@ impl<'a> Parser<'a> {
                 first_class_passengers.push(FirstClassPassenger {name: String::from(res[0]), data: String::from(res[1])})
             }
             self.current += line.len();
-            self.current += 1;
+            self.skip_line()?;
         }
 
         self.expect_exact_line("[SECOND CLASS]")?;
@@ -60,7 +60,7 @@ impl<'a> Parser<'a> {
                 }
             }
             self.current += line.len();
-            self.current += 1;
+            self.skip_line()?;
         }
 
         let config = parse_wishes(&first_class_passengers);
