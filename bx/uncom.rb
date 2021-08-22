@@ -68,6 +68,9 @@ $uncom_words = {}
 ["comment?", [:any], lambda {|a| a.is_a?(UnComment) }],
 
 ["puts", [:any], lambda {|a| puts a }],
+["p", [:any], lambda {|a| p a }],
+["inspect", [:any], lambda {|a| a.inspect }],
+["to_s", [:any], lambda {|a| a.to_s }],
 
 ].each {|word|
 	$uncom_words[word[0]] = UnFunc.new(*word)
@@ -95,9 +98,28 @@ end.new("def", [:quote, :quote, :quote], lambda {|a, b, c|})
 
 $uncom_words["if"] = Class.new(UnFunc) do
 	def call(uncom)
-		
+		body = uncom.data.pop()
+		pred = uncom.data.pop()
+		uncom.call_quote(body) if pred
 	end
-end.new("def", [:bool, :quote], lambda {|a, b|})
+end.new("if", [:bool, :quote], lambda {|a, b|})
+
+$uncom_words["ifelse"] = Class.new(UnFunc) do
+	def call(uncom)
+		f_body = uncom.data.pop()
+		t_body = uncom.data.pop()
+		pred = uncom.data.pop()
+		uncom.call_quote(t_body) if pred
+		uncom.call_quote(f_body) if not pred
+	end
+end.new("ifelse", [:bool, :quote, :quote], lambda {|a, b, c|})
+
+$uncom_words["do"] = Class.new(UnFunc) do
+	def call(uncom)
+		uncom.call_quote uncom.data.pop()
+	end
+end.new("ifelse", [:quote], lambda {|a|})
+
 
 class UnComment
 	# NOTE: MAKE SURE THAT THE LENGTH OF THE SOURCE STRING NEVER GETS CHANGED
@@ -161,8 +183,15 @@ class UnQuote
 end
 
 class Uncom
-	def initialize(source = "")
+	def initialize(source = "", file: "")
 		@source = source
+
+		if file != "" then
+			f = File.new file
+			@source = f.read
+			f.close
+		end
+
 		@func_stacks = [[]]
 		@data_stacks = [[]]
 		# first one is global, rest are used for func locals, where last is for current func
@@ -388,18 +417,8 @@ class Uncom
 end
 
 def do_source(source)
-	#puts
-	#puts "DO SOURCE"
 	uncom = Uncom.new source
-	uncom.run()
-	#puts
-	uncom
-
-	#if file_path != "" then
-	#	f = File.new file_path
-	#	@source = f.read
-	#	f.close
-	#end
+	uncom.run().data
 end
 
 # t e s t s #
@@ -427,8 +446,13 @@ end
 	name comment?] name', [true, 42]],
 	['#$name: dookies
 	[$name comment?]', [true]],
+	["if false {1}",[]],
+	["if true {1}",[1]],
+	["ifelse true {1} {2}",[1]],
+	["ifelse false {1} {2}",[2]],
 	].each_with_index {|t, idx|
-		raise "failed test number #{idx + 1}" if do_source(t[0]).data != t[1]
+		u = Uncom.new(t[0]).run
+		raise "failed test number #{idx + 1} data_stack #{u.data}" if u.data != t[1]
 	}
 }).call
 
