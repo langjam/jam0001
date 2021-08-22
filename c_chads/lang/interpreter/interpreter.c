@@ -1,6 +1,28 @@
 #include "interpreter.h"
+#include "../eh.h"
 
 static struct Interpreter_State intrp;
+
+static const char* type_names[] = {
+    [IT_VOID] = "void",
+    [IT_CFUNC] = "cfunc",
+    [IT_FUNC] = "func",
+    [IT_INT] = "int",
+    [IT_FLOAT] = "float",
+    [IT_STRING] = "string"
+};
+
+static void error_tok(strview_t tok) {
+    const string src = parser_get_state()->lexer.src;
+    eh_error_pos((usize)(tok.view - src), src);
+    exit(1);
+}
+
+static void error_mmtype(enum Interpreter_Type expected, enum Interpreter_Type supplied, strview_t tok) {
+
+    EH_MESSAGE("Mismatched type: '%s' expected but '%s' supplied", type_names[expected], type_names[supplied]);
+    error_tok(tok);
+}
 
 static struct Interpreter_Value void_val() {
     return (struct Interpreter_Value){ IT_VOID, {0} };
@@ -71,14 +93,22 @@ static struct Interpreter_Value* get_var(strview_t name) {
     struct Interpreter_Value* val = map_get(intrp.vars, name);
     if (!val) 
         val = map_get(&intrp.global, name);
+
+    if (!val) {
+        EH_MESSAGE("Variable '%.*s' not found", (int)name.size, name.view);
+        error_tok(name);
+    }
+
     return val;
 }
 
 static struct Interpreter_Value execute(struct Parser_Node* body, bool* should_return) {
 
+    struct Interpreter_Value retval = void_val();
+
     for (usize i = 0; i < body->children.size; i++) {
         bool sr;
-        struct Interpreter_Value retval = intrp_run(vec_get(&body->children, i), &sr);
+        retval = intrp_run(vec_get(&body->children, i), &sr);
 
         if (sr) {
             if (should_return) *should_return = sr;
@@ -86,7 +116,7 @@ static struct Interpreter_Value execute(struct Parser_Node* body, bool* should_r
         }
     }
 
-    return void_val();
+    return retval;
 }
 
 static struct Interpreter_Value call(struct Parser_Node* node) {
@@ -168,7 +198,7 @@ static struct Interpreter_Value assign(struct Parser_Node* node) {
     struct Interpreter_Value val = intrp_run(pnode_right(node), NULL);
     struct Interpreter_Value *var = get_var(dstname);
     if (val.type != var->type && var->type != IT_VOID)
-        printf("Spank Spank! Bad Programmer! Mismatched type\n");
+        error_mmtype(var->type, val.type, dstname);
 
     return (*var = val);
 }
@@ -191,14 +221,16 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
             ret = intrp_run(pnode_uvalue(node), should_return);
             *should_return = true;
         break;
-        case PN_IF:
+        case PN_IF: {
+
+            struct Interpreter_Value cond = intrp_run(node->addressing == PA_BINARY ? pnode_left(node) : pnode_cond(node), should_return);
+            if (cond.type != IT_INT)
+                error_mmtype(IT_INT, cond.type, (strview_t){0});
 
             if (node->addressing == PA_BINARY) {
-                struct Interpreter_Value cond = intrp_run(pnode_left(node), should_return);
                 if (cond.data.intg.val)
                     ret = execute(pnode_right(node), should_return);
             } else {
-                struct Interpreter_Value cond = intrp_run(pnode_cond(node), should_return);
                 if (cond.data.intg.val)
                     ret = intrp_run(pnode_body(node), should_return);
                 else
@@ -206,7 +238,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
 
             }
 
-        break;
+        } break;
         case PN_WHILE:
             while (1) {
                 struct Interpreter_Value cond = intrp_run(pnode_left(node), should_return);
@@ -258,14 +290,14 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                 right = intrp_run(pnode_right(node), NULL);
 
             if (left.type != right.type)
-                //error
-                ;
+                error_mmtype(left.type, right.type, node->data.op.op);
 
             if (left.type == IT_INT) {
                 ret.type = IT_INT;
                 int* rp = &ret.data.intg.val;
                 if (node->data.op.op.view[1] != '=') {
                     int lv = left.data.intg.val, rv = right.data.intg.val;
+
                     switch (node->data.op.op.view[0]) {
                     case '+': *rp = lv + rv; break;
                     case '-': *rp = lv - rv; break;
@@ -273,8 +305,11 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                     case '/': *rp = lv / rv; break;
                     case '%': *rp = lv % rv; break;
 
-                    case '<': *rp = lv < rv; break;
-                    case '>': *rp = lv > rv; break;
+                    case '<': if (node->data.op.op.view[1] == '<') *rp = lv << rv; else *rp = lv < rv; break;
+                    case '>': if (node->data.op.op.view[1] == '>') *rp = lv >> rv; else *rp = lv > rv; break;
+                    case '&': *rp = lv & rv; break;
+                    case '|': *rp = lv | rv; break;
+                    case '^': *rp = lv ^ rv; break;
                     }
                 } else {
                     int *lv = &left.data.intg.val, *rv = &right.data.intg.val;
@@ -320,7 +355,8 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                 }
                 
             } else {
-                // error
+                EH_MESSAGE("Operator '%.*s' doesn't support the operands '%s' and '%s'", (int)node->data.op.op.size, node->data.op.op.view, type_names[left.type], type_names[right.type]);
+                error_tok(node->data.op.op);
             }
 
         } break;
@@ -328,11 +364,23 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
 
             struct Interpreter_Value val = intrp_run(pnode_uvalue(node), NULL);
 
-            ret.type = IT_INT; 
-            switch (node->data.unary.op.view[0]) {
-                case '!': ret.data.intg.val = !val.data.intg.val; break;
-                case '-': ret.data.intg.val = -val.data.intg.val; break;
+            if (node->data.unary.op.view[0] == '!') {
+                if (val.type != IT_INT) {
+                    error_mmtype(IT_INT, val.type, node->data.unary.op);
+                } else val.data.intg.val = !val.data.intg.val;
+            } else if (node->data.unary.op.view[0] == '-') {
+                if (val.type == IT_INT)
+                    val.data.intg.val = -val.data.intg.val;
+                else if (val.type == IT_FLOAT)
+                    val.data.flt.val = -val.data.flt.val;
+                else {
+                    EH_MESSAGE("Operator '-' doesn't support operand of type '%s'", type_names[val.type]);
+                    error_tok(node->data.unary.op);
+                }
+
             }
+
+            ret = val;
         } break;
         default:
         break;
