@@ -1,12 +1,15 @@
 use std::borrow::Cow;
 
 use crate::ast::*;
-use crate::data::{ObjPtr, Object};
+use crate::data::Object;
 use crate::{data::Value, env::Env};
 
-#[derive(Debug, Default)]
-pub struct Evaluator<'a> {
+#[derive(Debug)]
+pub struct Evaluator<'a, 'b: 'a> {
+    buf_stack: Vec<String>,
     env: Env<Cow<'a, str>, Value<'a>>,
+    is_processing_comments: bool,
+    arena: &'b bumpalo::Bump,
 }
 
 #[derive(Debug)]
@@ -19,9 +22,14 @@ pub enum EvalError<'a> {
 }
 
 // TODO: return/break/continue signals
-impl<'a> Evaluator<'a> {
-    pub fn with_env(env: Env<Cow<'a, str>, Value<'a>>) -> Self {
-        Self { env }
+impl<'a, 'b> Evaluator<'a, 'b> {
+    pub fn with_env(env: Env<Cow<'a, str>, Value<'a>>, arena: &'b bumpalo::Bump) -> Self {
+        Self {
+            env,
+            buf_stack: Vec::new(),
+            is_processing_comments: false,
+            arena,
+        }
     }
 
     pub fn eval(&mut self, ast: &mut Ast<'a>) -> Result<(), EvalError<'a>> {
@@ -31,35 +39,57 @@ impl<'a> Evaluator<'a> {
     }
 
     fn eval_comments(&mut self, ast: &mut Ast<'a>) -> Result<(), EvalError<'a>> {
-        // Comment-time environment
-        self.env.push();
-
+        self.is_processing_comments = true;
         self.eval_comments_in_block(&mut ast.statements);
-
-        self.env.pop();
-
+        self.is_processing_comments = false;
         Ok(())
     }
 
     fn eval_comments_in_block(&mut self, block: &mut [LineComment<'a>]) {
+        self.env.push();
+
         for line in block {
             // TODO: allow comments to actually modify the next statement
-            if let CommentBody::Stmt(ref mut stmt) = line.body {
+            let replacement = if let CommentBody::Stmt(ref mut stmt) = line.body {
                 // We do not evaluate nested comments.
                 // QQQ: how should we handle errors occurring at comment-time?
-                match self.eval_stmt(stmt) {
-                    Ok(_) => (),
-                    Err(e) => {
+                self.buf_stack.push(String::new());
+
+                let is_success = self
+                    .eval_stmt(stmt)
+                    .map_err(|e| {
                         // TODO: optionally disable this
                         eprintln!("Failed to evaluate a comment: {:?}", e);
-                    }
-                }
-            }
+                    })
+                    .map(|_| ())
+                    .ok();
+
+                let code = self.arena.alloc(self.buf_stack.pop().unwrap());
+                is_success.and_then(move |_| {
+                    crate::parser::dank::file(code)
+                        .map(|ast| Stmt {
+                            span: 0..0,
+                            kind: StmtKind::UnscopedBlock(ast.statements),
+                        })
+                        .map_err(|e| {
+                            eprintln!("The printed code wasn't valid, ignoring it: {:?}. Code was:\n```\n{}\n```", e, code);
+                        })
+                        .ok()
+                })
+            } else {
+                None
+            };
 
             if let Some(stmt) = line.stmt.as_mut() {
                 self.eval_comments_in_stmt(stmt);
             }
+
+            if let Some(stmt) = replacement {
+                line.stmt = Some(stmt);
+            }
         }
+
+        self.env.pop();
     }
 
     fn eval_comments_in_stmt(&mut self, stmt: &mut Stmt<'a>) {
@@ -75,6 +105,7 @@ impl<'a> Evaluator<'a> {
             StmtKind::Print(args) => args.iter_mut().for_each(|e| self.eval_comments_in_expr(e)),
             StmtKind::Block(b) => self.eval_comments_in_block(b),
             StmtKind::While(_, stmt) => self.eval_comments_in_stmt(stmt),
+            StmtKind::UnscopedBlock(_) => unreachable!("Cannot appear while processing comments"),
         }
     }
 
@@ -83,6 +114,9 @@ impl<'a> Evaluator<'a> {
             ExprKind::ObjectLiteral(pairs) => pairs
                 .iter_mut()
                 .for_each(|(_, e)| self.eval_comments_in_expr(e)),
+            ExprKind::LambdaLiteral(f) => {
+                self.eval_comments_in_block(&mut f.body);
+            }
             ExprKind::Binary(l, _, r) => {
                 self.eval_comments_in_expr(l);
                 self.eval_comments_in_expr(r);
@@ -100,11 +134,21 @@ impl<'a> Evaluator<'a> {
         }
     }
 
-    fn eval_ast(&mut self, ast: &Ast<'a>) -> Result<Value, EvalError<'a>> {
+    fn eval_ast(&mut self, ast: &Ast<'a>) -> Result<Value<'a>, EvalError<'a>> {
         self.eval_block(&ast.statements)
     }
 
-    fn eval_block(&mut self, block: &[LineComment<'a>]) -> Result<Value, EvalError<'a>> {
+    fn eval_block(&mut self, block: &[LineComment<'a>]) -> Result<Value<'a>, EvalError<'a>> {
+        self.env.push();
+        let result = self.eval_unscoped_block(block);
+        self.env.pop();
+        result
+    }
+
+    fn eval_unscoped_block(
+        &mut self,
+        block: &[LineComment<'a>],
+    ) -> Result<Value<'a>, EvalError<'a>> {
         for stmt in block.iter().filter_map(|line| line.stmt.as_ref()) {
             self.eval_stmt(stmt)?;
         }
@@ -129,6 +173,10 @@ impl<'a> Evaluator<'a> {
                     object.fields.insert(k.clone(), value);
                 }
                 Ok(Value::Obj(object.move_on_heap()))
+            }
+            ExprKind::LambdaLiteral(f) => {
+                let fn_ref = crate::data::Ptr::new((&**f).clone());
+                Ok(Value::Fn(fn_ref))
             }
             ExprKind::Binary(_, _, _) => todo!(),
             ExprKind::Unary(_, _) => todo!(),
@@ -208,17 +256,17 @@ impl<'a> Evaluator<'a> {
         }
     }
 
-    fn eval_stmt(&mut self, stmt: &Stmt<'a>) -> Result<Value, EvalError<'a>> {
+    fn eval_stmt(&mut self, stmt: &Stmt<'a>) -> Result<Value<'a>, EvalError<'a>> {
         match &stmt.kind {
             StmtKind::Print(args) => {
                 for (i, a) in args.iter().enumerate() {
                     let value = self.eval_expr(a)?;
-                    print!("{}", value);
+                    self.print(format!("{}", value));
                     if i != args.len() - 1 {
-                        print!(", ")
+                        self.print(", ");
                     }
                 }
-                println!();
+                self.print("\n");
             }
             StmtKind::LetDecl(name, initializer) => {
                 let value = if let Some(i) = initializer {
@@ -234,9 +282,19 @@ impl<'a> Evaluator<'a> {
                 self.env.add(f.name.clone(), fn_obj);
             }
             StmtKind::Block(b) => return self.eval_block(b),
+            StmtKind::UnscopedBlock(b) => return self.eval_unscoped_block(b),
             _ => unimplemented!(),
         }
         Ok(Value::Null)
+    }
+
+    fn print<S: Into<String>>(&mut self, s: S) {
+        let s = s.into();
+        if self.is_processing_comments {
+            self.buf_stack.last_mut().unwrap().push_str(&s);
+        } else {
+            print!("{}", s)
+        }
     }
 }
 

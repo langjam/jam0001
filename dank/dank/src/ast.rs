@@ -55,6 +55,7 @@ pub enum StmtKind<'a> {
     ExprStmt(#[rename = "expr"] ExprPtr<'a>),
     Print(#[rename = "args"] Vec<Expr<'a>>),
     Block(#[rename = "statements"] Vec<LineComment<'a>>),
+    UnscopedBlock(#[rename = "statements"] Vec<LineComment<'a>>),
     While(
         #[rename = "condition"] ExprPtr<'a>,
         #[rename = "body"] StmtPtr<'a>,
@@ -80,6 +81,7 @@ pub enum UnOpKind {
 #[derive(Debug, Clone, PartialEq, AstToStr)]
 pub enum ExprKind<'a> {
     ObjectLiteral(Vec<(Cow<'a, str>, Expr<'a>)>),
+    LambdaLiteral(Ptr<Function<'a>>),
     Literal(#[debug] Value<'a>),
     Variable(#[rename = "name"] Cow<'a, str>),
     Property(

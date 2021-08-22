@@ -85,13 +85,23 @@ peg::parser!(pub grammar dank() for str {
          / f:func() {f}
 
     pub rule func() -> Stmt<'input>
-    = start:position!() "fn" name:ident() "(" args:ident() ** ("," ___) ")" body:block() end:position!()
+    = start:position!() "fn" ___ name:ident() _ "(" args:ident() ** ("," ___) ")" ___ body:block() end:position!()
     {
         Stmt { span: start..end, kind: StmtKind::FuncDecl(Box::new(Function {
             name: name.into(),
             args: args.into_iter().map(Into::into).collect(),
             body: match body.kind { StmtKind::Block(b) => b, _ => unreachable!() }
         })) }
+    }
+
+    pub rule lambda() -> Expr<'input>
+    = start:position!() "fn" _ "(" args:ident() ** ("," ___) ")" ___ body:block() end:position!()
+    {
+      Expr { span: start..end, kind: ExprKind::LambdaLiteral(Box::new(Function {
+        name: format!("fn@{}:{}", start, end).into(),
+        args: args.into_iter().map(Into::into).collect(),
+        body: match body.kind { StmtKind::Block(b) => b, _ => unreachable!() }
+    })) }
     }
 
     pub rule block() -> Stmt<'input>
@@ -141,6 +151,7 @@ peg::parser!(pub grammar dank() for str {
         / start:position!() l:literal() end:position!() { Expr { kind: ExprKind::Literal(l), span: start..end }}
         / "(" _ e:expr() _ ")" { e }
         / object()
+        / lambda()
 
     pub rule object() -> Expr<'input>
         = start:position!()
@@ -160,7 +171,7 @@ peg::parser!(pub grammar dank() for str {
         / "null" { Value::Null }
 
     rule print() -> Stmt<'input>
-         = start:position!() "print" _ args:(expr() ** ",") end:position!()
+         = start:position!() "print" _ args:(expr() ** ("," ___)) end:position!()
          { Stmt { kind: StmtKind::Print(args), span: Span { start, end } } }
 
     rule string() -> &'input str
@@ -221,6 +232,75 @@ pub mod tests {
                 $expected.trim().as_display()
             )
         };
+    }
+
+    #[test]
+    fn fn_declarations() {
+        let test = r#"
+        fn test() { }
+        fn with_args(a, b) { print a, b; }
+
+        let f = fn() {};
+        let f_with_args = fn(a, b) { print a, b; };
+      "#;
+
+        test_eq!(
+            test,
+            r#"
+Ast
+  statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: Function
+        name: "test"
+        args= 
+        body= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: Function
+        name: "with_args"
+        args= 
+          "a"
+          "b"
+        body= 
+          LineComment
+            body: CommentBody::Empty
+            stmt: StmtKind::Print
+              args= 
+                ExprKind::Variable
+                  name: "a"
+                ExprKind::Variable
+                  name: "b"
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "f"
+        initializer: ExprKind::LambdaLiteral
+          field0: Function
+            name: "fn@83:90"
+            args= 
+            body= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "f_with_args"
+        initializer: ExprKind::LambdaLiteral
+          field0: Function
+            name: "fn@118:142"
+            args= 
+              "a"
+              "b"
+            body= 
+              LineComment
+                body: CommentBody::Empty
+                stmt: StmtKind::Print
+                  args= 
+                    ExprKind::Variable
+                      name: "a"
+                    ExprKind::Variable
+                      name: "b"
+        "#
+        );
     }
 
     #[test]

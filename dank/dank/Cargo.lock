@@ -116,6 +116,7 @@ name = "dank"
 version = "0.1.0"
 dependencies = [
  "ast2str",
+ "bumpalo",
  "clap",
  "peg",
  "pretty_assertions",

@@ -3,7 +3,8 @@
 // dddddddddddd
 
 // // Nested comment
-// print("test test");
+// print "fn i_was_generated(x) { print x; }";
+// print "print 5;";
 
 print { name: "value", nested: { object: "here" } };
 
@@ -14,3 +15,6 @@ print x;
 let obj = { name: "test" };
 print obj.name;
 print clock();
+
+print i_was_generated(7);
+
