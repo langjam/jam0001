@@ -23,20 +23,21 @@
 	- [x] - comments
 
 - [ ] - evaluator
-	- [ ] - loops
+	- [x] - loops
 	- [ ] - instructions
 		- [ ] - m
-			- [ ] - check correctness
-				- [ ] - operation exists
+			- [x] - check correctness
+				- [x] - operation exists
 				- [x] - is possible to evaluate
 			- [x] - generate rpn
 			- [x] - evaluate rpn
 			- [ ] - functions
 
-		- [ ] - set
+		- [x] - set
 		- [ ] - not
 		- [x] - print
-	- [ ] - referencing variables
+	- [x] - referencing variables
+	- [ ] - replacing refs in strings
 	- [ ] - comments
 		- [ ] - ast generation
 		- [ ] - execution
