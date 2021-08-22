@@ -1,3 +1,5 @@
+Note: this was imported from (https://github.com/jDomantas/tontuna/tree/4390ab8af3428dbe0cf5fa236c232b7deeb6b0fc). Go to the original repo if you want to find updates.
+
 # Tontuna programming language
 
 This is an entry to the [first langjam](https://github.com/langjam/jam0001).
