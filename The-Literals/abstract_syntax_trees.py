@@ -107,19 +107,6 @@ class SetStmt(Stmt):
     def execute(self):
         defined_variables[self.target] = self.value
 
-class Function:
-    def __init__(self, func_name: str, params: "list[Parameter]", return_var: Variable, body: Stmts):
-        self.func_name = func_name
-        self.params = params
-        self.return_var = return_var
-        self.body = body
-
-    def __repr__(self):
-        return (
-            f"FUNC (NAME:{self.func_name}, PARAMS:{self.params}, "
-            f"RETURNS:{self.return_var}, BODY={self.body}"
-        )
-
 
 class Stmts:
     def __init__(self, stmt_list):
@@ -139,6 +126,27 @@ class Stmts:
                 next_stmt.execute()
             self.current_index += 1
 
+
+class Function:
+    def __init__(
+        self,
+        func_name: str,
+        params: "list[Parameter]",
+        return_var: Variable,
+        body: Stmts,
+    ):
+        self.func_name = func_name
+        self.params = params
+        self.return_var = return_var
+        self.body = body
+
+    def __repr__(self):
+        return (
+            f"FUNC (NAME:{self.func_name}, PARAMS:{self.params}, "
+            f"RETURNS:{self.return_var}, BODY={self.body}"
+        )
+
+
 class Program:
     def __init__(self, funcs: "list[Function]", stmts):
         self.funcs = funcs
@@ -146,4 +154,3 @@ class Program:
 
     def __repr__(self):
         return f"\nPROGRAM \n{self.funcs}\n{self.stmts}"
-
