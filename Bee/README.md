@@ -1,8 +1,129 @@
 # Bee Programming Language
 
-## Bee is interpreted programming language for LangJam 2021 (Created in less than 48h) based on first-class comments theme, the design of the syntax inspired from the comment style from many languages
+Bee is interpreted programming language for LangJam 2021 (Created in less than 48h) based on first-class comments theme, the design of the syntax inspired from the comment style from many languages
 
-## Features
+## How to use it
+
+In the bin directory you will find bee-lang.jar and example directory, the language require JAVA 8
+
+to run any example
+
+```
+java -jar bee-lang.jar <source> <options>
+```
+
+Run without options
+```
+java -jar bee-lang.jar examples/Test.bee
+```
+
+Run with options
+```
+java -jar bee-lang.jar examples/Test.bee -a -n -c 4
+```
+
+## Options
+```
+-a                  Enable the alert comments
+-n                  Enable the note comments
+-c <Integer>        Set the number of cores to use
+-v                  Print the language version
+-h                  Print the options
+```
+
+
+## Documentation
+
+- Call function with 0 args
+
+```
+@call function_name
+```
+
+- Call function with args 1, 2
+
+```
+@call function_name with 1, 2
+```
+
+- Call method from type c
+
+```
+@call c->function_name
+```
+
+- Call method from the same type
+
+```
+@call this->function_name
+```
+
+- Call method from the parent type
+
+```
+@call super->function_name
+```
+
+- Return with no value
+
+```
+#return
+```
+
+- Return with value
+
+```
+#return with 0
+```
+
+- Block
+
+```
+/*
+
+*/
+```
+
+- Function with 0 parameters
+
+```
+#function function_name
+/*
+
+*/
+```
+
+- Function with parameters
+
+```
+#function function_name take x, y
+/*
+
+*/
+```
+- Call function in other thread and wait for the result
+
+```
+#let future be @run function_name
+#let result be @wait future
+```
+
+- Loops
+
+```
+#loop 100
+/*
+
+*/
+
+#loop x < 10
+/*
+    
+*/
+```
+
+
+### Features
 - Object Oriented Programming type, extend, constructor, this, super
 
 ```
@@ -148,124 +269,4 @@
 (@call println with "Hello, World")
 ```
 
-## How to use it
-
-In the bin directory you will find bee-lang.jar and example directory, the language require JAVA 8
-
-to run any example
-
-```
-java -jar bee-lang.jar <source> <options>
-```
-
-Run without options
-```
-java -jar bee-lang.jar examples/Test.bee
-```
-
-Run with options
-```
-java -jar bee-lang.jar examples/Test.bee -a -n -c 4
-```
-
-## Options
-```
--a                  Enable the alert comments
--n                  Enable the note comments
--c <Integer>        Set the number of cores to use
--v                  Print the language version
--h                  Print the options
-```
-
-
-## Documentation
-
-- Call function with 0 args
-
-```
-@call function_name
-```
-
-- Call function with args 1, 2
-
-```
-@call function_name with 1, 2
-```
-
-- Call method from type c
-
-```
-@call c->function_name
-```
-
-- Call method from the same type
-
-```
-@call this->function_name
-```
-
-- Call method from the parent type
-
-```
-@call super->function_name
-```
-
-- Return with no value
-
-```
-#return
-```
-
-- Return with value
-
-```
-#return with 0
-```
-
-- Block
-
-```
-/*
-
-*/
-```
-
-- Function with 0 parameters
-
-```
-#function function_name
-/*
-
-*/
-```
-
-- Function with parameters
-
-```
-#function function_name take x, y
-/*
-
-*/
-```
-- Call function in other thread and wait for the result
-
-```
-#let future be @run function_name
-#let result be @wait future
-```
-
-- Loops
-
-```
-#loop 100
-/*
-
-*/
-
-#loop x < 10
-/*
-    
-*/
-```
-
-## All the examples are on bee-lang/bin/exampes, I hope you will enjoy and have fun with this project
+All the examples are on bee-lang/bin/exampes, I hope you will enjoy and have fun with this project
