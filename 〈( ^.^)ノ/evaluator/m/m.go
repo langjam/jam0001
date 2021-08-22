@@ -31,12 +31,14 @@ const (
 	GEOp
 	EqOp
 	NEqOp
+	FirstNamedFunction
 	AbsOp
 	SqrtOp
 	SinOp
 	CosOp
 	TanOp
 	RandOp
+	LastNamedFunction
 )
 
 var PrecedenceMap map[int]int = map[int]int{
@@ -451,7 +453,7 @@ func (e *Evaluator) Evaluate(input []Token) error {
 			e.operations = e.operations[:len(e.operations)-1]
 
 			// If this was a function call, make the call
-			if e.GetLastOperation().kind == AbsOp || e.GetLastOperation().kind == SqrtOp || e.GetLastOperation().kind == SinOp || e.GetLastOperation().kind == CosOp || e.GetLastOperation().kind == TanOp || e.GetLastOperation().kind == RandOp {
+			if e.GetLastOperation().kind > FirstNamedFunction && e.GetLastOperation().kind < LastNamedFunction {
 				err := e.Execute()
 				if err != nil {
 					return err
