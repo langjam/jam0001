@@ -108,6 +108,13 @@ class Interpreter:
                 value = self.expression(expr["value"])
                 self.env.assign_value(key, value)
                 return value
+            case Ast.MEMBER:
+                dictionary = self.expression(expr["dictionary"])
+                if not isinstance(dictionary, dict):
+                    raise Exception(f"Runtime Error: object not a dictionary")
+
+                key = self.expression(expr["key"])
+                return dictionary.get(key, None)
             case _:
                 raise Exception("Internal Error")
 

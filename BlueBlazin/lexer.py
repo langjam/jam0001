@@ -37,6 +37,8 @@ class Lexer:
             match self.peek():
                 case _ if self.is_numeric():
                     yield self.scan_number()
+                case "\"":
+                    yield self.scan_string()
                 case "+" | "-" | "*" | "!" \
                          | ">" | "<" | "(" \
                          | ")" | "{" | "=" \
@@ -60,6 +62,18 @@ class Lexer:
                     yield self.scan_identifier()
 
         yield self.token(self.line, TokenType.EOF, None)
+
+    def scan_string(self):
+        self.advance()
+        line = self.line
+        value = ""
+
+        c = self.peek()
+        while c != "\"":
+            value += self.advance()
+
+        self.expect("\"")
+        return self.token(line, TokenType.STRING, value)
 
     def scan_comment(self):
         # consume '/*'
