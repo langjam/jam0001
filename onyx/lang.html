@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<title>lang</title>
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==">
+<h2>input</h2>
+select an example: <select id="select_example"></select>
+<br>
+<br>
+<textarea id="input"></textarea><br>
+<h2>highlighted</h2>
+<pre id="highlight"></pre>
+<h2>errors</h2>
+<textarea id="errors" readonly></textarea>
+<h2>output</h2>
+<textarea id="output" readonly></textarea>
+<div id="tooltip"></div>
+<style>
+body, textarea, input, select {
+  background-color: #222;
+  color: white;
+}
+
+textarea {
+  width: 100%;
+  min-height: 15em;
+  font-family: monospace;
+  tab-size: 16;
+}
+
+#highlight {
+  font-family: monospace;
+}
+
+#tooltip {
+  display: none;
+  max-width: 30em;
+  position: fixed;
+  background: #444;
+}
+
+:root {
+  --identifier: white;
+  --comment: #727072;
+  --directive: var(--comment);
+  --directive_style: normal;
+  --string: #ffd866;
+  --constant: #ab9df2;
+  --integer: var(--constant);
+  --decimal: var(--constant);
+  --boolean: var(--constant);
+  --null: var(--constant);
+  --keyword: #ff6188;
+  --operator: var(--keyword);
+  --property: #a9dc76;
+  --function: #a9dc76;
+  --function_definition: #a9dc76;
+  --function_parameter: #fc9867;
+  --function_parameter_style: italic;
+  --error: #662222;
+  --type: #78dce8;
+  --type_style: italic;
+}
+
+.type { color: var(--type); font-style: var(--type_style); }
+.comment { color: var(--comment); }
+.directive { color: var(--directive); font-style: var(--directive_style); }
+.identifier { color: var(--identifier); }
+.string { color: var(--string); }
+.integer { color: var(--integer); }
+.decimal { color: var(--decimal); }
+.boolean { color: var(--boolean); }
+.null { color: var(--null); }
+.property { color: var(--property); }
+.function { color: var(--function); }
+.function_parameter { color: var(--function_parameter); font-style: var(--function_parameter_style); }
+.keyword { color: var(--keyword); }
+.operator { color: var(--operator); }
+
+.error { background: var(--error); }
+
+</style>
+<script>
+///<reference lib="es2020" />
+// @ts-check
+/** @type {HTMLTextAreaElement} */
+// @ts-ignore
+const errors = document.getElementById('errors');
+/** @type {HTMLTextAreaElement} */
+// @ts-ignore
+const input = document.getElementById('input');
+/** @type {HTMLTextAreaElement} */
+// @ts-ignore
+const output = document.getElementById('output');
+const highlight = document.getElementById('highlight');
+const tooltip = document.getElementById('tooltip');
+/** @type {HTMLSelectElement} */
+// @ts-ignore
+const select_example = document.getElementById('select_example');
+// notes
+// we skip various steps like typechecking and semantic analysis (no break outside of loops)
+
+console.log = (obj) => { output.value += obj; }
+console.error = (obj) => { errors.value += obj; }
+
+function prettyPrintToken(tok) {
+  return `${tok.type}\t${tok.value}\t${tok.start}:${tok.end}`;
+}
+
+function prettyPrintNode(node, toks, padding='', name='') {
+  const isObj = typeof node === 'object' && node !== null;
+  const isArr = Array.isArray(node);
+  // const desc = isArr ? '' : isObj ? 'value' in node ? `${node.type}(${JSON.stringify(node.value)})` : node.type : JSON.stringify(node);
+  const desc = isArr ? '' : isObj ? node.type : JSON.stringify(node);
+  let result = padding + (name ? desc ? `${name}: ${desc}` : name : desc); // + (isObj && !isArr ? ` ${toks[node.start].start}:${toks[node.end - 1].end}` : '');
+  result += '\n';
+  // if (!isObj || 'value' in node) { return result; }
+  if (!isObj) { return result; }
+  const newPadding = padding.replace(/ ├$/, ' │').replace(/ └$/, '  ');
+  // filter out type, start, end (because they've already been used) and an empty directives property
+  const kvs = Object.entries(node).filter(([k, v]) => !['type', 'start', 'end'].includes(k) && (k !== 'directives' || (v && v.length !== 0)) && v !== null);
+  // find last property name that is not `type`
+  for (const [k, v] of kvs.slice(0, -1)) {
+    result += prettyPrintNode(v, toks, newPadding + ' ├', isArr ? '' : k)
+  }
+  if (kvs.length >= 1) {
+    const [lastK, lastV] = kvs[kvs.length - 1];
+    result += prettyPrintNode(lastV, toks, newPadding + ' └', isArr ? '' : lastK);
+  }
+  return result;
+}
+
+function openTooltip(el, html) {
+  tooltip.innerHTML = html;
+  const rect = el.getBoundingClientRect();
+  tooltip.style.left = rect.left + 'px';
+  tooltip.style.top = 'calc(' + rect.top + 'px + 1em)';
+  tooltip.style.display = 'block';
+}
+
+function closeTooltip() {
+  tooltip.style.display = null;
+}
+
+function highlightInto(code, toks, node, element) {
+  // todo
+  // also todo: associate ast/cst with function, associate element with ast/cst node
+  // add node type & node syntax type (if it exists) to class name
+
+  // element.innerText = prettyPrintNode(node, toks);
+  function displayNode(node, start, end) {
+    const span = document.createElement('span');
+    if ('type' in node) {
+      span.classList.add(node.type);
+    }
+    if ('syntaxType' in node) { span.classList.add(node.syntaxType); }
+    // TODO: 
+    if (node && node.error) {
+      // todo: add tooltip
+      span.classList.add('error');
+      span.onmouseover = () => {
+        openTooltip(span, node.error);
+      };
+      span.onmouseout = () => {
+        closeTooltip();
+      }
+    }
+    const children = Object.values(node).filter((v) => typeof v === 'object' && v !== null && ((Array.isArray(v) && v.length !== 0) || 'start' in v))
+      // @ts-ignore
+      .map((v) => Array.isArray(v) ? ((arr) => { arr.start = arr[0].start; arr.end = arr[arr.length - 1].end; return arr; })([...v]) : v)
+      .sort((a, b) => a.start > b.start ? 1 : a.start < b.start ? -1 : a.end - b.end);
+    let pos = start;
+    for (const child of children) {
+      // todo: fix whitespace
+      span.appendChild(document.createTextNode(code.slice(pos, toks[child.start].start)));
+      span.appendChild(displayNode(child, toks[child.start].start, toks[child.end - 1].end));
+      pos = toks[child.end - 1].end;
+    }
+    span.appendChild(document.createTextNode(code.slice(children.length !== 0 ? toks[children[children.length - 1].end - 1].end : start, end)));
+    return span;
+  }
+  while (element.firstChild) { element.removeChild(element.firstChild); }
+  element.appendChild(displayNode(node, 0, code.length));
+}
+
+function didError(node) {
+  if (typeof node !== 'object' || Array.isArray(node)) { return false; }
+  if ('error' in node) { return true; }
+  return Object.values(node).some(didError);
+}
+
+function debounce(fn, timeout) {
+  let handle = 0;
+  return (...args) => {
+    clearTimeout(handle);
+    handle = setTimeout(() => {
+      fn(...args);
+    }, timeout);
+  };
+}
+
+input.oninput = debounce(() => {
+  output.value = '';
+  errors.value = '';
+  try {
+    // @ts-ignore
+    const toks = lex(input.value);
+    // @ts-ignore
+    const ast = parse(toks);
+    highlightInto(input.value, toks, ast, highlight);
+    // @ts-ignore
+    functionize(ast)(BUILTINS_SCOPE);
+  } catch(e) {
+    console.error('error: ' + e.message);
+    // errors.value += e.stack + '\n';
+  }
+  // output.value = lex(input.value).map((obj) => prettyPrintToken(obj)).join('\n');
+}, 250);
+
+// todo: <return this> at top level is not erroring :/
+
+const defaultExample = input.value = `\
+(: no generics yet :/)
+(note that i'm testing whether notes work)
+function id[value] { value (return this) }
+function neg[value (an integer)] (returns an integer) {
+  0 - value (return this)
+}
+function not[value (a boolean)] (returns a boolean) {
+  !value (return this)
+}
+
+function add[left (an integer) right (an integer)] (returns an integer: adds two numbers) {
+  left + right (return this)
+}
+
+print["add[1 2] is: "]
+println[add[1 2] (should be 3)]
+
+function test[left (an integer)] (returns an integer: adds 1 to a number) {
+  left + 1 (return this)
+}
+
+print["test[1] is: "]
+println[test[1] (should be 2)]
+
+function foo[n (an integer)] {
+  "foo" (if n % 2 == 0 (call this cond)) (call this var)
+  "bar" (unless cond) (call this var)
+  var (return this)
+}
+
+print["foo[100] is: "]
+println[foo[100] (should be "foo")]
+print["foo[101] is: "]
+println[foo[101] (should be "bar")]
+
+function fibonacci[n (an integer)] (returns an integer) {
+  n (if n <= 1) (return this)
+  fibonacci[n - 1] + fibonacci[n - 2] (return this)
+}
+(: ideally these would show up in docs)
+(for example fib[20] (should be 6765))
+
+println[fibonacci[10] (should be 55)]
+
+println["begin loop test"]
+0 (call this i)
+{
+  println[i]
+  i + 1 (call this i)
+} (while i < 10)
+println[add["1" "2"]]
+println[id["end loop test"
+`;
+
+const examples = new Map([
+  ['example', defaultExample],
+  ['fibonacci', `\
+function fibonacci[n (an integer)] (returns an integer) {
+  n (if n <= 1) (return this)
+  fibonacci[n - 1] + fibonacci[n - 2] (return this)
+}
+
+println[fibonacci[10] (should be 55)]
+println[fibonacci[20] (should be 6765)]
+`],
+  ['hello world', `\
+println["Hello, World!"]
+`],
+  ['test error display', `\
+function id[value] { value (return this) }
+println[id["test"
+`],
+  ['test directive error', `\
+print["test"] (call bad directive)
+`],
+  ['test return type error', `\
+function foo[] (returns an integer) { "foo" (return this) }
+print[foo[]]
+`],
+  ['test lambda', `\
+print[function[n]{ n * 2 (return this) }[3]]
+`],
+  ['test named lambda', `\
+function[n]{ n * 3 (return this) } (call this triple)
+print[triple[3]]
+`],
+]);
+
+for (const [exampleName, _exampleValue] of examples) {
+  const option = document.createElement('option');
+  option.appendChild(document.createTextNode(exampleName));
+  select_example.appendChild(option);
+}
+
+select_example.oninput = () => {
+  input.value = examples.get(select_example.selectedOptions[0].innerText);
+  input.oninput(new Event('ignored'));
+};
+
+let handle = setInterval(() => {
+  if (!('lex' in window)) { return; }
+  clearInterval(handle);
+  input.oninput(new Event('ignored'))
+}, 50);
+</script>
+<script src="lang.js" defer></script>
