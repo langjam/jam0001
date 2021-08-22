@@ -29,6 +29,7 @@ class ComstructLexer(Lexer):
         "SEP",  # :
         "FUNCDESC",  # Define the args of a class / method /* @param */
         "FUNCSEP",  # .
+        "NONE",  # None, equals to null
     }
 
     ignore = " \t\n"
@@ -36,6 +37,7 @@ class ComstructLexer(Lexer):
 
     FUNCDESC = r'/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/'
     FUNCSEP = r'\.'
+    NONE = r'None'
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
     PLUS = r'\+'
     STRING = r'"[^\"^\n]+"|""'
@@ -63,6 +65,10 @@ class ComstructLexer(Lexer):
     def NUMBER(self, t):
         t.value = int(t.value)
         return t
+
+    # noinspection PyUnusedLocal
+    def NONE(self, t):
+        return None
 
     def NEWSTMT(self, t):
         self.lineno += len(t.value)
