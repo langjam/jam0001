@@ -1,0 +1,11 @@
+\ Uses nested comment wrappings to determine if a positive integer input is even.
+
+\ is-even
+KEY
+0
+DO 3 TOGGLE-COMMENT LOOP
+3 IS-COMMENT
+DUP
+INVERT
+IF 3 TOGGLE-COMMENT THEN
+.
