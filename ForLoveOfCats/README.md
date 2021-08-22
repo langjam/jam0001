@@ -1,11 +1,13 @@
-# Build
+# StackTrack
+
+## Build
 
 Uses standard Rust stable toolchain, developed and tested with 1.54.0. A simple
-`cargo run` will build the interpreter and run `program.rat` in this directory.
+`cargo run` will build the interpreter and run `program.stack` in this directory.
 
 Pulls down no dependencies from crates.io
 
-# Rapid fire description
+## Rapid fire description
 
  - Strongly dynamic typed
  - Pass by value
@@ -20,7 +22,7 @@ Pulls down no dependencies from crates.io
  - Comment stack machine (see more below)
  - Full repl on panic (both manual and interpreter panic)
 
-# Detailed description
+## Detailed description
 
 This description will be a bit indulgent with thoughts, comments, and notes.
 
@@ -69,7 +71,7 @@ can be littered around to provide context and also log potentially important
 information. This log is not visible unless explicitly requested by the user in
 the case of an error and only contains the specifically relevant entries.
 
-Try playing around with the provided `program.rat` which implements a reverse
+Try playing around with the provided `program.stack` which implements a reverse
 polish notation interpreter. Try passing invalid arguments, poke at variables,
 and inspect the comment stack.
 

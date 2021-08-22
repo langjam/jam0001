@@ -1115,7 +1115,7 @@ fn print_comments(state: &ScopeState) {
 }
 
 fn main() {
-	let source = std::fs::read_to_string("program.rat");
+	let source = std::fs::read_to_string("program.stack");
 	let source = source.expect("Failed to find source file to execute");
 
 	let tokens = tokenize(&source);
