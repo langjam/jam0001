@@ -1,6 +1,8 @@
 # some language by some team
 The language concept revolves around threads, (each represented internally by a posix thread), which can produce work, as well as commenting on other thread's work! The language is dynamically typed, and compiled to c++!
 
+This language's home is on sourcehut, git.sr.ht/~pitust/langjam1
+
 ## Getting started
 0. Install clang++ on your system
 1. Install nodejs (see https://github.com/nvm-sh/nvm)
@@ -14,6 +16,14 @@ The language concept revolves around threads, (each represented internally by a 
 @thread
 fn main() {
     @log("Hello, world!");
+}
+```
+### Objects
+```rust
+@thread
+fn main() {
+    let obj = { field: 3 };
+    @log("obj: *", obj.field);
 }
 ```
 ### A more advanced program with _comments_
