@@ -5,6 +5,8 @@ The pancake programming language is a stack machine language with the following 
  * Users can conditionally (`flipif`) or unconditionally (`flip`) switch between them.
  * The execution continues from the beginning when it reaches the end.
 
+Try our demo [here](https://pancake-lang.github.io/)!
+
 # Build
 
 To build and run the pancake development environment perform the following.
