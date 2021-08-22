@@ -37,7 +37,7 @@ let rec pp_expr oc (expr : expr) =
 
 and pp_value oc (value: value) =
   match value with
-  | Arg id -> Format.fprintf oc "x%d" id
+  | Arg id -> Format.fprintf oc "x%d" (id - 1)
   | Cst value -> Format.fprintf oc "%d" value
   | Var name -> Format.fprintf oc "%s" name
   | Hole -> Format.fprintf oc "{??}"
