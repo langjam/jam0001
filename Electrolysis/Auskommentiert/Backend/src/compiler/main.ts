@@ -25,7 +25,7 @@ model.addPost({
             children: [
                 {
                     id: "33",
-                    content: "log(x, x*2, x/2, 1+x*2)",
+                    content: "log(x, sqrt(x))",
                     upvotes: -5,
                     date: 300,
                     children: []

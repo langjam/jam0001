@@ -56,10 +56,7 @@ export class VM {
             //console.log("Set " + comment.ast.varName);
             this.mVariables[this.mVariables.length - 1].set(comment.ast.varName, this.evaluateExpression(comment.ast.rhsExpr));
         } else if(comment.ast.kind === AST.ASTKinds.FunctionCall) {
-            
-            let func = this.evaluateExpression(comment.ast.funcName);
-            let params = this.evalFunctionParams(comment.ast.params);
-            (func as any).callback(params);
+            this.evalFunction(comment.ast);
         } else {
             throw new Error("Unknown kind " + comment.ast["kind"]);
         }
@@ -76,6 +73,11 @@ export class VM {
         }
         return ret.concat(this.evalFunctionParams(restOfParams));
     }
+    private evalFunction(funcCall : AST.FunctionCall) : VMValue {
+        let func = this.evaluateExpression(funcCall.funcName);
+        let params = this.evalFunctionParams(funcCall.params);
+        return (func as any).callback(params);
+    }
     private evaluateExpression(expression : AST.Expression) : VMValue {
         if(expression.kind === AST.ASTKinds.AtomicExpression_1) {
             return true;
@@ -87,6 +89,10 @@ export class VM {
                 if(expression.varName === "log") {
                     return new VMFunction(1, (p : VMValue[]) => {
                         console.log(p);
+                    });
+                } else if(expression.varName === "sqrt") {
+                    return new VMFunction(1, (p : VMValue[]) => {
+                        return Math.sqrt(p[0] as number);
                     });
                 }
                 throw new Error(val + " is not defined");
@@ -110,6 +116,8 @@ export class VM {
             return this.evaluateExpression(expression.lhs) as any <= (this.evaluateExpression(expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.MoreEqualExpression) {
             return this.evaluateExpression(expression.lhs) as any >= (this.evaluateExpression(expression.rhs) as any);
+        } else if(expression.kind == AST.ASTKinds.FunctionCall) {
+            return this.evalFunction(expression);
         }
         throw new Error("Unknown kind " + expression["kind"]);
         return false;
