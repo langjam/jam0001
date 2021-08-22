@@ -4,7 +4,7 @@
 
 > As with all MarkSideways programs, this is *NOT* just a markdown file that refers to code. The markdown file itself *IS* the code that MarkSideways interprets. You can run this program by running `python ms.py samples/Tetris.md`
 
-This document is an implementation of Tetris. It uses SDL2 (via PyGame). To play, use the arrow keys to move the piece around. Push the down arrow to drop the piece quickly, and up arrow to turn it clockwise and spacebar to turn it counter-clockwise.
+This document is an implementation of Tetris. It uses SDL2 (via PyGame since the interpreter is written in Python). To play, use the arrow keys to move the piece around. Push the down arrow to drop the piece quickly, and up arrow to turn it clockwise and spacebar to turn it counter-clockwise.
 
 As you progress the pieces fall faster. Every 10 line clears moves you to the next level and the colors of the pieces change. You can see how many lines you've cleared in the title bar, which updates in real time.
 
