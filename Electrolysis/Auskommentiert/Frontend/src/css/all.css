@@ -1,0 +1,33 @@
+
+.body {
+    border-color: grey;
+    border-style: solid;
+    border-radius: 5px;
+    border-width: 1px;
+}
+
+.middle {
+    width: 60%;
+    margin: 0 auto;
+}
+
+textarea {
+    resize: none;
+}
+
+.right {
+    float: right;
+}
+
+.max-width {
+    width: 100%;
+}
+
+.vertical {
+    display: block;
+}
+
+.content {
+    padding-left: 10px;
+    padding-right: 10px;
+}
