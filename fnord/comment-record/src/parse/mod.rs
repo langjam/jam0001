@@ -165,9 +165,11 @@ pub fn parse_value(input: &str) -> IResult<&str, ValueAst> {
     use nom::branch::alt;
     use nom::bytes::complete::tag;
     use nom::character::complete::{char, one_of};
+    use nom::combinator::map;
     use nom::sequence::preceded;
 
     let first = alt((
+        map(ws(tag("()")), |_| ValueAst::Unit),
         number,
         text,
         struct_value,
@@ -315,6 +317,14 @@ pub fn parse_type(input: &str) -> IResult<&str, TypeAst> {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn units() {
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("()").expect("parse").1;
+        assert!(matches!(res, ValueAst::Unit));
+    }
 
     #[test]
     fn numbers() {

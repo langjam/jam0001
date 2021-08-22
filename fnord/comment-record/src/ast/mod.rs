@@ -73,6 +73,7 @@ impl From<StructValueData> for StructValue {
 
 #[derive(Debug, Clone)]
 pub enum ValueAst {
+    Unit,
     Number(i64),
     Text(String),
     Struct(StructValue),

@@ -86,6 +86,7 @@ impl Env {
 
     pub fn evaluate(&self, val: &ValueAst) -> Result<Value, String> {
         match val {
+            ValueAst::Unit => Ok(Value::Unit),
             ValueAst::Number(n) => Ok(Value::Number(*n)),
             ValueAst::Text(t) => Ok(Value::Text(t.clone())),
             ValueAst::Struct(s) => {
