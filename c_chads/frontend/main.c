@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 
     intrp_init();
 
-    intrp_run(&result);
+    intrp_run(&result, NULL);
     intrp_main();
 
     intrp_deinit();
