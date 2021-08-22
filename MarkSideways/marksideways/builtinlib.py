@@ -1,4 +1,6 @@
+import json
 import random
+import sys
 import time
 from .values import *
 from .builtinlibgame import get_game_lib
@@ -55,6 +57,33 @@ def generate_builtins():
     if n.type == 'FLOAT': 
       return get_integer_value(int(n.value))
     return new_error_value(throw_token, "floor() can only accept number values.")
+
+  def _json_parse(throw_token, args):
+    err = ensure_arg_count(throw_token, args, 1)
+    if err != None: return err
+    err = ensure_is_string(throw_token, args, 0)
+    if err != None: return err
+    try:
+      value = json.loads(args[0].value)
+    except:
+      err = sys.exc_info()[1]
+      return new_error_value(throw_token, "Invalid JSON string. You have a syntax error on line " + str(err.lineno) + ", column " + str(err.colno) + ".")
+    return convert_python_value(value)
+
+  def _json_serialize(throw_token, args):
+    err = ensure_arg_count(throw_token, args, 1, 2)
+    if err != None: return err
+    if len(args) == 1:
+      use_pretty_print = False
+    else:
+      err = ensure_is_bool(throw_token, args, 1)
+      if err != None: return err
+      use_pretty_print = args[1].value
+    value = extract_py_value(args[0])
+    if value == None: return new_error_value(throw_token, "Data contains a value that cannot be serialized to JSON")
+    s = json.dumps(value) if not use_pretty_print else json.dumps(value, indent = 2)
+    return StringValue(s)
+      
 
   def _parse_int(throw_token, args):
     err = ensure_arg_count(throw_token, args, 1)
@@ -166,6 +195,8 @@ def generate_builtins():
     'game_is_key_pressed': _game_is_key_pressed,
     'game_is_quit': _game_is_quit,
     'game_set_title': _game_set_title,
+    'json_parse': _json_parse,
+    'json_serialize': _json_serialize,
     'parse_int': _parse_int,
     'print': _print,
     'random_float': _random_float,

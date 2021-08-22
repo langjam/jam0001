@@ -114,7 +114,7 @@ class DictionaryValue(Value):
     self.fields = {}
   def set_item(self, throw_token, key, value):
     nkey = self.get_native_key(key)
-    if nkey == None: return self.gen_error_key(key)
+    if nkey == None: return self.gen_error_key(throw_token, key)
     existing_index = self.lookup.get(nkey)
     if existing_index != None:
       self.values[existing_index] = value
@@ -126,15 +126,15 @@ class DictionaryValue(Value):
     return False
   def get_item(self, throw_token, key):
     nkey = self.get_native_key(key)
-    if nkey == None: return self.gen_error_key(key)
+    if nkey == None: return self.gen_error_key(throw_token, key)
     index = self.lookup.get(nkey)
     if index == None: return None
     return self.values[index]
-  def gen_error_key(self, key):
+  def gen_error_key(self, throw_token, key):
     return new_error_value(throw_token, "This is not a valid type that can be used as a key: " + key.type)
   def remove_item(self, throw_token, key):
     nkey = self.get_native_key(key)
-    if nkey == None: return self.gen_error_key(key)
+    if nkey == None: return self.gen_error_key(throw_token, key)
     index = self.lookup.get(nkey)
     if index == None: return new_error_value(throw_token, "The key " + key.to_string() + " does not exist in this dictionary.")
     last_index = self.size - 1
@@ -188,6 +188,15 @@ class DictionaryValue(Value):
       elif name == 'remove': output = BuiltInFunction('dictionary.remove', self._builtin_remove)
       self.fields[name] = output
     return output
+  def to_string(self):
+    sb = ['{']
+    for i in range(len(self.keys)):
+      if i > 0: sb.append(', ')
+      sb.append(self.keys[i].to_string())
+      sb.append(': ')
+      sb.append(self.values[i].to_string())
+    sb.append(' }')
+    return ''.join(sb)
 
 
 class BuiltInFunction(Value):
@@ -246,6 +255,53 @@ class StatusWrapper:
   def __init__(self, type, arg):
     self.type = type # RETURN, CONTINUE, BREAK, EXCEPTION
     self.arg = arg # a Value for RETURN, or a StackTrace for EXCEPTION
+
+PY_BOOL_TYPE = type(True)
+PY_STR_TYPE = type('')
+PY_INT_TYPE = type(1)
+PY_FLOAT_TYPE = type(1.5)
+PY_LIST_TYPE = type([])
+PY_DICT_TYPE = type({})
+
+# this is only used from the JSON parser. If you need to use it for something else
+# then it needs a few updates and additions (no throw token, only a few types supported)
+def convert_python_value(value):
+  if value == None: return NULL_VALUE
+  t = type(value)
+  if t == PY_BOOL_TYPE: return get_bool_value(value)
+  if t == PY_STR_TYPE: return StringValue(value)
+  if t == PY_INT_TYPE: return get_integer_value(value)
+  if t == PY_FLOAT_TYPE: return FloatValue(value)
+  if t == PY_LIST_TYPE:
+    items = map(convert_python_value, value)
+    return ArrayValue(list(items))
+  if t == PY_DICT_TYPE:
+    output = DictionaryValue()
+    for key in value.keys():
+      wrapped_key = convert_python_value(key)
+      wrapped_value = convert_python_value(value[key])
+      output.set_item(None, wrapped_key, wrapped_value)
+    return output
+  
+  return NULL_VALUE
+
+def extract_py_value(value):
+  t = value.type
+  if t == 'NULL': return None
+  if t in ('BOOL', 'INT', 'FLOAT', 'STRING'):  return value.value
+  if t == 'ARRAY':
+    return list(map(extract_py_value, value.value))
+  if t == 'DICTIONARY':
+    output = {}
+    keys = value.keys
+    values = value.values
+    for i in range(len(keys)):
+      if keys[i].type != 'STRING': return None
+      key = extract_py_value(keys[i])
+      output[key] = extract_py_value(values[i])
+    return output
+  return None
+
 
 def new_error_status(token, error):
   return StatusWrapper('EXCEPTION', StackTrace(token, error))

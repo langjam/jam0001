@@ -18,6 +18,8 @@ print("5! = " + factorialRecursive(5));
 
 testIncrement();
 dictionaryTest();
+
+jsonTest();
 ```
 
 ### Dictionary Test
@@ -130,7 +132,7 @@ print("Increment tests passed");
 
 ```
 
-### factorial recursive
+### Factorial Recursive
 
 - `n` - the value to calculate the factorial of
 
@@ -141,7 +143,7 @@ if n < 2 {
 return factorialRecursive(n - 1) * n;
 ```
 
-### ternary test
+### Ternary Test
 
 - `word` - word to make plural conditionally
 - `num` - number of items
@@ -177,6 +179,38 @@ for i = 1 thru 100 {
     total += i;
 }
 return total;
+```
+
+### JSON Test
+
+```
+value = {
+    "title": "I am flat JSON",
+    "arr": [1, 2, 3],
+    "objects": [
+        {
+            "id": 1,
+            "value": "apples"
+        },
+        {
+            "id": 2,
+            "value": "bananas"
+        },
+    ],
+    "floats": [1.5, 2.75],
+};
+print(json_serialize(value));
+value['title'] = "I am *pretty* JSON!";
+pretty_json = json_serialize(value, true);
+print(pretty_json);
+```
+
+Do a quick check just to see if round-tripping a dictionary through the serializer and parser will result in the same value as the original.
+
+```
+roundTrippedValue = json_parse(pretty_json) + '';
+directValue = value + '';
+assert(roundTrippedValue == directValue, "JSON round-tripping");
 ```
 
 ## Dummy Object
