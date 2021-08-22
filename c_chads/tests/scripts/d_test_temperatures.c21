@@ -33,8 +33,8 @@ main := proc () void {
         print((celsius - 121) / 14);
 
         print("doigt's dwindling sanity degrees:");
-        print((((celsius - 1) * .2 + celsius) + ((celsius - 300) * .04) / 5);
+        print((((celsius - 1) * .2 + celsius) + ((celsius - 300) * .04) / 5));
 
         celsius = celsius + 10;
-    }
-}
+    };
+};
