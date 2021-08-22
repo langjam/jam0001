@@ -1,3 +1,5 @@
+import time
+
 from application_stack_utils import StatementNode
 
 
@@ -22,6 +24,10 @@ def _for(args):
     return StatementNode.ForLoopExecutorNode(varname, tgetfrm, execute)
 
 
+def _forever(args):
+    return StatementNode.ForEverLoopExecutorNode(args[0])
+
+
 def intrange(args):
     return list(range(args[0], args[1]))
 
@@ -43,6 +49,7 @@ internals = {
     "if": when,
     "exit": lambda args: exit(args[0] if len(args) == 1 else 0),
     "for": _for,
+    "forever": _forever,
     "list_add": lambda args: args[0].append(args[1]),
     "list_clear": lambda args: args[0].clear(),
     "list_extend": lambda args: args[0].extend(args[1]),
@@ -62,7 +69,9 @@ internals = {
     "string_removeprefix": lambda args: args[0].removeprefix(args[1]),
     "string_removesuffix": lambda args: args[0].removesuffix(args[1]),
     "string_replace": lambda args: args[0].replace(args[1], args[2]),
-    "string_split": lambda args: args[0].split(args[1])
+    "string_split": lambda args: args[0].split(args[1]),
+    "string_contains": lambda args: args[1] in args[0],
+    "sleep": lambda args: time.sleep(args[0] / 1000)
 }
 
 env = {
@@ -74,6 +83,7 @@ env = {
     "if": StatementNode.FunctionDefinitionNode("internal"),
     "exit": StatementNode.FunctionDefinitionNode("internal"),
     "for": StatementNode.FunctionDefinitionNode("internal"),
+    "forever": StatementNode.FunctionDefinitionNode("internal"),
     "list_add": StatementNode.FunctionDefinitionNode("internal"),
     "list_clear": StatementNode.FunctionDefinitionNode("internal"),
     "list_extend": StatementNode.FunctionDefinitionNode("internal"),
@@ -89,9 +99,11 @@ env = {
     "string_islower": StatementNode.FunctionDefinitionNode("internal"),
     "string_isupper": StatementNode.FunctionDefinitionNode("internal"),
     "string_lower": StatementNode.FunctionDefinitionNode("internal"),
-    "string_uppper": StatementNode.FunctionDefinitionNode("internal"),
+    "string_upper": StatementNode.FunctionDefinitionNode("internal"),
     "string_removeprefix": StatementNode.FunctionDefinitionNode("internal"),
     "string_removesuffix": StatementNode.FunctionDefinitionNode("internal"),
     "string_replace": StatementNode.FunctionDefinitionNode("internal"),
     "string_split": StatementNode.FunctionDefinitionNode("internal"),
+    "string_contains": StatementNode.FunctionDefinitionNode("internal"),
+    "sleep": StatementNode.FunctionDefinitionNode("internal"),
 }

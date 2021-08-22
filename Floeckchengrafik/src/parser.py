@@ -4,17 +4,26 @@ from lexer import ComstructLexer
 from application_stack_utils import StatementNode
 
 
+class CustomLog:
+    def warning(self, *args):
+        pass
+
+
 # noinspection PyUnusedLocal
 class ComstructParser(Parser):
     tokens = ComstructLexer.tokens
 
     # debugfile = "parser.log"
 
+    log = CustomLog()
+
     precedence = (
         ("left", "NAME", "NUMBER", "STRING"),
         ("left", "PLUS", "MINUS"),
         ("left", "MULTIPLY", "DIVIDE"),
         ("left", "FUNCDESC"),
+        ("left", "OR", "AND", "NOT"),
+        ("left", "EQ", "NOTEQ", "GT", "GEQT", "ST", "SEQT")
     )
 
     @_("expr NEWSTMT")
@@ -45,25 +54,37 @@ class ComstructParser(Parser):
     def expr(self, p):
         return StatementNode.VarNode(p.NAME)
 
+    @_("expr OR expr")
+    def expr(self, p):
+        return StatementNode.OperationNode("||", p.expr0, p.expr1)
+
+    @_("expr AND expr")
+    def expr(self, p):
+        return StatementNode.OperationNode("&&", p.expr0, p.expr1)
+
+    @_("NOT expr")
+    def expr(self, p):
+        return StatementNode.OperationNode("!!", p.expr, None)
+
     @_("expr PLUS expr")
     def expr(self, p):
-        return StatementNode.MathNode("+", p.expr0, p.expr1)
+        return StatementNode.OperationNode("+", p.expr0, p.expr1)
 
     @_("expr MINUS expr")
     def expr(self, p):
-        return StatementNode.MathNode("-", p.expr0, p.expr1)
+        return StatementNode.OperationNode("-", p.expr0, p.expr1)
 
     @_("expr MULTIPLY expr")
     def expr(self, p):
-        return StatementNode.MathNode("*", p.expr0, p.expr1)
+        return StatementNode.OperationNode("*", p.expr0, p.expr1)
 
     @_("expr DIVIDE expr")
     def expr(self, p):
-        return StatementNode.MathNode("/", p.expr0, p.expr1)
+        return StatementNode.OperationNode("/", p.expr0, p.expr1)
 
     @_("expr MODULO expr")
     def expr(self, p):
-        return StatementNode.MathNode("%", p.expr0, p.expr1)
+        return StatementNode.OperationNode("%", p.expr0, p.expr1)
 
     @_("LPAREN expr RPAREN")
     def expr(self, p):
@@ -123,6 +144,14 @@ class ComstructParser(Parser):
     @_('NONE')
     def expr(self, p):
         return None
+
+    @_('TRUE')
+    def expr(self, p):
+        return True
+
+    @_('FALSE')
+    def expr(self, p):
+        return False
 
     @_('elem')
     def arglist(self, p):

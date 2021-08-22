@@ -13,7 +13,7 @@ class ComstructExecutor:
 
     def walkTree(self, node, _env):
 
-        if isinstance(node, StatementNode.MathNode):
+        if isinstance(node, StatementNode.OperationNode):
             if node.type == "+":
                 return self.walkTree(node.var1, _env) + self.walkTree(node.var2, _env)
 
@@ -28,6 +28,15 @@ class ComstructExecutor:
 
             elif node.type == "%":
                 return self.walkTree(node.var1, _env) % self.walkTree(node.var2, _env)
+
+            elif node.type == "||":
+                return self.walkTree(node.var1, _env) or self.walkTree(node.var2, _env)
+
+            elif node.type == "&&":
+                return self.walkTree(node.var1, _env) and self.walkTree(node.var2, _env)
+
+            elif node.type == "!!":
+                return not self.walkTree(node.var1, _env)
 
         elif isinstance(node, StatementNode.EqualNode):
             return self.walkTree(node.var1, _env) == self.walkTree(node.var2, _env)
@@ -52,7 +61,10 @@ class ComstructExecutor:
             return _env[node.var_name]
 
         elif isinstance(node, StatementNode.VarNode):
-            return _env[node.var_name]
+            try:
+                return _env[node.var_name]
+            except KeyError:
+                raise ElementNotFoundException(f"Variable '{node.var_name}' not found!")
 
         elif isinstance(node, StatementNode.LiterallyNode):
             if node.walk_function is not None:
@@ -126,8 +138,13 @@ class ComstructExecutor:
                     backup[arg[0]] = new_env[arg[0]] if arg[1] is not None else None
                 except KeyError:
                     to_delete.append(arg[0])
+                except TypeError:
+                    pass
 
-                new_env[arg[0]] = arg[1]
+                try:
+                    new_env[arg[0]] = arg[1]
+                except TypeError:
+                    pass
 
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(None)
 
@@ -168,6 +185,13 @@ class ComstructExecutor:
                 del _env[node.varname]
 
             return ret
+
+        elif isinstance(node, StatementNode.ForEverLoopExecutorNode):
+            try:
+                while True:
+                    self.walkTree(StatementNode.ExecuteStoredProcedureNode(node.execute), _env)
+            except KeyboardInterrupt:
+                return
 
         else:
             return node

@@ -14,4 +14,5 @@
 - [x] Implement Classes
 - [x] Implement If
 - [x] Implement for
+- [ ] Make Sokoban
 - [ ] Submit a PR (before the end of the jam)

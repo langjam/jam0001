@@ -7,6 +7,9 @@ class ComstructLexer(Lexer):
         "NAME",  # Any name like a var
         "NUMBER",  # A number like an int or a float
         "STRING",  # One or multible Lines of words
+        "OR",  # ||
+        "AND",  # &&
+        "NOT",  # !!
         "PLUS",  # +
         "MINUS",  # -
         "MULTIPLY",  # *
@@ -30,6 +33,8 @@ class ComstructLexer(Lexer):
         "FUNCDESC",  # Define the args of a class / method /* @param */
         "FUNCSEP",  # .
         "NONE",  # None, equal to null in other languages
+        "TRUE",  # Boolean "yes"
+        "FALSE",  # Boolen "no"
     }
 
     ignore = " \t"
@@ -38,7 +43,12 @@ class ComstructLexer(Lexer):
 
     FUNCDESC = r'/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/'
     FUNCSEP = r'\.'
+    OR = r"\|\|"
+    AND = r"&&"
+    NOT = r"!!"
     NONE = r"None"
+    TRUE = r"true"
+    FALSE = r"false"
     NAME = r'[a-zA-Z_][a-zA-Z_0-9]*'
     STRING = r'"[^\"^\n]+"|""'
     PLUS = r'\+'
@@ -84,6 +94,7 @@ class ComstructLexer(Lexer):
         # t.value = t.value.replace("*", "")
         token = t.value.removeprefix("/*").removesuffix("*/").replace("*", "").split("\n")
         t.value = FuncDescProcessor().tokenize(token)
+        self.lineno += len(token) - 1 if (len(token) - 1) > 0 else 0
         return t
 
     def error(self, t):
