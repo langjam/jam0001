@@ -179,14 +179,46 @@ impl Parser {
 
                 Ok(Statement::ExportVariable { name, value })
             }
-            None => {
-                let func = self.function_definition().or(Err(
-                    self.error("Expected function or identifier after 'export' keyword")
-                ))?;
-                Ok(Statement::ExportFunction {
-                    definition: Box::new(func),
-                })
-            }
+            None => match self.tokens.consume(vec![TokenType::Struct]) {
+                Some(_) => {
+                    if let Some(Token {
+                        token_type: TokenType::Identifier(struct_type, fields),
+                        ..
+                    }) = self.tokens.next()
+                    {
+                        self.tokens
+                            .consume(vec![TokenType::Semicolon])
+                            .ok_or(self.error("Expected ';' at the end of return statement"))?;
+
+                        Ok(Statement::StructDefinition {
+                            struct_type,
+                            fields,
+                            export: true,
+                        })
+                    } else {
+                        Err(self.error("Expected a struct definition after `struct` keyword"))
+                    }
+                }
+                None => {
+                    let func = self.function_definition().or(Err(
+                            self.error("Expected function definition, struct definition or an identifier after 'export' keyword")
+                        ))?;
+                    match func {
+                        Statement::FunctionDefinition {
+                            name,
+                            parameters,
+                            body,
+                            export: _,
+                        } => Ok(Statement::FunctionDefinition {
+                            name,
+                            parameters,
+                            body,
+                            export: true,
+                        }),
+                        _ => unreachable!(),
+                    }
+                }
+            },
         }
     }
 
@@ -285,6 +317,7 @@ impl Parser {
                 name,
                 parameters,
                 body,
+                export: false,
             })
         } else {
             Err(self.error("Expected an function signature after `func` keyword"))
@@ -324,6 +357,7 @@ impl Parser {
             Ok(Statement::StructDefinition {
                 struct_type,
                 fields,
+                export: false,
             })
         } else {
             Err(self.error("Expected a struct definition after `struct` keyword"))

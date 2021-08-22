@@ -333,24 +333,34 @@ impl Scope<'_> {
         }
     }
 
-    pub fn add_functions_from_ast(&mut self, ast: &[Statement]) {
+    /// Returns vec of exports
+    pub fn add_functions_from_ast(&mut self, ast: &[Statement]) -> Vec<Statement> {
+        let mut exports = Vec::new();
         for stmt in ast {
             if let Statement::FunctionDefinition {
                 name,
                 parameters: _,
                 body: _,
+                export,
             } = &stmt
             {
                 self.functions.insert_str(name, stmt.clone());
+                if *export {
+                    exports.push(stmt.clone());
+                }
             };
         }
+        return exports;
     }
 
-    pub fn add_struct_defs_from_ast(&mut self, ast: &[Statement]) {
+    /// Returns vec of exports
+    pub fn add_struct_defs_from_ast(&mut self, ast: &[Statement]) -> Vec<Statement> {
+        let mut exports = Vec::new();
         for stmt in ast {
             if let Statement::StructDefinition {
                 struct_type,
                 fields,
+                export,
             } = &stmt
             {
                 self.struct_defs.insert_str(
@@ -360,8 +370,13 @@ impl Scope<'_> {
                         .map(|field| (BString::from(field.clone()), ()))
                         .collect(),
                 );
+
+                if *export {
+                    exports.push(stmt.clone());
+                }
             }
         }
+        exports
     }
 
     /// Create a new scope, with `self` as the parent.
@@ -411,6 +426,7 @@ pub struct Interpreter<'b, 's> {
     column: usize,
     variable_exports: Trie<BString, RefCell<Value>>,
     function_exports: Vec<Statement>,
+    struct_exports: Vec<Statement>,
 }
 
 /// Represents all events that need to be bubbled-up during interpretation:
@@ -460,15 +476,16 @@ impl FromResidual<Result<Infallible, InterpreterError>> for Exec {
 
 impl<'b, 's> Interpreter<'b, 's> {
     pub fn new(mut scope: Scope<'s>, ast: &'b [Statement]) -> Self {
-        scope.add_functions_from_ast(ast);
-        scope.add_struct_defs_from_ast(ast);
+        let function_exports = scope.add_functions_from_ast(ast);
+        let struct_exports = scope.add_struct_defs_from_ast(ast);
 
         Self {
             scope,
             body: ast,
             line: 0,
             column: 0,
-            function_exports: Vec::new(),
+            function_exports,
+            struct_exports,
             variable_exports: Trie::new(),
         }
     }
@@ -629,6 +646,7 @@ impl<'b, 's> Interpreter<'b, 's> {
                 name: _,
                 parameters,
                 body,
+                export: _,
             } => (parameters, body),
 
             Statement::CallBuiltin { function } => {
@@ -872,8 +890,28 @@ impl<'b, 's> Interpreter<'b, 's> {
                                             name,
                                             parameters: _,
                                             body: _,
+                                            export: _,
                                         } => {
                                             self.scope.functions.insert_str(name, func.clone());
+                                        }
+                                        _ => unreachable!(),
+                                    }
+                                }
+
+                                for stru in interpreter.struct_exports {
+                                    match &stru {
+                                        Statement::StructDefinition {
+                                            struct_type,
+                                            fields,
+                                            export: _,
+                                        } => {
+                                            self.scope.struct_defs.insert_str(
+                                                struct_type,
+                                                fields
+                                                    .iter()
+                                                    .map(|field| (BString::from(field.clone()), ()))
+                                                    .collect(),
+                                            );
                                         }
                                         _ => unreachable!(),
                                     }
@@ -1008,6 +1046,7 @@ impl<'b, 's> Interpreter<'b, 's> {
                     name: _,
                     parameters: _,
                     body: _,
+                    export: _,
                 } => (),
                 Statement::Block { statements: _ } => (),
                 Statement::Return { expression } => {
@@ -1030,9 +1069,6 @@ impl<'b, 's> Interpreter<'b, 's> {
                         self.variable_exports
                             .insert_str(ident.into(), RefCell::new(val));
                     }
-                }
-                Statement::ExportFunction { definition } => {
-                    self.function_exports.push(definition.as_ref().clone());
                 }
                 Statement::Import { name } => {
                     if let TokenType::Identifier(ident, args) = self.get_token_type(&name) {

@@ -1,24 +1,6 @@
+import complex;
+
 let maximum number of iterations := 255;
-
-struct complex number has a `real part` and an `imaginary part`;
-
-func square a complex number `z` {
-	return complex number {
-		re := z.re * z.re - z.im * z.im,
-		im := 2.0 * z.re * z.im
-	};
-}
-
-func add complex numbers `z1` and `z2` {
-	return complex number {
-		re := z1.re + z2.re,
-		im := z1.im + z2.im
-	};
-}
-
-func magnitude squared of complex number `z` {
-	return z.re * z.re + z.im * z.im;
-}
 
 func count mandelbrot iterations at point `x` `y` {
 	let center := complex { 
@@ -42,11 +24,7 @@ let y := 0;
 while y < 400 {
 	let x := 0;
 	while x < 700 {
-		if count mandelbrot iterations at (float(x), float(y)) == maximum number of iterations {
-			print("1 ");
-		} else {
-			print("0 ");
-		}
+		print(count mandelbrot iterations at (float(x), float(y)) == maximum number of iterations, " ");
 		x := x + 1;
 	}
 	y := y + 1;
