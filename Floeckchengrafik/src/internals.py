@@ -1,3 +1,5 @@
+import time
+
 from application_stack_utils import StatementNode
 
 
@@ -67,7 +69,8 @@ internals = {
     "string_removeprefix": lambda args: args[0].removeprefix(args[1]),
     "string_removesuffix": lambda args: args[0].removesuffix(args[1]),
     "string_replace": lambda args: args[0].replace(args[1], args[2]),
-    "string_split": lambda args: args[0].split(args[1])
+    "string_split": lambda args: args[0].split(args[1]),
+    "sleep": lambda args: time.sleep(args[0] / 1000)
 }
 
 env = {
@@ -100,4 +103,5 @@ env = {
     "string_removesuffix": StatementNode.FunctionDefinitionNode("internal"),
     "string_replace": StatementNode.FunctionDefinitionNode("internal"),
     "string_split": StatementNode.FunctionDefinitionNode("internal"),
+    "sleep": StatementNode.FunctionDefinitionNode("internal"),
 }
