@@ -1,6 +1,5 @@
 ## About
-Hello! this is my entry for LangJam 1!
-*5 minute Whale sounds*
+Hello! this is my **very** incomplete entry for LangJam 1!
 
 ## Example
 ### Fibonacci
