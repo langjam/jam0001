@@ -18,11 +18,19 @@ struct RoutineValue {
     struct Node **block;
 };
 
+struct NumberExpr {
+    bool is_float;
+    union {
+        int _int;
+        double _float;
+    } as;
+};
+
 struct Value {
     enum ValueType type;
     union {
         char *string;
-        int number;
+        struct NumberExpr number;
         struct RoutineValue routine;
     } as;
 };
@@ -53,6 +61,17 @@ struct Expr {
 enum NodeType {
     NodeTypeLog = 1,
     NodeTypeSet,
+    NodeTypeIf
+};
+
+struct ElseStatementNode {
+
+};
+
+struct IfStatementNode {
+    struct Expr *expr;
+    struct Node **block;
+    struct Node **else_block;
 };
 
 struct Node {
@@ -63,6 +82,7 @@ struct Node {
             char *key;
             struct Expr *expr;    
         } set;
+        struct IfStatementNode if_stat;
     } value;
 };
 

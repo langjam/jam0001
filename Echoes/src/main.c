@@ -58,7 +58,11 @@ static void print_value(struct Value *value) {
         --indent;
         print_indent(); printf("value\n");
         ++indent;
-        print_indent(); printf("%d\n", value->as.number);
+        print_indent();
+        if (value->as.number.is_float)
+            printf("%f\n", value->as.number.as._float);
+        else
+            printf("%d\n", value->as.number.as._int);
         indent -= 2;
         break;
     case ValueTypeString:

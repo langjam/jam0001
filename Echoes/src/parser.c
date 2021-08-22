@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <assert.h>
 
 typedef enum Precedence {
@@ -54,12 +55,34 @@ static struct Expr *parser_parse_literal_expr(struct Parser* const parser) {
         return NULL;
     switch (parser->lexer.token.name) {
     case TokenNameNumber: {
-        int number = 0;
+        struct NumberExpr number = {
+            .is_float = false,
+        };
+        double as_float = 0.f;
+        int as_int = 0;
         expr = malloc(sizeof(struct Expr));
         for (size_t i = 0; i < parser->lexer.token.length; ++i) {
-            number *= 10;
-            number += parser->lexer.token.string[i] - '0';
+            if (parser->lexer.token.string[i] == '.') {
+                if (!number.is_float) {
+                    number.is_float = true;
+                    continue;
+                } else {
+                    parser_error(parser, "Unexpected '.' after float literal");
+                }
+            }
+            if (!number.is_float) {
+                as_int *= 10;
+                as_int += parser->lexer.token.string[i] - '0';
+            }
+            as_float *= 10;
+            as_float += parser->lexer.token.string[i] - '0';
+            if (number.is_float)
+                as_float /= 10;
         }
+        if (number.is_float)
+            number.as._float = as_float;
+        else
+            number.as._int = as_int;
         expr->type = ExprTypeValue;
         expr->as.value = malloc(sizeof(struct Value));
         expr->as.value->type = ValueTypeNumber;
@@ -368,10 +391,51 @@ static struct Value *parser_parse_node_routine(struct Parser* const parser) {
     return value;
 }
 
+static struct Node *parser_parse_if_statement(struct Parser* const parser) {
+    struct Node *node;
+    struct IfStatementNode if_stat = {
+        .block = NULL,
+        .else_block = NULL,
+        .expr = NULL
+    };
+    struct Lexer old_state = parser->lexer;
+    // is there something?
+    if (!lexer_tokenize(&parser->lexer))
+        return NULL;
+    // verify it starts with 'if'
+    if (parser->lexer.token.name != TokenNameIf) {
+        parser->lexer = old_state;
+        return NULL;
+    }
+    if (!(if_stat.expr = parser_parse_expr(parser))) {
+        parser_error(parser, "Expected an expression after if keyword");
+    }
+    if (!(if_stat.block = parser_parse_block(parser))) {
+        parser_error(parser, "Expected block after if (expr)");
+    }
+    node = malloc(sizeof(struct Node));
+    node->type = NodeTypeIf;
+    old_state = parser->lexer;
+    if (!lexer_tokenize(&parser->lexer)) {
+        goto end;
+    }
+    if (parser->lexer.token.name != TokenNameElse) {
+        parser->lexer = old_state;
+        goto end;
+    }
+    if (!(if_stat.else_block = parser_parse_block(parser))) {
+        parser_error(parser, "Expected block after Else keyword");
+    }
+end:
+    node->value.if_stat = if_stat;
+    return node;
+}
+
 static struct Node *parser_parse_node(struct Parser* const parser) {
     struct Node *node;
     if ((node = parser_parse_node_set(parser)) ||
-        (node = parser_parse_node_log(parser))) {
+        (node = parser_parse_node_log(parser)) ||
+        (node = parser_parse_if_statement(parser))) {
         return node;
     }
     return NULL;

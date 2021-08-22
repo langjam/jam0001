@@ -22,7 +22,9 @@ enum TokenName {
     TokenNameRightCur,
     TokenNameEquals,
     TokenNameSmallerThan,
-    TokenNameBiggerThan
+    TokenNameBiggerThan,
+    TokenNameIf,
+    TokenNameElse
 };
 
 struct Token {

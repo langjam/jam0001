@@ -190,6 +190,12 @@ bool lexer_tokenize(struct Lexer* const lexer) {
     // try to tokenize `routine`
     if (lexer_match_keyword(lexer, "routine", 7, TokenNameRoutine))
         return true;
+    // try to tokenize `if`
+    if (lexer_match_keyword(lexer, "if", 2, TokenNameIf))
+        return true;
+    // try to tokenize `else`
+    if (lexer_match_keyword(lexer, "else", 4, TokenNameElse))
+        return true;
 
     lexer_error(lexer, "Unrecognized token");
     return false;
