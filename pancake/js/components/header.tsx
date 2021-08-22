@@ -17,7 +17,7 @@ export function Header({ runtime }: HeaderProps) {
 
 function Logo() {
     return (
-        <div className='logo flex-row flex-align-center horizontal-rhythm-8'>
+        <div className='logo flex-row flex-align-center horizontal-rhythm-16'>
             <img src={icon} />
             <div>Pancake Playground</div> 
         </div>
@@ -34,6 +34,6 @@ export function Controls({ runtime }: ControlsProps) {
         <button onClick={runtime.start}>Run</button>
         <button onClick={() => runtime.step(1)}>Step</button>
         <button onClick={runtime.stop}>Stop</button>
-        {/* TODO Slider for speed (use pageEvents.onChangeSpeed) */}
+        {/* TODO Slider for speed (use runtime.delaySeconds) */}
     </div>
 }
