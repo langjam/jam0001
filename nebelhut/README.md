@@ -318,7 +318,7 @@ The statements in a block are not created but stored in block value.
 
 The expressions in a string-list are evaluated, converted to strings and concatenated resulting in a string value.
 
-An identifier can be preceded by `'` to create an identifier value. When an identifier is encountered, its value is looked up. Flamingo is dynamically scoped. If the value either is a builtin or it is a block and the variable is associated with an `arity`, a number of expressions corresponding to the arity following the identifier are parsed and evaluated. The builtin or the block are called with these arguments and the value is returned. If the value is macro, a number of macro arguments corresponding to the macro’s number of parameters is read, the macro is evaluated and the resulting block is evaluated. An identifier can be preceded by `&` to force a simple lookup without trying to parse function or macro calls.
+An identifier can be preceded by `'` to create an identifier value. When an identifier is encountered, its value is looked up. Flamingo is dynamically scoped. If the value either is a builtin or it is a block and the variable is associated with an `'arity`, a number of expressions corresponding to the arity following the identifier are parsed and evaluated. The builtin or the block are called with these arguments and the value is returned. If the value is macro, a number of macro arguments corresponding to the macro’s number of parameters is read, the macro is evaluated and the resulting block is evaluated. An identifier can be preceded by `&` to force a simple lookup without trying to parse function or macro calls.
 
 A statement is either an empty line, an `if`, a `for`, a `macro` definition, a `return` statement or an expression.
 
@@ -328,15 +328,15 @@ An `if` is followed by an expression that must be of type bool and a code block.
 
 A `for` is followed by an identifier, an expression and a code block. The expression must produce a list. The block is evaluated for every element of the list. It is evaluated in a new scope and the list element is bound to the given identifier if that identifier is not `_`. The value of the statement is the value of the block of the last iteration. If the list is empty, its value is `no`.
 
-A `macro` TODO
+A `macro` statement is followed by an identifier, an integer token and a block. It creates a macro value that stores the integer which is the number of parameters the macro receives and the block, and binds that macro value under the given name in the current scope.
 
-A `return` is followed by an expression and ends the execution of an function call early resulting in the expression value. An execution of a code block constitutes a function call if: its origin is `eval`, its origin is `apply`, its origin is a parsed function call due to a bound block value having an associated `arity`.
+A `return` is followed by an expression and ends the execution of an function call early resulting in the expression value. An execution of a code block constitutes a function call if: its origin is `eval`, its origin is `apply`, its origin is a parsed function call due to a bound block value having an associated `'arity`.
 
 If a statement is an expression that results in a comment, this comment is stashed. See `stash-comment` for further semantics.
 
 If a statment is an expression and there is a stashed string comment beginning with "`TEST `" the expression following "`TEST `" is evaluated in the current scope and this test expression is tested for equality with the result of the statement of expression. If they are not equal, execution halts and a failure is displayed. If there is a stashed string comment beginning with "`TESTWITH `", the statement is executed for every `TESTWITH` clause in the comment. A `TESTWITH` clause is followed by an identifier and two expressions. Both expressions are evaluated in the current scope. The result of the first expression is bound to the identifier in the current scope before the statement is executed. The result of statement is compared with the second expression for equality. If they are not equal, execution halts and a failure is displayed.
 
-TODO Macro evaluation.
+When a variable that has a macro value bound to it is encountered, the parser consumes as many macro arguments as the macro has designated parameters. A macro argument is a regular token or several tokens enclosed between balanced parentheses and brackets. The outer parentheses/brackets are not part of the argument. To insert the arguments into the macro body every token that is not preceded by a `,` (comma) is copied to the output. A comma followed by an integer token copies the corresponding argument into the output. A comma followed by the identifier `len` and an integer token, writes an integer token to the output that is the length of the corresponding argument. A comma followed by the identifier `for`, an integer token and a body evaluates the body for every token in the argument. Two additional parameters are made available to the body: the token and the loop index as an integer token. When the output list of tokens is finished, it is executed as a block in the current environment.
 
 There are 10 types of values in Flamingo: bools, ints, floats, identifiers, strings, lists, comments, builtins, blocks and macros.
 
@@ -459,4 +459,5 @@ There are 10 types of values in Flamingo: bools, ints, floats, identifiers, stri
 `float->int x:float`
 > Truncate the value of `x` (round towards to zero) and return it as an integer.
 
-`defun` TODO
+`defun name:ident params:list body:block`
+> `defun` is a macro. `params` must be a list of (non-quoted) identifiers. `defun` binds the code block to the given name, associates the `'arity` derived from the parameter list, and inserts code in the code block to assign the numeric arguments to the given parameter names.
