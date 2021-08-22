@@ -270,6 +270,21 @@ class Function:
         return result
 
 
+class BuiltInFunction(Function):
+    def __init__(
+        self, func_name: str, param_names: "list[str]", effect, return_var: str = None
+    ):
+        params = [Parameter(name) for name in param_names]
+        body = Stmts([
+            Stmt(
+                body=type(
+                    "BuiltInFunctionStmt", (StmtContents, object), {"execute": effect}
+                )
+            )
+        ])
+        super().__init__(func_name, params, body, return_var=return_var)
+
+
 class Program:
     def __init__(self, funcs: "list[Function]", stmts):
         self.funcs = funcs
@@ -281,22 +296,17 @@ class Program:
     def execute(self):
         self.stmts.execute()
 
-
 builtin_funcs = {
-    Function(
-        func_name="Prints a number",
-        params=[Parameter("the number")],
-        body=Stmts(
-            [
-                Stmt(
-                    body=type(
-                        "PrintNumberStmt",
-                        (StmtContents, object),
-                        {"execute": lambda: print(get_var("the number"))},
-                    )
-                )
-            ]
-        ),
+    BuiltInFunction(
+        func_name = "Prints a number", 
+        param_names = ["the number"], 
+        effect = lambda: print(get_var("the number"))
+    ),
+    BuiltInFunction(
+        func_name="Asks the user for a number", 
+        param_names=[], 
+        effect = lambda: set_var("the number", int(input("Please enter a number:"))),
+        return_var = "the number"
     )
 }
 

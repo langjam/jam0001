@@ -181,7 +181,7 @@ class Tokeniser:
             if self.advance_if("with"):
                 return Token.WITH
 
-            if self.advance_if("as"):
+            if self.advance_if("as "):
                 return Token.AS
 
             if ch == ".":
