@@ -54,14 +54,14 @@ function input_stream_for(string, filename) {
 
 function process_comment(matched_text) {
 	const text = matched_text.slice(2, -2).trim()
-	const comment_regex = /^([^ ]+) *(\([^)]+\))?:/
+	const comment_regex = /^([^ (]+) *(\([^)]+\))?:/
 	const match = comment_regex.exec(text)
 	if (match === null) {
 		return { kind: 'naked', text }
 	} else if (match[2] === undefined) {
 		return { kind: 'tagged', tag: match[1], text: text.slice(match[0].length) }
 	}
-	const parameters = match[2].split(',').map(param => param.trim())
+	const parameters = match[2].slice(1, -1).split(',').map(param => param.trim())
 	return { kind: 'parametric', tag: match[1], text: text.slice(match[0].length), parameters }
 }
 
