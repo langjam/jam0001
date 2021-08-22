@@ -2,12 +2,16 @@ import json
 from collections import defaultdict
 from math import sqrt, inf
 from pprint import pprint
-from random import random, shuffle
+from random import random, shuffle, choice
 from queue import PriorityQueue
 from sys import argv
 import os
 
 from matplotlib import pyplot as plt, patches
+
+import noise
+from noise import snoise2
+
 import matplotlib
 
 # matplotlib.use("TkAgg")
@@ -393,6 +397,13 @@ class World:
 
         tiles = set()
 
+        for station in self.stations:
+            tiles.add(Tile(station.x,station.y, "STATION"))
+            tiles.add(Tile(station.x+1,station.y, "STATION"))
+            tiles.add(Tile(station.x,station.y+1, "STATION"))
+            tiles.add(Tile(station.x+1,station.y+1, "STATION"))
+
+
         for id,road in enumerate(self.roads):
             path = road[3]
 
@@ -441,6 +452,26 @@ class World:
                             tiles.add(Tile(road[3][-1][0], road[3][-1][1], "T_NORTH"))
                         if road[3][-2][1] == road[3][-1][1] + 1 :
                             tiles.add(Tile(road[3][-1][0], road[3][-1][1], "T_SOUTH"))
+
+
+
+        min_x,min_y,max_x,max_y = min(tile.x for tile in tiles),min(tile.y for tile in tiles),max(tile.x for tile in tiles),max(tile.y for tile in tiles)
+
+        for x in range(min_x,max_x+1):
+            for y in range(min_y,max_y+1):
+                if snoise2(x/10,y/10,octaves=3)>0.1 and Tile(x, y, "X") not in tiles:
+                    tiles.add(Tile(x, y, choice(["Decoration1"])))
+
+
+
+
+
+
+
+
+
+
+
         data = {
             "stations" : [{"x":station.x,"y":station.y,"stoppers":station_data[i],"type":station.type, "name": station.name} for (i,station) in enumerate(self.stations)],
             "lines" : [{"station_id":line[0], "station_track":line[1],"path":line[3]} for line in lines],
@@ -467,7 +498,7 @@ if __name__ == '__main__':
         file = argv[1].strip().strip("\"")
     else:
         file = "test_places.json"
-        file = "visualizer_setup/32.json"
+        # file = "visualizer_setup/32.json"
 
 
     print(os.getcwd())
@@ -479,7 +510,7 @@ if __name__ == '__main__':
     stations = [Station(id, d["inputs"], d["to"], d["type"], d["name"]) for id, d in enumerate(data)]
     stations = StationGroup.build(stations)
     # stations.plot()
-    stations.scale(2)
+    stations.scale(3)
     # stations.plot()
     print("Stations placed")
 

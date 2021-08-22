@@ -23,7 +23,14 @@ const TILE_TYPE = {
     T_NORTH: {name: "T_crossing_left.png", img: null, rot: DIRECTION.East},
     T_EAST: {name: "T_crossing_left.png", img: null, rot: DIRECTION.South},
     T_SOUTH: {name: "T_crossing_left.png", img: null, rot: DIRECTION.West},
-    CROSSING: {name: "crossing.png", img: null, rot: DIRECTION.North}
+    CROSSING: {name: "crossing.png", img: null, rot: DIRECTION.North},
+
+    Decoration1: {name: "decoration1.png", img:null, rotate: DIRECTION.North},
+    Decoration2: {name: "decoration2.png", img:null, rotate: DIRECTION.North},
+    Decoration3: {name: "decoration3.png", img:null, rotate: DIRECTION.North},
+    Decoration4: {name: "decoration4.png", img:null, rotate: DIRECTION.North},
+    Decoration5: {name: "decoration5.png", img:null, rotate: DIRECTION.North},
+
 }
 
 const COLOR = {
@@ -126,7 +133,9 @@ class Grid {
 
 
     addTile(coordinate, tile) {
-        this.grid.set(coordinate, {tile: tile, rotation: tile.rot})
+        if (tile) {
+            this.grid.set(coordinate, {tile: tile, rotation: tile.rot})
+        }
     }
 
     addTrain(train) {
