@@ -198,7 +198,7 @@ let generate_function (Spec (_, name, comment)) =
     name; n_args = 0; declarations = []; result = Yolo []
   } comments
 
-let rec compile_function ftable { result; declarations; _ } =
+let rec compile_function (ftable : Kl_IR.ftable) { result; declarations; _ } =
   match result with
   | Function e -> compile_expr ftable declarations e
   | _ -> Kl_IR.Cst 0
@@ -221,7 +221,7 @@ and compile_operation ftable env =
   | Div (e1, e2) ->
     Kl_IR.div (compile_val e1) (compile_val e2)
   | App (fname, vals) ->
-    Kl_IR.(app (func ~name:(Some fname) (List.assoc fname ftable)) (List.map compile_val vals))
+    Kl_IR.app (FUN fname) (List.map compile_val vals)
   | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map compile_val vs)
 
 and compile_value ftable env = function

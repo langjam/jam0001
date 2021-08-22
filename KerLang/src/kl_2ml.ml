@@ -24,18 +24,18 @@ let emit_param_sequence oc (params_count : int) =
     Printf.fprintf oc "x%d" (params_count - 1)
   end
 
-let rec emit_ast oc ?(self_name : string option = None) ?(indent_lvl : int = 0) (func: ast) =
+let rec emit_ast oc ?(self_name : string option = None) ?(indent_lvl : int = 0) (func : ast) =
   match func with
   | Cst value ->
     Printf.fprintf oc "\n%a%d" emit_indent indent_lvl value
   | Var id ->
     Printf.fprintf oc "\n%ax%d" emit_indent indent_lvl id
-  | App(op, args) ->
+  | App (op, args) ->
     Printf.fprintf oc "\n%a(%a %a)"
       emit_indent indent_lvl
-      (emit_op ~self_name ~indent_lvl) op
+      (emit_op ~self_name) op
       (emit_ast_list ~self_name ~indent_lvl:(indent_lvl + 1)) args
-  | If(cond, ifcase, elsecase) ->
+  | If (cond, ifcase, elsecase) ->
     Printf.fprintf oc "\n%aif 0 <> (%a)\n%athen%a\n%aelse%a"
       emit_indent indent_lvl
       (emit_ast ~self_name ~indent_lvl:(indent_lvl + 1)) cond
@@ -51,14 +51,10 @@ and emit_ast_list oc ?(self_name : string option = None) ?(indent_lvl : int = 0)
     emit_ast oc ~self_name:(self_name) ~indent_lvl:(indent_lvl) ast;
     emit_ast_list oc ~self_name:(self_name) ~indent_lvl:(indent_lvl) q
 
-and emit_op oc ?(self_name : string option = None) ?(indent_lvl : int = 0) (op: op) =
+and emit_op oc ?(self_name : string option = None) (op: op) =
   match op with
   | OUT ->
-    Printf.fprintf oc "%s" "(fun ";
-    emit_param_sequence oc (op_count_params op);
-    Printf.fprintf oc " -> ";
-    Printf.fprintf oc "print_int x0; print_string \"\\n\"; ";
-    Printf.fprintf oc "x1)";
+    Printf.fprintf oc "(fun x0 x1 -> print_int x0; print_string \"\\n\"; x1)";
   | ADD ->
     Printf.fprintf oc "(+)"
   | SUB ->
@@ -67,39 +63,25 @@ and emit_op oc ?(self_name : string option = None) ?(indent_lvl : int = 0) (op: 
     Printf.fprintf oc "( * )"
   | DIV ->
     Printf.fprintf oc "(/)"
-  | FUN (Some name, _) ->
+  | FUN name ->
     Printf.fprintf oc "%s" name
-  | FUN (None, func) ->
-    let params = op_count_params op in
-    if params = 0 then
-      emit_ast oc ~self_name ~indent_lvl:(indent_lvl + 1) func
-    else
-      Printf.fprintf oc "(fun %a -> %a)"
-        emit_param_sequence params
-        (emit_ast ~self_name ~indent_lvl:(indent_lvl + 1)) func
   | SELF ->
     match self_name with
     | None -> failwith "were gonna need a self name here"
     | Some name -> Printf.fprintf oc "%s" name
 
-let emit_ast_as_function oc ?(indent_lvl : int = 0) (name : string) (func : ast) = 
+and emit_ast_as_function oc ?(indent_lvl : int = 0) ~name (func : ast) =
+  let params = ast_count_params func in
+  if params > 0 then
+    Printf.fprintf oc "(fun %a -> %a)"
+      emit_param_sequence params
+      (emit_ast ~self_name:(Some name) ~indent_lvl) func
+  else
+    emit_ast oc ~indent_lvl func
+
+let emit_ast_as_function_decl oc ?(indent_lvl : int = 0) (name : string) (func : ast) =
   emit_indent oc indent_lvl;
   Printf.fprintf oc "let %s%s = %a\n"
     (if ast_is_recursive func then "rec " else "")
     name
-    (emit_op ~self_name:(Some name) ~indent_lvl:(indent_lvl + 1)) (FUN (None, func))
-
-let emit_op_as_function oc ?(indent_lvl : int = 0) (op : op) =
-  match op with
-  | FUN (name_opt, func) -> begin
-      match name_opt with
-      | Some name -> begin
-          Printf.fprintf oc "%alet %s %s = %a\n"
-            emit_indent indent_lvl
-            (if ast_is_recursive func then "rec" else "")
-            name
-            (emit_op ~self_name:(Some name) ~indent_lvl:(indent_lvl + 1)) (FUN (None, func))
-        end
-      | None -> failwith "i aint gonna generate an op with no name"
-    end
-  | _ -> failwith "whats even that"
+    (emit_ast_as_function ~indent_lvl:(indent_lvl + 1) ~name) func

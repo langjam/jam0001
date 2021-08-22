@@ -4,7 +4,7 @@
 
 (** {2 Syntax} *)
 
-type op = OUT | ADD | MUL | DIV | SUB | FUN of string option * ast | SELF
+type op = OUT | ADD | MUL | DIV | SUB | FUN of string | SELF
 
 and ast =
   | App of op * ast list
@@ -12,41 +12,41 @@ and ast =
   | Var of int
   | If of ast * ast * ast
 
-type ftable = string * ast list
+type ftable = (string * ast) list
 
 let[@inline] add x y = App (ADD, [x; y])
 let[@inline] sub x y = App (SUB, [x; y])
 let[@inline] mul x y = App (MUL, [x; y])
 let[@inline] div x y = App (DIV, [x; y])
 let[@inline] app f args = App (f, args)
-let[@inline] func ?name:(name=None) bdy = FUN (name, bdy)
-let[@inline] nfunc name ftable = FUN (Some name, List.assoc name ftable)
-
+let[@inline] func name = FUN name
 
 (** {3 Semantics} *)
 
-let rec eval ?self:(self : ast option = None) (env : int list) (expr : ast) : int =
+let rec eval ?self:(self : ast option = None) (env : int list) (ftable : ftable) (expr : ast) : int =
   match expr with
   | App (op, args) ->
-    List.map (eval ~self env) args
-    |> eval_op self op
+    List.map (eval ~self env ftable) args
+    |> eval_op self ftable op
   | Cst n -> n
   | Var x -> List.nth env x
   | If (c, b1, b2) ->
-    if eval ~self env c = 0
-    then eval ~self env b2
-    else eval ~self env b1
+    if eval ~self env ftable c = 0
+    then eval ~self env ftable b2
+    else eval ~self env ftable b1
 
-and eval_op (self : ast option) = function
+and eval_op (self : ast option) ftable = function
   | OUT -> (function [x; next] -> print_int x |> print_newline; next | _ -> failwith "OUT : wrong number of args")
   | ADD -> (function [x; y] -> x + y | _ -> failwith "ADD : wrong number of args")
   | SUB -> (function [x; y] -> x - y | _ -> failwith "SUB : wrong number of args")
   | MUL -> (function [x; y] -> x * y | _ -> failwith "MUL : wrong number of args")
   | DIV -> (function [x; y] -> x / y | _ -> failwith "DIV : wrong number of args")
-  | FUN (_, body) -> (fun args -> eval ~self:(Some body) args body)
+  | FUN fname -> (fun args ->
+    let body = List.assoc fname ftable in
+    eval ~self:(Some body) args ftable body)
   | SELF ->
     match self with
-    | Some body -> eval_op self (func body)
+    | Some body -> fun args -> eval ~self args ftable body
     | None -> failwith "'self' is unbound"
 
 and pp_ast fmt = function
@@ -65,21 +65,14 @@ and pp_op fmt = function
   | SUB -> Format.pp_print_string fmt "-"
   | MUL -> Format.pp_print_string fmt "×"
   | DIV -> Format.pp_print_string fmt "/"
-  | FUN (fn, a) ->
-    begin match fn with
-      | None -> Format.fprintf fmt "%a" pp_ast a
-      | Some name -> Format.pp_print_string fmt name
-    end
+  | FUN fname -> Format.pp_print_string fmt fname
   | SELF -> Format.pp_print_string fmt "self"
 
 and pp_list fmt = function
   | [] -> ()
   | [x] -> pp_ast fmt x
   | x::xs -> Format.fprintf fmt "%a @,%a" pp_ast x pp_list xs
-
-let test = app (func @@ mul (Cst 2) (Var 0)) [add (Cst 1) (Cst 2)]
-
-let count = func ~name:(Some("count")) @@
+let count =
   If (Var 0,
       app OUT [Var 0; app SELF [sub (Var 0) (Cst 1)]],
       app OUT [Cst 0; Cst 0])
@@ -99,10 +92,10 @@ let rec ast_count_params (func : ast): int =
   | If (cond, ifcase, elsecase) ->
     max3 (ast_count_params cond) (ast_count_params ifcase) (ast_count_params elsecase)
 
-let op_count_params ?(self_param_count : int = 0) = function
+(* let op_count_params ?(self_param_count : int = 0) = function
   | OUT | ADD | MUL | DIV | SUB -> 2
   | FUN (_, func) -> ast_count_params func
-  | SELF -> self_param_count
+  | SELF -> self_param_count *)
 
 let rec ast_is_recursive (func : ast) : bool =
   let op_is_self = function SELF -> true | _ -> false in
