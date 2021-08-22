@@ -1,0 +1,13 @@
+factorial := proc (n : int) int {
+
+    if (!n) 1;
+    else n * factorial(n - 1);
+};
+
+main := proc () void {
+
+    print(factorial(1));
+    print(factorial(22));
+    print(factorial(444));
+    print(factorial(8888));
+};
