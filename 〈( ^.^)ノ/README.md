@@ -13,7 +13,7 @@ As soon as everything is set up you can check if it works by running:
 go run . --version
 ```
 Next up, let's try to get a basic hello world example to run.
-Here our syntax should be fairly straigth forward (and can also be found in our ``examples`` directory):
+Here our syntax should be fairly straigth forward (and can also be found in our ``examples`` directory, right [here](/%E3%80%88(%20%5E.%5E)%E3%83%8E/examples/helloworld.sml)):
 ```go
 print("Hello World!")
 print(smile())
@@ -26,7 +26,7 @@ go run . path_to_the_file
 ## How to write code
 Now that we've got a basic "Hello World" programm to work, we can start talking about the other language features and how to write more complex programms.
 
-We'll showcase most of the features using the following fibonacci sequence program:
+We'll showcase most of the features using the following fibonacci sequence program (can also be found [here](/%E3%80%88(%20%5E.%5E)%E3%83%8E/examples/fib.sml)):
 ```go
 set($-1 1)
 set($-2 1)
