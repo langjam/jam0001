@@ -257,7 +257,7 @@ if __name__ == "__main__":
         yield (Token.LEAVE_FUNC, "and we're done")
         yield (Token.DOT, ".")
 
-    def function_header_no_params_no_return():
+    def function_no_params_no_return():
         yield (Token.FUNCTION, "/**")
         yield (Token.EOL, "\n")
         yield (Token.HFILL, " *")
@@ -270,7 +270,7 @@ if __name__ == "__main__":
         yield (Token.DOT, ".")
         yield (Token.EOL, "\n")
 
-    def function_header_params_no_return():
+    def function_params_no_return():
         yield (Token.FUNCTION, "/**")
         yield (Token.EOL, "\n")
         yield (Token.HFILL, " *")
@@ -291,7 +291,7 @@ if __name__ == "__main__":
         yield (Token.DOT, ".")
         yield (Token.EOL, "\n")
 
-    def function_header_params_and_return():
+    def function_params_and_return():
         yield (Token.FUNCTION, "/**")
         yield (Token.EOL, "\n")
         yield (Token.HFILL, " *")
@@ -366,13 +366,13 @@ if __name__ == "__main__":
     )
     parser.parse()
 
-    parser = Parser(program(function_header_no_params_no_return))
+    parser = Parser(program(function_no_params_no_return))
     parser.parse()
 
-    parser = Parser(program(function_header_params_no_return))
+    parser = Parser(program(function_params_no_return))
     parser.parse()
 
-    parser = Parser(program(function_header_params_and_return))
+    parser = Parser(program(function_params_and_return))
     parser.parse()
 
     parser = Parser(program(code, set_var_to_constant))
