@@ -1,5 +1,6 @@
 import Base from './Base'
-import {Heading as MdastHeading} from 'mdast'
+import {Content, Heading as MdastHeading} from 'mdast'
+import {mdastToMd, mdToMdast} from "../Markdown";
 
 class Heading extends Base {
     getMdastContent(): MdastHeading {
@@ -11,6 +12,23 @@ class Heading extends Base {
             this.getMdastContent().depth = depth
         }
         return this.getMdastContent().depth
+    }
+
+    append(item: string): void {
+        let md = this.text()
+        md += item
+        this.text(md)
+    }
+
+    text(text?: string): string {
+        if (text !== undefined) {
+            const serializedChildren = (<MdastHeading>mdToMdast(text).children[0]).children
+            this.getMdastContent().children = serializedChildren
+        }
+        const contentOnly: Content = {
+            children: this.getMdastContent().children, type: 'paragraph'
+        }
+        return mdastToMd(contentOnly, true)
     }
 }
 
