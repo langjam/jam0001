@@ -22,6 +22,9 @@ class ComstructParser(Parser):
         ("left", "PLUS", "MINUS"),
         ("left", "MULTIPLY", "DIVIDE"),
         ("left", "FUNCDESC"),
+        ("left", "OR", "AND", "NOT"),
+        ("left", "EQ", "NOTEQ", "GT", "GEQT", "ST", "SEQT"),
+        ("right", "UMINUS"),
     )
 
     @_("expr NEWSTMT")
@@ -71,6 +74,10 @@ class ComstructParser(Parser):
     @_("expr MINUS expr")
     def expr(self, p):
         return StatementNode.OperationNode("-", p.expr0, p.expr1)
+
+    @_("UMINUS expr")
+    def expr(self, p):
+        return StatementNode.OperationNode("-", 0, p.expr)
 
     @_("expr MULTIPLY expr")
     def expr(self, p):
