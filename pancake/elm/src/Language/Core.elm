@@ -274,10 +274,13 @@ encodeValue value =
             JsonE.list encodeValue list
 
         Fun _ ->
-            JsonE.object [ ( "func", JsonE.bool True ) ]
+            JsonE.object [ ( "type", JsonE.string "func" ) ]
 
         Name name ->
-            JsonE.object [ ( "name", JsonE.string name ) ]
+            JsonE.object
+                [ ( "type", JsonE.string "name" )
+                , ( "name", JsonE.string name )
+                ]
 
 
 toValue : Atom -> Value
