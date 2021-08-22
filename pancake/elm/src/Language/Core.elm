@@ -2,6 +2,7 @@ module Language.Core exposing (..)
 
 import Array exposing (Array)
 import Dict exposing (Dict)
+import Json.Encode as JsonE
 import Language.AST as AST
     exposing
         ( AST
@@ -15,6 +16,11 @@ import Maybe.Extra as MaybeX
 
 type alias Stack =
     List Value
+
+
+encodeStack : Stack -> JsonE.Value
+encodeStack =
+    JsonE.list encodeValue
 
 
 
@@ -142,16 +148,17 @@ dealWithAtom atom runtime =
                                 Just v ->
                                     case v of
                                         Fun f ->
-                                            runtime
+                                            Debug.log "next runtime" <|
+                                                next runtime
 
                                         other ->
-                                            push other runtime
+                                            push other runtime |> next
 
                                 Nothing ->
                                     panic runtime
 
         _ ->
-            push (toValue atom) runtime
+            push (toValue atom) runtime |> next
 
 
 {-| `Command` has access to `Runtime` and can do whatever it pleases.
@@ -242,6 +249,25 @@ type Value
     | List (List Value)
     | Fun Func
     | Name String
+
+
+encodeValue : Value -> JsonE.Value
+encodeValue value =
+    case value of
+        Int int ->
+            JsonE.int int
+
+        Char char ->
+            JsonE.string <| String.fromChar char
+
+        List list ->
+            JsonE.list encodeValue list
+
+        Fun _ ->
+            JsonE.object [ ( "func", JsonE.bool True ) ]
+
+        Name name ->
+            JsonE.object [ ( "name", JsonE.string name ) ]
 
 
 toValue : Atom -> Value

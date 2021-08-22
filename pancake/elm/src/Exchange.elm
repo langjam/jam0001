@@ -1,5 +1,9 @@
 module Exchange exposing (..)
 
+import Json.Encode as JsonE
+import Language.AST exposing (universeToString)
+import Language.Core as Core exposing (Runtime)
+
 
 type alias CompilationResult =
     { successful : Bool
@@ -26,4 +30,16 @@ compilationFail errorLines =
 
 type alias StateInfo =
     { universe : String
+    , activeLine : Int
+    , stack : JsonE.Value -- JSON
+    , alive : Bool
+    }
+
+
+stateInfo : Runtime -> StateInfo
+stateInfo runtime =
+    { universe = universeToString runtime.universe
+    , activeLine = runtime.ip
+    , stack = Core.encodeStack runtime.stack
+    , alive = runtime.ok
     }

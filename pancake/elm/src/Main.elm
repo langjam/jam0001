@@ -85,9 +85,11 @@ update msg model =
                     ( model, Cmd.none )
 
                 Compiled runtime ->
-                    ( Compiled <| Core.step runtime
-                    , state <| StateInfo <| AST.universeToString Alpha
-                    )
+                    let
+                        stepped =
+                            Core.step runtime
+                    in
+                    ( Compiled stepped, state <| stateInfo stepped )
 
 
 
