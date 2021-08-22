@@ -8,7 +8,8 @@ enum Interpreter_Type {
     IT_FUNC,
     IT_INT,
     IT_FLOAT,
-    IT_STRING
+    IT_STRING,
+    IT_ARRAY
 };
 
 typedef struct Interpreter_Value (*Interpreter_Cfunc)(struct Vec OF(struct Interpreter_Value)*);
@@ -31,6 +32,9 @@ struct Interpreter_Value {
         struct {
             strview_t str;
         } string;
+        struct {
+            struct Vec OF(struct Interperter_Value) values;
+        } array;
     } data;
 };
 
