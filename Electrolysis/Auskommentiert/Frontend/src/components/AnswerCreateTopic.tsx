@@ -1,5 +1,6 @@
 import React from "react";
 import { Component } from "react";
+import { Link } from "react-router-dom";
 
 import '../css/all.css'
 import GlobalTopicStore from "./GlobalTopicStore";
@@ -10,6 +11,10 @@ class AnswerCreateTopic extends Component<{}, TopicType> {
 
     private bodyRef: React.RefObject<HTMLTextAreaElement> = React.createRef();
 
+    static contextTypes = {
+        router: () => true,
+    }
+
     render() {
         return (
             <div className="middle">
@@ -18,7 +23,9 @@ class AnswerCreateTopic extends Component<{}, TopicType> {
                     <textarea className="max-width vertical" ref={this.bodyRef} id="createAnswer" rows={10}></textarea>
                 </div>
                 <div>
-                    <button className="right" onClick={() => this.createAnswer()}>Create</button>
+                    <Link to={"/topic/" + GlobalTopicStore.getTopic().id}>
+                        <button className="right" onClick={() => this.createAnswer()}>Create</button>
+                    </Link>
                 </div>
             </div>
         );

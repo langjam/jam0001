@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react';
 import { Component } from 'react';
 import '../css/App.css';
 import { Comment } from './Comment';
-import { TopicType } from './types'
+import { Downvote, TopicType, Upvote } from './types'
 import '../css/Topic.css'
 import '../css/all.css'
 import { Link } from 'react-router-dom';
@@ -19,6 +19,10 @@ class Topic extends Component<TopicType, TopicType> {
             let component = <Comment id={entry.id} content={entry.content} children={entry.children} upvotes={entry.upvotes} date={entry.date}></Comment>
             this.comments.push(component)
         }
+    }
+
+    componentDidMount() {
+        GlobalTopicStore.setTopic(this.state);
     }
 
     render() {
@@ -48,9 +52,36 @@ class Topic extends Component<TopicType, TopicType> {
 
     upvote() {
         this.setState({ upvotes: this.state.upvotes + 1 })
+        let body: Upvote = {
+            id: this.state.id
+        }
+        fetch("http://" + window.location.hostname + ":6789/api/upvote", {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            body: JSON.stringify(body),
+        })
     }
+
     downvote() {
         this.setState({ upvotes: this.state.upvotes - 1 })
+        let body: Downvote = {
+            id: this.state.id
+        }
+        fetch("http://" + window.location.hostname + ":6789/api/downvote", {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            body: JSON.stringify(body),
+        })
     }
 }
 

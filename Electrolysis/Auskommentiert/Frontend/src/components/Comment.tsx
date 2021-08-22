@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
 import { Component } from 'react';
 import '../css/App.css';
-import { CommentType } from './types'
+import { CommentType, Downvote, Upvote } from './types'
 import '../css/Comment.css';
 import '../css/all.css';
 import { Link } from 'react-router-dom';
@@ -46,9 +46,36 @@ class Comment extends Component<CommentType, CommentType> {
 
     upvote() {
         this.setState({ upvotes: this.state.upvotes + 1 })
+        let body: Upvote = {
+            id: this.state.id
+        }
+        fetch("http://" + window.location.hostname + ":6789/api/upvote", {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            body: JSON.stringify(body),
+        })
     }
+
     downvote() {
         this.setState({ upvotes: this.state.upvotes - 1 })
+        let body: Downvote = {
+            id: this.state.id
+        }
+        fetch("http://" + window.location.hostname + ":6789/api/downvote", {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            body: JSON.stringify(body),
+        })
     }
 }
 

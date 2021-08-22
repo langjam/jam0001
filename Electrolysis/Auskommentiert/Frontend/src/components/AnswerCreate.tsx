@@ -1,13 +1,16 @@
 import React from "react";
 import { Component } from "react";
+import { Link } from "react-router-dom";
 
 import '../css/all.css'
 import GlobalCommentStore from "./GlobalCommentStore";
+import GlobalTopicStore from "./GlobalTopicStore";
 import { CommentCreate, TopicType } from "./types";
 
 
 class AnswerCreate extends Component<{}, TopicType> {
     private bodyRef: React.RefObject<HTMLTextAreaElement> = React.createRef();
+
     constructor(props: {}) {
         super(props);
         console.log(GlobalCommentStore.getComment())
@@ -21,7 +24,9 @@ class AnswerCreate extends Component<{}, TopicType> {
                     <textarea className="max-width vertical" id="createAnswer" rows={10} ref={this.bodyRef}></textarea>
                 </div>
                 <div>
-                    <button className="right" onClick={() => this.createAnswer()}>Create</button>
+                    <Link to={"/topic/" + GlobalTopicStore.getTopic().id}>
+                        <button className="right" onClick={() => this.createAnswer()}>Create</button>
+                    </Link>
                 </div>
             </div>
         );
@@ -49,6 +54,7 @@ class AnswerCreate extends Component<{}, TopicType> {
             redirect: 'follow',
             body: JSON.stringify(body),
         })
+
     }
 }
 
