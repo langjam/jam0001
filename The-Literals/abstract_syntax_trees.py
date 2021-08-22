@@ -134,7 +134,7 @@ class SetStmt(Stmt):
         return f"SET {self.target} TO {self.value}"
 
     def execute(self):
-        defined_variables[self.target] = self.value
+        set_var(self.target, self.value)
 
 def find_function(func_name: str):
     # Move this later, and also define it!
