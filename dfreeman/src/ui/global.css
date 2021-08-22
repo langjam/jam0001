@@ -10,3 +10,11 @@ body {
   display: flex;
   flex-flow: row;
 }
+
+.sidebar-item {
+  transition: background-color 0.1s ease-in-out;
+}
+
+.sidebar-item:hover {
+  background-color: #444;
+}

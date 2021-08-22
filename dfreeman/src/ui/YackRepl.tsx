@@ -68,7 +68,6 @@ export const YackRepl = React.forwardRef<
                       pushMessage({ kind: 'out', value: evaluator.evaluate(ast.value) });
                     } else {
                       evaluator.execute(ast.value);
-                      pushMessage({ kind: 'out', value: new VoidValue() });
                     }
                     editor.setValue('');
                   } catch (error) {
@@ -172,7 +171,7 @@ const YackValue: React.FC<{ value: Value }> = ({ value, ...props }) => {
   } else if (value.kind === 'Void') {
     return <YackCode source="void" {...props} />;
   } else if (value.kind === 'NativeFunction' || value.kind === 'Function') {
-    return <YackCode source={`fun ${value.name}(${value.params.join(', ')})`} {...props} />;
+    return <YackCode source={`${value.name}(${value.params.join(', ')})`} {...props} />;
   } else if (value.kind === 'Comment') {
     return (
       <YackCode
@@ -271,6 +270,7 @@ const YackComment: React.FC<{ comment: CommentValue }> = ({ comment }) => {
           return (
             <span
               className="ace-tomorrow-night-eighties"
+              key={index}
               style={{
                 display: 'inline-block',
                 padding: '0 2px',

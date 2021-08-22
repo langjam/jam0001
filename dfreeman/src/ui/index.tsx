@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { render } from 'react-dom';
-import { stripIndent } from 'common-tags';
 import debounce from 'lodash.debounce';
 import { parser } from '../parser';
 import { Evaluator } from '../evaluator';
 import { buildNativeDefinitions } from '../evaluator/native-functions';
 import { ReplMessage, YackRepl } from './YackRepl';
 import { YackEditor } from './YackEditor';
+import { Sidebar } from './Sidebar';
+import { Example, Examples } from './examples';
 
 const Pane: React.FC<{ flex: string }> = ({ flex, children }) => {
   return (
@@ -31,61 +32,8 @@ const Pane: React.FC<{ flex: string }> = ({ flex, children }) => {
 
 const Playground: React.FC = () => {
   let [messages, setMessages] = useState<Array<ReplMessage>>([]);
-  let [source, setSource] = useState(stripIndent`
-    ###
-    Ok I can write a reasonable amount of stuff here.
-
-    For example, this is the number two:
-    @example#first
-      2
-    @end
-
-    And this is a hundred:
-    @example#second
-      100
-    @end
-    ###
-    def fn = fun(a)
-      fun(_)
-        a
-      end
-    end
-
-    def isEmpty = fun(list)
-      match list
-        | Cons(_, _) -> false
-        | Nil() -> true
-      end
-    end
-
-    def isOneTwoThree = fun(list)
-      match list
-        | Cons(1, Cons(2, Cons(3, Nil()))) -> true
-        | _ -> false
-      end
-    end
-
-    ###
-    A list represents an ordered collection of items.
-
-    Since Yack is completely dynamically typed, lists can be
-    pretty free-form. They don't need to contain a single type
-    of value, and in fact they don't even need to include a
-    terminating {Nil()} value.
-
-    Embed: {fn#second} {List#oneTwoThree} {fn#} {List#}
-
-    @example#oneTwoThree
-      Cons(1,
-        Cons(2,
-          Cons(3, Nil())))
-    @end
-    ###
-    data List = Nil() | Cons(head, tail)
-
-    def list = Cons(1, Cons(2, Nil()))
-    def ref = isOneTwoThree(List#oneTwoThree)
-  `);
+  let [example, setExample] = useState(Examples[1] as Example);
+  let [source, setSource] = useState('');
 
   let pushMessage = (message: ReplMessage) => setMessages((messages) => [...messages, message]);
   let evaluator = useMemo(
@@ -99,6 +47,9 @@ const Playground: React.FC = () => {
     (source: string) => {
       evaluator.reset();
       setSource(source);
+
+      Object.assign(window, { source, evaluator, parser });
+
       try {
         let ast = parser.parse(source)!;
         if (ast.kind !== 'script') return;
@@ -115,7 +66,25 @@ const Playground: React.FC = () => {
   let updateSource = useMemo(() => debounce(doUpdateSource, 250), []);
   let scrollContainer = useRef<HTMLDivElement>(null);
 
-  useEffect(() => doUpdateSource(source), []);
+  useEffect(() => {
+    doUpdateSource(example.source);
+
+    setMessages([]);
+    for (let replInput of example.repl ?? []) {
+      pushMessage({ kind: 'in', text: replInput });
+      try {
+        let ast = parser.parse(replInput)!;
+        if (ast.kind === 'expression') {
+          pushMessage({ kind: 'out', value: evaluator.evaluate(ast.value) });
+        } else {
+          evaluator.execute(ast.value);
+        }
+      } catch (error) {
+        pushMessage({ kind: 'error', message: error.message });
+      }
+    }
+  }, [example]);
+
   useEffect(() => scrollContainer.current?.scrollTo(0, 999999999), [messages.length]);
 
   return (
@@ -129,10 +98,13 @@ const Playground: React.FC = () => {
         backgroundColor: '#555',
       }}
     >
-      <Pane flex="1">
+      <Pane flex="1 0 200px">
+        <Sidebar examples={Examples} selected={example} onSelect={setExample} />
+      </Pane>
+      <Pane flex="10">
         <YackEditor value={source} onChange={updateSource} />
       </Pane>
-      <Pane flex="1">
+      <Pane flex="10">
         <YackRepl
           evaluator={evaluator}
           messages={messages}
