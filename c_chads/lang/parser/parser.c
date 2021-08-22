@@ -293,7 +293,7 @@ static pnode_t pnode_endpoint(pnode_kind_t kind) {
     };
 }
 
-static pnode_t delimited(pnode_kind_t kind, const string open, const string shut, bool mustclose, pnode_t callback()) {
+static pnode_t delimited(pnode_kind_t kind, const string open, const string shut, bool mustclose, bool autohandle, pnode_t callback()) {
     if (kind == PN_TYPELIST) 
         setexpect("Did you mean to create a parameter list?");
     pnode_t node = pnode_listing(kind);
@@ -305,13 +305,15 @@ static pnode_t delimited(pnode_kind_t kind, const string open, const string shut
         add_comments();
         pnode_attach(&node, v);
         if (check(shut) && (!mustclose)) break;
-        if (!check(shut) || mustclose || isinval(v)) { 
-            if (isinval(v))
-                setexpect("Invalid expression");
-            else
-                setexpect("Expected semicolon");
+        if (isinval(v)) {
+            setexpect("Invalid expression");
             skip_tt_panic(shut);
         }
+        if (!autohandle)
+            if (!check(shut) || mustclose) { 
+                setexpect("Expected semicolon befor it");
+                skip_tt_panic(shut);
+            }
     }
     setexpect(NULL);
     enddelim(delim);
@@ -326,7 +328,7 @@ static pnode_t maybe_call() {
     pnode_t left = value();
     if (!check("("))
         return left;
-    return pnode_binary(PN_CALL, left, delimited(PN_PARAMS, "(", ")", false, most_important_expression));
+    return pnode_binary(PN_CALL, left, delimited(PN_PARAMS, "(", ")", false, false, most_important_expression));
 }
 
 static pnode_t declaration(tok_t on);
@@ -403,11 +405,14 @@ static pnode_t pulldeclaration() {
 static pnode_t statement();
 
 static pnode_t body() {
-    return delimited(PN_BODY, "{", "}", true, statement);
+    return delimited(PN_BODY, "{", "}", true, true, statement);
 }
 
 static pnode_t statement() {
-    if (check("while")) {
+    if (check("{")) {
+        return body();
+    }
+    else if (check("while")) {
         skip_v("while");
         rune delim = begindelim('(');
         skip_v("(");
@@ -418,7 +423,9 @@ static pnode_t statement() {
     }
     else if (check("return")) {
         skip_v("return");
-        return pnode_unary(PN_RETURN, statement());
+        pnode_t node = pnode_unary(PN_RETURN, most_important_expression());
+        skip_v(";");
+        return node;
     }
     else if (check("if")) {
         skip_v("if");
@@ -436,7 +443,10 @@ static pnode_t statement() {
             return pnode_binary(PN_IF, cond, body);
         }
     }
-    return most_important_expression();
+    pnode_t node = most_important_expression();
+    setexpect("Expected semicolon before it");
+    skip_tt(TT_SEMI);
+    return node;
 }
 
 static pnode_t value() {
@@ -478,7 +488,7 @@ static pnode_t value() {
         }
         case TT_PROC:
             pull();
-            pnode_t left = delimited(PN_TYPELIST, "(", ")", false, pulldeclaration);
+            pnode_t left = delimited(PN_TYPELIST, "(", ")", false, false, pulldeclaration);
             strview_t returntype = typedecl();
             value_node = pnode_binary(
                 PN_PROC, 
@@ -546,11 +556,7 @@ void parser_deinit() {
 pnode_t parser_parse_toplevel() {
     pnode_t node = pnode_listing(PN_TOPLEVEL);
     while (peek().tt != TT_EOF) {
-        add_comments();
         pnode_attach(&node, statement());
-        setexpect("Expected semicolon");
-        skip_tt(TT_SEMI);
-        setexpect(NULL);
     }
     if (error_handling.fail == true) {
         pnode_checkfree(&node);
