@@ -47,6 +47,7 @@ cr has a simple data model, with numbers, text, structs, and comment types.
 	# this is an anonymous struct
 	object = {
 		name: "My Great Object",
+		age: 42,
 	};
 
 comments can be attached to struct & field types and instances.  they flow
@@ -73,7 +74,8 @@ comments can be incorporated by reference.
 	#! parent
 	child = {};
 
-comments can be inspected at run time.
+comments can be inspected at run time, which we use to implement an
+idiomatic version of hello world.
 
 	# hello, world!
 	x = {};
