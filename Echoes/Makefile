@@ -5,7 +5,7 @@ RM=rm -f
 
 all: clean $(NAME)
 
-$(NAME): src/lexer.c src/parser.c src/main.c
+$(NAME): src/lexer.c src/parser.c src/varmap.c src/interpreter.c src/main.c
 	$(CC) -o $(NAME) $^
 
 clean:
