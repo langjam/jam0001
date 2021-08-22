@@ -1,0 +1,33 @@
+[[TUTO:Arrays]]
+[[Arrays and objects are created and manipulated with the `array` and `obj` primitives]]
+
+[[Creating an array is easy]]
+empty_array := array>>call.
+one_two_three := array 1 2 3.
+
+print 'empty_array>>length' empty_array>>length.
+print 'one_two_three>>length' one_two_three>>length.
+
+[[We can do dynamic access]]
+i := 0.
+while < i one_two_three>>length holds
+do
+    print 'At index' i 'i found' (one_two_three>>at i).
+    i := + i 1
+done.
+[[And we can hardcode the index]]
+print 'Running one_two_three>>0 returns' one_two_three>>0.
+
+[[We can also modify the arrays]]
+empty_array>>push 0.
+print empty_array.
+
+empty_array>>pop>>call.
+print empty_array.
+
+[[And the contents]]
+one_two_three>>1 := one_two_three>>0.
+print 'Running one_two_three>>1 returns' one_two_three>>1.
+
+one_two_three>>set 0 'hi!'.
+print 'Running one_two_three>>0 returns' one_two_three>>0.

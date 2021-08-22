@@ -1030,10 +1030,3 @@ function parse_args() {
 }
 
 main(parse_args())
-
-//test_compile('array 1 2 3')
-//test_compile('array 1 (2. 3. 4) 3')
-//test_compile('array 1 do 2. 3. 4 done 3')
-//test_compile('if array 1 2 then \'hi\' else 5.')
-//test_compile('if 0 then 0.')
-//test_compile('i := 0. while < i 10 holds do print \'F\'. i := + i 1 done')
