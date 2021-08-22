@@ -38,4 +38,4 @@ PostfixExpression := FunctionCall | AtomicExpression
 FunctionParameters := value=Expression _ next={',' _ nextParam=FunctionParameters}?
 FunctionCall := funcName=AtomicExpression _ '\(' _ params=FunctionParameters? _ '\)'
 
-AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+'
+AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)'

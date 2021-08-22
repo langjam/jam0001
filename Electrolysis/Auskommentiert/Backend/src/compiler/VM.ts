@@ -100,6 +100,8 @@ export class VM {
             return val;
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_4) {
             return Number(expression.num);
+        } else if(expression.kind === AST.ASTKinds.AtomicExpression_5) {
+            return this.evaluateExpression(expression.sub);
         } else if(expression.kind === AST.ASTKinds.AddExpression) {
             return this.evaluateExpression(expression.lhs) as any + (this.evaluateExpression(expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.SubExpression) {

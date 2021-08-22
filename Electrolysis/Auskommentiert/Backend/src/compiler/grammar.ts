@@ -28,7 +28,7 @@
 * PostfixExpression := FunctionCall | AtomicExpression
 * FunctionParameters := value=Expression _ next={',' _ nextParam=FunctionParameters}?
 * FunctionCall := funcName=AtomicExpression _ '\(' _ params=FunctionParameters? _ '\)'
-* AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+'
+* AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)'
 */
 type Nullable<T> = T | null;
 type $$RuleType<T> = () => Nullable<T>;
@@ -89,6 +89,7 @@ export enum ASTKinds {
     AtomicExpression_2 = "AtomicExpression_2",
     AtomicExpression_3 = "AtomicExpression_3",
     AtomicExpression_4 = "AtomicExpression_4",
+    AtomicExpression_5 = "AtomicExpression_5",
     $EOF = "$EOF",
 }
 export interface start {
@@ -224,7 +225,7 @@ export interface FunctionCall {
     funcName: AtomicExpression;
     params: Nullable<FunctionParameters>;
 }
-export type AtomicExpression = AtomicExpression_1 | AtomicExpression_2 | AtomicExpression_3 | AtomicExpression_4;
+export type AtomicExpression = AtomicExpression_1 | AtomicExpression_2 | AtomicExpression_3 | AtomicExpression_4 | AtomicExpression_5;
 export interface AtomicExpression_1 {
     kind: ASTKinds.AtomicExpression_1;
     value: string;
@@ -240,6 +241,10 @@ export interface AtomicExpression_3 {
 export interface AtomicExpression_4 {
     kind: ASTKinds.AtomicExpression_4;
     num: string;
+}
+export interface AtomicExpression_5 {
+    kind: ASTKinds.AtomicExpression_5;
+    sub: Expression;
 }
 export class Parser {
     private readonly input: string;
@@ -846,6 +851,7 @@ export class Parser {
             () => this.matchAtomicExpression_2($$dpth + 1, $$cr),
             () => this.matchAtomicExpression_3($$dpth + 1, $$cr),
             () => this.matchAtomicExpression_4($$dpth + 1, $$cr),
+            () => this.matchAtomicExpression_5($$dpth + 1, $$cr),
         ]);
     }
     public matchAtomicExpression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<AtomicExpression_1> {
@@ -896,6 +902,21 @@ export class Parser {
                     && ($scope$num = this.regexAccept(String.raw`(?:[0-9]+)`, $$dpth + 1, $$cr)) !== null
                 ) {
                     $$res = {kind: ASTKinds.AtomicExpression_4, num: $scope$num};
+                }
+                return $$res;
+            });
+    }
+    public matchAtomicExpression_5($$dpth: number, $$cr?: ErrorTracker): Nullable<AtomicExpression_5> {
+        return this.run<AtomicExpression_5>($$dpth,
+            () => {
+                let $scope$sub: Nullable<Expression>;
+                let $$res: Nullable<AtomicExpression_5> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:\()`, $$dpth + 1, $$cr) !== null
+                    && ($scope$sub = this.matchExpression($$dpth + 1, $$cr)) !== null
+                    && this.regexAccept(String.raw`(?:\))`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.AtomicExpression_5, sub: $scope$sub};
                 }
                 return $$res;
             });
