@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Belle</title>
+    <link rel="stylesheet" href="crochet.css" />
+    <link rel="stylesheet" href="belle.css" />
+    <link rel="stylesheet" href="debugger.css" />
+    <link rel="stylesheet" href="./fa-solid.css" />
+    <link rel="stylesheet" href="./fontawesome.min.css" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Parisienne&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="crochet-container">
+      <div id="crochet" class="crochet-loading">
+        <div class="crochet-loading-screen">Loading...</div>
+      </div>
+    </div>
+    <div id="crochet-tools"></div>
+    <script src="crochet.js"></script>
+    <script>
+      void (async function () {
+        const root = document.querySelector("#crochet");
+        try {
+          const crochet = new Crochet.CrochetForBrowser(
+            document.location.pathname + "library",
+            new Set([]),
+            false
+          );
+          await crochet.boot_from_file(
+            document.location.pathname + "app/crochet.json",
+            Crochet.Package.target_web()
+          );
+          root.className = "";
+          for (const child of root.children) {
+            child.remove();
+          }
+          const tools = document.querySelector("#crochet-tools");
+          crochet.debug_ui.render(crochet, tools);
+          await crochet.run("main-html: _", [crochet.ffi.box(root)]);
+        } catch (error) {
+          console.error(error);
+          const element = document.createElement("div");
+          element.className = "crochet-error";
+          element.appendChild(document.createTextNode(error.message));
+          root.appendChild(element);
+        }
+      })();
+    </script>
+  </body>
+</html>
