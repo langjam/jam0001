@@ -21,6 +21,22 @@ let print_info prog =
   ) prog |> print_newline;
   List.iter (fun (s, ast) -> emit_ast_as_function stdout s ast |> print_newline) prog
 
+(** Type of kl_IR realizers *)
+module type Realizer = sig
+  (** Realize a complete program *)
+  val realize : out_channel -> (string * ast) list -> unit
+
+  (** Realize an anonymous term *)
+  val realize_term : out_channel -> ast -> unit
+
+  (** Realize a named declaration *)
+  val realize_decl : out_channel -> string -> ast -> unit
+end
+
+module ML_Realizer = struct
+  (* ... *)
+end
+
 let synthetize oc =
   Printf.fprintf oc "
 (*---------------------------------------------------------*)\n
