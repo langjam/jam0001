@@ -26,3 +26,10 @@ function equals_10;
     It uses SECRET_SUM and A and argument 2.
  */
 function gap_sum;
+
+/*
+    This function takes 1 arguments,
+    Let a variable involving sum be the sum of 3 and 7,
+    It returns the sum of a variable involving sum and argument 1.
+ */
+function nani;
