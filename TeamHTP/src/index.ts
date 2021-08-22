@@ -11,7 +11,7 @@ const srcPath = process.argv[2];
 //console.log(srcPath)
 const src = fs.readFileSync(srcPath).toString()
 const runtime = new Runtime(src)
-
+console.log(src)
 startRepl(async (input) => {
     try {
         const evalScope = runtime.generateEvalScope()
