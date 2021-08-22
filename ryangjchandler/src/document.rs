@@ -34,7 +34,7 @@ impl Document {
         self.version = version;
     }
 
-    pub fn help(&self) {
+    pub fn info(&self) {
         println!("{} {}", self.name.white(), if self.version.is_some() {
             self.version.as_ref().unwrap().green()
         } else {

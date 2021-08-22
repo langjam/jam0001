@@ -397,8 +397,8 @@ impl<'i> Interpreter<'i> {
     pub fn execute(&mut self) -> Result<(), InterpreterError> {
         self.setup_document()?;
 
-        if crate::has_flag("--help") {
-            self.document.help();
+        if crate::has_flag("--info") {
+            self.document.info();
         }
 
         while let Some(s) = self.program.next() {
