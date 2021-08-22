@@ -1,0 +1,12 @@
+let a = 1;
+println(a);
+a = 2;
+println(a);
+{
+    let b = 3;
+    println(b);
+    b = 4;
+    println(b);
+    b = b + a;
+    println(b);
+}

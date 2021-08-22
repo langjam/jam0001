@@ -1,0 +1,7 @@
+let list = List(1, 2, 3);
+println(list);
+for item in list {
+    println(item);
+}
+println("length: ", list.len);
+println("2nd item: ", list.get(1));

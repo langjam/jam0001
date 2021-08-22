@@ -1,0 +1,13 @@
+[package]
+name = "tontuna"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+doctest = false
+
+[dependencies]
+logos = "0.12.0"
+anyhow = "1.0.43"
+codespan-reporting = "0.11.1"
+structopt = "0.3.22"

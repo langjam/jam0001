@@ -1,0 +1,4 @@
+let x = "string";
+println(x.get(2));
+println(x.substring(0, 3));
+println(x + " is great");

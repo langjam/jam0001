@@ -1,0 +1,2 @@
+let string = "foobar";
+println("length(", string, ") = ", string.len);

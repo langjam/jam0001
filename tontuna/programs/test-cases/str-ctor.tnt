@@ -1,0 +1,2 @@
+println(Str(1, 2));
+println(Str(List("a", "b")));

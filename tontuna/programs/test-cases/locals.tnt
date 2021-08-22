@@ -1,0 +1,12 @@
+let a = 4;
+print(a);
+let b = 2;
+print(b);
+println();
+
+println(a * 2, ", ", b * 3);
+if a * 2 > b * 3 {
+    println("ok");
+} else {
+    println("not ok");
+}
