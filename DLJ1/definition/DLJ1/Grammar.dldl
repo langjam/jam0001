@@ -44,6 +44,9 @@ expression
     expression MIN expression
     expression DIVIDE expression
     expression MULTI expression
+    expression AND expression
+    expression OR expression
+    LEFT_PARANTHESIS expression RIGHT_PARANTHESIS
     value
 
 variable_initialization
@@ -61,6 +64,7 @@ branch
 
 conditional
     IF LEFT_PARANTHESIS expression RIGHT_PARANTHESIS LEFT_BRACKET function_stmt RIGHT_BRACKET
-
+    ELIF LEFT_PARANTHESIS expression RIGHT_PARANTHESIS LEFT_BRACKET function_stmt RIGHT_BRACKET
+    ELSE LEFT_BRACKET function_stmt RIGHT_BRACKET
 
 /  
