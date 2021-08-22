@@ -2,9 +2,11 @@ use toml::Value;
 
 use std::collections::HashMap;
 use std::env;
+use std::f64::consts::PI;
 use std::fmt;
 use std::fs;
 
+#[derive(Debug)]
 struct Env {
     env: HashMap<String, Exp>,
 }
@@ -17,12 +19,12 @@ impl Default for Env {
 
         default.env.insert(
             String::from("+"),
-            Exp::Fn(|args| {
+            Exp::Fn(|args, env| {
                 let answer: f64 = args
                     .iter()
-                    .map(|v| match v {
-                        Value::Float(f) => *f,
-                        Value::Integer(i) => *i as f64,
+                    .map(|v| match eval(&Exp::from(v.clone()), env) {
+                        Exp::Float(f) => f,
+                        Exp::Integer(i) => i as f64,
                         _ => panic!("you can only add numbers, silly"),
                     })
                     .sum();
@@ -30,6 +32,25 @@ impl Default for Env {
                 Value::Float(answer)
             }),
         );
+        default.env.insert(
+            String::from("pi"),
+            Exp::Fn(|_, _| {
+                Value::Float(PI)
+            }));
+
+        default.env.insert(
+            String::from("*"),
+            Exp::Fn(|args, env| {
+                let answer: f64 = args.iter().map(|v| {
+                    match eval(&Exp::from(v.clone()), env) {
+                        Exp::Float(f) => f,
+                        Exp::Integer(i) => i as f64,
+                        _ => panic!("you can only multiply numbers, silly"),
+                    }
+                }).product();
+
+                Value::Float(answer)
+            }));
 
         default
     }
@@ -44,10 +65,10 @@ enum Exp {
     Datetime(toml::value::Datetime),
     Array(toml::value::Array),
     Table(toml::value::Table),
-    Fn(fn(&[Value]) -> Value),
+    Fn(fn(&[Value], &mut Env) -> Value),
 }
 
-impl fmt::Display for Exp {
+impl fmt::Debug for Exp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Exp::String(s) => write!(f, "{}", s),
@@ -70,6 +91,12 @@ impl fmt::Display for Exp {
     }
 }
 
+impl fmt::Display for Exp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl From<toml::Value> for Exp {
     fn from(toml: toml::Value) -> Self {
         match toml {
@@ -84,18 +111,16 @@ impl From<toml::Value> for Exp {
     }
 }
 
-impl From<Exp> for toml::Value {
-    fn from(exp: Exp) -> Self {
-        match exp {
-            Exp::String(s) => Value::String(s),
-            Exp::Integer(i) => Value::Integer(i),
-            Exp::Float(f) => Value::Float(f),
-            Exp::Boolean(b) => Value::Boolean(b),
-            Exp::Datetime(dt) => Value::Datetime(dt),
-            Exp::Array(a) => Value::Array(a),
-            Exp::Table(t) => Value::Table(t),
-            Exp::Fn(_func) => panic!("cannot turn a Fn into a Value"),
-        }
+fn exp_to_value(exp: Exp, env: &mut Env) -> toml::Value {
+    match exp {
+        Exp::String(s) => Value::String(s),
+        Exp::Integer(i) => Value::Integer(i),
+        Exp::Float(f) => Value::Float(f),
+        Exp::Boolean(b) => Value::Boolean(b),
+        Exp::Datetime(dt) => Value::Datetime(dt),
+        Exp::Array(a) => Value::Array(a),
+        Exp::Table(t) => Value::Table(t),
+        Exp::Fn(func) => func(&[], env),
     }
 }
 
@@ -129,10 +154,9 @@ fn main() {
 fn eval(exp: &Exp, env: &mut Env) -> Exp {
     match exp {
         Exp::String(s) => {
-            if let Some(Exp::Fn(f)) = env.env.get(s) {
-                Exp::Fn(*f)
-            } else {
-                exp.clone()
+            match env.env.get(s) {
+                Some(a) => a.clone(),
+                None => Exp::String(s.clone())
             }
         }
         Exp::Array(values) => {
@@ -143,6 +167,8 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
             if let Value::String(s) = first {
                 match s.as_str() {
                     "if" => return eval_if(&rest, env),
+                    "begin" => return eval_begin(&rest, env),
+                    "define" => return eval_define(&rest, env),
                     _ => {}
                 }
             }
@@ -150,11 +176,11 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
             let first = eval(&Exp::from(first.clone()), env);
 
             if let Exp::Fn(f) = first {
-                let args: Vec<Value> = rest.iter().map(|v| eval(v, env).into()).collect();
+                let args: Vec<Value> = rest.iter().map(|v| exp_to_value(eval(v, env), env)).collect();
 
-                f(&args).into()
+                f(&args, env).into()
             } else {
-                panic!("needs to be a function");
+                panic!("'{}' needs to be a function", first);
             }
         }
         Exp::Integer(_) => exp.clone(),
@@ -168,7 +194,6 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
 
 fn eval_if(args: &[Exp], env: &mut Env) -> Exp {
     let test = args.get(0).expect("if with no test? sus");
-
     match eval(test, env) {
         Exp::Boolean(b) => {
             let result = if b { &args[1] } else { &args[2] };
@@ -176,5 +201,28 @@ fn eval_if(args: &[Exp], env: &mut Env) -> Exp {
             eval(result, env)
         }
         _ => panic!("test has to be a bool"),
+    }
+}
+
+fn eval_begin(args: &[Exp], env: &mut Env) -> Exp {
+    let mut ret = None;
+
+    for arg in args {
+        ret = Some(eval(arg, env));
+    }
+
+    ret.expect("begin must have arguments")
+}
+
+fn eval_define(args: &[Exp], env: &mut Env) -> Exp {
+    match &args[0] {
+        Exp::String(k) => {
+            let v = eval(&args[1], env);
+
+            env.env.insert(k.clone(), v.clone());
+
+            v
+        }
+        _ => panic!("define must take a string"),
     }
 }
