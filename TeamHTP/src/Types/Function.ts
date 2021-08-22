@@ -11,7 +11,6 @@ class Function extends Base {
         super(mdastContent, tag)
         this.parent = parent
         this.rawMd = rawMd
-        console.log(this.rawMd)
     }
 
     getMdastContent(): Definition {

@@ -8,7 +8,7 @@ class Base {
     constructor(mdastContent: Content, tag?: Tag) {
         this.mdastContent = mdastContent
         this.tag = tag
-        console.log(`[${tag?.getMdastContent().label}]: ${mdastContent.type}`)
+        //console.log(`[${tag?.getMdastContent().label}]: ${mdastContent.type}`)
     }
 
     getMdastContent(): Content {

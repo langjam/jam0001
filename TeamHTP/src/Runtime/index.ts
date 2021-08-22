@@ -34,7 +34,7 @@ class Runtime {
             let body;
             if (wrappedObject instanceof Function && (body = wrappedObject.getBody())) {
                 const result = parser.parse(body)
-                console.log(result)
+                //console.log(result)
                 wrappedObject.setRawJs(result)
                 wrappedObject.evalRawJs()
             }
