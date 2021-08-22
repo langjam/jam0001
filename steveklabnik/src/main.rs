@@ -97,23 +97,18 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
     match exp {
         Exp::String(_) => exp.clone(),
         Exp::Array(values) => {
-            match &values[0] {
-                Value::String(s) => {
+            if let Value::String(s) = &values[0] {
+                if let Some(Exp::Fn(f)) = env.env.get(s) {
+                    // if the string is a function, we need to treat it like one
                     let args = &values[1..];
-                    match env.env.get(s) {
-                        // if the string is a function, we need to treat it like one
-                        Some(Exp::Fn(f)) => {
-                            f(args).into()
-                        }
-                        Some(_) => panic!("stored a value that's not a function"),
-                        // but if it's not, we want to just leave it as-is
-                        None => {
-                           values[0].clone().into()
-                        }
-                    }
+
+                    // we want to return out because we're done here
+                    return f(args).into();
                 }
-                rest => rest.clone().into()
             }
+
+            panic!("can't find a function '{}'", values[0]);
+
         }
         _ => todo!(),
     }
