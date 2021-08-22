@@ -7,37 +7,38 @@ use std::{
 };
 
 #[comment_errors::wrap]
-fn main() -> eyre::Result<()> {
+fn get_config() -> eyre::Result<String> {
+    let config_path = "doesn't exist";
+
+    /// # Reading config file
+    ///
     let file = {
-        /// # Custom Error Title
+        /// ## Opening file: `doesn't exist`
         ///
-        /// The file you are trying to *open* doesn't **exist**!
+        /// It **failed**, for one of the following reasons:
         ///
-        /// To be fair the code I tried to run was:
-        ///
-        /// ```rust
-        /// File::open("doesn't exist")?
-        /// ```
-        ///
-        /// * Look
-        /// * `At`
-        /// * This
-        ///
-        /// ## Tables
-        ///
-        /// | Maybe | This | Table | Helps |
-        /// |-------|:----:|:------|-------|
-        /// |hello  | 3.14 | 42    |world  |
-        /// |hello  | 3.14 | 42    |world  |
-        File::open("doesn't exist")?
+        /// * You don't have *permissions* to read this file.
+        /// * It hasn't been created yet.
+        File::open(config_path)?
     };
     let mut reader = BufReader::new(file);
     let mut buffer = String::new();
 
-    /// Could be a decoding error
+    /// # Loading config
+    ///
+    /// There could be a *decoding* error?
     reader.read_to_string(&mut buffer)?;
 
-    println!("{}", buffer);
+    Ok(buffer)
+}
 
+#[comment_errors::wrap]
+fn main() -> eyre::Result<()> {
+    /// # Getting config
+    ///
+    /// This is error prone as it attempts to read a config from your file system.
+    /// If you *hit* this, please **[submit an issue](https://github.com/langjam/jam0001/issues/new)**
+    let config = get_config()?;
+    println!("{}", config);
     Ok(())
 }

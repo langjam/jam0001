@@ -60,7 +60,7 @@ impl Fold for CommentErrorFold {
 
                     let mut skin = ::termimad::MadSkin::default_dark();
 
-                    format!("{}", ::termimad::FmtText::from(&skin, &text, Some(80)))
+                    format!("{}", ::termimad::FmtText::from(&skin, &text, Some(100)))
                 })?
             }
         }
