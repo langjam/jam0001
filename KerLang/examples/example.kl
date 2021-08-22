@@ -1,0 +1,41 @@
+/*
+    This function takes 3 arguments,
+    Let A be the product of argument 1 and argument 2,
+    It returns the difference of A and argument 3.
+ */
+function f;
+
+/*
+    This function takes 2 arguments,
+    Let A be the application of f on argument 1 and 42 and argument 2,
+    It returns the product of A and A.
+ */
+function g;
+
+/*
+    This function takes 1 argument,
+    Let A be the difference of argument 1 and 10,
+    It returns 0 if A and 1 otherwise.
+ */
+function equals_10;
+
+/*
+    This function takes 2 arguments,
+    Let A be the difference of argument 1 and 10,
+    Let SECRET_SUM be the sum of something and something,
+    It uses SECRET_SUM and A and argument 2.
+ */
+function gap_sum;
+
+/*
+    This function takes 1 arguments,
+    Let a variable involving sum be the sum of 3 and 7,
+    It returns the sum of a variable involving sum and argument 1.
+ */
+function nani;
+
+/*
+    This function takes 0 arguments,
+	It uses 1 and 9.
+ */
+function main;

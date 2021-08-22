@@ -1,0 +1,11 @@
+/*  This is a useless comment.
+    It takes no argument and has no result. */
+
+/*
+    This function takes 1 argument.
+    It returns the sum of argument 1 and 0.
+    HAHA semicolons are useless!
+    I can write whatever I want,
+    as long as it does not contain reserved keywords it will be ignored.
+ */
+function idc

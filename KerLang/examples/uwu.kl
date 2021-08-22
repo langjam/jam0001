@@ -1,0 +1,7 @@
+/*
+    This function takes 0 argument.
+    Let a be the sum of 2 and 3,
+    It shows 2 and a.
+    It returns 7.
+*/
+function main;
