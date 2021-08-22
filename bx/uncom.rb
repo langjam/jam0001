@@ -39,6 +39,7 @@ $uncom_words = {}
 [
 ["uncom-v", [], lambda { "uncom ver 2108.2021" }],
 ["shrek!", [], lambda { puts "shrek!" ; nil }],
+["halt", [], lambda { raise "Program has finished" }], # TODO: GET A PROPER HALT
 
 ["false", [], lambda { false }],
 ["true", [], lambda { true }],
@@ -64,6 +65,8 @@ $uncom_words = {}
 ["str?", [:any], lambda {|a| a.is_a?(String) }],
 ["quote?", [:any], lambda {|a| a.is_a?(UnQuote) }],
 ["comment?", [:any], lambda {|a| a.is_a?(UnComment) }],
+
+["puts", [:any], lambda {|a| puts a ; a }],
 
 ].each {|word|
 	$uncom_words[word[0]] = UnFunc.new(*word)
@@ -91,7 +94,7 @@ class UnComment
 	end
 
 	def inspect
-		@source[@start, @len]
+		@source[@start, @len].inspect
 	end
 end
 
@@ -119,7 +122,6 @@ def do_words(words)
 	# puts "-> " + uncom.data.inspect
 	uncom
 end
-
 
 # TODO:
 # we need a way to set their check functions and arity
@@ -158,20 +160,95 @@ class Uncom
 		return @data_stacks.last
 	end
 
+	def run(steps: true, print_words: false)
+		# 3. DONE when at end of string return special `halt` word that sets end of prog
+
+		# 4. DONE write `run` function that calls this to run the @source program
+		#    step should take an arg for how many words you want to run for
+		#    step should return both? stacks
+
+		while (steps.is_a? TrueClass or steps > 0) do
+			steps -= 1 if steps.is_a? Integer
+			w = next_word
+			puts w.inspect if print_words
+			if w == "halt" then
+				break
+			end
+			do_word w
+		end
+
+		self
+	end
+
+	# NOTE: WHEN WE DO A CALL, CHECK IF WE JUMPED INTO A COMMENT, IF SO COMEBACK FROM CALL
+
 	def next_word
 		# get next word, starting at instruction_ptr advancing forwards
 		# can be a string, number, quote or comment
 
-		# !!!!!!!!!!!!!! YOU WERE HERE !!!!!!!!!!!!!!!!!
-		# 1. skip whitespace, make brackets, spaces, curly-braces delimmiters
-		# 2. get to the point that we can replace array.split with this function
-		# 3. when at end of string return special `end` word that sets end of prog
-		# 4. write `step` function that calls this to run the @source program
-		#    step should take an arg for how many words you want to run for
-		#    step should return both? stacks
-		# 5. re-work test function to use step
+		def cur_char() @source[@instruction_ptr] end
+		def look_ahead() @source[@instruction_ptr + 1] end
+		def eof?() @instruction_ptr >= @source.length end
+
+		whitespace = [" ", "\t", "\n"]
+		one_chars = ["(", ")", "{", "}", "[", "]", "#"]
+
+		# 1. DONE skip whitespace, make brackets, spaces, curly-braces delimmiters
+		while (whitespace.include? cur_char) do
+			@instruction_ptr += 1
+		end
+		return "halt" if eof?
+
+		if cur_char == "#" then
+			start = @instruction_ptr
+			len = 0
+			while cur_char != "\n" and not eof? do
+				len += 1 # comment += cur_char
+				@instruction_ptr += 1
+			end
+			if cur_char == "\n" then
+				len += 1 # comment += cur_char
+				@instruction_ptr += 1
+			end
+
+			return UnComment.new @source, start, len
+		end
+
+		if cur_char == "{" then
+			# TODO: Consume quote if we see one
+			start = @instruction_ptr
+			len = 0
+			nest = 1
+
+			# return UnQuote.new @source, start, len
+		end
+
+		if one_chars.include? cur_char then
+			word = cur_char
+			@instruction_ptr += 1
+			return word
+		end
+
+		word = ""
+		while (not (whitespace + one_chars + [nil]).include? cur_char) do
+			word += cur_char
+			@instruction_ptr += 1
+		end
+
+
+		# try convert to number
+		begin
+			num = Integer(word)
+			word = num
+		rescue ArgumentError
+			# not number
+		end
+
+		return word
+
+		# 2. DONE get to the point that we can replace array.split with this function
+
 		# 6. add support for quotes, making sure to keep track of nested quotes
-		# 7. add support for comments, decide on when their vars get bound
 	end
 
 	# retuns false when nothing was done, true when func(s) were called
@@ -186,7 +263,20 @@ class Uncom
 	end
 
 	def do_word(word)
-		# special words #
+		# number -> push
+		if word.is_a? Integer then
+			data.push word
+			return try_apply_stacks()
+		end
+
+		# comment -> ?????
+		if word.is_a? UnComment then
+			# TODO: check if comment is named and do variable storage
+
+			# 7. DONE add support for comments, decide on when their vars get bound
+			# 8. comments get bound inside do_word
+			return false
+		end
 
 		# ( -> push data + func stacks
 		if word == "(" then
@@ -212,15 +302,6 @@ class Uncom
 
 		# quotation -> push
 			# TODO
-
-		# number -> push
-		begin
-			num = Integer(word)
-			data.push num
-			return try_apply_stacks()
-		rescue ArgumentError
-			# not number
-		end
 
 		# found global -> do word
 		if @dict.first.member? word then
@@ -252,6 +333,19 @@ class Uncom
 	end
 end
 
+def do_source(source)
+	#puts
+	#puts "DO SOURCE"
+	uncom = Uncom.new source
+	uncom.run()
+	#puts
+	uncom
+end
+
+do_source("  dookie= $smokey= 42 -69 (1 + 2 + 3) # this is comment
+and #these are normal words
+#comment again
+0")
 
 # t e s t s #
 (lambda {
@@ -265,8 +359,9 @@ end
 	["5 $x= ( $x + $x + $x ) $x= $x", [15]],
 	["x= 5 x= ( x + x + x ) x", [15]],
 	["5 x= ( x + x + x ) x= x", [15]],
+	["1 2 3 .", []],
 	].each_with_index {|t, idx|
-		raise "failed test number #{idx + 1}" if do_words(t[0]).data != t[1]
+		raise "failed test number #{idx + 1}" if do_source(t[0]).data != t[1]
 	}
 }).call
 
