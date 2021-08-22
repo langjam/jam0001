@@ -486,3 +486,5 @@ if __name__ == '__main__':
 
     with open(f"{file}.result.json","w") as f:
         f.write(outp)
+
+# PYTHON_EXECUTABLE=python3 CARGO_INCREMENTAL=1 cargo run -- shunting_yard/incrementer.train
