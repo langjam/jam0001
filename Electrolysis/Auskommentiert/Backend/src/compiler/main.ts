@@ -39,7 +39,7 @@ model.addPost({
             children: [
                 {
                     id: "36",
-                    content: "if ${get comment 1 left 1 up}>=5:",
+                    content: "if ${get comment 1 left 1 up} == 5:",
                     upvotes: -5,
                     date: 300,
                     children: [
