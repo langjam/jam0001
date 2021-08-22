@@ -60,6 +60,10 @@ func (e *Evaluator) getRefValue(ref string) string {
 		os.Exit(1)
 	}
 
+	if varIndex > e.maxRef {
+		e.maxRef = varIndex
+	}
+
 	return arr[varIndex-1]
 }
 
