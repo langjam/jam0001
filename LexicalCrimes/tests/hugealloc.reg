@@ -1,0 +1,13 @@
+main:
+    let first = "RegrettiRegrettiRegrettiRegrettiRegrettiRegrettiRegrettiRegrettiRegrettiRegrettiRegrettiRegrettiRegrettiRegrettiRegretti"
+    let second = "SpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghettiSpaghetti"
+    let third = "ForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgettiForgetti"
+
+    /*
+        +--------------+
+        | print first  |
+        | print second |
+        | print third  |
+        +--------------+
+    */
+:end

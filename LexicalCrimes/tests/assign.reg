@@ -1,0 +1,13 @@
+main:
+    let first = "Regretti"
+    let second = "Spaghetti"
+    let third = "Forgetti"
+
+    /*
+        +--------------+
+        | print first  |
+        | print second |
+        | print third  |
+        +--------------+
+    */
+:end
