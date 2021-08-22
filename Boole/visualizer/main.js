@@ -8,6 +8,30 @@ async function ask_for_input(prompt_message) {
     return prompt(prompt_message)
 }
 
+let paused = false;
+function togglePause() {
+    paused = !paused;
+    if (paused) {
+        document.getElementById("pause").style.background = "orangered";
+    } else {
+        document.getElementById("pause").style.background = "unset";
+    }
+}
+
+let continueSimulation = false;
+function toggleContinue() {
+    continueSimulation = !continueSimulation;
+    if (continueSimulation) {
+        document.getElementById("continue").style.background = "green";
+
+        if (stopcount === grid.trains.size) {
+            socket.nextTimeStep()
+        }
+    } else {
+        document.getElementById("continue").style.background = "unset";
+    }
+}
+
 let socket;
 window.addEventListener("load", () => {
     socket = startSocket()
@@ -87,6 +111,7 @@ function loadData(path) {
             }
 
             document.getElementById("loading").style.display = "none";
+            updateFinishedValue();
         })
     })
 
@@ -132,8 +157,9 @@ function setup() {
     centerZero();
 }
 
+prints = []
 function draw() {
-    background(51);
+    background(0x56, 0x7d, 0x46);
 
     push()
 
@@ -142,6 +168,21 @@ function draw() {
 
     grid.draw()
 
+    pop()
+
+
+    push()
+    translate(10, 10);
+    for (const m of prints) {
+        translate(0, 25);
+        push();
+        fill(255);
+        stroke(255);
+        textAlign(LEFT, CENTER);
+        textSize(23);
+        text(m, 0, 0);
+        pop();
+    }
     pop()
 }
 

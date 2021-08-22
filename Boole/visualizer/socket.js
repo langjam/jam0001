@@ -40,13 +40,24 @@ function startSocket() {
                     let prompt_message = "give an integer input:";
                     while (1) {
                         try {
-                            res = parseInt(await ask_for_input(prompt_message), 10);
+                            const inp = await ask_for_input(prompt_message);
+                            if (inp === null || typeof inp === "undefined") {
+                                prompt_message = "not an integer! give an integer input:";
+                                continue;
+                            }
+                            res = parseInt(inp, 10);
+                            if (isNaN(res)) {
+                                prompt_message = "not an integer! give an integer input:";
+                                continue;
+                            }
+
                             break;
                         } catch (e) {
-                            prompt_message = "not an integer! " + prompt_message;
+                            prompt_message = "not an integer! give an integer input:";
                         }
                     }
 
+                    console.log(res)
 
                     s.send(JSON.stringify({
                         "type": "SendInputResponse",
@@ -110,6 +121,7 @@ function startSocket() {
                 case "Print": {
                     const station = grid.stations.get(message.station.name);
                     station.last_print = message.message;
+                    prints.push(message.message)
 
                     break;
                 }
