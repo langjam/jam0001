@@ -283,7 +283,10 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             }
             StmtKind::Block(b) => return self.eval_block(b),
             StmtKind::UnscopedBlock(b) => return self.eval_unscoped_block(b),
-            _ => unimplemented!(),
+            StmtKind::ExprStmt(e) => {
+                self.eval_expr(e)?;
+            }
+            StmtKind::While(_, _) => todo!(),
         }
         Ok(Value::Null)
     }

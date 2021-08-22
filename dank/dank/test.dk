@@ -16,5 +16,5 @@ let obj = { name: "test" };
 print obj.name;
 print clock();
 
-print i_was_generated(7);
+i_was_generated(7);
 

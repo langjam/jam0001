@@ -78,11 +78,12 @@ peg::parser!(pub grammar dank() for str {
     }
 
     pub rule stmt() -> Stmt<'input>
-         = p:print() ";" {p}
-         / b:binding() ";" {b}
-         / w:while_loop()  {w}
+         = p:print() ___ ";" {p}
+         / b:binding() ___ ";" {b}
+         / w:while_loop() {w}
          / b:block() {b}
          / f:func() {f}
+         / e:expr() ___ ";" end:position!() { Stmt {  span: e.span.start..end, kind: StmtKind::ExprStmt(Box::new(e)) } }
 
     pub rule func() -> Stmt<'input>
     = start:position!() "fn" ___ name:ident() _ "(" args:ident() ** ("," ___) ")" ___ body:block() end:position!()
@@ -232,6 +233,52 @@ pub mod tests {
                 $expected.trim().as_display()
             )
         };
+    }
+
+    #[test]
+    fn expression_statements() {
+        let test = r#"
+        5;
+        call();
+        a.b;
+        obj.method();
+      "#;
+
+        test_eq!(
+            test,
+            r#"
+Ast
+  statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::ExprStmt
+        expr: ExprKind::Literal
+          field0: Num(5.0)
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::ExprStmt
+        expr: ExprKind::Call
+          callee: ExprKind::Variable
+            name: "call"
+          args= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::ExprStmt
+        expr: ExprKind::Property
+          name: "b"
+          obj: ExprKind::Variable
+            name: "a"
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::ExprStmt
+        expr: ExprKind::Call
+          callee: ExprKind::Property
+            name: "method"
+            obj: ExprKind::Variable
+              name: "obj"
+          args=
+"#
+        );
     }
 
     #[test]
