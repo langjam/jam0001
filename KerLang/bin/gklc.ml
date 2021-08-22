@@ -52,10 +52,18 @@ let speclist =
 let () =
   Arg.parse speclist anon_fun usage_msg;
   begin try check () with Arg.Bad msg ->
-    Printf.eprintf "\x1b[1;31merror:\x1b[0m %s\n\n" msg;
-    Arg.usage speclist usage_msg;
-    exit 1
+      Printf.eprintf "\x1b[1;31merror:\x1b[0m %s\n\n" msg;
+      Arg.usage speclist usage_msg;
+      exit 1
   end;
-  parse_file !input_files
-  |> Kerlang.Kl_codegen.emit_kl_ir
-  |> Kerlang.Kl_codegen.realize (open_out !output_file) (Option.get !output_lang)
+  try
+    parse_file !input_files
+    |> Kerlang.Kl_codegen.emit_kl_ir
+    |> Kerlang.Kl_codegen.realize (open_out !output_file) (Option.get !output_lang)
+  with
+  | Kerlang.Kl_errors.DeveloperError msg ->
+    Kerlang.Kl_errors.dev_error msg
+  | Kerlang.Kl_errors.CompileError msg ->
+    Kerlang.Kl_errors.error msg
+  | Kerlang.Kl_errors.SyntaxError (pos, msg) ->
+    Kerlang.Kl_errors.syntax_error pos msg
