@@ -14,7 +14,14 @@ use crate::ast::{
 };
 
 pub fn parse(name: &str, input: &str) -> Result<Script, String> {
-    todo!()
+    use nom::branch::alt;
+    use nom::multi::many0;
+
+    let statements = many0(parse_ast)(input)
+        .map_err(|e| format!("Error parsing file {}: {}", name, e))?
+        .1;
+
+    Ok(Script { name: name.to_string(), statements })
 }
 
 /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
@@ -150,23 +157,6 @@ pub fn field_value(input: &str) -> IResult<&str, FieldValueAst> {
                 comment: Comment { lines: vec![] }, // TODO
             }
         }
-    )(input)
-}
-
-pub fn field_access(input: &str) -> IResult<&str, ValueAst> {
-    use nom::character::complete::char;
-    use nom::combinator::map;
-    use nom::sequence::{pair, preceded};
-
-    map(
-        pair(
-            parse_value,
-            preceded(
-                ws(char('.')),
-                identifier,
-            ),
-        ),
-        |(source, field)| ValueAst::FieldAccess(Box::new(source), field.to_string()),
     )(input)
 }
 

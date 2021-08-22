@@ -5,6 +5,23 @@ mod types;
 mod values;
 
 fn main() {
+    let script = parse::parse(
+        "test_script",
+        "struct Rational {
+    numerator: Number,
+    denominator: Number,
+}
+
+pi = Rational {
+    numerator: 54,
+    denominator: 17,
+};
+
+result = pi.numerator;
+verified = pi!VERIFIED;
+",
+    ).unwrap();
+    /*
     let script = ast::Script {
         name: "test script".into(),
         statements: vec![
@@ -81,7 +98,7 @@ fn main() {
             ),
         ],
     };
-
+*/
     println!("{:?}", script);
 
     let mut env = env::Env::new();
