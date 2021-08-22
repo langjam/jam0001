@@ -675,7 +675,7 @@ function compile(parsetree, comments, filename='') {
 			// FIXME: We can do binary search here
 			for (let i = 0; i < comments.length; i++) {
 				const comment = comments[i]
-				if (from < comment.index_start && comment.index_start < to)
+				if (from <= comment.index_start && comment.index_start < to)
 					add_op(op.COMMENT, i)
 			}
 		}
