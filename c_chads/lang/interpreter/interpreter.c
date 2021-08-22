@@ -12,16 +12,20 @@ static const char* type_names[] = {
     [IT_STRING] = "string"
 };
 
-static void error_tok(strview_t tok) {
+static void error_pos(usize pos) {
     const string src = parser_get_state()->lexer.src;
-    eh_error_pos((usize)(tok.view - src), src);
+    eh_error_pos(pos, src);
     exit(1);
 }
 
-static void error_mmtype(enum Interpreter_Type expected, enum Interpreter_Type supplied, strview_t tok) {
+static usize get_pos(strview_t tok) {
+    return (usize)(tok.view - parser_get_state()->lexer.src);
+}
+
+static void error_mmtype(enum Interpreter_Type expected, enum Interpreter_Type supplied, usize pos) {
 
     EH_MESSAGE("Mismatched type: '%s' expected but '%s' supplied", type_names[expected], type_names[supplied]);
-    error_tok(tok);
+    error_pos(pos);
 }
 
 static struct Interpreter_Value void_val() {
@@ -61,6 +65,15 @@ static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Val
             break;
             case IT_FUNC:
                 printf("(func)");
+            break;
+            case IT_CPTR:
+                printf("(cptr)");
+            break;
+            case IT_STRUCT:
+                printf("(struct)");
+            break;
+            case IT_STRUCTDECL:
+                printf("(structdecl)");
             break;
         }
 
@@ -124,7 +137,7 @@ static struct Interpreter_Value* get_var(strview_t name) {
 
     if (!val) {
         EH_MESSAGE("Variable '%.*s' not found", (int)name.size, name.view);
-        error_tok(name);
+        error_pos(get_pos(name));
     }
 
     return val;
@@ -156,6 +169,12 @@ static void val_drop(struct Interpreter_Value* val) {
         for (usize i = 0; i < val->data.array.values.size; i++)
             val_drop(vec_get(&val->data.array.values, i));
         vec_drop(&val->data.array.values);
+    break;
+    case IT_STRUCTDECL:
+        map_drop(&val->data.strctdecl.fields);
+    break;
+    case IT_STRUCT:
+        map_drop(&val->data.strct.fields);
     break;
     default:
     break;
@@ -234,7 +253,7 @@ static struct Interpreter_Value assign(struct Parser_Node* node) {
     struct Interpreter_Value val = intrp_run(pnode_right(node), NULL);
     struct Interpreter_Value *var = get_var(dstname);
     if (val.type != var->type && var->type != IT_VOID)
-        error_mmtype(var->type, val.type, dstname);
+        error_mmtype(var->type, val.type, get_pos(dstname));
 
     return (*var = val);
 }
@@ -259,9 +278,10 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
         break;
         case PN_IF: {
 
-            struct Interpreter_Value cond = intrp_run(node->addressing == PA_BINARY ? pnode_left(node) : pnode_cond(node), should_return);
+            struct Parser_Node* cond_node = node->addressing == PA_BINARY ? pnode_left(node) : pnode_cond(node);
+            struct Interpreter_Value cond = intrp_run(cond_node, should_return);
             if (cond.type != IT_INT)
-                error_mmtype(IT_INT, cond.type, (strview_t){0});
+                error_mmtype(IT_INT, cond.type, cond_node->pos);
 
             if (node->addressing == PA_BINARY) {
                 if (cond.data.intg.val)
@@ -290,6 +310,42 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
             ret.type = IT_FUNC;
             ret.data.func.ast = node;
         break;
+        case PN_STRUCT:
+            ret.type = IT_STRUCTDECL;
+            ret.data.strctdecl.fields = map_new(sizeof(enum Interpreter_Type));
+           
+            for (usize i = 0; i < node->children.size; i++) {
+                struct Parser_Node* fdecl = vec_get(&node->children, i);
+                enum Interpreter_Type type = resolve_type(fdecl->data.decl.type.name);
+                map_add(&ret.data.strctdecl.fields, fdecl->data.decl.name, &type);
+            }
+        break;
+        case PN_NEW:
+            ret.type = IT_STRUCT;
+            ret.data.strct.typename = node->data.newinst.type.name;
+            ret.data.strct.fields = map_new(sizeof(struct Interpreter_Value));
+
+            for (usize i = 0; i < node->children.size; i++) {
+                struct Parser_Node* init = vec_get(&node->children, i);
+                struct Interpreter_Value val = intrp_run(pnode_uvalue(init), should_return);
+                map_add(&ret.data.strct.fields, init->data.init.name, &val);
+            }
+
+        break;
+        case PN_FIELD: {
+            struct Interpreter_Value strct = intrp_run(pnode_uvalue(node), should_return);
+            strview_t field = node->data.field.name; 
+            if (strct.type != IT_STRUCT)
+                error_mmtype(IT_STRUCT, strct.type, node->pos);
+
+            struct Interpreter_Value* val = map_get(&strct.data.strct.fields, field);
+            if (!val) {
+                EH_MESSAGE("Field '%.*s' not found in struct", (int)field.size, field.view);
+                error_pos(get_pos(field));
+            }
+
+            ret = *val;
+        } break;
         case PN_STRING:
             ret.type = IT_STRING;
             ret.data.string.str = (strview_t){
@@ -305,6 +361,18 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                 vec_push(&ret.data.array.values, &val);
             }
         break;
+        case PN_ACCESS: {
+            struct Interpreter_Value array = intrp_run(pnode_left(node), should_return);
+            struct Interpreter_Value index = intrp_run(pnode_right(node), should_return);
+            if (array.type != IT_ARRAY)
+                error_mmtype(IT_ARRAY, index.type, pnode_left(node)->pos);
+            if (index.type != IT_INT)
+                error_mmtype(IT_INT, index.type, pnode_right(node)->pos);
+
+            int idx = index.data.intg.val;
+            if (idx < 0) idx = (int)array.data.array.values.size + idx;
+            ret = VEC_GET_VAL(struct Interpreter_Value, &array.data.array.values, (usize)idx);
+        } break;
         case PN_NUMBER:
 
             if (node->data.number.kind != PNM_FLT) {
@@ -334,7 +402,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                 right = intrp_run(pnode_right(node), NULL);
 
             if (left.type != right.type)
-                error_mmtype(left.type, right.type, node->data.op.op);
+                error_mmtype(left.type, right.type, get_pos(node->data.op.op));
 
             if (left.type == IT_INT) {
                 ret.type = IT_INT;
@@ -400,7 +468,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                 
             } else {
                 EH_MESSAGE("Operator '%.*s' doesn't support the operands '%s' and '%s'", (int)node->data.op.op.size, node->data.op.op.view, type_names[left.type], type_names[right.type]);
-                error_tok(node->data.op.op);
+                error_pos(node->pos);
             }
 
         } break;
@@ -410,7 +478,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
 
             if (node->data.unary.op.view[0] == '!') {
                 if (val.type != IT_INT) {
-                    error_mmtype(IT_INT, val.type, node->data.unary.op);
+                    error_mmtype(IT_INT, val.type, node->pos);
                 } else val.data.intg.val = !val.data.intg.val;
             } else if (node->data.unary.op.view[0] == '-') {
                 if (val.type == IT_INT)
@@ -419,7 +487,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                     val.data.flt.val = -val.data.flt.val;
                 else {
                     EH_MESSAGE("Operator '-' doesn't support operand of type '%s'", type_names[val.type]);
-                    error_tok(node->data.unary.op);
+                    error_pos(node->pos);
                 }
 
             }
