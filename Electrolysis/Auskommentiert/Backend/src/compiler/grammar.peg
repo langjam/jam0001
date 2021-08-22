@@ -19,7 +19,11 @@ CommentSelector := '{' _ 'get' _ countSelector={sth='comment' | count='[0-9]+' _
 IfComment := 'if' _ condition=Expression _ ':'
 
 VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
-Expression := ComparisionExpression
+Expression := LogicalExpression
+
+LogicalExpression := EqualsExpression | NotEqualsExpression | ComparisionExpression
+EqualsExpression := lhs=LogicalExpression _ '==' _ rhs=ComparisionExpression
+NotEqualsExpression := lhs=LogicalExpression _ '!=' _ rhs=ComparisionExpression
 
 ComparisionExpression := LessThanExpression | MoreThanExpression | LessEqualExpression | MoreEqualExpression | LineExpression
 LessThanExpression := lhs=ComparisionExpression _ '<' _ rhs=LineExpression

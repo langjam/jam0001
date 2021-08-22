@@ -163,7 +163,6 @@ export class VM {
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_2) {
             return false;
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_3) {
-
             if(expression.varName === "log") {
                 return new VMFunction(1, (p : VMValue[]) => {
                     console.log(p.map(p => this.stringify(p)).join(" "));
@@ -171,6 +170,10 @@ export class VM {
             } else if(expression.varName === "sqrt") {
                 return new VMFunction(1, (p : VMValue[]) => {
                     return Math.sqrt(p[0] as number);
+                });
+            } else if(expression.varName === "getUpvotes") {
+                return new VMFunction(1, (p : VMValue[]) => {
+                    return parentComment.upvotes;
                 });
             }
             throw new Error(expression.varName + " is not defined");
@@ -207,6 +210,10 @@ export class VM {
             return (await this.evaluateExpression(parentComment, expression.lhs) as any) <= (await this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.MoreEqualExpression) {
             return (await this.evaluateExpression(parentComment, expression.lhs) as any) >= (await this.evaluateExpression(parentComment, expression.rhs) as any);
+        } else if(expression.kind === AST.ASTKinds.EqualsExpression) {
+            return (await this.evaluateExpression(parentComment, expression.lhs) as any) == (await this.evaluateExpression(parentComment, expression.rhs) as any);
+        } else if(expression.kind === AST.ASTKinds.NotEqualsExpression) {
+            return (await this.evaluateExpression(parentComment, expression.lhs) as any) != (await this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.FunctionCall) {
             return (await this.evalFunction(parentComment, expression));
         } else if(expression.kind === AST.ASTKinds.GetLengthExpression) {

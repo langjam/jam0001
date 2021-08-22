@@ -14,7 +14,10 @@
 * CommentSelector := '{' _ 'get' _ countSelector={sth='comment' | count='[0-9]+' _ 'comments' _ aboveBelow={'above' | 'below'}} _ navigations=Navigations _ '}'
 * IfComment := 'if' _ condition=Expression _ ':'
 * VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
-* Expression := ComparisionExpression
+* Expression := LogicalExpression
+* LogicalExpression := EqualsExpression | NotEqualsExpression | ComparisionExpression
+* EqualsExpression := lhs=LogicalExpression _ '==' _ rhs=ComparisionExpression
+* NotEqualsExpression := lhs=LogicalExpression _ '!=' _ rhs=ComparisionExpression
 * ComparisionExpression := LessThanExpression | MoreThanExpression | LessEqualExpression | MoreEqualExpression | LineExpression
 * LessThanExpression := lhs=ComparisionExpression _ '<' _ rhs=LineExpression
 * MoreThanExpression := lhs=ComparisionExpression _ '>' _ rhs=LineExpression
@@ -80,6 +83,11 @@ export enum ASTKinds {
     IfComment = "IfComment",
     VarName = "VarName",
     Expression = "Expression",
+    LogicalExpression_1 = "LogicalExpression_1",
+    LogicalExpression_2 = "LogicalExpression_2",
+    LogicalExpression_3 = "LogicalExpression_3",
+    EqualsExpression = "EqualsExpression",
+    NotEqualsExpression = "NotEqualsExpression",
     ComparisionExpression_1 = "ComparisionExpression_1",
     ComparisionExpression_2 = "ComparisionExpression_2",
     ComparisionExpression_3 = "ComparisionExpression_3",
@@ -201,7 +209,21 @@ export interface IfComment {
     condition: Expression;
 }
 export type VarName = string;
-export type Expression = ComparisionExpression;
+export type Expression = LogicalExpression;
+export type LogicalExpression = LogicalExpression_1 | LogicalExpression_2 | LogicalExpression_3;
+export type LogicalExpression_1 = EqualsExpression;
+export type LogicalExpression_2 = NotEqualsExpression;
+export type LogicalExpression_3 = ComparisionExpression;
+export interface EqualsExpression {
+    kind: ASTKinds.EqualsExpression;
+    lhs: LogicalExpression;
+    rhs: ComparisionExpression;
+}
+export interface NotEqualsExpression {
+    kind: ASTKinds.NotEqualsExpression;
+    lhs: LogicalExpression;
+    rhs: ComparisionExpression;
+}
 export type ComparisionExpression = ComparisionExpression_1 | ComparisionExpression_2 | ComparisionExpression_3 | ComparisionExpression_4 | ComparisionExpression_5;
 export type ComparisionExpression_1 = LessThanExpression;
 export type ComparisionExpression_2 = MoreThanExpression;
@@ -341,10 +363,12 @@ export class Parser {
         return this.pos.overallPos === this.input.length;
     }
     public clearMemos(): void {
+        this.$scope$LogicalExpression$memo.clear();
         this.$scope$ComparisionExpression$memo.clear();
         this.$scope$LineExpression$memo.clear();
         this.$scope$DotExpression$memo.clear();
     }
+    protected $scope$LogicalExpression$memo: Map<number, [Nullable<LogicalExpression>, PosInfo]> = new Map();
     protected $scope$ComparisionExpression$memo: Map<number, [Nullable<ComparisionExpression>, PosInfo]> = new Map();
     protected $scope$LineExpression$memo: Map<number, [Nullable<LineExpression>, PosInfo]> = new Map();
     protected $scope$DotExpression$memo: Map<number, [Nullable<DotExpression>, PosInfo]> = new Map();
@@ -651,7 +675,85 @@ export class Parser {
         return this.regexAccept(String.raw`(?:[a-zA-Z]+[0-9a-zA-Z]*)`, $$dpth + 1, $$cr);
     }
     public matchExpression($$dpth: number, $$cr?: ErrorTracker): Nullable<Expression> {
+        return this.matchLogicalExpression($$dpth + 1, $$cr);
+    }
+    public matchLogicalExpression($$dpth: number, $$cr?: ErrorTracker): Nullable<LogicalExpression> {
+        const fn = () => {
+            return this.choice<LogicalExpression>([
+                () => this.matchLogicalExpression_1($$dpth + 1, $$cr),
+                () => this.matchLogicalExpression_2($$dpth + 1, $$cr),
+                () => this.matchLogicalExpression_3($$dpth + 1, $$cr),
+            ]);
+        };
+        const $scope$pos = this.mark();
+        const memo = this.$scope$LogicalExpression$memo.get($scope$pos.overallPos);
+        if(memo !== undefined) {
+            this.reset(memo[1]);
+            return memo[0];
+        }
+        const $scope$oldMemoSafe = this.memoSafe;
+        this.memoSafe = false;
+        this.$scope$LogicalExpression$memo.set($scope$pos.overallPos, [null, $scope$pos]);
+        let lastRes: Nullable<LogicalExpression> = null;
+        let lastPos: PosInfo = $scope$pos;
+        for(;;) {
+            this.reset($scope$pos);
+            const res = fn();
+            const end = this.mark();
+            if(end.overallPos <= lastPos.overallPos)
+                break;
+            lastRes = res;
+            lastPos = end;
+            this.$scope$LogicalExpression$memo.set($scope$pos.overallPos, [lastRes, lastPos]);
+        }
+        this.reset(lastPos);
+        this.memoSafe = $scope$oldMemoSafe;
+        return lastRes;
+    }
+    public matchLogicalExpression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<LogicalExpression_1> {
+        return this.matchEqualsExpression($$dpth + 1, $$cr);
+    }
+    public matchLogicalExpression_2($$dpth: number, $$cr?: ErrorTracker): Nullable<LogicalExpression_2> {
+        return this.matchNotEqualsExpression($$dpth + 1, $$cr);
+    }
+    public matchLogicalExpression_3($$dpth: number, $$cr?: ErrorTracker): Nullable<LogicalExpression_3> {
         return this.matchComparisionExpression($$dpth + 1, $$cr);
+    }
+    public matchEqualsExpression($$dpth: number, $$cr?: ErrorTracker): Nullable<EqualsExpression> {
+        return this.run<EqualsExpression>($$dpth,
+            () => {
+                let $scope$lhs: Nullable<LogicalExpression>;
+                let $scope$rhs: Nullable<ComparisionExpression>;
+                let $$res: Nullable<EqualsExpression> = null;
+                if (true
+                    && ($scope$lhs = this.matchLogicalExpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:==)`, $$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$rhs = this.matchComparisionExpression($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.EqualsExpression, lhs: $scope$lhs, rhs: $scope$rhs};
+                }
+                return $$res;
+            });
+    }
+    public matchNotEqualsExpression($$dpth: number, $$cr?: ErrorTracker): Nullable<NotEqualsExpression> {
+        return this.run<NotEqualsExpression>($$dpth,
+            () => {
+                let $scope$lhs: Nullable<LogicalExpression>;
+                let $scope$rhs: Nullable<ComparisionExpression>;
+                let $$res: Nullable<NotEqualsExpression> = null;
+                if (true
+                    && ($scope$lhs = this.matchLogicalExpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:!=)`, $$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$rhs = this.matchComparisionExpression($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.NotEqualsExpression, lhs: $scope$lhs, rhs: $scope$rhs};
+                }
+                return $$res;
+            });
     }
     public matchComparisionExpression($$dpth: number, $$cr?: ErrorTracker): Nullable<ComparisionExpression> {
         const fn = () => {
