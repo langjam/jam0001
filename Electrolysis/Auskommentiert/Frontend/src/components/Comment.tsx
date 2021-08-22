@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
 import { Component } from 'react';
 import '../css/App.css';
-import { CommentType } from './types'
+import { CommentType, Downvote, Upvote } from './types'
 import '../css/Comment.css';
 import '../css/all.css';
 import { Link } from 'react-router-dom';
@@ -12,17 +12,28 @@ import GlobalCommentStore from './GlobalCommentStore';
 class Comment extends Component<CommentType, CommentType> {
     answers: Array<ReactElement<any, any>> = [];
 
-    UNSAFE_componentWillMount() {
-        this.setState(this.props)
-        for (let entry of this.props.children) {
+    constructor(props: CommentType) {
+        super(props);
+        this.state = props;
+        this.initAnswers(this.props);
+    }
+
+    initAnswers(values: CommentType) {
+        this.answers = [];
+        for (let entry of values.children) {
             let component = <Comment id={entry.id} content={entry.content} children={entry.children} upvotes={entry.upvotes} date={entry.date}></Comment>
             this.answers.push(component)
         }
     }
 
+    componentDidMount() {
+        this.setState(this.props);
+        this.initAnswers(this.state);
+    }
+
     render() {
         return (
-            <div className="">
+            <div className="" key={Date.now()}>
                 <div className="body comment">
                     <p className="content">{this.state.content}</p>
                     <button onClick={() => this.upvote()}>{this.state.upvotes} &#8593;</button>
@@ -45,9 +56,36 @@ class Comment extends Component<CommentType, CommentType> {
 
     upvote() {
         this.setState({ upvotes: this.state.upvotes + 1 })
+        let body: Upvote = {
+            id: this.state.id
+        }
+        fetch("http://" + window.location.hostname + ":6789/api/upvote", {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            body: JSON.stringify(body),
+        })
     }
+
     downvote() {
         this.setState({ upvotes: this.state.upvotes - 1 })
+        let body: Downvote = {
+            id: this.state.id
+        }
+        fetch("http://" + window.location.hostname + ":6789/api/downvote", {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            body: JSON.stringify(body),
+        })
     }
 }
 

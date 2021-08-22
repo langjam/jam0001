@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react';
 import { Component } from 'react';
 import '../css/App.css';
 import { Comment } from './Comment';
-import { TopicType } from './types'
+import { Downvote, TopicType, Upvote } from './types'
 import '../css/Topic.css'
 import '../css/all.css'
 import { Link } from 'react-router-dom';
@@ -11,18 +11,35 @@ import GlobalTopicStore from './GlobalTopicStore';
 
 class Topic extends Component<TopicType, TopicType> {
     comments: Array<ReactElement<any, any>> = [];
+    timer: NodeJS.Timeout | undefined = undefined
 
-    UNSAFE_componentWillMount() {
-        this.setState(this.props)
-        for (let entry of this.props.comments) {
+    constructor(props: TopicType) {
+        super(props);
+        this.state = this.props;
+        this.initComments(this.state);
+    }
+
+    initComments(values: TopicType) {
+        this.comments = [];
+        for (let entry of values.children) {
             let component = <Comment id={entry.id} content={entry.content} children={entry.children} upvotes={entry.upvotes} date={entry.date}></Comment>
             this.comments.push(component)
         }
     }
 
+    componentDidMount() {
+        GlobalTopicStore.setTopic(this.state);
+        this.timer = setInterval(() => {
+            fetch("http://" + window.location.hostname + ":6789/api/topic/" + this.state.id).then(data => data.json()).then(data => {
+                this.setState(data);
+                this.initComments(data);
+            }).catch(reason => { console.log(reason) })
+        }, 100)
+    }
+
     render() {
         return (
-            <div className="middle">
+            <div className="middle" key={Date.now()}>
                 <div className="">
                     <h2 className="heading_element">{this.state.title}</h2>
                     <h4 className="heading_element">{new Date(this.state.date).toLocaleString()}</h4>
@@ -37,19 +54,48 @@ class Topic extends Component<TopicType, TopicType> {
                         <button onClick={() => GlobalTopicStore.setTopic(this.state)}>Answer</button>
                     </Link>
                 </div>
-                <h3>Comments:</h3>
-                <>
-                    {this.comments}
-                </>
+                <div key={Date.now()}>
+                    <h3>Comments:</h3>
+                    <>
+                        {this.comments}
+                    </>
+                </div>
             </div>
         );
     }
 
     upvote() {
         this.setState({ upvotes: this.state.upvotes + 1 })
+        let body: Upvote = {
+            id: this.state.id
+        }
+        fetch("http://" + window.location.hostname + ":6789/api/upvote", {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            body: JSON.stringify(body),
+        })
     }
+
     downvote() {
         this.setState({ upvotes: this.state.upvotes - 1 })
+        let body: Downvote = {
+            id: this.state.id
+        }
+        fetch("http://" + window.location.hostname + ":6789/api/downvote", {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            body: JSON.stringify(body),
+        })
     }
 }
 
