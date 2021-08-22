@@ -9,7 +9,11 @@ const string TT_NAMES[256] = {
     [TT_EOF] = "Eof",
     [TT_INVALID] = "Invalid",
     [TT_STRING] = "String",
-    [TT_NUMBER] = "Number",
+    [TT_HEXADECIMAL] = "Number",
+    [TT_BINARY] = "Binary",
+    [TT_OCTAL] = "Octal",
+    [TT_INTEGER] = "Integer",
+    [TT_FLOATING] = "Floating",
     [TT_IDENT] = "Ident",
     [TT_DEF] = "Definition",
     [TT_LBRACE] = "LeftBrace",
@@ -117,14 +121,43 @@ static enum Token_Type lex_ident(struct Lexer_State *self) {
 }
  
 static enum Token_Type lex_num(struct Lexer_State *self) {
- 
     if (lex_is(self, '-')) TRY_SKIP(self, '-'); 
  
-    rune ch = lex_skip(self);
-    if (!is_num(ch)) return TT_INVALID;
-    while (ch = lex_peek(self), ch >= '0' && ch <= '9') lex_skip(self);
+    if (!(is_num(lex_peek(self)) || lex_peek(self) == '.')) return TT_INVALID;
+
+    if (lex_peek(self) == '0') {
+        rune ch;
+        lex_skip(self);
+        if (lex_peek(self) == 'x') {
+            lex_skip(self);
+            while (ch = lex_peek(self), (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')) lex_skip(self);
+            return TT_HEXADECIMAL;
+        }
+        else if (lex_peek(self) == 'b') {
+            lex_skip(self);
+            while (ch = lex_peek(self), (ch >= '0' && ch <= '1')) lex_skip(self);
+            return TT_BINARY;
+        }
+        else {
+            while (ch = lex_peek(self), (ch >= '0' && ch <= '7')) lex_skip(self);
+            return TT_OCTAL;
+        }
+    }
+
+    enum Token_Type tt = TT_INTEGER;
+    bool had_dot = false;
+
+    rune ch;
+    while (ch = lex_peek(self), is_num(ch) || (ch == '.')) {
+        if (ch == '.') {
+            if (had_dot) break;
+            had_dot = true;
+            tt = TT_FLOATING;
+        }
+        lex_skip(self);
+    }
     
-    return TT_NUMBER;
+    return tt;
 }
  
 static enum Token_Type lex_single_rune(struct Lexer_State *self) {
@@ -149,6 +182,17 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
             {
                 lex_skip(self);
             }
+        case '&':
+            if (lex_peek(self) == '&')
+            {
+                lex_skip(self);
+            }
+        case '|':
+            if (lex_peek(self) == '|')
+            {
+                lex_skip(self);
+            }
+        case '^':
         case '+':
         case '-':
         case '*':

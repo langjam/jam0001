@@ -45,9 +45,6 @@ static void lineinfo(tok_t *token) {
     if (error_handling.expected != NULL) {
         EH_MESSAGE(". %s", error_handling.expected);
     }
-    if (error_handling.unmatched != 0) {
-        EH_MESSAGE(", while closing `%c`", error_handling.unmatched);
-    }
     eh_error(token->line, token->col, parser.lexer.src);
 }
 
@@ -83,7 +80,14 @@ static void ptok(tok_t tok) {
 
 static tok_t eof(tok_t tok) {
     EH_MESSAGE("Unexpected end of file");
-    lineinfo(&parser.current_token);
+    if (error_handling.unmatched != 0) {
+        EH_MESSAGE(", enclosed in `%c`", error_handling.unmatched);
+    }
+    struct Token faketoken = {
+        .col = parser.lexer.col,
+        .line = parser.lexer.line,
+    };
+    lineinfo(&faketoken);
     if (parser.lexer.src[tok.span.from] == '\"') {
         fprintf(stderr, "(Probably due to unclosed \")\n");
         eh_at_line(tok.line, parser.lexer.src);
@@ -146,7 +150,8 @@ static void skip_tt_panic(const string shut) {
     tok_t tok = peek();
     if (tok.tt != TT_SEMI) {
         error_handling.fail = true;
-        stray_panic(&tok);
+        if (tok.tt != TT_INVALID)
+            stray_panic(&tok);
         while (!(peek().tt == TT_SEMI || check(shut))) {
             pull();
         };
@@ -247,7 +252,7 @@ static pnode_t pnode_endpoint(pnode_kind_t kind) {
 }
 
 static pnode_t delimited(pnode_kind_t kind, const string open, const string shut, bool mustclose, pnode_t callback()) {
-    if (kind == PN_TYPELIST && check("{")) 
+    if (kind == PN_TYPELIST) 
         setexpect("Did you mean to create a parameter list?");
     pnode_t node = pnode_listing(kind);
     skip_v(open);
@@ -293,13 +298,18 @@ static strview_t typedecl() {
 }
 
 #define OPS_W 4
-#define OPS_H 5
+#define OPS_H 10
 
 static const string OPERATORS[OPS_H][OPS_W] = {
     { "*", "/", "%" },
     { "+", "-" },
     { "<", ">", ">=", "<=" },
     { "==", "!=" },
+    { "&" },
+    { "^" },
+    { "|" },
+    { "&&" },
+    { "||" },
     { "=" },
 };
 
@@ -312,7 +322,6 @@ usize getprec(struct Span op) {
     }
     return 0;
 }
-
 
 static pnode_t parse_expr(usize prec) {
     if (prec == 0) return maybe_call();
@@ -383,16 +392,28 @@ static pnode_t statement() {
 static pnode_t value() {
     tok_t token = peek();
     pnode_t value_node;
+    enum Parser_Number_Kind kind;
     switch (token.tt) {
         case TT_STRING:
             pull();
             value_node = pnode_endpoint(PN_STRING);
             value_node.data.string.val = strview_span(token.span, parser.lexer.src);
             return value_node;
-        case TT_NUMBER:
+        case TT_HEXADECIMAL:
+            kind = PNM_HEX; goto meat;
+        case TT_BINARY:
+            kind = PNM_BIN; goto meat;
+        case TT_OCTAL:
+            kind = PNM_OCT; goto meat;
+        case TT_INTEGER:
+            kind = PNM_INT; goto meat;
+        case TT_FLOATING:
+            kind = PNM_FLT; goto meat;
+        meat:
             pull();
             value_node = pnode_endpoint(PN_NUMBER);
             value_node.data.number.val = strview_span(token.span, parser.lexer.src);
+            value_node.data.number.kind = kind;
             return value_node;
         case TT_IDENT: {
             pull();
