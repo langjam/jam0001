@@ -1,0 +1,8 @@
+REM 1
+REM 2
+REM 3
+; this should roll
+
+
+REM 4
+# mul should result in [3,1,8]

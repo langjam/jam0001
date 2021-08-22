@@ -1,0 +1,14 @@
+% crochet
+
+command belle make-vm: (Program is program) do
+  new vm(
+    #cell with-value: #map empty, // global bindings
+    #cell with-value: [], // global stack
+    #cell with-value: Program.forms, // source program
+    #cell with-value: [], // defined rewrite rules
+  )
+    | add-primitive-rules
+    | add-prelude
+    | sort-rules;
+end
+

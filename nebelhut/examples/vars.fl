@@ -1,0 +1,13 @@
+bind 'answer 42
+assoc 'answer 'doc {* The answer to life, the universe, and everything. *}
+println answer
+println assoclist 'answer
+
+{* Twice the answer, twice the insight. *}
+bind 'answer2 * 2 42
+println assoclist 'answer2
+
+{* There is much to say about the variable. *}
+{* But we don’t want to dwell on the matter. *}
+bind 'foo 4
+println assoclist 'foo

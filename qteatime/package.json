@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "start": "crochet run-web belle/crochet.json --www-root www/"
+  },
+  "dependencies": {
+    "@origamitower/crochet": "^0.10.0"
+  }
+}

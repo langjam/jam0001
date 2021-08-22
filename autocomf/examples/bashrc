@@ -1,0 +1,16 @@
+# AUTOCOMF COMMENT LINE #
+# AUTOCOMF VAR myUserColour REGEX ^(red|green|blue|purple|cyan|white|yellow)$
+# AUTOCOMF VAR myHostColour REGEX ^(red|green|blue|purple|cyan|white|yellow)$
+
+export red=$'\e[0;31m'
+export green=$'\e[0;32m'
+export blue=$'\e[0;34m'
+export purple=$'\e[0;35m'
+export cyan=$'\e[0;36m'
+export white=$'\e[0;37m'
+export yellow=$'\e[0;33m'
+
+# AUTOCOMF USE uc=$¤myUserColour¤; hc=$¤myHostColour¤
+uc=$purple; hc=$red
+
+PS1="\[$uc\]\u@\[$hc\]\h\$ \[\033[00m\]"

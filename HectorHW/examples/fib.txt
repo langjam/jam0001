@@ -1,0 +1,19 @@
+fib = function (n) (
+    //assert $isnum(n)$
+    1; //when $n<=2$
+    self(n-1)+self(n-2);//otherwise
+);
+print "enter n";
+a = readnum();
+
+print fib(a);
+
+print "a few numbers for you";
+
+//loop start
+
+a = 1; //once
+a = a+1;//otherwise
+print fib(a);
+
+goto loop start; //when $a<10$

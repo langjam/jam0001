@@ -1,0 +1,15 @@
+{* TEST 5 *}
++ 2 3
+
+{- t -}
+{* TEST 6 *}
++ 2 3
+
+{- T -}
+{* TEST 5 *}
++ 2 3
+
+println switch? {- t -}
+println env-switch? {- t -}
+switch! {- t -}
+println env-switch? {- t -}
