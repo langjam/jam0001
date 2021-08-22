@@ -248,6 +248,7 @@ There is a variety of built-in functions for you to use.
 - `parse_int(string)` - takes in a string and tries to convert it into a number. Returns `null` upon failure.
 - `print(...)` - can take in any number of arguments and prints them to `STDOUT`.
 - `random_float()` - returns a float between 0 (inclusive) and 1 (exclusive).
+- `read_input(optionalPrompt)` - reads input from `STDIN`. If you pass in a string, it will use the string as the prefix for the prompt.
 - `sqrt(number)` - returns the square root of a number as a float, even if it is a whole number, mathematically.
 - `unix_time()` - returns the current unix timestamp as a float.
 

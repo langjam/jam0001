@@ -62,6 +62,7 @@ There are a variety of demo code files in the `samples/` directory. You can run 
 - **[Tetris](samples/Tetris.md)** - This is an implementation of Tetris using SDL2 (via PyGame since the interpreter is written in Python). It demonstrates how to create a game window, draw to the screen, and use input from the user.
 - **[Calculate &pi;](samples/CalculatePi.md)** - This is a program that calculates &pi; by inscribing a circle in a square and choosing some number of random points within the square and seeing how many fall within the circle. The number of points can be passed in from the command line.
 - **[Twitter Clone HTTP Server](samples/HttpServer.md)** - This is a **minimalistic** Twitter clone written with the MarkSideways HTTP Server library. It serves both static content for the frontend and also has a dynamic API endpoint for handling JSON requests.
+- **[Rock Paper Scissors Showdown](samples/RockPaperScissors.md)** - A command-line implementation of Rock Paper Scissors that reads input from STDIN.
 
 > You may be wondering *"If there's a heading called 'Other Demos' here, isn't that technically creating a class definition called OtherDemos?"* and the answer is **Yes**. Because there are no full-block code snippets in this heading and no sub-headings, this is technically an empty class definition with an empty constructor.
 

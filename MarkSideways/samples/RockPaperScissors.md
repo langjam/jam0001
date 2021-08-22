@@ -1,5 +1,7 @@
 # Rock Paper Scissors
 
+> As with all MarkSideways programs, this is *NOT* just a markdown file that refers to code. The markdown file itself *IS* the code that MarkSideways interprets. You can run this program by running `python ms.py samples/RockPaperScissors.md`
+
 This is a command line version of the classic game Rock Paper Scissors. You still have to play it with your hands, it's just that your hands are now on the keyboard.
 
 
