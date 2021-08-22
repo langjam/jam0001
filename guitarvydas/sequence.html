@@ -10,8 +10,12 @@ textarea {
 
 <h1>Sequence Transpiler (DaS Workbench)</h1>
 
+<p>source (diagrams.net raw):</p>
+<textarea id="encodedsource" rows="17" cols="90" placeholder="raw source (sequence.drawio)" style="background-color:oldlace;">
+</textarea>
+
 <p>grok (decoder):</p>
-<textarea id="decodergrammar" name="a" rows="1" cols="90" placeholder="decoder grammar" style="background-color:oldlace;">
+<textarea id="decodergrammar" rows="1" cols="90" placeholder="decoder grammar" style="background-color:oldlace;">
 AppDiagramsEncodedNet{
 TabbedDiagrams = Header Diagram+ Trailer
 Header = "<" "mxfile" encodedChar+
@@ -40,13 +44,8 @@ attributeValue[x] = [[${x}]]
 number [n] = [[${n}]]
 </textarea>
 
-<p>source (diagrams.net raw):</p>
-<textarea id="encodedsource" name="source" rows="17" cols="90" placeholder="diagrams.net raw source" style="background-color:oldlace;">
-<mxfile host="Electron" modified="2021-08-21T03:51:26.298Z" agent="5.0 (Macintosh; Intel Mac OS X 11_3_1) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/14.6.13 Chrome/89.0.4389.128 Electron/12.0.7 Safari/537.36" etag="Zq9fhvX-Tii9DVQKB6BC" version="14.6.13" type="device"><diagram id="fJMiZ-UQUDxddErPQ4Be" name="sequence">zZfbjpswEIafJpetAg4kvWwO26raVSvlYrNXlYEBvGswMk5C+vQdB3MKe9QGJVfB/4xP3z8DyogskuKHpFl8JwLgI3scFCOyHNm2ZY1d/NHKoVTc6aQUIskCk9QIa/YPjDg26pYFkHcSlRBcsawr+iJNwVcdjUop9t20UPDurhmNoCesfcr76j0LVFzfa9wEfgKLYrP1zDGBhFbJRshjGoh9SyKrEVlIIVT5lBQL4BpexaWcd/NCtD6YhFS9Z0JS/H2a37EHL/wl2WR6n29mj18qzDvKt+bGSmS3sNM2Hk+tDhUKKbZpAHo1a0Tm+5gpWGfU19E9mo9arBJuwjuQiiHG75xFKWq4KqpmM4xB8eI1rBoOVhWIBJQ8YIqZYFfkTUHZEzPeN/Y4FfO45YxVOUNNSUT12g01fDDgPgDR7jGUWIr5tQKcnQCc9QFazwF0h+JHevw8TYqlEaqeKOBaUdZ1djUonR5Klvbg4Tr4+oS3wdE8K9+pISs07HnIOF8ILuRxIRI4MAsmOtGQ9REcYHCeKymeoJU6sz3iuhhB2uo37siUhoY9eR4nrBMnvjk9J8gzRpChjHD71AP8sJihkCoWkUgpXzXqvClqTaXJuRW6YI+OPIJSB/OVpFslun4hLHnYmPnHwYMefHWq4bJoB5cHMyrPqg/4On68j9hKH16599R8o6mMQL1VqH07JXCq2K57jrObM+11SegN1yVhGNq+/64uCVzPdYbrEnL66r90l1jkIm1SMLVpPbeaBEdNj+jBx1vkzdK37E/Wvpn6RzDcujbXdbrmEuvEtbJ3zawT4+pjfMJL6xJentGXySC22PZQtuCw+fdQpjf/wcjqPw==</diagram></mxfile>
-</textarea>
-
 <p>decoded:</p>
-<textarea id="decodertranspiled" name="transpiled" rows="17" cols="90" placeholder="decoded"  readonly style="background-color:whitesmoke;">
+<textarea id="decodertranspiled" rows="1" cols="90" placeholder="decoded"  readonly style="background-color:whitesmoke;">
 </textarea>
 <br>
 <br>
@@ -59,7 +58,7 @@ number [n] = [[${n}]]
 <!-- diagrams.net style expander -->
 
 <p>grok (styleexpander):</p>
-<textarea id="styleexpandergrammar" name="a" rows="1" cols="90" placeholder="styleexpander grammar" style="background-color:oldlace;">
+<textarea id="styleexpandergrammar" rows="1" cols="90" placeholder="styleexpander grammar" style="background-color:oldlace;">
 AppStyleexpander{
   Diagrams = Diagram+
   Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
@@ -118,7 +117,7 @@ number [n] = [[${n}]]
 
 
 <p>diagrams net style expanded:</p>
-<textarea id="styleexpandertranspiled" rows="17" cols="90" placeholder="style expander"  readonly style="background-color:whitesmoke;">
+<textarea id="styleexpandertranspiled" rows="1" cols="90" placeholder="style expander"  readonly style="background-color:whitesmoke;">
 </textarea>
 <br>
 <br>
@@ -134,7 +133,7 @@ number [n] = [[${n}]]
 <!-- diagrams.net attribute elider -->
 
 <p>grok (attributeelider):</p>
-<textarea id="attributeelidergrammar" name="a" rows="1" cols="90" placeholder="attributeelider grammar" style="background-color:oldlace;">
+<textarea id="attributeelidergrammar" rows="1" cols="90" placeholder="attributeelider grammar" style="background-color:oldlace;">
 AppAttributeelider{
   Diagrams = Diagram+
   Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
@@ -235,7 +234,7 @@ quote [c] = [[${c}]]
 
 
 <p>diagrams net attribute elider:</p>
-<textarea id="attributeelidertranspiled" rows="17" cols="90" placeholder="attribute elider"  readonly style="background-color:whitesmoke;">
+<textarea id="attributeelidertranspiled" rows="1" cols="90" placeholder="attribute elider"  readonly style="background-color:whitesmoke;">
 </textarea>
 <br>
 <br>
@@ -253,7 +252,7 @@ quote [c] = [[${c}]]
 <!-- collect cell and diagam names into a table -->
 
 <p>grok (tofb1):</p>
-<textarea id="tofb1grammar" name="a" rows="1" cols="90" placeholder="tofb1 grammar" style="background-color:oldlace;">
+<textarea id="tofb1grammar" rows="1" cols="90" placeholder="tofb1 grammar" style="background-color:oldlace;">
 Tofb1{
   Diagrams = Diagram+
   Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
@@ -362,7 +361,7 @@ quote [c] = [[${c}]]
 
 
 <p>diagrams net tofb1:</p>
-<textarea id="tofb1transpiled" rows="17" cols="90" placeholder="tofb1 output"  readonly style="background-color:whitesmoke;">
+<textarea id="tofb1transpiled" rows="1" cols="90" placeholder="tofb1 output"  readonly style="background-color:whitesmoke;">
 </textarea>
 <br>
 <br>
@@ -377,7 +376,7 @@ quote [c] = [[${c}]]
 <!-- diagrams.net tofb -->
 
 <p>grok (tofb):</p>
-<textarea id="tofbgrammar" name="a" rows="1" cols="90" placeholder="tofb grammar" style="background-color:oldlace;">
+<textarea id="tofbgrammar" rows="1" cols="90" placeholder="tofb grammar" style="background-color:oldlace;">
 Tofb{
   Diagrams = Diagram+
   Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
@@ -500,7 +499,7 @@ quote [c] = [[${c}]]
 
 
 <p>diagrams net tofb:</p>
-<textarea id="tofbtranspiled" rows="17" cols="90" placeholder="tofb output"  readonly style="background-color:whitesmoke;">
+<textarea id="tofbtranspiled" rows="1" cols="90" placeholder="tofb output"  readonly style="background-color:whitesmoke;">
 </textarea>
 <br>
 <br>
@@ -509,7 +508,7 @@ quote [c] = [[${c}]]
 <!-- end diagrams.net tofb -->
 
 <!-- sort -->
-<p>diagrams net sort</p>
+<p>sorted</p>
 <textarea id="plsorted" rows="17" cols="90" placeholder="pl sorted"  readonly style="background-color:whitesmoke;">
 </textarea>
 <br>

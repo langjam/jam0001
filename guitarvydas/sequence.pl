@@ -34,12 +34,10 @@ height(id7, 30).
 height(id9, 30).
 name(id1, "sequence").
 source(id8, id9).
-target(id10, "mx_kBMiYbfJri47WsX8j__12").
-target(id11, "mx_kBMiYbfJri47WsX8j__4").
 target(id8, id7).
 value(id4, "topLevel").
-value(id5, "rects").
-value(id6, "bounding boxes").
+value(id5, "process A").
+value(id6, "process B").
 value(id7, "in").
 value(id9, "fb").
 vertex(id4, "").

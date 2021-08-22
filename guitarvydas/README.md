@@ -4,13 +4,42 @@ title:  "Jam0001"
 ---
 # Synopsis
 
-Transpile drawings to code using drawio, PROLOG, Ohm-JS.
+Transpile diagrams to code.
 
-Use 2 drawings to describe 1 (very, very simple) problem.
+## Introduction
 
-Use 4 languages to transpile the 2 drawings.
+To me, 1st class comments means that:
 
-Components on the drawings are concurrent by default.
+- if you change the comments, the execution (code) changes.
+
+The following is a discussion about the [language jam](https://github.com/langjam/langjam).
+
+[_I find that writing about a problem helps me think about the problem. This may read as a stream of consciousness._]
+
+# Build and Run
+- to see the source code, open `sequence.drawio` and `details.drawio`
+- yes, the source code is in the form of diagrams (see Discussion section)
+
+- (`sequence.drawio` shows the order in which components must be executed)
+- (`details.drawio` shows the details within the components (BASH at the moment))
+
+- run `run.bash` from the command line, it should print 
+```
+hello
+... from process A
+... from process B
+goodbye
+```
+
+# Abstract
+
+Transpile drawings to code.
+
+The main purpose of this project is to show that it is easy to transpile diagrams to code.
+
+For simplicity of explanation, only a toy example is transpiled.
+
+Components on the drawings are *concurrent* by default.
 
 Four transpilers (languages) are created:
 1. sequencing diagram -> JSON
@@ -18,18 +47,18 @@ Four transpilers (languages) are created:
 3. sequence.json -> BASH
 4. details.json -> BASH
 
-[_Status: Done: 1, 2. Working on 4._]
-
-Jump to _Build_ section to skip the essay about motivation.
+This is done using drawio, PROLOG, Ohm-JS and JavaScript.
 
 # Key Takeaways
 - multiple views on one problem
-- one mini-language (SCN) for each problem
+- one mini-language (SCN[^scn]) for each problem
 - separation of concerns
 - isolation
 - concurrency
 - simplicity
 - the New Assembler.
+
+[^scn]: SCN means Solution Centric Notation.
 
 # Key Technologies
 - drawings (.drawio, .svg in the future)
@@ -51,7 +80,9 @@ I used PROLOG (SWIPL) for this project, but, there are other choices, e.g.
 - miniKanren
 - datalog
 - core.logic
-- nested loops.
+- nested loops
+- prolog.js
+- etc.
 
 # PEG
 PEG means Parsing Expression Grammars.
@@ -118,13 +149,6 @@ Lisp (Common Lisp, Racket) would be my choice, but Ohm-JS has not yet been porte
 
 80x86 is Old Assembler.
 
-# Introduction
-
-The following is a discussion about the [language jam](https://github.com/langjam/langjam).
-
-[_I find that writing about a problem helps me think about the problem. This may read as a stream of consciousness._]
-
-# Build
 # Discussion
 To me, 1st class comments means that:
 - if you change the comments, the execution changes.
@@ -298,7 +322,7 @@ Let's start by making separate diagrams for each of the view.
 
 ## Sequence Diagram
 
-![2021-08-20-jam0001-sequence.png](https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/2021-08-20-jam0001-sequence.png?raw=true)
+
 
 ## Details Diagram
 
@@ -342,9 +366,21 @@ Dead code ...
 
 - make this thing emit code for JVM and BEAM
 
+- feed this thing to itself ("self compile", "eat your own dogfood")
+
+- node-ify the whole thing, so that it all runs from the command line
+
+- add hierarchical nodes, allow sub-sequences/details
+
+- strip out unneeded code from support.js
+
+- missing newlines
+
 # Appendix
 
 [Bare Essence](https://guitarvydas.github.io/2021/08/16/Bare-Essence.html).
+
+[js-prolog](https://github.com/guitarvydas/js-prolog)
 
 [Blog](https://guitarvydas.github.io)
 [Videos](https://www.youtube.com/channel/UC2bdO9l84VWGlRdeNy5)

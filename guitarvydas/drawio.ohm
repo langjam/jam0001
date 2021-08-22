@@ -1,0 +1,12 @@
+AppDiagramsEncodedNet{
+TabbedDiagrams = Header Diagram+ Trailer
+Header = "<" "mxfile" encodedChar+
+Trailer = "</mxfile>"
+Diagram = "<diagram" Attribute* ">" encodedChar+ "</diagram>"
+Attribute = alnum+ "=" attributeValue
+string= "\"" notDQ* "\""
+notDQ = ~"\"" any
+encodedChar = ~"<" any		   
+attributeValue = number | string
+number = digit+
+}

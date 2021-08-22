@@ -1,7 +1,7 @@
 {"diagram":"id1", "toplevelcomponent":"id4"}
 
 {
-  "children": ["rects", "bounding boxes" ],
+  "children": ["process__A", "process__B" ],
   "connections": [],
   "diagram":"id1",
   "id":"id4",
@@ -16,7 +16,7 @@
   "diagram":"id1",
   "id":"id5",
   "inputs": [],
-  "name":"rects",
+  "name":"process__A",
   "outputs": [],
   "synccode":""
 }
@@ -28,7 +28,7 @@
   "inputs": [],
   "name":"c3",
   "outputs": [],
-  "synccode":"swipl -q  -g 'consult(fb).'  -g 'consult(rects).'  -g 'printRects.'  -g 'halt.'| ./augment__fb"
+  "synccode":"~~echo hello~~echo ... from process A~~"
 }
 {
   "children": ["c4" ],
@@ -36,7 +36,7 @@
   "diagram":"id1",
   "id":"id7",
   "inputs": [],
-  "name":"bounding boxes",
+  "name":"process__B",
   "outputs": [],
   "synccode":""
 }
@@ -48,6 +48,6 @@
   "inputs": [],
   "name":"c4",
   "outputs": [],
-  "synccode":"swipl -q  -g 'consult(fb).'  -g 'consult(boundingBoxes).'  -g 'printBB.'  -g 'halt.'  | ./augment__fb"
+  "synccode":"~~echo ... from process B~~echo goodbye~~"
 }
 

@@ -73,12 +73,10 @@ t(id6,280).
 t(id7,295).
 t(id8,310).
 t(id9,295).
-target(id10, "mx_kBMiYbfJri47WsX8j__12").
-target(id11, "mx_kBMiYbfJri47WsX8j__4").
 target(id8, id7).
 value(id4, "topLevel").
-value(id5, "rects").
-value(id6, "bounding boxes").
+value(id5, "process A").
+value(id6, "process B").
 value(id7, "in").
 value(id9, "fb").
 vertex(id4, "").

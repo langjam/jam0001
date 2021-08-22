@@ -1,0 +1,26 @@
+AppStyleexpander{
+  Diagrams = Diagram+
+  Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
+  Attribute = alnum+ "=" attributeValue
+  string= "\"" notDQ* "\""
+  notDQ = ~"\"" any
+  encodedChar = ~"<" any		   
+
+  GraphModel = "<mxGraphModel" Attribute+ ">" Root "</mxGraphModel>" 
+  Root = "<root>" Cell+ "</root>"
+  Cell = CellWithContent | CellWithoutContent
+  CellWithoutContent = "<mxCell" CellAttribute+ "/>"
+  CellWithContent = "<mxCell" CellAttribute+ ">" Geometry? "</mxCell>"	     
+  Geometry = GeometryWithoutContent | GeometryWithContent
+  GeometryWithoutContent = "<mxGeometry" Attribute+ "/>"
+  GeometryWithContent = "<mxGeometry" Attribute+ ">" ignore+ "</mxGeometry>"
+  CellAttribute = StyleAttribute | OtherCellAttribute
+  StyleAttribute = "style" "=" string
+  OtherCellAttribute = alnum+ "=" attributeValue
+
+  attributeValue = number | string
+  number = digit+
+
+  ignore = ~"</mxGeometry>" any
+
+}
