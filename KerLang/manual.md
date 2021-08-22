@@ -61,6 +61,7 @@ function my_fun;
 ```
 
 Sentences can be of different kinds:
+
 1. **Argument specification** : 
    + The signature of a function need to be provided. This can be done by writing the comment `This function takes 3 arguments.` for example
    + If the number of argument is'nt specified, it may lead to a compile error
