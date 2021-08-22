@@ -114,7 +114,10 @@ impl Interpreter {
                     return Err(RuntimeErrorCause::MissingFunction.error(call_stmt.span));
                 };
 
-                //TODO: do something with call_out
+                if let Some(store) = &call_stmt.store {
+                    local.store(store.clone(), call_out, Mutability::Mutable)
+                        .map_err(|_| RuntimeErrorCause::Immutable.error(call_stmt.span))?;
+                }
             },
 
             Stmt::Cond(cond_stmt) => {

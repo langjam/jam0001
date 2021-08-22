@@ -1,2 +1,5 @@
-//prints "hello world"
+//This function adds 3, 4, 5 storing the result in sum, then prints sum
 function main()
+
+//A function which stores a + b + c in sum then returns sum
+function add(a, b, c)

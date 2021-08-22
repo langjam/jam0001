@@ -43,6 +43,7 @@ impl fmt::Display for Value {
             Value::Bool(val) => write!(f, "{}", val),
             Value::Int(val) => write!(f, "{}", val),
             Value::String(val) => write!(f, "{}", val),
+            Value::Function(val) => write!(f, "function[{}]", val),
             // Value::File(val) => write!(f, "{:?}", val),
         }
     }

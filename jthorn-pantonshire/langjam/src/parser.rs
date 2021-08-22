@@ -76,6 +76,7 @@ pub struct CallStmt {
     pub span: Span,
     pub function: String,
     pub args: Vec<Expr>,
+    pub store: Option<String>,
 }
 
 #[derive(Debug)]
@@ -246,11 +247,29 @@ fn parse_statement(pair: Pair) -> Stmt {
                 //TODO: return an error instead
                 None => panic!(r#"call to function "{}" must end with an s"#, function),
             };
-            let args = pairs.map(parse_expr).collect::<Vec<_>>();
+
+            let mut args = None;
+            let mut store = None;
+
+            for pair in pairs {
+                match pair.as_rule() {
+                    Rule::callArgs => {
+                        args = Some(pair.into_inner().map(parse_expr).collect::<Vec<_>>());
+                    },
+
+                    Rule::callStore => {
+                        store = Some(pair.into_inner().next().unwrap().as_str().to_owned());
+                    },
+
+                    _ => unreachable!(),
+                }
+            }
+
             Stmt::Call(CallStmt {
                 span,
                 function,
-                args,
+                args: args.unwrap_or_else(|| Vec::new()),
+                store,
             })
         },
 
@@ -287,24 +306,24 @@ fn parse_expr(pair: Pair) -> Expr {
         let mut pairs = pair.into_inner();
         let lhs = parse_comparison(pairs.next().unwrap());
 
-        match pairs.next() {
-            Some(op) => {
-                let op = match op.as_rule() {
-                    Rule::opNeq => BinaryOp::Neq,
-                    Rule::opEq => BinaryOp::Eq,
-                    _ => unreachable!(),
-                };
-    
-                let rhs = parse_comparison(pairs.next().unwrap());
+        let mut expr = lhs;
 
-                Expr {
-                    span,
-                    kind: ExprKind::Binary(op, Box::new(lhs), Box::new(rhs))
-                }
-            },
+        while let Some(op) = pairs.next() {
+            let op = match op.as_rule() {
+                Rule::opNeq => BinaryOp::Neq,
+                Rule::opEq => BinaryOp::Eq,
+                _ => unreachable!(),
+            };
 
-            None => lhs,
+            let rhs = parse_comparison(pairs.next().unwrap());
+
+            expr = Expr {
+                span,
+                kind: ExprKind::Binary(op, Box::new(expr), Box::new(rhs))
+            };
         }
+
+        expr
     }
 
     fn parse_comparison(pair: Pair) -> Expr {
@@ -312,26 +331,26 @@ fn parse_expr(pair: Pair) -> Expr {
         let mut pairs = pair.into_inner();
         let lhs = parse_term_or(pairs.next().unwrap());
         
-        match pairs.next() {
-            Some(op) => {
-                let op = match op.as_rule() {
-                    Rule::opGt => BinaryOp::Gt,
-                    Rule::opGe => BinaryOp::Ge,
-                    Rule::opLt => BinaryOp::Lt,
-                    Rule::opLe => BinaryOp::Le,
-                    _ => unreachable!(),
-                };
-    
-                let rhs = parse_term_or(pairs.next().unwrap());
+        let mut expr = lhs;
 
-                Expr {
-                    span,
-                    kind: ExprKind::Binary(op, Box::new(lhs), Box::new(rhs))
-                }
-            },
+        while let Some(op) = pairs.next() {
+            let op = match op.as_rule() {
+                Rule::opGt => BinaryOp::Gt,
+                Rule::opGe => BinaryOp::Ge,
+                Rule::opLt => BinaryOp::Lt,
+                Rule::opLe => BinaryOp::Le,
+                _ => unreachable!(),
+            };
 
-            None => lhs,
+            let rhs = parse_term_or(pairs.next().unwrap());
+
+            expr = Expr {
+                span,
+                kind: ExprKind::Binary(op, Box::new(expr), Box::new(rhs))
+            };
         }
+
+        expr
     }
 
     fn parse_term_or(pair: Pair) -> Expr {
@@ -339,43 +358,43 @@ fn parse_expr(pair: Pair) -> Expr {
         let mut pairs = pair.into_inner();
         let lhs = parse_factor_and(pairs.next().unwrap());
         
-        match pairs.next() {
-            Some(op) => {
-                let op = match op.as_rule() {
-                    Rule::opSub => BinaryOp::Sub,
-                    Rule::opAdd => BinaryOp::Add,
-                    Rule::opOr => BinaryOp::Or,
-                    _ => unreachable!(),
-                };
-    
-                let rhs = parse_factor_and(pairs.next().unwrap());
+        let mut expr = lhs;
 
-                Expr {
-                    span,
-                    kind: ExprKind::Binary(op, Box::new(lhs), Box::new(rhs))
-                }
-            },
+        while let Some(op) = pairs.next() {
+            let op = match op.as_rule() {
+                Rule::opSub => BinaryOp::Sub,
+                Rule::opAdd => BinaryOp::Add,
+                Rule::opOr => BinaryOp::Or,
+                _ => unreachable!(),
+            };
 
-            None => lhs,
+            let rhs = parse_factor_and(pairs.next().unwrap());
+
+            expr = Expr {
+                span,
+                kind: ExprKind::Binary(op, Box::new(expr), Box::new(rhs))
+            };
         }
+
+        expr
     }
 
     fn parse_factor_and(pair: Pair) -> Expr {
         let span = Span::from(pair.as_span());
         let mut pairs = pair.into_inner();
         let lhs = parse_unary(pairs.next().unwrap());
-        
+
         match pairs.next() {
             Some(op) => {
                 let op = match op.as_rule() {
                     Rule::opDiv => BinaryOp::Div,
                     Rule::opMul => BinaryOp::Mul,
-                    Rule::opAnd => BinaryOp::Add,
+                    Rule::opAnd => BinaryOp::And,
                     _ => unreachable!(),
                 };
     
                 let rhs = parse_unary(pairs.next().unwrap());
-
+    
                 Expr {
                     span,
                     kind: ExprKind::Binary(op, Box::new(lhs), Box::new(rhs))
