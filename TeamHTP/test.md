@@ -12,7 +12,6 @@ this is a paragraph
 *  bubble gum
 
 [TodoList]:: (
-    at: k at: i at: j
-        | x y |
-        ^42
+    print
+        true print
 )

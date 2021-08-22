@@ -2,7 +2,7 @@ import Tag from '../Types/Tag'
 import {mdToMdast} from '../Markdown'
 import {Base, Function, wrap} from '../Types'
 import {Root} from 'mdast'
-import {get_parser, Token} from "../mouthful"
+import {get_parser, Token, Tree} from "../mouthful"
 
 const opNames: Record<string, string> = {
     "~": "tilde",
@@ -22,37 +22,61 @@ const opNames: Record<string, string> = {
     "?": "question",
 }
 
-//
-// 2 + 2
-//
-// 2.plus(2)
-//
+const sortKeypairs = (pairs: [[string, string]]) => {
+    const sorted = [...pairs].sort(([a, _a], [b, _b]) => {
+        if (a < b) return -1
+        if (a > b) return 1
+        return 0
+    })
+    const name = sorted.map(([part,]) => part).join('$')
+    const params = sorted.map(([, param]) => param).join(', ')
+    return `${name}(${params})`
+}
 
 const transformer = {
     method: ([name, ...rest]: string[]) => `function ${name} {\n${rest.join('\n')}\n}`,
-    binary_message([{value: op}, {value: param}]: Token[]) {
-        const name = (op as string).split('').map(c => opNames[c]).join('$')
-        return `${name}(${param})`
-    },
-    keyword_message: (pairs: [[string, string]]) => {
-        const sorted = [...pairs].sort(([a, _a], [b, _b]) => {
-            if (a < b) return -1
-            if (a > b) return 1
-            return 0
-        })
-        const name = sorted.map(([part, _]) => part).join('$')
-        const params = sorted.map(([_, param]) => param).join(', ')
-        return `${name}(${params})`
-    },
-    message_pair: ([{value: key}, {value}]: [Token, Token]) => {
-        const namePart = (key as string).slice(0, -1) + (value as string)
-        const param = value as string
-        return [namePart, param]
-    },
-    unary_message: ([name]: Token[]) => `${name.value}()`,
+    binary_message: ([op, param]: [string, string]) => `${op}(${param})`,
+    keyword_message: sortKeypairs,
+    message_pair: ([key, value]: [string, string]) => [key.slice(0, -1), value],
+    unary_message: ([name]: [string]) => `${name}()`,
+    exprs: (exprs: string[]) => exprs.join('\n'),
     answer: ([v]: [string]) => `return ${v}`,
-    temps: (words: Token[]) => `let ${words.map(w => w.value).join(', ')}`,
-    number: ([n]: Token[]) => parseFloat(n.value),
+    assign: ([name, value]: [string, string]) => `${name} = ${value}`,
+    keyword: ([callee, call, cascades]: [string, string, string[]]) => {
+        const calls = [`${callee}.${call}`]
+        for (const cascade of cascades) {
+            calls.push(`${callee}.${cascade}`)
+        }
+        return `(${calls.join(', ')})`
+    },
+    keypairs: sortKeypairs,
+    keypair: ([key, value]: [string, string]) => [key.slice(0, -1), value],
+    cascades: (cascades: string[]) => cascades,
+    binary: ([left, op, right]: [string, string, string]) => `${left}.${op}(${right})`,
+    unary: ([left, op]: [string, string]) => `${left}.${op}()`,
+    array: (array: string[]) => `[${array.join(', ')}]`,
+    block: ([p, ...rest]: [Tree | string, ...string[]]) => {
+        let params = '';
+        let body = rest.join('\n');
+        if (typeof p === 'string') {
+            body = `${p}\n${body}`
+        } else {
+            const {children} = p
+            params = children.join(', ')
+        }
+        return `function (${params}) {\n${body}\n}`
+    },
+    temps: (words: string[]) => `let ${words.join(', ')}`,
+    map: (entries: string[]) => `{ ${entries.join(', ')} }`,
+    mappair: ([keyword, value]: [string, string]) => `${keyword} ${value}`,
+    scalar: ([value]: [string]) => `(${value})`,
+    kw: ([{value}]: [Token]) => value as string,
+    number: ([{value}]: Token[]) => `(${parseFloat(value)})`,
+    op: ([{value}]: [Token]) => (value as string).split('').map(c => '$' + opNames[c]).join(''),
+    param: ([{value}]: [Token]) => (value as string).substr(1),
+    string: ([{value}]: [Token]) => value as string,
+    symbol: ([{value}]: [Token]) => `Symbol('${value.substr(1)}')`,
+    word: ([{value}]: [Token]) => value,
 }
 
 const parser = get_parser({transformer})
