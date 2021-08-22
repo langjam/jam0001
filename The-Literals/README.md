@@ -125,13 +125,25 @@ A function call statement consists of a function name, in imperative form, follo
 ### Function Names
 As described above, function names are given in third person singular form, e.g., `Opens the pod bay doors`. However, functions must be invoked in imperative form, e.g., `Open the pod bay doors`.
 
-The following example invokes a function named `Calculates the nth fibonacci number`, and sets the named parameter `n` to 10. The result is placed into a variable called `fibonacci number`. Note that function invocation is imperative, even though the function name is third person. __*This is a revolution in imperative programming*__.
+The following example invokes a function named `Calculates the nth fibonacci number`, and sets the named parameter `n` to 10. The result is placed into a variable called `fibonacci number`. Note that function invocation is imperative, even though the function name is third person.__*This is a revolution in imperative programming*__.
 
 ### Argument List
 If present, this is a number of bindings from expressions to named function parameters. The first binding takes the form `with` *parameter name* `as` *expression*. Subsequent bindings are similar, but `with` is replaced by `and`.
 
+For example, if a function has named parameters `x`, `y`, and `z`, then these could be supplied in order as follows:
+```
+with x as 3 and y as 22 and z as 99.
+```
+Or in a different order:
+```
+with y as 22 and z as 99 and x as 3.
+```
+
 ### Postfix Assignment
 This is the equivalent of a variable assignment statement, but is used for the result of a function call. If present, it follows the function name and its optional parameters, and takes the form `and call it` followed by a variable name.
+```
+and call it the result.
+```
 
 ## Built-ins
 There are a number of built-in functions.
