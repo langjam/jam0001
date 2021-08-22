@@ -14,7 +14,7 @@ from abstract_syntax_trees import (
     StringLiteral,
     Variable,
     reset_functions,
-    reset_env
+    reset_env,
 )
 from tokenise import Token, Tokeniser
 
@@ -219,7 +219,7 @@ class Parser:
     def parse_arguments(self):
         token, value = self.peek_lexeme()
         args = []
-        while token == Token.WITH:
+        while token == Token.WITH or token == Token.AND:
             args.append(self.parse_argument())
             token, value = self.peek_lexeme()
         return dict(args)
@@ -268,7 +268,7 @@ class Parser:
             return Number(int(operand_value))
         elif token == Token.STRING_LITERAL:
             operand_token, operand_value = self.expect(Token.STRING_LITERAL)
-            return StringLiteral(operand_value.strip("\""))
+            return StringLiteral(operand_value.strip('"'))
         elif token == Token.IDENTIFIER_WORD:
             varname = self.parse_identifier()
             return Variable(varname)
@@ -535,7 +535,7 @@ if __name__ == "__main__":
     # parser = Parser(program(function_call_with_params_and_result))
     # parser.parse()
 
-    input_file = "samples/string_literal.comment"
+    input_file = "samples/echo.comment"
     with open(input_file, "r") as f:
         text = f.read()
     tokeniser = Tokeniser(text)

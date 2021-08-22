@@ -40,6 +40,7 @@ There are a number of samples in the `samples/` directory. At the time of writin
 
 - `fib.comment` - calculates the nth fibonacci number and prints it using a **Built-in**.
 - `string_literal.comment` - prints a string literal using a **Built-in**.
+- `multiply.comment` - multiplies two numbers and prints the result using a **Built-in**.
 
 ### fib.comment
 ```
@@ -52,6 +53,11 @@ $ python3 -m commentinator samples/string_literal.comment
 Hello
 ```
 
+### multiply.comment
+```
+$ python3 -m commentinator samples/multiply.comment
+27
+```
 # Syntax Guide
 
 ## Function Definitions
