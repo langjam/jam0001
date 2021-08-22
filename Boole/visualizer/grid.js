@@ -1,7 +1,7 @@
 
 const TILE_SIZE = 50;
 const OP_SIZE = TILE_SIZE * 3/4
-const TRAIN_SPEED = .1;
+const TRAIN_SPEED = .3;
 
 const TILE_TYPE = {
     Horizontal: {name: "track_straight_EW.png", img: null},
@@ -221,6 +221,8 @@ class Train {
             this.direction = DIRECTION.West;
         }else if (this.traveling_to[1] > this.traveling_from[1]) {
             this.direction = DIRECTION.South;
+        }else {
+            this.direction = DIRECTION.North;
         }
 
         const x = lerp(this.traveling_from[0], this.traveling_to[0], this.animation_count)

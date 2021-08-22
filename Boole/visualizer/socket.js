@@ -58,8 +58,6 @@ function startSocket() {
                             direction = DIRECTION.West;
                         }else if (line_second_location.y > line_start_location.y) {
                             direction = DIRECTION.South;
-                        } else {
-                            direction = DIRECTION.North;
                         }
                     }
 

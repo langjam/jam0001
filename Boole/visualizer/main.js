@@ -1,5 +1,5 @@
 
-const zoomSpeed = .2;
+const zoomSpeed = .1;
 const minimumZoom = .1;
 const default_scale = 10;
 const controlsHeight = 40;
