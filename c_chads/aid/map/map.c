@@ -10,6 +10,9 @@ struct Map map_new(usize el_size) {
 }
 
 void map_add(struct Map *self, strview_t key, void *value) {
+    if (map_get(self, key) != NULL) {
+        map_remove(self, key);
+    }
     vec_push(&self->keys, &key);
     vec_push(&self->values, value);
 }

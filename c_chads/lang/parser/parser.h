@@ -52,6 +52,11 @@ enum Parser_Node_Kind {
     PN_NUMBER,   // ENDPOINT
     PN_PROC,     // BINARY
     PN_CALL,     // BINARY
+    PN_ACCESS,   // BINARY
+    PN_FIELD,    // FIELD
+    // JACOB YOU WONT HAVE TO BOTHER ABOUT THIS DONT TOUCH IT
+    PN_MACRO,    // LIST
+    PN_COMMAND   // LIST
 };
 
 struct Parser_Node {
@@ -91,6 +96,9 @@ struct Parser_Node {
         struct {
             strview_t op; 
         } unary;
+        struct {
+            strview_t name; 
+        } field;
     } data;
 };
 

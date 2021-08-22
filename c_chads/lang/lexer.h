@@ -14,6 +14,7 @@ struct Lexer_State {
 
 enum Token_Type {
     TT_EOF,
+    TT_OF,
     TT_INVALID,
     TT_DEF,
     TT_STRING,
@@ -35,6 +36,7 @@ enum Token_Type {
     TT_RETURN,
     TT_PROC,
     TT_STRUCT,
+    TT_PIPE,
     TT_NEW
 };
 

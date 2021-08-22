@@ -163,6 +163,8 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
     switch (lex_skip(self)) {
         case ':':
             return TT_DEF;
+        case '\'':
+            return TT_OF;
         case ',':
             return TT_COMMA;
         case '{':
@@ -173,6 +175,14 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
             return TT_LBRACKET;
         case ']':
             return TT_RBRACKET;
+        case '|':
+            if (lex_peek(self) == '|')
+            {
+                lex_skip(self);
+            }
+            else {
+                return TT_PIPE;
+            } 
         case '!':
         case '<':
             if (lex_peek(self) == '<')
@@ -191,11 +201,6 @@ static enum Token_Type lex_single_rune(struct Lexer_State *self) {
             }
         case '&':
             if (lex_peek(self) == '&')
-            {
-                lex_skip(self);
-            }
-        case '|':
-            if (lex_peek(self) == '|')
             {
                 lex_skip(self);
             }

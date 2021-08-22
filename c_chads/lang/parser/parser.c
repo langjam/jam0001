@@ -183,7 +183,7 @@ static void pnode_checkfree(pnode_t *node) {
     }
 }
 
-static void pnode_attach(pnode_t *left, pnode_t right) {
+void pnode_attach(pnode_t *left, pnode_t right) {
     if (isinval(right)) {
         pnode_checkfree(left);
     }
@@ -193,7 +193,7 @@ static void pnode_attach(pnode_t *left, pnode_t right) {
     vec_push(&left->children, &right);
 }
 
-static pnode_t pnode_listing(usize pos, pnode_kind_t kind) {
+pnode_t pnode_listing(usize pos, pnode_kind_t kind) {
     return (pnode_t) {
         .kind = kind,
         .pos = pos,
@@ -202,7 +202,7 @@ static pnode_t pnode_listing(usize pos, pnode_kind_t kind) {
     };
 }
 
-static pnode_t pnode_unary(usize pos, pnode_kind_t kind, pnode_t left) {
+pnode_t pnode_unary(usize pos, pnode_kind_t kind, pnode_t left) {
     pnode_t node = {
         .kind = kind,
         .pos = pos,
@@ -213,7 +213,7 @@ static pnode_t pnode_unary(usize pos, pnode_kind_t kind, pnode_t left) {
     return node;
 }
 
-static pnode_t pnode_binary(usize pos, pnode_kind_t kind, pnode_t left, pnode_t right) {
+pnode_t pnode_binary(usize pos, pnode_kind_t kind, pnode_t left, pnode_t right) {
     pnode_t node = {
         .kind = kind,
         .pos = pos,
@@ -225,7 +225,7 @@ static pnode_t pnode_binary(usize pos, pnode_kind_t kind, pnode_t left, pnode_t 
     return node;
 }
 
-static pnode_t pnode_ternary(usize pos, pnode_kind_t kind, pnode_t cond, pnode_t left, pnode_t right) {
+pnode_t pnode_ternary(usize pos, pnode_kind_t kind, pnode_t cond, pnode_t left, pnode_t right) {
     pnode_t node = {
         .kind = kind,
         .pos = pos,
@@ -340,9 +340,24 @@ static pnode_t value();
 static pnode_t maybe_call() {
     usize start = pos();
     pnode_t left = value();
-    if (!check("("))
-        return left;
-    return pnode_binary(start, PN_CALL, left, delimited(PN_PARAMS, "(", TT_COMMA, ")", false, false, most_important_expression));
+    if (check("("))
+        return pnode_binary(start, PN_CALL, left, delimited(PN_PARAMS, "(", TT_COMMA, ")", false, false, most_important_expression));
+    else if (check("{")) {
+        skip_tt(TT_LBRACE);
+        ptok(peek());
+        pnode_t node = pnode_binary(start, PN_ACCESS, left, most_important_expression());
+        skip_tt(TT_RBRACE);
+        return node;
+    }
+    else if (check("'")) {
+        pull();
+        tok_t name = pull();
+        assert_tt(&name, TT_IDENT);
+        pnode_t node = pnode_unary(start, PN_FIELD, left);
+        node.data.field.name = strview_span(name.span, parser.lexer.src);
+        return node;
+    }
+    return left;
 }
 
 static pnode_t declaration(tok_t on);
@@ -398,7 +413,7 @@ usize getprec(struct Span op) {
 static pnode_t parse_expr(usize prec) {
     if (prec == 0) return maybe_call();
     pnode_t left = parse_expr(prec-1);
-    while (peek().tt == TT_OPERATOR && getprec(peek().span) == prec) {
+    while ((peek().tt == TT_OPERATOR || peek().tt == TT_PIPE) && getprec(peek().span) == prec) {
         pnode_kind_t kind = PN_OPERATOR;
         struct Span op = peek().span;
         usize start = pos();
@@ -485,20 +500,17 @@ static pnode_t initializer() {
     return node;
 }
 
-static pnode_t value() {
+static pnode_t atom() {
     usize start = pos();
-    tok_t token = peek();
     pnode_t value_node;
     enum Parser_Number_Kind kind;
+    tok_t token = peek();
     switch (token.tt) {
         case TT_STRING:
             pull();
             value_node = pnode_endpoint(start, PN_STRING);
             value_node.data.string.val = strview_span(token.span, parser.lexer.src);
             return value_node;
-        case TT_DEF:
-            skip_tt(TT_DEF);
-            return delimited(PN_LIST, "{", TT_COMMA, "}", false, false, most_important_expression);
         case TT_HEXADECIMAL:
             kind = PNM_HEX; goto meat;
         case TT_BINARY:
@@ -517,15 +529,33 @@ static pnode_t value() {
             return value_node;
         case TT_IDENT: {
             pull();
-            if (peek().tt == TT_DEF) {
-                return declaration(token);
-            }
-            else {
-                value_node = pnode_endpoint(start, PN_IDENT);
-                value_node.data.ident.val = strview_span(token.span, parser.lexer.src);
-                return value_node;
-            }
+            value_node = pnode_endpoint(start, PN_IDENT);
+            value_node.data.ident.val = strview_span(token.span, parser.lexer.src);
+            return value_node;
         }
+        default:
+            return inval();
+    }
+}
+
+static pnode_t macro() {
+    usize start = pos();
+    setexpect("Macros are limited to only basic features, refer to documentation");
+    pnode_t node = pnode_listing(start, PN_COMMAND);
+    while (!(check("|") || check("]"))) {
+        pnode_t n = atom();
+        if (isinval(n)) break;
+        pnode_attach(&node, n);
+    }
+    setexpect(NULL);
+    return node;
+}
+
+static pnode_t value() {
+    usize start = pos();
+    tok_t token = peek();
+    pnode_t value_node;
+    switch (token.tt) {
         case TT_NEW:{ 
             pull();
             struct Parser_Type type = typedecl();
@@ -548,6 +578,19 @@ static pnode_t value() {
             );
             value_node.data.proc.return_type = returntype;
             return value_node;
+        case TT_LBRACKET:
+            return delimited(PN_MACRO, "[", TT_PIPE, "]", false, false, macro);
+        case TT_IDENT: {
+            pull();
+            if (peek().tt == TT_DEF) {
+                return declaration(token);
+            }
+            else {
+                value_node = pnode_endpoint(start, PN_IDENT);
+                value_node.data.ident.val = strview_span(token.span, parser.lexer.src);
+                return value_node;
+            }
+        }
         case TT_LPAREN:
             if (skip_tt(TT_LPAREN)) return inval();
             value_node = most_important_expression();
@@ -571,7 +614,7 @@ static pnode_t value() {
                 return value_node;
             }
         default: 
-            return inval();
+            return atom();
     }
 }
 

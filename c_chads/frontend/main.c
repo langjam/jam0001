@@ -46,8 +46,17 @@ void print_ast(struct Parser_Node *node, usize depth) {
     switch (node->kind) {
         case PN_INVAL:
             break;
+        case PN_ACCESS:
+            printf("Access\n");
+            break;
         case PN_LIST:
             printf("List\n");
+            break;
+        case PN_MACRO:
+            printf("Macro\n");
+            break;
+        case PN_COMMAND:
+            printf("Command\n");
             break;
         case PN_NEW:
             printf("New(");
@@ -62,6 +71,9 @@ void print_ast(struct Parser_Node *node, usize depth) {
             break;
         case PN_UNARY:
             printf("Unary(%.*s)\n", (int)node->data.unary.op.size, node->data.unary.op.view);
+            break;
+        case PN_FIELD:
+            printf("Field(%.*s)\n", (int)node->data.field.name.size, node->data.field.name.view);
             break;
         case PN_IF:
             printf("If\n");
