@@ -1,20 +1,19 @@
 import { inspect } from "util"
+import * as p from "./parserCombinator"
 
 const sourceFile = `
 foo($bar):
-  $bar = $bar * 2
+  # First, we double $bar
+  $newBar = $bar
   repeat:
-    break
+    if $newBar == $bar * 2:
+      break
+    $bar = $bar + 1
+  $bar = $newBar
   return $bar
 
 return foo($input)
 `
-
-interface Line {
-	text: string,
-  indentation: number,
-	children: Line[],
-}
 
 function run(text: string){
   const indent = /^[ \t]+/m.exec(text)?.[0] ?? "  "
@@ -23,10 +22,12 @@ function run(text: string){
     /^\s*/.exec(x)?.[0].length ?? 0,
   ]))
 
+  const parseExpression = _parseExpression()
+
   return lines.map(parseLine)
 
   type Statement =
-    | { kind: "comment", text: string }
+    | { kind: "comment", text: string[] }
     | { kind: "func", name: string, args: string[], body: Statement[] }
     | { kind: "repeat", body: Statement[] }
     | { kind: "return", value: Expression }
@@ -49,7 +50,7 @@ function run(text: string){
     if(body.length)
       throw new Error("Unexpected indentation on line " + JSON.stringify(text))
     if((m = text.match(/^#\s*(.*)$/)))
-      return { kind: "comment", text: m[1] }
+      return { kind: "comment", text: m[1].match(/(?:(?!\$\w+).)+|\$\w+/g) ?? [] }
     if((m = text.match(/^return(?: (.+))?$/)))
       return { kind: "return", value: parseExpression(m[1] || "null") }
     if(text === "continue" || text === "break")
@@ -59,9 +60,107 @@ function run(text: string){
     throw new Error("Invalid statement")
   }
 
-  type Expression = string
-  function parseExpression(text: string): Expression{
-    return text
+  type Expression =
+    | { kind: "literal", value: unknown }
+    | { kind: "variable", name: string }
+    | { kind: "unaryOp", op: "0-" | "!", arg: Expression }
+    | { kind: "binaryOp", op: "+" | "-" | "*" | "/" | "%" | "&&" | "||" | "==" | "!=", args: [Expression, Expression] }
+    | { kind: "call", name: string, args: Expression[] }
+  function _parseExpression(){
+    const numberLiteral = p.map(p.regex(/\d+|\d+.\d*|\d*.\d+/), (x): Expression => (
+      { kind: "literal", value: +x }
+    ))
+    const stringLiteral = p.map(p.regex(/(["'`])((?:[^\\\n]|\\.)+?)\1/), (x): Expression => (
+      { kind: "literal", value: x[2].replace(/\\./g, x => x === "\\n" ? "\n" : x[1]) }
+    ))
+    const variable = p.map(p.regex(/\$(\w+)/), (x): Expression => (
+      { kind: "variable", name: x[1] }
+    ))
+    const val = p.ws(p.or(
+      numberLiteral,
+      stringLiteral,
+      variable,
+      p.surround(p.string("("), () => expr, p.string(")")),
+      p.map(p.concat(
+        p.regex(/\w+/),
+        p.surround(
+          p.string("("),
+          p.optional(p.concat(
+            p.multiple(p.suffix(() => expr, p.string(","))),
+            p.suffix(() => expr, p.optional(p.string(","), null)),
+          ), null),
+          p.string(")"),
+        ),
+      ), (x): Expression => (
+        { kind: "call", name: x[0][0], args: x[1] ? [...x[1][0], x[1][1]] : [] }
+      )),
+    ))
+    const op = p.ws(p.or(...(["+", "-", "*", "/", "%", "&&", "||", "==", "!=", "!"] as const).map(x => p.string(x))))
+    const expr: p.Parser<Expression> = p.map(
+      p.multiple(p.or(val, op)),
+      input => {
+        console.log(input)
+        let outputQueue = []
+        let opStack = []
+        let op = false
+        for(const token of input) {
+          if(typeof token !== "string") {
+            outputQueue.push(token)
+            op = true
+            continue
+          }
+          if(token === "-" && !op) {
+            opStack.push("0-")
+            continue
+          }
+          while(opStack.length && getPrecedence(opStack[opStack.length - 1]) >= getPrecedence(token))
+            outputQueue.push(opStack.pop()!)
+          opStack.push(token)
+          op = false
+        }
+        while(opStack.length)
+          outputQueue.push(opStack.pop()!)
+        let stack: Expression[] = []
+        for(const x of outputQueue) {
+          if(typeof x !== "string") {
+            stack.push(x)
+            continue
+          }
+          if(x === "!" || x === "0-")
+            stack.push({ kind: "unaryOp", op: x, arg: stack.pop()! })
+          else
+            stack.push({ kind: "binaryOp", op: x as never, args: [stack.pop()!, stack.pop()!].reverse() as never })
+        }
+        return stack.pop()!
+        function getPrecedence(op: string): number{
+          switch(op) {
+            case "||":
+              return 0
+            case "&&":
+              return 1
+            case "==":
+            case "!=":
+              return 2
+            case "+":
+            case "-":
+              return 3
+            case "*":
+            case "/":
+            case "%":
+              return 4
+            case "!":
+              return 5
+            default:
+              throw new Error("Invalid operator " + op)
+          }
+        }
+      },
+    )
+    return (text: string) => {
+      const x = p.parse(expr, text)
+      if(!x) throw new Error("Invalid expression " + text)
+      return x
+    }
   }
 
   type Line = [string, Line[]]
