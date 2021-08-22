@@ -1129,26 +1129,19 @@ Slice<Token> get_macro_arg(Slice<Token> *tokens) {
     }
 }
 
-s64 get_macro_param_ref(Slice<Token> *tokens, s64 params_cnt, const char *ctx, SourceLoc loc) {
-    if (!tokens->count) {
-        fprintf(stderr, "%s:%d:%d: Macro %s expects argument.\n", LOCFMT(loc), ctx);
-        exit(1);
-    }
+Error get_macro_param_ref(s64 *out, Slice<Token> *tokens, s64 params_cnt, const char *ctx, SourceLoc loc) {
+    if (!tokens->count) return {.loc = loc, .msg = tprint("Macro %s expects argument.", ctx)};
+
     Token tok = (*tokens)[0];
-    if (tok.type != Token_Int) {
-        fprintf(stderr, "%s:%d:%d: Macro %s expects argument reference, not %s.\n", LOCFMT(tok.loc), ctx, format_token(tok));
-        exit(1);
-    }
-    if (tok.i < 0 || tok.i >= params_cnt) {
-        fprintf(stderr, "%s:%d:%d: Macro argument #%ld is out of bounds. %ld arguments are available.\n", LOCFMT(tok.loc),
-            tok.i, params_cnt);
-        exit(1);
-    }
+    if (tok.type != Token_Int) return {.loc = tok.loc, .msg = tprint("Macro %s expects argument reference, not %s.", ctx, format_token(tok))};
+    if (tok.i < 0 || tok.i >= params_cnt) return {.loc = tok.loc, .msg = tprint("Macro argument #%ld is out of bounds. %ld arguments are available.", tok.i, params_cnt)};
+
     slice_advance(tokens, 1);
-    return tok.i;
+    if (out) *out = tok.i;
+    return {};
 }
 
-Slice<Token> eval_macro(Slice<Token> tokens, Slice<Slice<Token>> params) {
+Error eval_macro(Slice<Token> *sout, Slice<Token> tokens, Slice<Slice<Token>> params) {
     Array<Token> out = {};
     out.arena = &arena;
     while (tokens.count) {
@@ -1165,16 +1158,22 @@ Slice<Token> eval_macro(Slice<Token> tokens, Slice<Slice<Token>> params) {
         }
 
         if (tokens[0].type == Token_Int) {
-            s64 arg = get_macro_param_ref(&tokens, params.count, "", loc);
+            s64 arg;
+            Error err = get_macro_param_ref(&arg, &tokens, params.count, "", loc);
+            if (err.msg) return err;
             for (Token &tok : params[arg])
                 array_push(&out, tok);
         } else if (tokens[0].type == Token_Ident && tokens[0].atom == atom_len) {
             slice_advance(&tokens, 1);
-            s64 arg = get_macro_param_ref(&tokens, params.count, "len", loc);
+            s64 arg;
+            Error err = get_macro_param_ref(&arg, &tokens, params.count, "len", loc);
+            if (err.msg) return err;
             array_push(&out, {.loc = loc, .type = Token_Int, .i = params[arg].count});
         } else if (tokens[0].type == Token_KwFor) {
             slice_advance(&tokens, 1);
-            s64 arg = get_macro_param_ref(&tokens, params.count, "for", loc);
+            s64 arg;
+            Error err = get_macro_param_ref(&arg, &tokens, params.count, "for", loc);
+            if (err.msg) return err;
             Slice<Token> body = get_macro_arg(&tokens);
             Slice<Slice<Token>> newparams = arena_alloc_slice<Slice<Token>>(&arena, params.count + 2);
             copy_slice(newparams.data, params);
@@ -1182,13 +1181,16 @@ Slice<Token> eval_macro(Slice<Token> tokens, Slice<Slice<Token>> params) {
                 newparams[params.count] = {.data = &params[arg][i], .count = 1};
                 Token tok_i = {.loc = loc, .type = Token_Int, .i = i};
                 newparams[params.count+1] = {.data = &tok_i, .count = 1};
-                Slice<Token> result = eval_macro(body, newparams);
+                Slice<Token> result;
+                Error err = eval_macro(&result, body, newparams);
+                if (err.msg) return err;
                 for (Token &tok : result)
                     array_push(&out, tok);
             }
         }
     }
-    return array_slice(&out);
+    if (sout) *sout = array_slice(&out);
+    return {};
 }
 
 Value eval(Slice<Token> *tokens, Env *env) {
@@ -1243,7 +1245,9 @@ Value eval(Slice<Token> *tokens, Env *env) {
             args.arena = &arena;
             for (s64 i = 0; i < sym->value.macro.param_count; i++)
                 array_push(&args, get_macro_arg(tokens));
-            Slice<Token> body = eval_macro(sym->value.macro.body, array_slice(&args));
+            Slice<Token> body;
+            Error err = eval_macro(&body, sym->value.macro.body, array_slice(&args));
+            if (err.msg) return {.type = Value_Failure, .fail = err};
             return exec_block(body, env);
         } else {
             return sym->value;
@@ -1392,7 +1396,7 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
     if ((*tokens)[0].type == Token_Line) {
         slice_advance(tokens, 1);
         env->stashed_comment = {};
-        return {};
+        return {.type = Value_Bool, .b = false};
     } else if ((*tokens)[0].type == Token_KwIf) {
         SourceLoc loc = (*tokens)[0].loc;
         slice_advance(tokens, 1);
