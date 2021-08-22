@@ -1,0 +1,20 @@
+tests = import("examples/tests.clm//tests");
+
+print(tests);
+
+# tests([
+    arr_eq([1,2,3], []) == false,
+    arr_eq([], []) == true
+])
+arr_eq = function(arr1, arr2) {
+    len(arr1) == len(arr2)
+};
+
+# tests([
+    arr_eq(zip([1,2,3], [4,5,6]), [[1,4], [2,5], [3,6]])
+])
+zip = function(arr1, arr2) {
+    result = []
+};
+
+print("utils.clm")
