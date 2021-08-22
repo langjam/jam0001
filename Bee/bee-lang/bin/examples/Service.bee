@@ -1,0 +1,7 @@
+#function show
+/*
+    @call println with @call threadName
+*/
+
+#let t be @run show
+#let f be @wait t
