@@ -10,6 +10,8 @@ pub fn main() anyerror!void {
     _ = args.skip(); // program name.
 
     const file_name = try args.next(allocator) orelse {
+        debug.print("zash Programmming Language v0.1.\n", .{});
+        debug.print("#: Where comments are First-C;ass! :#\n\n", .{});
         debug.print("usage: zash <zash_source_file>\n", .{});
         std.os.exit(1);
     };
