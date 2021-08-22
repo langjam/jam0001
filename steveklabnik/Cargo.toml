@@ -1,5 +1,5 @@
 [package]
-name = "tins"
+name = "tomlisp"
 version = "0.1.0"
 authors = ["Steve Klabnik <steve@steveklabnik.com>"]
 edition = "2018"
