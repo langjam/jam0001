@@ -45,6 +45,10 @@ let split_lines (comment : tok list) : tok list list =
     | [] -> List.rev res
   in split [] [] comment
 
+let tok_pos = function
+  | Int (p, _) | Word (p, _) -> p
+  | Sep -> failwith "sep has no position"
+
 let string_of_tok = function
   | Int (_, n) -> string_of_int n
   | Word (_, w) -> String.lowercase_ascii w
@@ -57,7 +61,7 @@ let rec string_of_comment = function
 
 let look_for (kw : string) (comment : tok list) : tok list * tok list =
   let rec search (prev : tok list) = function
-    | [] -> failwith ("keyword" ^ kw ^ "not found")
+    | [] -> failwith ("expected keyword " ^ kw)
     | t::q -> if string_of_tok t = kw then (List.rev prev, q)
       else search (t::prev) q
   in search [] comment
@@ -78,10 +82,11 @@ let parse_value (comment : tok list) : value =
     if kwd = "argument" then begin
       match q with
       | Int (_, n)::_ -> Arg n
-      | _ -> failwith "expected argument index"
+      | _ -> print_syntax_error (tok_pos t) "expected argument index"
     end else if kwd = "something" then
       Hole
     else Var kwd
+    (* TODO check variable name *)
 
 let parse_operation (comment : tok list) : operation =
   let f = parse_value in
@@ -89,14 +94,43 @@ let parse_operation (comment : tok list) : operation =
     | [] -> failwith "no operation"
     | t::q -> (
         match string_of_tok t with
-        | "if" -> let a, b = look_for "and" q in let b, _ = look_for "otherwise" b in If (f a, f (List.rev prev), f b)
-        | "sum" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Sum (f a, f b)
-        | "difference" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Diff (f a, f b)
-        | "product" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Prod (f a, f b)
-        | "division" -> let _, b = look_for "of" q in let a, b = look_for "and" b in Div (f a, f b)
-        | "application" -> let _, b = look_for "of" q in let a, b = look_for "on" b in
-          let s = string_of_comment a and l = split_kw "and" b in
-          if s = "self" then Rec (List.map f l) else App (s, List.map f l)
+        | "if" ->
+          begin try
+            let a, b = look_for "and" q in
+            let b, _ = look_for "otherwise" b in
+            If (f a, f (List.rev prev), f b)
+          with Failure msg -> print_syntax_error (tok_pos t) msg end
+        | "sum" ->
+          begin try
+            let _, b = look_for "of" q in
+            let a, b = look_for "and" b in
+            Sum (f a, f b)
+          with Failure msg -> print_syntax_error (tok_pos t) msg end
+        | "difference" ->
+          begin try
+            let _, b = look_for "of" q in
+            let a, b = look_for "and" b in
+            Diff (f a, f b)
+          with Failure msg -> print_syntax_error (tok_pos t) msg end
+        | "product" ->
+          begin try
+            let _, b = look_for "of" q in
+            let a, b = look_for "and" b in
+            Prod (f a, f b)
+          with Failure msg -> print_syntax_error (tok_pos t) msg end
+        | "division" ->
+          begin try
+            let _, b = look_for "of" q in
+            let a, b = look_for "and" b in
+            Div (f a, f b)
+          with Failure msg -> print_syntax_error (tok_pos t) msg end
+        | "application" ->
+          begin try
+            let _, b = look_for "of" q in
+            let a, b = look_for "on" b in
+            let s = string_of_comment a and l = split_kw "and" b in
+            if s = "self" then Rec (List.map f l) else App (s, List.map f l)
+          with Failure msg -> print_syntax_error (tok_pos t) msg end
         | _ -> search (t::prev) q
       )
   in search [] comment
@@ -110,9 +144,12 @@ let rec parse_statement (comment : tok list) : cconstraint =
     | "take" | "takes" ->
       begin match q with
         | Int (_, n)::_ -> Takes n
-        | _ -> failwith "expected number of arguments"
+        | _ -> print_syntax_error (tok_pos t) "expected number of arguments"
       end
-    | "let" -> let a, b = look_for "be" q in Let (string_of_comment a, f b)
+    | "let" ->
+      begin try
+        let a, b = look_for "be" q in Let (string_of_comment a, f b)
+      with Failure msg -> print_syntax_error (tok_pos t) msg end
     | "return" | "returns" -> Returns (f q)
     | "use" | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
     | _ -> parse_statement q
