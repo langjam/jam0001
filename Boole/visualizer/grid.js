@@ -120,6 +120,10 @@ class Grid {
         this.trains.set(train.identifier, train)
     }
 
+    deleteTrain(train) {
+        this.trains.delete(train.identifier)
+    }
+
     addStation(station) {
         this.stations.set(station.name, station)
     }
@@ -222,10 +226,10 @@ class Train {
     traveling_to
     traveling_from
 
-    constructor(location, accent, accent1, direction, identifier) {
+    constructor(location, prim, sec, direction, identifier) {
         this.location = location;
-        this.accent = accent;
-        this.accent1 = accent1;
+        this.accent = sec;
+        this.accent1 = prim;
         this.direction = direction;
         this.path = null;
         this.identifier = identifier;
@@ -314,7 +318,7 @@ class Train {
         push()
         if (this.path !== null) {
             this.ticks_since_last_cloud += 1;
-            if (this.ticks_since_last_cloud > 5) {
+            if (this.ticks_since_last_cloud > 2) {
                 this.ticks_since_last_cloud = 0;
                 this.clouds.push(new Cloud(createVector(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE)));
             }

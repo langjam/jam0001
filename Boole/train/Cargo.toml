@@ -14,7 +14,7 @@ strum = "0.21"
 strum_macros = "0.21"
 rand = "0.8.4"
 thiserror = "1.0.26"
-tokio = "1.10.0"
+tokio = { version = "1.10.0", features = ["full"] }
 async-trait = "0.1.51"
 
 [dependencies.serde]

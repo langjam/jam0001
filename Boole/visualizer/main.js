@@ -194,6 +194,9 @@ function mouseDragged(event) {
     const {px, py} = world;
 
     const pos = {x: event.clientX, y: event.clientY};
+    if (mouseY<0){
+        return
+    }
     const dx = pos.x - px;
     const dy = pos.y - py;
 

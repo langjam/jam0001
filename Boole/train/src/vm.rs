@@ -4,7 +4,7 @@ use std::sync::{Arc, MutexGuard, PoisonError};
 use tokio::sync::Mutex;
 
 use crate::ast::{Program, Station, Train, SecondClassPassenger};
-use crate::interface::Communicator;
+use crate::interface::{Communicator, CommunicatorError};
 use crate::operations::Operation;
 
 #[derive(Debug)]
@@ -17,6 +17,12 @@ pub enum VMError {
 impl<T> From<PoisonError<MutexGuard<'_, T>>> for VMError {
     fn from(_: PoisonError<MutexGuard<T>>) -> Self {
         Self::UnlockError
+    }
+}
+
+impl From<CommunicatorError> for VMError {
+    fn from(_: CommunicatorError) -> Self {
+        Self::ConnectionClosed
     }
 }
 
@@ -366,7 +372,9 @@ impl Data {
                 Operation::Delete => {
                     let st = &mut station.trains[0];
                     while !st.is_empty() {
-                        st.pop_front();
+                        let pop = st.pop_front().ok_or(VMError::UnlockError)?;
+                        let train = pop.lock().await;
+                        interface.delete_train(train.train.clone())?;
                     }
                     did_work = true;
                 }
@@ -428,6 +436,7 @@ mod tests {
     use crate::parse::parser::Span;
     use crate::vm::Data;
     use crate::wishes::{ColorChoice, TrainConfig};
+    use std::sync::Arc;
 
 
     struct VMInterface(bool);
@@ -441,8 +450,9 @@ mod tests {
         }
     }
 
+    #[async_trait::async_trait]
     impl Communicator for VMInterface {
-        fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError> {
+        async fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError> {
             Ok(vec![0])
         }
 
@@ -462,6 +472,10 @@ mod tests {
             _start_track: usize,
             _end_track: usize,
         ) -> Result<(), CommunicatorError> {
+            Ok(())
+        }
+
+        fn delete_train(&self, _train: Train) -> Result<(), CommunicatorError> {
             Ok(())
         }
     }
@@ -529,31 +543,31 @@ mod tests {
 
     macro_rules! bin_ops {
         ($func:ident, $x:expr, $op:tt) => {
-            #[test]
-            fn $func() {
+            #[tokio::test]
+            async fn $func() {
                 let program = create_program!($x);
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-                pp.do_current_step(&i).unwrap();
-                let train = pp.trains[0].lock().unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+                pp.do_current_step(i).await.unwrap();
+                let train = pp.trains[0].lock().await;
                 assert_eq!(Some(10 $op 20), train.first_passenger_value());
             }
         };
     }
 
-    #[test]
-    fn nothing_does_nothing() {
+    #[tokio::test]
+    async fn nothing_does_nothing() {
         let program = create_program!(Operation::Nothing);
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        assert_eq!(pp.train_count().unwrap(), 2);
-        pp.do_current_step(&i).unwrap();
-        let train = pp.trains[0].lock().unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+        assert_eq!(pp.train_count().await.unwrap(), 2);
+        pp.do_current_step(i).await.unwrap();
+        let train = pp.trains[0].lock().await;
         assert_eq!(Some(10), train.first_passenger_value());
     }
 
-    #[test]
-    fn trains_travel() {
+    #[tokio::test]
+    async fn trains_travel() {
         let program = Program {
             trains: vec![Train {
                 identifier: 0,
@@ -608,26 +622,26 @@ mod tests {
                 },
             ],
         };
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        pp.do_current_step(&i).unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
         {
-            let station = pp.stations.get("Test2").unwrap().lock().unwrap();
+            pp.do_current_step(i.clone()).await.unwrap();
+            let station = pp.stations.get("Test2").unwrap().lock().await;
             assert_eq!(station.trains[0].len(), 1);
         }
-        pp.do_current_step(&i).unwrap();
+        pp.do_current_step(i.clone()).await.unwrap();
         {
-            let station = pp.stations.get("Test").unwrap().lock().unwrap();
+            let station = pp.stations.get("Test").unwrap().lock().await;
             assert_eq!(station.trains[1].len(), 1);
         }
-        pp.do_current_step(&i).unwrap();
+        pp.do_current_step(i.clone()).await.unwrap();
         {
-            let station = pp.stations.get("Test2").unwrap().lock().unwrap();
+            let station = pp.stations.get("Test2").unwrap().lock().await;
             assert_eq!(station.trains[1].len(), 1);
         }
-        pp.do_current_step(&i).unwrap();
+        pp.do_current_step(i.clone()).await.unwrap();
         {
-            let station = pp.stations.get("Test").unwrap().lock().unwrap();
+            let station = pp.stations.get("Test").unwrap().lock().await;
             assert_eq!(station.trains[0].len(), 1);
         }
         // while let Ok(t) = receiver.recv_timeout(Duration::from_millis(10)) {
@@ -635,12 +649,12 @@ mod tests {
         // }
     }
 
-    #[test]
-    fn print_prints() {
+    #[tokio::test]
+    async fn print_prints() {
         let program = create_program!(Operation::PrintString);
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        pp.do_current_step(&i).unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+        pp.do_current_step(i).await.unwrap();
         // receiver.recv().unwrap();
         // receiver.recv().unwrap();
         // if let Ok(m) = receiver.recv() {
@@ -693,13 +707,13 @@ mod tests {
         // let (sender, receiver) = channel();
         // let i = VMInterface::new();
         /*std::thread::spawn(|| {
-            let mut pp = Data::new(program, &i);
-            pp.do_current_step(&i).unwrap();
+            let pp = Data::new(program, i);
+            pp.do_current_step(i).await.unwrap();
         });*/
         // while let Ok(t) = receiver.recv_timeout(Duration::from_millis(10)) {
         //     println!("{:?}", t);
         //     if let VmInterfaceMessage::AskForInput(n) = t {
-        //         let h = i.message_ids_in_use.lock().unwrap();
+        //         let h = i.message_ids_in_use.lock().await;
         //         let sender = h.get(&n).unwrap();
         //         sender.send(Input {
         //             value: vec![1, 2, 3, 4, 5],
@@ -708,8 +722,8 @@ mod tests {
         // }
     }
 
-    #[test]
-    fn switch_switches() {
+    #[tokio::test]
+    async fn switch_switches() {
         let program = Program {
             trains: vec![Train {
                 identifier: 0,
@@ -764,10 +778,10 @@ mod tests {
                 },
             ],
         };
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        pp.do_current_step(&i).unwrap();
-        let other = pp.stations.get("Other").unwrap().lock().unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+        pp.do_current_step(i).await.unwrap();
+        let other = pp.stations.get("Other").unwrap().lock().await;
         assert_eq!(other.trains[1].len(), 0);
         assert_eq!(other.trains[0].len(), 1);
         // while let Ok(t) = receiver.recv_timeout(Duration::from_millis(10)) {
@@ -775,8 +789,8 @@ mod tests {
         // }
     }
 
-    #[test]
-    fn switch_empty() {
+    #[tokio::test]
+    async fn switch_empty() {
         let program = Program {
             trains: vec![Train {
                 identifier: 0,
@@ -828,10 +842,10 @@ mod tests {
                 },
             ],
         };
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        pp.do_current_step(&i).unwrap();
-        let other = pp.stations.get("Other").unwrap().lock().unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+        pp.do_current_step(i).await.unwrap();
+        let other = pp.stations.get("Other").unwrap().lock().await;
         assert_eq!(other.trains[1].len(), 0);
         assert_eq!(other.trains[0].len(), 1);
         // while let Ok(t) = receiver.recv_timeout(Duration::from_millis(10)) {
@@ -839,8 +853,8 @@ mod tests {
         // }
     }
 
-    #[test]
-    fn delete_train() {
+    #[tokio::test]
+    async fn delete_train() {
         let program = Program {
             trains: vec![Train {
                 identifier: 0,
@@ -877,19 +891,19 @@ mod tests {
                 ],
             }],
         };
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        assert_eq!(1, pp.train_count().unwrap());
-        pp.do_current_step(&i).unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+        assert_eq!(1, pp.train_count().await.unwrap());
+        pp.do_current_step(i).await.unwrap();
         {
-            let station = pp.stations.get("Test").unwrap().lock().unwrap();
+            let station = pp.stations.get("Test").unwrap().lock().await;
             assert_eq!(station.trains[0].len(), 0);
         }
-        assert_eq!(0, pp.train_count().unwrap());
+        assert_eq!(0, pp.train_count().await.unwrap());
     }
 
-    #[test]
-    fn del_top() {
+    #[tokio::test]
+    async fn del_top() {
         let program = Program {
             trains: vec![Train {
                 identifier: 0,
@@ -932,16 +946,16 @@ mod tests {
                 ],
             }],
         };
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        pp.do_current_step(&i).unwrap();
-        let train = pp.trains.first().unwrap().lock().unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+        pp.do_current_step(i).await.unwrap();
+        let train = pp.trains.first().unwrap().lock().await;
         assert_eq!(1, train.train.second_class_passengers.len());
         assert_eq!(20, train.train.second_class_passengers.first().unwrap().data);
     }
 
-    #[test]
-    fn duplicate() {
+    #[tokio::test]
+    async fn duplicate() {
         let program = Program {
             trains: vec![Train {
                 identifier: 0,
@@ -994,26 +1008,25 @@ mod tests {
                                ],
                            }],
         };
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        pp.do_current_step(&i).unwrap();
-        let station = pp.stations.get("Test2").unwrap().lock().unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+        pp.do_current_step(i).await.unwrap();
+        let station = pp.stations.get("Test2").unwrap().lock().await;
         assert_eq!(station.trains[0].len(), station.trains[1].len());
         let t1 = {
             station.trains[0]
                 .front()
                 .unwrap()
-                .lock()
-                .unwrap()
+                .lock().await
                 .train
                 .clone()
         };
-        assert_eq!(t1.second_class_passengers, station.trains[1].front().unwrap().lock().unwrap().train.second_class_passengers);
-        assert_ne!(t1.identifier, station.trains[1].front().unwrap().lock().unwrap().train.identifier);
+        assert_eq!(t1.second_class_passengers, station.trains[1].front().unwrap().lock().await.train.second_class_passengers);
+        assert_ne!(t1.identifier, station.trains[1].front().unwrap().lock().await.train.identifier);
     }
 
-    #[test]
-    fn banana_rotate() {
+    #[tokio::test]
+    async fn banana_rotate() {
         let program = Program {
             trains: vec![Train {
                 identifier: 0,
@@ -1064,15 +1077,15 @@ mod tests {
                 ],
             }],
         };
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        pp.do_current_step(&i).unwrap();
-        let train = pp.trains.first().unwrap().lock().unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+        pp.do_current_step(i).await.unwrap();
+        let train = pp.trains.first().unwrap().lock().await;
         assert_eq!(20, train.train.second_class_passengers[0].data);
     }
 
-    #[test]
-    fn faster() {
+    #[tokio::test]
+    async fn faster() {
         let program = Program {
             trains: vec![
                 Train {
@@ -1143,13 +1156,13 @@ mod tests {
                 ],
             }],
         };
-        let i = VMInterface::new();
-        let mut pp = Data::new(program);
-        pp.do_current_step(&i).unwrap();
-        let train = pp.trains.first().unwrap().lock().unwrap();
+        let i = Arc::new(VMInterface::new());
+        let pp = Data::new(program).await;
+        pp.do_current_step(i).await.unwrap();
+        let train = pp.trains.first().unwrap().lock().await;
         assert_eq!(20, train.train.second_class_passengers[0].data);
         assert_eq!(3, train.train.second_class_passengers.len());
-        let train2 = pp.trains.last().unwrap().lock().unwrap();
+        let train2 = pp.trains.last().unwrap().lock().await;
         assert_eq!(10, train2.train.second_class_passengers[0].data);
         assert_eq!(2, train2.train.second_class_passengers.len());
     }

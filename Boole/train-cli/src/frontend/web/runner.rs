@@ -188,4 +188,8 @@ impl Communicator for WebRunner {
             end_track,
         })
     }
+
+    fn delete_train(&self, train: Train) -> Result<(), CommunicatorError> {
+        self.send(MessageToWebpage::DeleteTrain {train })
+    }
 }
