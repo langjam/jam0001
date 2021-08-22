@@ -49,3 +49,7 @@
 		- [ ] - execution
 			- [x] - figure out what to do with stacks
 			- [ ] - fix returns if and used
+- [ ] - meta
+	- [ ] - replace occurances of ``fmt.Print(some_error)`` with ``log.Fatal()``
+	- [ ] - update the shell
+	- [ ] - maybe make main.go take in a file
