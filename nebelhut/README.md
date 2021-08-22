@@ -275,10 +275,10 @@ If a macro is encountered, the parser consumes as many macro arguments as are sp
 The simplest way to insert a macro argument is `,`_n_, a comma followed by an integer token. The integer must be greater or equal to zero and less than the number of parameters. The tokens of the given argument are spliced in-place.
 
 ```
-macro debug 1 [ println << ',0 ": " ,0 >> ]
+macro printvar 1 [ println << ',0 ": " ,0 >> ]
 ```
 
-This defines a simple macro that expects an identifier and results in a statement that prints the name and the value of the corresponding variable.
+This defines a simple macro that expects an identifier and results in a statement that prints the name and the value of the corresponding variable. (A similar macro named `debug` is builtin.)
 
 Another use of arguments is `,len` _n_ (note that there must be a space between `len` and the integer). It inserts an integer token representing the number of tokens in the given argument.
 
@@ -317,9 +317,10 @@ macro func 3 [
 
 We iterate over the list of the parameters and add some code to the already stored function block. The code we preprend just binds the parameter index (macro argument `4`) to the parameter name (macro argument `3`). This is in fact the definition of the builtin macro `defun`.
 
+---
 
-Reference
----------
+Language reference
+------------------
 
 There are 21 types of tokens in Flamingo:
 
@@ -366,6 +367,8 @@ If a statement is an expression that results in a switch comment, the correspond
 - `h`/`H`: Lexing switch that sets the integer base to 16.
 - `t`/`T`: Enable or disable testing
 - `b`/`B`: Enable or disable step debugging.
+- `f`/`F`: Enable or disable failing hard. If an error is encountered and failing hard is enabled, the execution immediately halts, even in the REPL. If failing hard is disabled, the error can be recovered with the `recover` builtin.
+- `n`/`N`: Enable or disable narrating. When enabled, statement is about to be executed and a comment is stashed, print the comment out to stderr.
 
 If a statment is an expression and there is a stashed string comment beginning with "`TEST `" and testing is enabled, the expression following "`TEST `" is evaluated in the current scope and this test expression is tested for equality with the result of the statement of expression. If they are not equal, execution halts and a failure is displayed. If there is a stashed string comment beginning with "`TESTWITH `" and testing is enabled, the statement is executed for every `TESTWITH` clause in the comment. A `TESTWITH` clause is followed by an identifier and two expressions. Both expressions are evaluated in the current scope. The result of the first expression is bound to the identifier in the current scope before the statement is executed. The result of statement is compared with the second expression for equality. If they are not equal, execution halts and a failure is displayed.
 
@@ -380,7 +383,8 @@ When a statement is about to be executed and step debugging is disabled, a debug
 - `cont`/`continue`: Disable step debugging and continue the execution as normal.
 - `exit`: Halt the execution.
 
----
+Builtins
+--------
 
 `yes`, `no`
 > Bool literals.
@@ -448,8 +452,9 @@ When a statement is about to be executed and step debugging is disabled, a debug
 `or a:bool b:bool`
 > Return `yes` if one or both arguments are `yes`, otherwise `no`.
 
-`not a:bool`
-> Return `yes` if `a` is `no`, otherwise `no`.
+`not a:bool` <br>
+`not c:switch-comment`
+> If the argument is bool, negate it. If the argument is switch comment, return a switch comment with negated state.
 
 `->string a:value`
 > Convert `a` to a string.
@@ -485,10 +490,13 @@ When a statement is about to be executed and step debugging is disabled, a debug
 > Return a list containing the integers `a` ≤ _i_ < `b`.
 
 `eval b:block`
-> Execute the contents of b in the current scope and return the value of the last statement of `b`. If `b` is empty, return `no`. `eval` is equivalent to `apply` with an empty argument list.
+> Execute the `b` in the current scope and return the value of the last statement of `b`. If `b` is empty, return `no`. `eval` is equivalent to `apply` with an empty argument list.
 
 `apply b:block args:list`
-> Execute the contents of b in a new scope that has `args` set as parameters and return the value of the last statement of `b`. If `b` is empty, return `no`. Also see `eval`.
+> Execute the `b` in a new scope that has `args` set as parameters and return the value of the last statement of `b`. If `b` is empty, return `no`. Also see `eval`.
+
+`recover b:block`
+> Execute `b` in the current scope. If an error occurs during the execution, return a value comment containing the location of the error and the error message. Otherwise, return the value of the block.
 
 `getparam i:int`
 > Retrieve the `i`th (zero-based) of the current scope. Only meaningful in a block execution if the block has been provided with parameters. See `apply`.
@@ -508,5 +516,20 @@ When a statement is about to be executed and step debugging is disabled, a debug
 `float->int x:float`
 > Truncate the value of `x` (round towards to zero) and return it as an integer.
 
+`type v:value`
+> Return an identifier designating the value type of `v`, one of: `'bool`, `'int`, `'float`, `'ident`, `'bool`, `'string`, `'list`, `'value-comment`, `'switch-comment`, `'builtin`, `'block`, `'macro`.
+
+`len xs:list`
+> Return the integer length of `xs`.
+
+`at xs:list idx:int`
+> Return the element at index `idx` (zero-based). If the index is out of range, raise an error.
+
+`error msg:string`
+> Raise an error at the location of the call with the given message.
+
 `defun name:ident params:list body:block`
 > `defun` is a macro. `params` must be a list of (non-quoted) identifiers. `defun` binds the code block to the given name, associates the `'arity` derived from the parameter list, and inserts code in the code block to assign the numeric arguments to the given parameter names.
+
+`debug vars:list`
+> `debug` is a macro. `vars` must be a list of (non-quoted) identifiers. `debug` prints out each of the named variables alongside its value.

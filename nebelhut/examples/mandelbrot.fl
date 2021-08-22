@@ -7,14 +7,6 @@ bind 'maxiter 500
 defun lerp (a t b) [ + * - 1 t a * t b ]
 defun abs (x) [ if < x 0 [ * -1 x ] else [ x ] ]
 
-macro debug 1 [
-    println <<
-    ,for 0 [
-        ',1 ": " ,1 "  "
-    ]
-    >>
-]
-
 defun escape (x0 y0) [
     bind 'x 0
     bind 'y 0

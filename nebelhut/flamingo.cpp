@@ -82,6 +82,11 @@ struct SourceLoc {
 
 #define LOCFMT(loc) (loc).srcname, (loc).line, (loc).col
 
+struct Error {
+    SourceLoc loc;
+    const char *msg;
+};
+
 struct Token {
     SourceLoc loc;
     TokenType type;
@@ -146,7 +151,7 @@ void source_advance(Slice<u8> *src, SourceLoc *loc, s32 n = 1) {
     }
 }
 
-Token gettoken(Slice<u8> *src, SourceLoc *loc) {
+Token gettoken(Slice<u8> *src, SourceLoc *loc, Error *err) {
     while (src->count && isspace((*src)[0])) {
         if (slice_has_prefix(*src, lit_slice("\n\n"))) {
             SourceLoc l = *loc;
@@ -160,7 +165,7 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
     if (src->count >= 2 && (*src)[0] == '<' && (*src)[1] == '<') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Lstrlist, {}}; }
     if (src->count >= 2 && (*src)[0] == '>' && (*src)[1] == '>') { source_advance(src, loc, 2); return {.loc = *loc, .type = Token_Rstrlist, {}}; }
 
-    if (digit2val((*src)[0], NULL) || ((*src)[0] == '-' && src->count > 1 && digit2val((*src)[0], NULL))) {
+    if (digit2val((*src)[0], NULL) || ((*src)[0] == '-' && src->count > 1 && digit2val((*src)[1], NULL))) {
         s64 sign = 1;
         if ((*src)[0] == '-') {
             sign = -1;
@@ -254,13 +259,14 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
         while (src->count && isspace((*src)[0]))
             source_advance(src, loc, 1);
         if (!src->count) {
-            fprintf(stderr, "%s:%d:%d: Unexpected end-of-file in switch comment.\n", LOCFMT(*loc));
-            exit(1);
+            if (err) { err->loc = *loc; err->msg = "Unexpected end-of-file in switch comment."; }
+            return {};
         }
         tok.swytch = (*src)[0];
-        if (tolower(tok.swytch) != 't' && tolower(tok.swytch) != 'b' && tolower(tok.swytch) != 'u' && tolower(tok.swytch) != 'h') {
-            fprintf(stderr, "%s:%d:%d: Unknown switch: %c.\n", LOCFMT(*loc), tok.swytch);
-            exit(1);
+        if (tolower(tok.swytch) != 't' && tolower(tok.swytch) != 'b' && tolower(tok.swytch) != 'u' && tolower(tok.swytch) != 'h' &&
+            tolower(tok.swytch) != 'f' && tolower(tok.swytch) != 'n' ) {
+            if (err) { err->loc = *loc; err->msg = tprint("Unknown switch: %c.", tok.swytch); }
+            return {};
         }
         source_advance(src, loc, 1);
         while (src->count && isspace((*src)[0]))
@@ -289,21 +295,23 @@ Token gettoken(Slice<u8> *src, SourceLoc *loc) {
         source_advance(src, loc, 1);
         return {.loc = *loc, .type = Token_Comma, {}};
     } else {
-        fprintf(stderr, "%s:%d:%d: Unknown start of token '%c' (%d).\n", LOCFMT(*loc), (*src)[0], (*src)[0]);
-        exit(1);
+        if (err) { err->loc = *loc; err->msg = tprint("Unknown start of token '%c' (%d).", (*src)[0], (*src)[0]); }
+        return {};
     }
 }
 
-Slice<Token> tokenize(const char *srcname, Slice<u8> src) {
+Slice<Token> tokenize(const char *srcname, Slice<u8> src, Error *err) {
     Array<Token> tokens = {};
     tokens.arena = &arena;
     SourceLoc loc = {.srcname = srcname, .line = 1, .col = 1};
     while (src.count) {
-        Token tok = gettoken(&src, &loc);
+        Token tok = gettoken(&src, &loc, err);
+        if (err->msg) break;
         if (tok.type == Token_EOF) break;
         if (tok.type == Token_SwitchComment) {
             if (tolower(tok.swytch) == 'u') switch_uppercase = tok.swytch == 'U';
             if (tolower(tok.swytch) == 'h') switch_hex = tok.swytch == 'H';
+            else array_push(&tokens, tok);
             continue;
         }
         array_push(&tokens, tok);
@@ -313,7 +321,7 @@ Slice<Token> tokenize(const char *srcname, Slice<u8> src) {
 
 enum ValueType {
     Value_Bool = 1, Value_Int, Value_Float, Value_Ident, Value_String, Value_List, Value_ValueComment, Value_SwitchComment,
-    Value_Builtin, Value_Block, Value_Macro, Value_Return,
+    Value_Builtin, Value_Block, Value_Macro, Value_Return, Value_Failure,
 };
 
 struct Value;
@@ -350,6 +358,7 @@ struct Value {
         ValMacro macro;
         Value *ret;
         u8 swytch;
+        Error fail;
     };
 };
 
@@ -380,6 +389,7 @@ bool operator==(const Value &a, const Value &b) {
         case Value_Block: return false;
         case Value_Macro: return false;
         case Value_Return: assert(!"Unreachable"); return false;
+        case Value_Failure: assert(!"Unreachable"); return false;
     }
 
     assert(!"Unreachable");
@@ -390,11 +400,35 @@ FORCEINLINE static inline bool operator!=(const Value &a, const Value &b) {
     return !(a == b);
 }
 
+Value fail(bool failhard, SourceLoc loc, const char *fmt, ...) {
+    if (failhard) {
+        fprintf(stderr, "%s:%d:%d: ", LOCFMT(loc));
+        va_list args;
+        va_start(args, fmt);
+        vfprintf(stderr, fmt, args);
+        va_end(args);
+        exit(1);
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    s32 size = vsnprintf(NULL, 0, fmt, args);
+    va_end(args);
+    char *msg = arena_alloc_many<char>(&arena, size + 1);
+    va_start(args, fmt);
+    vsprintf(msg, fmt, args);
+    va_end(args);
+    msg[size] = 0;
+    return {.type = Value_Failure, .fail = {.loc = loc, .msg = msg}};
+}
+
 struct Symbol {
     Atom name;
     Value value;
     Array<Value> assoc;
 };
+
+Symbol failure_sym;
 
 struct EnvPage {
     Symbol syms[32];
@@ -409,6 +443,8 @@ struct Env {
     Value stashed_comment;
     bool switch_testing;
     bool switch_stepping;
+    bool switch_failhard;
+    bool switch_narrating;
 };
 
 Env new_environment(Env *super) {
@@ -416,6 +452,8 @@ Env new_environment(Env *super) {
         .super = super, .first_page = NULL, .params = {}, .stashed_comment = {},
         .switch_testing = super ? super->switch_testing : true,
         .switch_stepping = super ? super->switch_stepping : false,
+        .switch_failhard = super ? super->switch_failhard : true,
+        .switch_narrating = super ? super->switch_narrating : false,
     };
 }
 
@@ -462,8 +500,14 @@ Symbol *lookup(Env *env, Atom name, SourceLoc loc) {
     Symbol *sym = try_lookup(env, name);
     if (sym) return sym;
 
-    fprintf(stderr, "%s:%d:%d: Cannot reference unknown name '%.*s'.\n", LOCFMT(loc), ATOMFMT(name));
-    exit(1);
+    if (env->switch_failhard) {
+        fprintf(stderr, "%s:%d:%d: Cannot reference unknown name '%.*s'.\n", LOCFMT(loc), ATOMFMT(name));
+        exit(1);
+    } else {
+        failure_sym.name = name;
+        failure_sym.value = {.type = Value_Failure, .fail = {.loc = loc, .msg = tprint("Cannot reference unknown name: '%.*s'.", ATOMFMT(name))}};
+        return &failure_sym;
+    }
 }
 
 void assoc(Symbol *sym, Atom key, Value val) {
@@ -492,11 +536,15 @@ bool getassoc(Symbol *sym, Atom key, Value *out) {
 void set_switch(Env *env, u8 swytch) {
     if (tolower(swytch) == 't') env->switch_testing = swytch == 'T';
     if (tolower(swytch) == 'b') env->switch_stepping = swytch == 'B';
+    if (tolower(swytch) == 'f') env->switch_failhard = swytch == 'F';
+    if (tolower(swytch) == 'n') env->switch_narrating = swytch == 'N';
 }
 
 bool get_switch(Env *env, u8 swytch) {
     if (tolower(swytch) == 't') return env->switch_testing;
     if (tolower(swytch) == 'b') return env->switch_stepping;
+    if (tolower(swytch) == 'f') return env->switch_failhard;
+    if (tolower(swytch) == 'n') return env->switch_narrating;
     assert(!"Unreachable");
     return false;
 }
@@ -515,6 +563,7 @@ const char *format_value_type(ValueType type) {
         case Value_Block: return "block";
         case Value_Macro: return "macro";
         case Value_Return: assert(!"Unreachable"); return "<invalid>";
+        case Value_Failure: assert(!"Unreachable"); return "<invalid>";
     }
     assert(!"Unreachable");
     return "<invalid>";
@@ -554,6 +603,7 @@ const char *format_value(Value val, bool inspect) {
         } break;
         case Value_Macro: return tprint("<macro/%ld +%dl>", val.macro.param_count, val.macro.body.count);
         case Value_Return: assert(!"Unreachable"); break;
+        case Value_Failure: assert(!"Unreachable"); break;
     }
     assert(!"Unreachable");
     return "<invalid>";
@@ -576,15 +626,12 @@ void stash_comment(Env *env, Value v) {
     env->stashed_comment = {.type = Value_ValueComment, .c = {.loc = env->stashed_comment.c.loc, .value = copy_to_arena(&arena, newc)}};
 }
 
-
-void check_arg(const char *fnname, Slice<Value> args, s32 idx, ValueType required, SourceLoc loc) {
-    if (args[idx].type != required) {
-        fprintf(stderr, "%s:%d:%d: %s: Argument #%d must be of type %s, not %s.\n", LOCFMT(loc), fnname, idx + 1,
-            format_value_type(required), format_value_type(args[idx].type));
-        exit(1);
-    }
-}
-#define CHECK_ARG(fnname, idx, required) check_arg(fnname, args, idx, required, loc)
+#define CHECK_ARG(fnname, idx, required) \
+    do { \
+        if (args[idx].type != (required)) \
+            return fail(env->switch_failhard, loc, "%s: Argument #%d must be of type %s, not %s.", (fnname), (idx) + 1, \
+                format_value_type(required), format_value_type(args[idx].type)); \
+    } while (0)
 
 Value b_println(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env; (void)loc;
@@ -648,9 +695,8 @@ Value b_add(Slice<Value> args, Env *env, SourceLoc loc) {
         for (Value &val : args[1].list) array_push(&list, val);
         return {.type = Value_List, .list = array_slice(&list)};
     } else {
-        fprintf(stderr, "%s:%d:%d: +: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, "+: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -663,9 +709,8 @@ Value b_sub(Slice<Value> args, Env *env, SourceLoc loc) {
         f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
         return {.type = Value_Float, .f = fa - fb};
     } else {
-        fprintf(stderr, "%s:%d:%d: -: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, "-: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -678,9 +723,8 @@ Value b_mul(Slice<Value> args, Env *env, SourceLoc loc) {
         f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
         return {.type = Value_Float, .f = fa * fb};
     } else {
-        fprintf(stderr, "%s:%d:%d: *: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, "*: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -693,9 +737,8 @@ Value b_div(Slice<Value> args, Env *env, SourceLoc loc) {
         f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
         return {.type = Value_Float, .f = fa / fb};
     } else {
-        fprintf(stderr, "%s:%d:%d: /: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, "/: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -707,9 +750,8 @@ Value b_fdiv(Slice<Value> args, Env *env, SourceLoc loc) {
         f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
         return {.type = Value_Float, .f = fa / fb};
     } else {
-        fprintf(stderr, "%s:%d:%d: /.: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, "/.: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -722,9 +764,8 @@ Value b_mod(Slice<Value> args, Env *env, SourceLoc loc) {
         f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
         return {.type = Value_Float, .f = fmod(fa, fb)};
     } else {
-        fprintf(stderr, "%s:%d:%d: mod: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, "mod: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -749,9 +790,8 @@ Value b_lt(Slice<Value> args, Env *env, SourceLoc loc) {
         f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
         return {.type = Value_Bool, .b = fa < fb};
     } else {
-        fprintf(stderr, "%s:%d:%d: <: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, "<: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -764,9 +804,8 @@ Value b_le(Slice<Value> args, Env *env, SourceLoc loc) {
         f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
         return {.type = Value_Bool, .b = fa <= fb};
     } else {
-        fprintf(stderr, "%s:%d:%d: <=: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, "<=: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -779,9 +818,8 @@ Value b_ge(Slice<Value> args, Env *env, SourceLoc loc) {
         f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
         return {.type = Value_Bool, .b = fa >= fb};
     } else {
-        fprintf(stderr, "%s:%d:%d: >=: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, ">=: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -794,9 +832,8 @@ Value b_gt(Slice<Value> args, Env *env, SourceLoc loc) {
         f64 fb = args[1].type == Value_Int ? args[1].i : args[1].f;
         return {.type = Value_Bool, .b = fa > fb};
     } else {
-        fprintf(stderr, "%s:%d:%d: >: Incompatible argument types %s and %s.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, ">: Incompatible argument types %s and %s.",
             format_value_type(args[0].type), format_value_type(args[1].type));
-        exit(1);
     }
 }
 
@@ -818,9 +855,14 @@ Value b_or(Slice<Value> args, Env *env, SourceLoc loc) {
 
 Value b_not(Slice<Value> args, Env *env, SourceLoc loc) {
     (void)env;
-    CHECK_ARG("not", 0, Value_Bool);
-
-    return {.type = Value_Bool, .b = !args[0].b};
+    if (args[0].type == Value_Bool) {
+        return {.type = Value_Bool, .b = !args[0].b};
+    } else if (args[0].type == Value_SwitchComment) {
+        u8 s = args[0].swytch == tolower(args[0].swytch) ? toupper(args[0].swytch) : tolower(args[0].swytch);
+        return {.type = Value_SwitchComment, .swytch = s};
+    } else {
+        return fail(env->switch_failhard, loc, "not: Incompatible argument type: %s.", format_value_type(args[0].type));
+    }
 }
 
 Value b_tostring(Slice<Value> args, Env *env, SourceLoc loc) {
@@ -894,9 +936,8 @@ Value b_testtable(Slice<Value> args, Env *env, SourceLoc loc) {
     Slice<Value> ins = args[1].list, wants = args[2].list;
 
     if (ins.count != wants.count) {
-        fprintf(stderr, "%s:%d:%d: testtable: Input and expected list must match in size; encountered %ld and %ld.\n", LOCFMT(loc),
+        return fail(env->switch_failhard, loc, "testtable: Input and expected list must match in size; encountered %ld and %ld.",
             ins.count, wants.count);
-        exit(1);
     }
 
     for (s64 i = 0; i < ins.count; i++) {
@@ -957,12 +998,21 @@ Value b_apply(Slice<Value> args, Env *env, SourceLoc loc) {
     return result;
 }
 
+Value b_recover(Slice<Value> args, Env *env, SourceLoc loc) {
+    CHECK_ARG("eval", 0, Value_Block);
+    Value result = exec_block(args[0].body, env);
+    if (result.type == Value_Return) result = *result.ret;
+    if (result.type == Value_Failure) {
+        Value s = {.type = Value_String, .s = str_slice(result.fail.msg)};
+        result = {.type = Value_ValueComment, .c = {.loc = result.fail.loc, .value = copy_to_arena(&arena, s)}};
+    }
+    return result;
+}
+
 Value b_getparam(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("getparam", 0, Value_Int);
-    if (args[0].i < 0 || args[0].i >= env->params.count) {
-        fprintf(stderr, "%s:%d:%d: Requested parameter #%ld is out-of-bounds for current environment.\n", LOCFMT(loc), args[0].i + 1);
-        exit(1);
-    }
+    if (args[0].i < 0 || args[0].i >= env->params.count)
+        return fail(env->switch_failhard, loc, "Requested parameter #%ld is out-of-bounds for current environment.", args[0].i + 1);
     return env->params[args[0].i];
 }
 
@@ -999,6 +1049,48 @@ Value b_float2int(Slice<Value> args, Env *env, SourceLoc loc) {
     CHECK_ARG("float->int", 0, Value_Float);
 
     return {.type = Value_Int, .i = (s64)args[0].f};
+}
+
+Value b_type(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env; (void)loc;
+    Atom atom = {};
+    switch (args[0].type) {
+        case Value_Bool: atom = intern(lit_slice("bool")); break;
+        case Value_Int: atom = intern(lit_slice("int")); break;
+        case Value_Float: atom = intern(lit_slice("float")); break;
+        case Value_Ident: atom = intern(lit_slice("ident")); break;
+        case Value_String: atom = intern(lit_slice("string")); break;
+        case Value_ValueComment: atom = intern(lit_slice("value-comment")); break;
+        case Value_SwitchComment: atom = intern(lit_slice("switch-comment")); break;
+        case Value_Builtin: atom = intern(lit_slice("builtin")); break;
+        case Value_List: atom = intern(lit_slice("list")); break;
+        case Value_Block: atom = intern(lit_slice("block")); break;
+        case Value_Macro: atom = intern(lit_slice("macro")); break;
+        case Value_Return: assert(!"Unreachable"); break;
+        case Value_Failure: assert(!"Unreachable"); break;
+    }
+    return {.type = Value_Ident, .atom = atom};
+}
+
+Value b_len(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("len", 0, Value_List);
+    return {.type = Value_Int, .i = args[0].list.count};
+}
+
+Value b_at(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("at", 0, Value_List);
+    CHECK_ARG("at", 1, Value_Int);
+    if (args[1].i < 0 || args[1].i >= args[0].list.count)
+        return fail(env->switch_failhard, loc, "Index out of range: %ld for list of length %ld.", args[1].i, args[0].list.count);
+    return args[0].list[args[1].i];
+}
+
+Value b_error(Slice<Value> args, Env *env, SourceLoc loc) {
+    (void)env;
+    CHECK_ARG("error", 0, Value_String);
+    return {.type = Value_Failure, .fail = {.loc = loc, .msg = tprint("%.*s", STRFMT(args[0].s))}};
 }
 
 Slice<Token> get_macro_arg(Slice<Token> *tokens) {
@@ -1116,16 +1208,10 @@ Value eval(Slice<Token> *tokens, Env *env) {
         } else if (sym->value.type == Value_Block) {
             Value arity;
             if (getassoc(sym, atom_arity, &arity)) {
-                if (arity.type != Value_Int) {
-                    fprintf(stderr, "%s:%d:%d: Associated arity for %.*s is not an integer but %s.\n", LOCFMT(tok.loc),
-                        ATOMFMT(sym->name), format_value_type(arity.type));
-                    exit(1);
-                }
-                if (arity.i > MAX_ARITY) {
-                    fprintf(stderr, "%s:%d:%d: %.*s exceeds maximum arity of %d arguments.\n", LOCFMT(tok.loc),
-                        ATOMFMT(sym->name), MAX_ARITY);
-                    exit(1);
-                }
+                if (arity.type != Value_Int)
+                    return fail(env->switch_failhard, tok.loc, "Associated arity for %.*s is not an integer but %s.", ATOMFMT(sym->name), format_value_type(arity.type));
+                if (arity.i > MAX_ARITY)
+                    return fail(env->switch_failhard, tok.loc, "%.*s exceeds maximum arity of %d arguments.", ATOMFMT(sym->name), MAX_ARITY);
                 Value args[MAX_ARITY];
                 for (s64 i = 0; i < arity.i; i++)
                     args[i] =  eval(tokens, env);
@@ -1150,31 +1236,25 @@ Value eval(Slice<Token> *tokens, Env *env) {
         }
     } else if (tok.type == Token_Quote) {
         slice_advance(tokens, 1);
-        if (!tokens->count) {
-            fprintf(stderr, "%s:%d:%d: Unexpected end-of-file after '.\n", LOCFMT(tok.loc));
-            exit(1);
-        }
+        if (!tokens->count)
+            fail(env->switch_failhard, tok.loc, "Unexpected end-of-file after '.");
         Token tok = (*tokens)[0];
         if (tok.type == Token_Ident) {
             slice_advance(tokens, 1);
             return {.type = Value_Ident, .atom = tok.atom};
         } else {
-            fprintf(stderr, "%s:%d:%d: Cannot quote expression beginning with %s.\n", LOCFMT(tok.loc), format_token(tok));
-            exit(1);
+            return fail(env->switch_failhard, tok.loc, "Cannot quote expression beginning with %s.", format_token(tok));
         }
     } else if (tok.type == Token_Amp) {
         slice_advance(tokens, 1);
-        if (!tokens->count) {
-            fprintf(stderr, "%s:%d:%d: Unexpected end-of-file after &.\n", LOCFMT(tok.loc));
-            exit(1);
-        }
+        if (!tokens->count)
+            return fail(env->switch_failhard, tok.loc, "Unexpected end-of-file after &.");
         Token tok = (*tokens)[0];
         if (tok.type == Token_Ident) {
             slice_advance(tokens, 1);
             return lookup(env, tok.atom, tok.loc)->value;
         } else {
-            fprintf(stderr, "%s:%d:%d: An identifier is required for function quoting, not %s.\n", LOCFMT(tok.loc), format_token(tok));
-            exit(1);
+            return fail(env->switch_failhard, tok.loc, "An identifier is required for function quoting, not %s.", format_token(tok));
         }
     } else if (tok.type == Token_Lparen) {
         slice_advance(tokens, 1);
@@ -1207,8 +1287,7 @@ Value eval(Slice<Token> *tokens, Env *env) {
         }
         return {.type = Value_Block, .body = body};
     } else {
-        fprintf(stderr, "%s:%d:%d: Unexpected start of expression: %s.\n", LOCFMT(tok.loc), format_token(tok));
-        exit(1);
+        return fail(env->switch_failhard, tok.loc, "Unexpected start of expression: %s.", format_token(tok));
     }
 }
 
@@ -1257,9 +1336,13 @@ void debugger_repl(Slice<Token> *tokens, Env *env) {
             }
             slice_advance(tokens, n);
         } else if (cmd == lit_slice("p") || cmd == lit_slice("print")) {
-            Slice<Token> toks = tokenize("<debug>", arg);
-            Value result = eval(&toks, env);
-            fprintf(stderr, "%s\n", format_value(result, true));
+            Error err = {};
+            Slice<Token> toks = tokenize("<debug>", arg, &err);
+            if (!err.msg) {
+                Value result = eval(&toks, env);
+                if (result.type != Value_Failure)
+                    fprintf(stderr, "%s\n", format_value(result, true));
+            }
         }
     }
 }
@@ -1269,6 +1352,9 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
 
     if (env->switch_stepping) debugger_repl(tokens, env);
 
+    if (env->switch_narrating && env->stashed_comment.type == Value_ValueComment)
+        fprintf(stderr, "%s:%d:%d: %s\n", LOCFMT(env->stashed_comment.c.loc), format_value(*env->stashed_comment.c.value, false));
+
     if ((*tokens)[0].type == Token_Line) {
         slice_advance(tokens, 1);
         env->stashed_comment = {};
@@ -1277,23 +1363,17 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
         SourceLoc loc = (*tokens)[0].loc;
         slice_advance(tokens, 1);
         Value cond = eval(tokens, env);
-        if (cond.type != Value_Bool) {
-            fprintf(stderr, "%s:%d:%d: if condition must be of type bool, not %s.\n", LOCFMT(loc), format_value_type(cond.type));
-            exit(1);
-        }
+        if (cond.type != Value_Bool)
+            return fail(env->switch_failhard, loc, "if condition must be of type bool, not %s.", format_value_type(cond.type));
         Value iftrue = eval(tokens, env);
-        if (iftrue.type != Value_Block) {
-            fprintf(stderr, "%s:%d:%d: if body must be of type block, not %s.\n", LOCFMT(loc), format_value_type(iftrue.type));
-            exit(1);
-        }
+        if (iftrue.type != Value_Block)
+            return fail(env->switch_failhard, loc, "if body must be of type block, not %s.", format_value_type(iftrue.type));
         Value iffalse = {};
         if (tokens->count && (*tokens)[0].type == Token_KwElse) {
             slice_advance(tokens, 1);
             iffalse = eval(tokens, env);
-            if (iffalse.type != Value_Block) {
-                fprintf(stderr, "%s:%d:%d: else body must be of type block, not %s.\n", LOCFMT(loc), format_value_type(iffalse.type));
-                exit(1);
-            }
+            if (iffalse.type != Value_Block)
+                return fail(env->switch_failhard, loc, "else body must be of type block, not %s.\n", format_value_type(iffalse.type));
         }
         Value result = {.type = Value_Bool, .b = false};
         if (cond.b)
@@ -1304,24 +1384,16 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
     } else if ((*tokens)[0].type == Token_KwFor) {
         SourceLoc loc = (*tokens)[0].loc;
         slice_advance(tokens, 1);
-        if (!tokens->count || (*tokens)[0].type != Token_Ident) {
-            if (tokens->count)
-                fprintf(stderr, "%s:%d:%d: ", LOCFMT((*tokens)[0].loc));
-            fprintf(stderr, "Expected identifier in for header, got: %s.\n", tokens->count ? format_token((*tokens)[0]) : "EOF");
-            exit(1);
-        }
+        if (!tokens->count || (*tokens)[0].type != Token_Ident)
+            return fail(env->switch_failhard, loc, "Expected identifier in for header, got: %s.", tokens->count ? format_token((*tokens)[0]) : "EOF");
         Atom var = (*tokens)[0].atom;
         slice_advance(tokens, 1);
         Value list = eval(tokens, env);
-        if (list.type != Value_List) {
-            fprintf(stderr, "%s:%d:%d: for can only iterate over lists, not %s.\n", LOCFMT(loc), format_value(list, true));
-            exit(1);
-        }
+        if (list.type != Value_List)
+            return fail(env->switch_failhard, loc, "for can only iterate over lists, not %s.", format_value(list, true));
         Value body = eval(tokens, env);
-        if (body.type != Value_Block) {
-            fprintf(stderr, "%s:%d:%d: for body must be of type block, not %s.\n", LOCFMT(loc), format_value_type(body.type));
-            exit(1);
-        }
+        if (body.type != Value_Block)
+            return fail(env->switch_failhard, loc, "for body must be of type block, not %s.", format_value_type(body.type));
         Value result = {.type = Value_Bool, .b = false};
         for (s64 i = 0; i < list.list.count; i++) {
             Env newenv = new_environment(env);
@@ -1335,24 +1407,16 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
     } else if ((*tokens)[0].type == Token_KwMacro) {
         SourceLoc loc = (*tokens)[0].loc;
         slice_advance(tokens, 1);
-        if (!tokens->count) {
-            fprintf(stderr, "%s:%d:%d: Macro definition requires a name.\n", LOCFMT(loc));
-            exit(1);
-        }
-        if ((*tokens)[0].type != Token_Ident) {
-            fprintf(stderr, "%s:%d:%d: Macro name must be an identifier, not %s.\n", LOCFMT(loc), format_token((*tokens)[0]));
-            exit(1);
-        }
+        if (!tokens->count)
+            return fail(env->switch_failhard, loc, "Macro definition requires a name.");
+        if ((*tokens)[0].type != Token_Ident)
+            return fail(env->switch_failhard, loc, "Macro name must be an identifier, not %s.", format_token((*tokens)[0]));
         Atom name = (*tokens)[0].atom;
         slice_advance(tokens, 1);
-        if (!tokens->count) {
-            fprintf(stderr, "%s:%d:%d: Macro definition requires parameter count.\n", LOCFMT(loc));
-            exit(1);
-        }
-        if ((*tokens)[0].type != Token_Int) {
-            fprintf(stderr, "%s:%d:%d: Macro name must be an identifier, not %s.\n", LOCFMT(loc), format_token((*tokens)[0]));
-            exit(1);
-        }
+        if (!tokens->count)
+            return fail(env->switch_failhard, loc, "Macro definition requires parameter count.");
+        if ((*tokens)[0].type != Token_Int)
+            return fail(env->switch_failhard, loc, "Macro name must be an identifier, not %s.", format_token((*tokens)[0]));
         s64 param_count = (*tokens)[0].i;
         slice_advance(tokens, 1);
         Slice<Token> body = get_macro_arg(tokens);
@@ -1376,22 +1440,18 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
             slice_has_prefix(env->stashed_comment.c.value->s, lit_slice("TESTWITH ")) &&
             (*tokens)[0].type != Token_ValComment)
         {
-            Slice<Token> tests = tokenize("<TESTWITH>", env->stashed_comment.c.value->s);
+            Error err = {};
+            Slice<Token> tests = tokenize("<TESTWITH>", env->stashed_comment.c.value->s, &err);
+            if (err.msg) return fail(env->switch_failhard, err.loc, "TESTWITH: %s.", err.msg);
             Slice<Token> stmt;
             Value have;
             while (tests.count) {
                 SourceLoc loc = tests[0].loc;
-                if (tests[0].type != Token_Ident || tests[0].atom != atom_testwith) {
-                    fprintf(stderr, "%s:%d:%d: Unexpected token in TESTWITH directive: %s.\n", LOCFMT(tests[0].loc), format_token(tests[0]));
-                    exit(1);
-                }
+                if (tests[0].type != Token_Ident || tests[0].atom != atom_testwith)
+                    return fail(env->switch_failhard, tests[0].loc, "Unexpected token in TESTWITH directive: %s.", format_token(tests[0]));
                 slice_advance(&tests, 1);
-                if (!tests.count || tests[0].type != Token_Ident) {
-                    if (tests.count)
-                        fprintf(stderr, "%s:%d:%d: ", LOCFMT(tests[0].loc));
-                    fprintf(stderr, "Expected identifier in TESTWITH directive, got: %s.\n", tests.count ? format_token(tests[0]) : "EOF");
-                    exit(1);
-                }
+                if (!tests.count || tests[0].type != Token_Ident)
+                    return fail(env->switch_failhard, loc, "Expected identifier in TESTWITH directive, got: %s.", tests.count ? format_token(tests[0]) : "EOF");
                 Atom var = tests[0].atom;
                 slice_advance(&tests, 1);
                 Value input = eval(&tests, env);
@@ -1400,11 +1460,9 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
                 Env newenv = new_environment(env);
                 bind(&newenv, var)->value = input;
                 have = eval(&stmt, &newenv);
-                if (have != expected) {
-                    fprintf(stderr, "%s:%d:%d: TESTWITH failure: With %.*s=%s the statement produced %s but %s was required.\n",
-                        LOCFMT(loc), ATOMFMT(var), format_value(input, true), format_value(have, true), format_value(expected, true));
-                    exit(1);
-                }
+                if (have != expected)
+                    return fail(env->switch_failhard, loc, "TESTWITH failure: With %.*s=%s the statement produced %s but %s was required.",
+                        ATOMFMT(var), format_value(input, true), format_value(have, true), format_value(expected, true));
                 free_environment(&newenv);
             }
             *tokens = stmt;
@@ -1422,13 +1480,13 @@ Value exec_stmt(Slice<Token> *tokens, Env *env) {
             ) {
                 Slice<u8> expr = env->stashed_comment.c.value->s;
                 slice_advance(&expr, 5);
-                Slice<Token> toks = tokenize("<TEST>", expr);
+                Error err = {};
+                Slice<Token> toks = tokenize("<TEST>", expr, &err);
+                if (err.msg) return fail(env->switch_failhard, loc, "TEST: %s.", err.msg);
                 Value expected = eval(&toks, env);
-                if (v != expected) {
-                    fprintf(stderr, "%s:%d:%d: TEST failure: Expression produced %s but %s was required.\n", LOCFMT(loc),
+                if (v != expected)
+                    return fail(env->switch_failhard, loc, "TEST failure: Expression produced %s but %s was required.\n",
                         format_value(v, true), format_value(expected, true));
-                    exit(1);
-                }
                 env->stashed_comment = {};
             }
             return v;
@@ -1513,65 +1571,45 @@ int main(int argc, char **argv) {
     BIND_BUILTIN1("iota+", b_iota_plus, 2);
     BIND_BUILTIN(eval, 1);
     BIND_BUILTIN(apply, 2);
+    BIND_BUILTIN(recover, 1);
     BIND_BUILTIN(getparam, 1);
     BIND_BUILTIN(floor, 1);
     BIND_BUILTIN(sqrt, 1);
     BIND_BUILTIN(sin, 1);
     BIND_BUILTIN(cos, 1);
     BIND_BUILTIN1("float->int", b_float2int, 1);
+    BIND_BUILTIN(type, 1);
+    BIND_BUILTIN(len, 1);
+    BIND_BUILTIN(at, 2);
+    BIND_BUILTIN(error, 1);
 #undef BIND_BUILTIN
 #undef BIND_BUILTIN1
     bind(&env, intern(lit_slice("yes")))->value = {.type = Value_Bool, .b = true};
     bind(&env, intern(lit_slice("no")))->value = {.type = Value_Bool, .b = false};
     {
-        Token body[] = {
-            {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("bind"))},
-            {.loc = {}, .type = Token_Quote, {}},
-            {.loc = {}, .type = Token_Comma, {}},
-            {.loc = {}, .type = Token_Int, .i = 0},
-            {.loc = {}, .type = Token_Lbracket, {}},
-                {.loc = {}, .type = Token_Comma, {}},
-                {.loc = {}, .type = Token_Int, .i = 2},
-            {.loc = {}, .type = Token_Rbracket, {}},
-
-            {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("assoc"))},
-            {.loc = {}, .type = Token_Quote, {}},
-            {.loc = {}, .type = Token_Comma, {}},
-            {.loc = {}, .type = Token_Int, .i = 0},
-            {.loc = {}, .type = Token_Quote, {}},
-            {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("arity"))},
-            {.loc = {}, .type = Token_Comma, {}},
-            {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("len"))},
-            {.loc = {}, .type = Token_Int, .i = 1},
-
-            {.loc = {}, .type = Token_Comma, {}},
-            {.loc = {}, .type = Token_KwFor, {}},
-            {.loc = {}, .type = Token_Int, .i = 1},
-            {.loc = {}, .type = Token_Lbracket, {}},
-                {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("store"))},
-                {.loc = {}, .type = Token_Quote, {}},
-                {.loc = {}, .type = Token_Comma, {}},
-                {.loc = {}, .type = Token_Int, .i = 0},
-                {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("+"))},
-                {.loc = {}, .type = Token_Lbracket, {}},
-                    {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("bind"))},
-                    {.loc = {}, .type = Token_Quote, {}},
-                    {.loc = {}, .type = Token_Comma, {}},
-                    {.loc = {}, .type = Token_Int, .i = 3},
-                    {.loc = {}, .type = Token_Ident, .atom = intern(lit_slice("getparam"))},
-                    {.loc = {}, .type = Token_Comma, {}},
-                    {.loc = {}, .type = Token_Int, .i = 4},
-                {.loc = {}, .type = Token_Rbracket, {}},
-                {.loc = {}, .type = Token_Amp, {}},
-                {.loc = {}, .type = Token_Comma, {}},
-                {.loc = {}, .type = Token_Int, .i = 0},
-            {.loc = {}, .type = Token_Rbracket, {}},
-        };
-        bind(&env, intern(lit_slice("defun")))->value = {.type = Value_Macro, .macro = {.param_count = 3, .body = {.data = body, .count = ARRAY_COUNT(body)}}};
+        Error err = {};
+        const char s[] = R"EOT(
+            bind ',0 [ ,2 ]
+            assoc ',0 'arity ,len 1
+            ,for 1 [
+                store ',0 + [ bind ',3 getparam ,4 ] &,0
+            ]
+        )EOT";
+        Slice<Token> body = tokenize("<defun macro>", lit_slice(s), &err);
+        assert(!err.msg);
+        bind(&env, intern(lit_slice("defun")))->value = {.type = Value_Macro, .macro = {.param_count = 3, .body = body}};
     }
+    {
+        Error err = {};
+        Slice<Token> body = tokenize("<debug macro>", lit_slice("println << ,for 0 [ ',1 \": \" ,1 \"  \" ] >>"), &err);
+        assert(!err.msg);
+        bind(&env, intern(lit_slice("debug")))->value = {.type = Value_Macro, .macro = {.param_count = 1, .body = body}};
+    }
+
 
     if (!input) {
         printf("Entering Flamingo REPL.\nExit by pressing Ctrl-C whenever, Ctrl-D on an empty line, or typing .quit.\n\n");
+        env.switch_failhard = false;
         for (;;) {
             char line[1024];
             printf("> ");
@@ -1582,9 +1620,18 @@ int main(int argc, char **argv) {
             if (strcmp(line, ".quit") == 0) break;
 
             Slice<u8> input = copy_slice_to_arena(&arena, str_slice(line));
-            Slice<Token> tokens = tokenize("<repl>", input);
-            Value v = exec_block(tokens, &env);
-            printf("%s\n", format_value(v, true));
+            Error err = {};
+            Slice<Token> tokens = tokenize("<repl>", input, &err);
+            if (err.msg) {
+                fprintf(stderr, "%s:%d:%d: %s\n", LOCFMT(err.loc), err.msg);
+            } else {
+                Value v = exec_block(tokens, &env);
+                if (v.type == Value_Failure) {
+                    fprintf(stderr, "%s:%d:%d: %s\n", LOCFMT(v.fail.loc), v.fail.msg);
+                } else {
+                    printf("%s\n", format_value(v, true));
+                }
+            }
         }
     } else {
         Slice<u8> src;
@@ -1592,7 +1639,12 @@ int main(int argc, char **argv) {
             fprintf(stderr, "Could not read input file: %s.\n", input);
             exit(1);
         }
-        Slice<Token> tokens = tokenize(input, src);
+        Error err = {};
+        Slice<Token> tokens = tokenize(input, src, &err);
+        if (err.msg) {
+            fprintf(stderr, "%s:%d:%d: %s\n", LOCFMT(err.loc), err.msg);
+            return 1;
+        }
 
         exec_block(tokens, &env);
     }
