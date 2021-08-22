@@ -74,7 +74,7 @@ impl WebRunner {
         }
     }
 
-    pub async fn generate_visualizer_file(&self, connection_id: i64) -> Result<PathBuf, GenerateVisualizerDataError> {
+    pub async fn generate_visualizer_file(&self, connection_id: String) -> Result<PathBuf, GenerateVisualizerDataError> {
         let mut res = Vec::new();
 
         let mut indices = HashMap::new();
