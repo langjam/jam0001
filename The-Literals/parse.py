@@ -11,6 +11,7 @@ from abstract_syntax_trees import (
     SetStmt,
     Stmt,
     Stmts,
+    StringLiteral,
     Variable,
     reset_functions,
     reset_env
@@ -265,6 +266,9 @@ class Parser:
         if token == Token.NUMBER:
             operand_token, operand_value = self.expect(Token.NUMBER)
             return Number(int(operand_value))
+        elif token == Token.STRING_LITERAL:
+            operand_token, operand_value = self.expect(Token.STRING_LITERAL)
+            return StringLiteral(operand_value.strip("\""))
         elif token == Token.IDENTIFIER_WORD:
             varname = self.parse_identifier()
             return Variable(varname)
@@ -531,10 +535,9 @@ if __name__ == "__main__":
     # parser = Parser(program(function_call_with_params_and_result))
     # parser.parse()
 
-    input_file = "samples/fib.comment"
+    input_file = "samples/string_literal.comment"
     with open(input_file, "r") as f:
         text = f.read()
-
     tokeniser = Tokeniser(text)
     parser = Parser(tokeniser.tokenise().__next__)
     program = parser.parse()

@@ -31,6 +31,7 @@ class Token(Enum):
     PARAM = auto()
     RETURNVAR = auto()
     SETVAR = auto()
+    STRING_LITERAL = auto()
     THEN = auto()
     TO = auto()
     WITH = auto()
@@ -83,6 +84,14 @@ class Tokeniser:
             self.advance()
         if not self.done() and self.text[self.current] == ".":
             return Token.FUNCTION_NAME
+
+    def string_literal(self):
+        # A string literal surrounded by double quotes.
+        while self.peek() != "\"":
+            self.advance()
+        self.advance()
+        if not self.done() and self.text[self.current] == ".":
+            return Token.STRING_LITERAL
 
     def ignore(self):
         while self.peek() != "\n":
@@ -181,11 +190,15 @@ class Tokeniser:
             if self.advance_if("with"):
                 return Token.WITH
 
-            if self.advance_if("as"):
+            if self.advance_if("as "):
                 return Token.AS
 
             if ch == ".":
                 return Token.DOT
+
+            # Is it a string literal?
+            if ch == '"':
+                return self.string_literal()
 
             # Is it a positive number?
             if ch.isdigit():
