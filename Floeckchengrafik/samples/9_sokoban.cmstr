@@ -102,7 +102,9 @@ ispospossible = function({
             })?
 
             if(valid : {
-                \\ move
+                \\ move tile
+                list_set(tile : 0 : box_x)?
+                list_set(tile : 1 : box_y)?
             })?
         })?
     })?
