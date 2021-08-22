@@ -183,7 +183,7 @@ let parse_value (decl : (string * expr) list) (comment : tok list) : value =
 let parse_operation (decl : (string * expr) list) (comment : tok list) : operation =
   let f x = Leaf (parse_value decl x) in
   let rec search (prev : tok list) = function
-    | [] -> dev_error "no operation"
+    | [] -> failwith "no operation"
     | t::q -> (
         match string_of_tok t with
         | "if" ->
