@@ -10,6 +10,7 @@ impl<'a> Parser<'a> {
             match self.rest().chars().next().unwrap() {
                 '[' => trains.push(self.parse_train()?),
                 '{' => stations.push(self.parse_station()?),
+                '\r' => self.current += 1,
                 '\n' => self.current += 1,
                 _ => {
                     return Err(ParserError {
