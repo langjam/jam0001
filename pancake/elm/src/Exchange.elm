@@ -25,5 +25,5 @@ compilationFail errorLines =
 
 
 type alias StateInfo =
-    { mode : String
+    { universe : String
     }

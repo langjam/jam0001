@@ -1,27 +1,10 @@
 module Language.AST exposing (..)
 
-import Array exposing (Array)
-
-
-
 -- AST
 
 
 type alias AST =
     List Instruction
-
-
-
--- CODE
-
-
-type alias Code =
-    Array Instruction
-
-
-toCode : AST -> Code
-toCode =
-    Array.fromList
 
 
 type alias Instruction =
@@ -55,9 +38,6 @@ universeToString universe =
 -- ATOM
 
 
-{-| Int, Str, and List are always Quoted.
-Functions might not be quoted though.
--}
 type Atom
     = Int Int
     | Str String
@@ -67,31 +47,11 @@ type Atom
     | Actual String
 
 
-toInt : Atom -> Maybe Int
-toInt atom =
+isLabel : Atom -> Bool
+isLabel atom =
     case atom of
-        Int int ->
-            Just int
+        Label _ ->
+            True
 
         _ ->
-            Nothing
-
-
-toStr : Atom -> Maybe String
-toStr atom =
-    case atom of
-        Str str ->
-            Just str
-
-        _ ->
-            Nothing
-
-
-toList : Atom -> Maybe (List Atom)
-toList atom =
-    case atom of
-        List list ->
-            Just list
-
-        _ ->
-            Nothing
+            False

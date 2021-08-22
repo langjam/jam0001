@@ -1,51 +1,157 @@
 module Language.Core exposing (..)
 
 import Array exposing (Array)
+import Dict exposing (Dict)
 import Language.AST as AST
     exposing
         ( AST
-        , Atom(..)
-        , Code
+        , Atom
         , Instruction
         , Universe(..)
         )
+import Language.Parser exposing (identifier)
 import Maybe.Extra as MaybeX
 
 
 type alias Stack =
-    List Atom
+    List Value
+
+
+
+-- CODE
+
+
+type alias Code =
+    Array Instruction
+
+
+toCode : AST -> Code
+toCode =
+    List.filter (Tuple.second >> AST.isLabel >> not) >> Array.fromList
+
+
+toLabels : AST -> Dict String Int
+toLabels =
+    let
+        enumerate id ( _, atom ) =
+            ( id, atom )
+
+        label ( id, atom ) =
+            case atom of
+                AST.Label l ->
+                    Just ( l, id )
+
+                _ ->
+                    Nothing
+    in
+    List.indexedMap enumerate >> List.filterMap label >> Dict.fromList
+
+
+
+-- RUNTIME
 
 
 type alias Runtime =
     { code : Code
+    , ip : Int -- Instruction pointer.
+    , universe : Universe
 
     -- Internals.
+    , labels : Dict String Int
+    , names : Dict String Value
     , stack : Stack
-    , ip : Int -- Instruction pointer.
     , ok : Bool
-    , universe : Universe
     }
 
 
 init : AST -> Runtime
 init ast =
-    { code = AST.toCode ast
-    , stack = []
+    { code = toCode ast
     , ip = 0
-    , ok = True
     , universe = Alpha
+    , labels = toLabels ast
+    , names =
+        Dict.fromList
+            [ ( "+", Fun add )
+            ]
+    , stack = []
+    , ok = True
     }
 
 
+{-| `exec` deals with a series of `Atom`s. Here's how they look:
+
+    type Atom
+        = Int Int
+        | Str String
+        | List (List Atom)
+        | Quoted String
+        | Actual String
+        | Label String -- always skipped
+
+-}
 exec : Runtime -> Instruction -> Runtime
 exec runtime instruction =
     case instruction of
         ( universe, atom ) ->
             if runtime.universe == universe then
-                next runtime
+                dealWithAtom atom runtime
 
             else
-                runtime
+                -- Skip this instruction as it's from a different universe.
+                -- Labels are always skipped since runtime is never in Lambda!
+                next runtime
+
+
+{-| All atoms but the `Actual` are considered to be `Quoted` and are therefore,
+pushed onto the `stack` immediately.
+
+`Quoted` identifiers may belong to one of 3 groups:
+
+1.  Command
+2.  Label
+3.  Name
+4.  Unknown
+
+-}
+dealWithAtom : Atom -> Runtime -> Runtime
+dealWithAtom atom runtime =
+    case atom of
+        AST.Actual identifier ->
+            let
+                command =
+                    Dict.get identifier commands
+
+                label =
+                    Dict.get identifier runtime.labels
+
+                name =
+                    Dict.get identifier runtime.names
+            in
+            case command of
+                Just alter ->
+                    alter runtime
+
+                Nothing ->
+                    case label of
+                        Just to ->
+                            jump to runtime
+
+                        Nothing ->
+                            case name of
+                                Just v ->
+                                    case v of
+                                        Fun f ->
+                                            runtime
+
+                                        other ->
+                                            push other runtime
+
+                                Nothing ->
+                                    panic runtime
+
+        _ ->
+            push (toValue atom) runtime
 
 
 {-| `Command` has access to `Runtime` and can do whatever it pleases.
@@ -55,51 +161,67 @@ type alias Command =
     Runtime -> Runtime
 
 
+commands : Dict String Command
+commands =
+    Dict.fromList
+        [ ( "pass", next ) ]
+
+
 next : Command
 next runtime =
     { runtime | ip = runtime.ip + 1 }
 
 
-step : Runtime -> Runtime
+jump : Int -> Command
+jump ip runtime =
+    { runtime | ip = ip }
+
+
+step : Command
 step runtime =
     MaybeX.unwrap (panic runtime) (exec runtime) <|
         Array.get runtime.ip runtime.code
 
 
-panic : Runtime -> Runtime
+panic : Command
 panic runtime =
     { runtime | ok = False }
+
+
+push : Value -> Command
+push atom runtime =
+    { runtime | stack = atom :: runtime.stack }
 
 
 {-| `Func` is a restricted function that only has access to its arguments.
 It can be partially applied since every `Func` is curried.
 -}
 type alias Func =
-    { args : Array Atom
+    { args : Array Value
     , argi : Int
     , func : Executioner
     }
 
 
 type alias Executioner =
-    Array Atom -> Maybe Atom
+    Array Value -> Maybe Value
 
 
 func : Int -> Executioner -> Func
 func argc f =
     let
-        dummyAtom =
+        dummyValue =
             Int 0
     in
-    { args = Array.repeat argc dummyAtom
+    { args = Array.repeat argc dummyValue
     , argi = 0
     , func = f
     }
 
 
-app : Func -> Atom -> Func
-app f a =
-    { args = Array.set f.argi a f.args
+app : Func -> Value -> Func
+app f v =
+    { args = Array.set f.argi v f.args
     , argi = f.argi + 1
     , func = f.func
     }
@@ -114,6 +236,73 @@ argsLeft f =
 -- LIBRARY
 
 
+type Value
+    = Int Int
+    | Char Char
+    | List (List Value)
+    | Fun Func
+    | Name String
+
+
+toValue : Atom -> Value
+toValue atom =
+    case atom of
+        AST.Int int ->
+            Int int
+
+        AST.Str str ->
+            List <| List.map Char <| String.toList str
+
+        AST.List atoms ->
+            List <| List.map toValue atoms
+
+        AST.Quoted id ->
+            Name id
+
+        _ ->
+            Debug.todo "unreachable"
+
+
+toInt : Value -> Maybe Int
+toInt value =
+    case value of
+        Int int ->
+            Just int
+
+        _ ->
+            Nothing
+
+
+toChar : Value -> Maybe Char
+toChar value =
+    case value of
+        Char char ->
+            Just char
+
+        _ ->
+            Nothing
+
+
+toList : Value -> Maybe (List Value)
+toList value =
+    case value of
+        List list ->
+            Just list
+
+        _ ->
+            Nothing
+
+
+toFunc : Value -> Maybe Func
+toFunc value =
+    case value of
+        Fun f ->
+            Just f
+
+        _ ->
+            Nothing
+
+
 add : Func
 add =
     func 2 sum
@@ -125,5 +314,5 @@ add =
 
 sum : Executioner
 sum =
-    MaybeX.traverseArray AST.toInt
+    MaybeX.traverseArray toInt
         >> Maybe.map (Array.toList >> List.sum >> Int)

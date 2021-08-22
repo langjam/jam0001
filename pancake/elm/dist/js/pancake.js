@@ -2359,6 +2359,43 @@ function _Platform_mergeExportsDebug(moduleName, obj, exports)
 
 
 
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
+
+
+
 
 // STRINGS
 
@@ -2991,8 +3028,8 @@ var $author$project$Language$AST$Alpha = {$: 'Alpha'};
 var $author$project$Main$Compiled = function (a) {
 	return {$: 'Compiled', a: a};
 };
-var $author$project$Exchange$StateInfo = function (mode) {
-	return {mode: mode};
+var $author$project$Exchange$StateInfo = function (universe) {
+	return {universe: universe};
 };
 var $author$project$Exchange$compilationFail = function (errorLines) {
 	return {errorLines: errorLines, successful: false, typedLines: _List_Nil};
@@ -3076,6 +3113,331 @@ var $elm_community$result_extra$Result$Extra$combine = A2(
 	$elm$core$List$foldr,
 	$elm$core$Result$map2($elm$core$List$cons),
 	$elm$core$Result$Ok(_List_Nil));
+var $author$project$Language$Core$Fun = function (a) {
+	return {$: 'Fun', a: a};
+};
+var $author$project$Language$Core$Int = function (a) {
+	return {$: 'Int', a: a};
+};
+var $elm$core$Array$repeat = F2(
+	function (n, e) {
+		return A2(
+			$elm$core$Array$initialize,
+			n,
+			function (_v0) {
+				return e;
+			});
+	});
+var $author$project$Language$Core$func = F2(
+	function (argc, f) {
+		var dummyValue = $author$project$Language$Core$Int(0);
+		return {
+			argi: 0,
+			args: A2($elm$core$Array$repeat, argc, dummyValue),
+			func: f
+		};
+	});
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $author$project$Language$Core$toInt = function (value) {
+	if (value.$ === 'Int') {
+		var _int = value.a;
+		return $elm$core$Maybe$Just(_int);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
+var $elm$core$Array$foldl = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (node.$ === 'SubTree') {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldl, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldl, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldl,
+			func,
+			A3($elm$core$Elm$JsArray$foldl, helper, baseCase, tree),
+			tail);
+	});
+var $elm$core$Maybe$map2 = F3(
+	function (func, ma, mb) {
+		if (ma.$ === 'Nothing') {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var a = ma.a;
+			if (mb.$ === 'Nothing') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var b = mb.a;
+				return $elm$core$Maybe$Just(
+					A2(func, a, b));
+			}
+		}
+	});
+var $elm$core$Elm$JsArray$push = _JsArray_push;
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$Elm$JsArray$singleton = _JsArray_singleton;
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
+var $elm$core$Array$insertTailInTree = F4(
+	function (shift, index, tail, tree) {
+		var pos = $elm$core$Array$bitMask & (index >>> shift);
+		if (_Utils_cmp(
+			pos,
+			$elm$core$Elm$JsArray$length(tree)) > -1) {
+			if (shift === 5) {
+				return A2(
+					$elm$core$Elm$JsArray$push,
+					$elm$core$Array$Leaf(tail),
+					tree);
+			} else {
+				var newSub = $elm$core$Array$SubTree(
+					A4($elm$core$Array$insertTailInTree, shift - $elm$core$Array$shiftStep, index, tail, $elm$core$Elm$JsArray$empty));
+				return A2($elm$core$Elm$JsArray$push, newSub, tree);
+			}
+		} else {
+			var value = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (value.$ === 'SubTree') {
+				var subTree = value.a;
+				var newSub = $elm$core$Array$SubTree(
+					A4($elm$core$Array$insertTailInTree, shift - $elm$core$Array$shiftStep, index, tail, subTree));
+				return A3($elm$core$Elm$JsArray$unsafeSet, pos, newSub, tree);
+			} else {
+				var newSub = $elm$core$Array$SubTree(
+					A4(
+						$elm$core$Array$insertTailInTree,
+						shift - $elm$core$Array$shiftStep,
+						index,
+						tail,
+						$elm$core$Elm$JsArray$singleton(value)));
+				return A3($elm$core$Elm$JsArray$unsafeSet, pos, newSub, tree);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$unsafeReplaceTail = F2(
+	function (newTail, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var originalTailLen = $elm$core$Elm$JsArray$length(tail);
+		var newTailLen = $elm$core$Elm$JsArray$length(newTail);
+		var newArrayLen = len + (newTailLen - originalTailLen);
+		if (_Utils_eq(newTailLen, $elm$core$Array$branchFactor)) {
+			var overflow = _Utils_cmp(newArrayLen >>> $elm$core$Array$shiftStep, 1 << startShift) > 0;
+			if (overflow) {
+				var newShift = startShift + $elm$core$Array$shiftStep;
+				var newTree = A4(
+					$elm$core$Array$insertTailInTree,
+					newShift,
+					len,
+					newTail,
+					$elm$core$Elm$JsArray$singleton(
+						$elm$core$Array$SubTree(tree)));
+				return A4($elm$core$Array$Array_elm_builtin, newArrayLen, newShift, newTree, $elm$core$Elm$JsArray$empty);
+			} else {
+				return A4(
+					$elm$core$Array$Array_elm_builtin,
+					newArrayLen,
+					startShift,
+					A4($elm$core$Array$insertTailInTree, startShift, len, newTail, tree),
+					$elm$core$Elm$JsArray$empty);
+			}
+		} else {
+			return A4($elm$core$Array$Array_elm_builtin, newArrayLen, startShift, tree, newTail);
+		}
+	});
+var $elm$core$Array$push = F2(
+	function (a, array) {
+		var tail = array.d;
+		return A2(
+			$elm$core$Array$unsafeReplaceTail,
+			A2($elm$core$Elm$JsArray$push, a, tail),
+			array);
+	});
+var $elm_community$maybe_extra$Maybe$Extra$traverseArray = function (f) {
+	return A2(
+		$elm$core$Array$foldl,
+		function (x) {
+			return A2(
+				$elm$core$Maybe$map2,
+				$elm$core$Array$push,
+				f(x));
+		},
+		$elm$core$Maybe$Just($elm$core$Array$empty));
+};
+var $author$project$Language$Core$sum = A2(
+	$elm$core$Basics$composeR,
+	$elm_community$maybe_extra$Maybe$Extra$traverseArray($author$project$Language$Core$toInt),
+	$elm$core$Maybe$map(
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$Array$toList,
+			A2($elm$core$Basics$composeR, $elm$core$List$sum, $author$project$Language$Core$Int))));
+var $author$project$Language$Core$add = A2($author$project$Language$Core$func, 2, $author$project$Language$Core$sum);
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $elm$core$Dict$Black = {$: 'Black'};
+var $elm$core$Dict$RBNode_elm_builtin = F5(
+	function (a, b, c, d, e) {
+		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
+	});
+var $elm$core$Dict$Red = {$: 'Red'};
+var $elm$core$Dict$balance = F5(
+	function (color, key, value, left, right) {
+		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
+			var _v1 = right.a;
+			var rK = right.b;
+			var rV = right.c;
+			var rLeft = right.d;
+			var rRight = right.e;
+			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
+				var _v3 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var lLeft = left.d;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					key,
+					value,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					rK,
+					rV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, left, rLeft),
+					rRight);
+			}
+		} else {
+			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
+				var _v5 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var _v6 = left.d;
+				var _v7 = _v6.a;
+				var llK = _v6.b;
+				var llV = _v6.c;
+				var llLeft = _v6.d;
+				var llRight = _v6.e;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					lK,
+					lV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, lRight, right));
+			} else {
+				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
+			}
+		}
+	});
+var $elm$core$Basics$compare = _Utils_compare;
+var $elm$core$Dict$insertHelp = F3(
+	function (key, value, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
+		} else {
+			var nColor = dict.a;
+			var nKey = dict.b;
+			var nValue = dict.c;
+			var nLeft = dict.d;
+			var nRight = dict.e;
+			var _v1 = A2($elm$core$Basics$compare, key, nKey);
+			switch (_v1.$) {
+				case 'LT':
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						A3($elm$core$Dict$insertHelp, key, value, nLeft),
+						nRight);
+				case 'EQ':
+					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
+				default:
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						nLeft,
+						A3($elm$core$Dict$insertHelp, key, value, nRight));
+			}
+		}
+	});
+var $elm$core$Dict$insert = F3(
+	function (key, value, dict) {
+		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
+		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, dict) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$Dict$insert, key, value, dict);
+			}),
+		$elm$core$Dict$empty,
+		assocs);
+};
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -3111,31 +3473,26 @@ var $elm$core$Array$fromList = function (list) {
 		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
 	}
 };
-var $author$project$Language$AST$toCode = $elm$core$Array$fromList;
-var $author$project$Language$Core$init = function (ast) {
-	return {
-		code: $author$project$Language$AST$toCode(ast),
-		ip: 0,
-		ok: true,
-		stack: _List_Nil,
-		universe: $author$project$Language$AST$Alpha
-	};
-};
-var $author$project$Language$Pancake$compile = function (parsed) {
-	var _v0 = $elm_community$result_extra$Result$Extra$combine(parsed);
-	if (_v0.$ === 'Ok') {
-		var ast = _v0.a;
-		return $elm$core$Result$Ok(
-			$author$project$Language$Core$init(ast));
+var $author$project$Language$AST$isLabel = function (atom) {
+	if (atom.$ === 'Label') {
+		return true;
 	} else {
-		return $elm$core$Result$Err(parsed);
+		return false;
 	}
 };
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
+var $elm$core$Basics$not = _Basics_not;
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $author$project$Language$Core$toCode = A2(
+	$elm$core$Basics$composeR,
+	$elm$core$List$filter(
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$Tuple$second,
+			A2($elm$core$Basics$composeR, $author$project$Language$AST$isLabel, $elm$core$Basics$not))),
+	$elm$core$Array$fromList);
 var $elm$core$List$maybeCons = F3(
 	function (f, mx, xs) {
 		var _v0 = f(mx);
@@ -3154,9 +3511,57 @@ var $elm$core$List$filterMap = F2(
 			_List_Nil,
 			xs);
 	});
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
+var $author$project$Language$Core$toLabels = function () {
+	var label = function (_v2) {
+		var id = _v2.a;
+		var atom = _v2.b;
+		if (atom.$ === 'Label') {
+			var l = atom.a;
+			return $elm$core$Maybe$Just(
+				_Utils_Tuple2(l, id));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	};
+	var enumerate = F2(
+		function (id, _v0) {
+			var atom = _v0.b;
+			return _Utils_Tuple2(id, atom);
+		});
+	return A2(
+		$elm$core$Basics$composeR,
+		$elm$core$List$indexedMap(enumerate),
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$List$filterMap(label),
+			$elm$core$Dict$fromList));
+}();
+var $author$project$Language$Core$init = function (ast) {
+	return {
+		code: $author$project$Language$Core$toCode(ast),
+		ip: 0,
+		labels: $author$project$Language$Core$toLabels(ast),
+		names: $elm$core$Dict$fromList(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'+',
+					$author$project$Language$Core$Fun($author$project$Language$Core$add))
+				])),
+		ok: true,
+		stack: _List_Nil,
+		universe: $author$project$Language$AST$Alpha
+	};
+};
+var $author$project$Language$Pancake$compile = function (parsed) {
+	var _v0 = $elm_community$result_extra$Result$Extra$combine(parsed);
+	if (_v0.$ === 'Ok') {
+		var ast = _v0.a;
+		return $elm$core$Result$Ok(
+			$author$project$Language$Core$init(ast));
+	} else {
+		return $elm$core$Result$Err(parsed);
+	}
 };
 var $author$project$Language$Pancake$errorLines = function () {
 	var justError = function (p) {
@@ -3910,7 +4315,6 @@ var $elm$core$String$isEmpty = function (string) {
 	return string === '';
 };
 var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
-var $elm$core$Basics$not = _Basics_not;
 var $elm$parser$Parser$Advanced$token = function (_v0) {
 	var str = _v0.a;
 	var expecting = _v0.b;
@@ -4255,11 +4659,202 @@ var $author$project$Main$state = _Platform_outgoingPort(
 			_List_fromArray(
 				[
 					_Utils_Tuple2(
-					'mode',
-					$elm$json$Json$Encode$string($.mode))
+					'universe',
+					$elm$json$Json$Encode$string($.universe))
 				]));
 	});
+var $author$project$Language$Core$next = function (runtime) {
+	return _Utils_update(
+		runtime,
+		{ip: runtime.ip + 1});
+};
+var $author$project$Language$Core$commands = $elm$core$Dict$fromList(
+	_List_fromArray(
+		[
+			_Utils_Tuple2('pass', $author$project$Language$Core$next)
+		]));
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var $author$project$Language$Core$jump = F2(
+	function (ip, runtime) {
+		return _Utils_update(
+			runtime,
+			{ip: ip});
+	});
+var $author$project$Language$Core$panic = function (runtime) {
+	return _Utils_update(
+		runtime,
+		{ok: false});
+};
+var $author$project$Language$Core$push = F2(
+	function (atom, runtime) {
+		return _Utils_update(
+			runtime,
+			{
+				stack: A2($elm$core$List$cons, atom, runtime.stack)
+			});
+	});
+var $author$project$Language$Core$Char = function (a) {
+	return {$: 'Char', a: a};
+};
+var $author$project$Language$Core$List = function (a) {
+	return {$: 'List', a: a};
+};
+var $author$project$Language$Core$Name = function (a) {
+	return {$: 'Name', a: a};
+};
 var $elm$core$Debug$todo = _Debug_todo;
+var $author$project$Language$Core$toValue = function (atom) {
+	switch (atom.$) {
+		case 'Int':
+			var _int = atom.a;
+			return $author$project$Language$Core$Int(_int);
+		case 'Str':
+			var str = atom.a;
+			return $author$project$Language$Core$List(
+				A2(
+					$elm$core$List$map,
+					$author$project$Language$Core$Char,
+					$elm$core$String$toList(str)));
+		case 'List':
+			var atoms = atom.a;
+			return $author$project$Language$Core$List(
+				A2($elm$core$List$map, $author$project$Language$Core$toValue, atoms));
+		case 'Quoted':
+			var id = atom.a;
+			return $author$project$Language$Core$Name(id);
+		default:
+			return _Debug_todo(
+				'Language.Core',
+				{
+					start: {line: 263, column: 13},
+					end: {line: 263, column: 23}
+				})('unreachable');
+	}
+};
+var $author$project$Language$Core$dealWithAtom = F2(
+	function (atom, runtime) {
+		if (atom.$ === 'Actual') {
+			var identifier = atom.a;
+			var name = A2($elm$core$Dict$get, identifier, runtime.names);
+			var label = A2($elm$core$Dict$get, identifier, runtime.labels);
+			var command = A2($elm$core$Dict$get, identifier, $author$project$Language$Core$commands);
+			if (command.$ === 'Just') {
+				var alter = command.a;
+				return alter(runtime);
+			} else {
+				if (label.$ === 'Just') {
+					var to = label.a;
+					return A2($author$project$Language$Core$jump, to, runtime);
+				} else {
+					if (name.$ === 'Just') {
+						var v = name.a;
+						if (v.$ === 'Fun') {
+							var f = v.a;
+							return runtime;
+						} else {
+							var other = v;
+							return A2($author$project$Language$Core$push, other, runtime);
+						}
+					} else {
+						return $author$project$Language$Core$panic(runtime);
+					}
+				}
+			}
+		} else {
+			return A2(
+				$author$project$Language$Core$push,
+				$author$project$Language$Core$toValue(atom),
+				runtime);
+		}
+	});
+var $author$project$Language$Core$exec = F2(
+	function (runtime, instruction) {
+		var universe = instruction.a;
+		var atom = instruction.b;
+		return _Utils_eq(runtime.universe, universe) ? A2($author$project$Language$Core$dealWithAtom, atom, runtime) : $author$project$Language$Core$next(runtime);
+	});
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var $elm_community$maybe_extra$Maybe$Extra$unwrap = F3(
+	function (_default, f, m) {
+		if (m.$ === 'Nothing') {
+			return _default;
+		} else {
+			var a = m.a;
+			return f(a);
+		}
+	});
+var $author$project$Language$Core$step = function (runtime) {
+	return A3(
+		$elm_community$maybe_extra$Maybe$Extra$unwrap,
+		$author$project$Language$Core$panic(runtime),
+		$author$project$Language$Core$exec(runtime),
+		A2($elm$core$Array$get, runtime.ip, runtime.code));
+};
 var $author$project$Language$AST$universeToString = function (universe) {
 	switch (universe.$) {
 		case 'Alpha':
@@ -4309,11 +4904,17 @@ var $author$project$Main$update = F2(
 							$author$project$Language$Pancake$typedLines(parsed))));
 			}
 		} else {
-			return _Utils_Tuple2(
-				model,
-				$author$project$Main$state(
-					$author$project$Exchange$StateInfo(
-						$author$project$Language$AST$universeToString($author$project$Language$AST$Alpha))));
+			if (model.$ === 'Idle') {
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			} else {
+				var runtime = model.a;
+				return _Utils_Tuple2(
+					$author$project$Main$Compiled(
+						$author$project$Language$Core$step(runtime)),
+					$author$project$Main$state(
+						$author$project$Exchange$StateInfo(
+							$author$project$Language$AST$universeToString($author$project$Language$AST$Alpha))));
+			}
 		}
 	});
 var $elm$core$Platform$worker = _Platform_worker;

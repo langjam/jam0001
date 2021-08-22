@@ -2,9 +2,9 @@ port module Main exposing (..)
 
 import Exchange exposing (..)
 import Language.AST as AST exposing (Universe(..))
-import Language.Core exposing (Runtime)
+import Language.Core as Core exposing (Runtime)
 import Language.Pancake as Pancake
-import Language.Parser as Parser exposing (parse)
+import Language.Parser exposing (parse)
 import Platform exposing (Program, worker)
 
 
@@ -80,7 +80,14 @@ update msg model =
                     )
 
         GotStep _ ->
-            ( model, state <| StateInfo <| AST.universeToString Alpha )
+            case model of
+                Idle ->
+                    ( model, Cmd.none )
+
+                Compiled runtime ->
+                    ( Compiled <| Core.step runtime
+                    , state <| StateInfo <| AST.universeToString Alpha
+                    )
 
 
 
