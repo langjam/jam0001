@@ -5,17 +5,19 @@ const Parser = @import("Parser.zig");
 const Eval = @import("Eval.zig");
 
 const src =
-    \\#: This is a comment. :#
-    \\#: This one too.
-    \\#: Can we #: nest :# too? :#
-    \\123 + 123
-    \\2 * 3 - 4 #: inline comment :# / 2 * 33424
-    \\x := 2112
-    \\x
-    \\y := #: Assigning a comment :#
-    \\y
-    \\fn foo(a, b) { a + b }
-    \\foo(3, 6)
+    \\ #: Comments can go to the end of the line...
+    \\ y := #: ...or can be assigned to a variable. :#
+    \\
+    \\ 2 * 4 #: ...or be embedded inline! :# / 2
+    \\
+    \\ #: This function concatenates comments.
+    \\ #: So it receives comments as args and 
+    \\ #: returns a coment. First-class baby!
+    \\ fn comment_concat(a #: comment :#, b #: comment :#) {
+    \\     a ++ b #: `++` is the comment concat operator.
+    \\  }
+    \\
+    \\ comment_concat(#: Hey :#, y)
 ;
 
 pub fn main() anyerror!void {

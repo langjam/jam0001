@@ -83,7 +83,8 @@ fn parseExpression(self: *Self, token: Token, precedence: Precedence) !Node {
     }
 
     while (self.peek()) |pt| {
-        if (pt.is(.comment)) {
+        if (pt.is(.comment) and !token.is(.op_define) and !token.is(.op_concat)) {
+            // Ignore comments in most contexts.
             _ = self.advance(); // comment
             continue;
         }
@@ -127,9 +128,11 @@ fn parseFnDef(self: *Self, _: Token) Node {
 
     if (!self.peekIs(.punct_rparen)) {
         params.append(self.advance().?) catch @panic("Unable to append param!");
+        _ = self.skip(.comment); // comments after param names
 
         while (self.skip(.punct_comma)) {
             params.append(self.expectNext()) catch @panic("Unable to append param!");
+            _ = self.skip(.comment); // comments after param names
         }
     }
 

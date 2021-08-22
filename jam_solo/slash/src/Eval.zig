@@ -1,4 +1,5 @@
 const std = @import("std");
+const debug = std.debug;
 const Call = @import("ast.zig").Call;
 const Function = @import("ast.zig").Function;
 const Infix = @import("ast.zig").Infix;
@@ -74,7 +75,7 @@ pub const Env = struct {
 };
 
 pub const Value = union(enum) {
-    comment,
+    comment: []const u8,
     function,
     integer: isize,
 
@@ -83,7 +84,8 @@ pub const Value = union(enum) {
         _ = options;
 
         switch (value) {
-            .comment, .function => {},
+            .comment => |c| _ = try writer.print("{s}", .{c}),
+            .function => {},
             .integer => |i| _ = try writer.print("{}", .{i}),
         }
     }
@@ -113,7 +115,7 @@ pub fn eval(self: *Self, node: Node, env: *Env) anyerror!Value {
             try env.insertFunc(f.name.src.?, f);
             break :result .function;
         },
-        .comment => .comment,
+        .comment => |c| .{ .comment = c.token.src.? },
         .infix => |i| self.evalInfix(i, env),
         .integer => |tn| .{ .integer = try std.fmt.parseInt(isize, tn.token.src.?, 10) },
         .program => |p| try self.evalProgram(p, env),
@@ -144,6 +146,16 @@ fn evalFnCall(self: *Self, c: Call, env: *Env) !Value {
 fn evalInfix(self: *Self, i: Infix, env: *Env) !Value {
     // Going out on a limb here assuming the types. Cowboy programming, big time!
     return switch (i.op.ty) {
+        .op_concat => result: {
+            const c1 = try self.eval(i.lhs.*, env);
+            const c2 = try self.eval(i.rhs.*, env);
+            var joined = try std.ArrayList(u8).initCapacity(self.allocator, c1.comment.len + c2.comment.len + 1);
+            defer joined.deinit();
+            joined.appendSliceAssumeCapacity(c1.comment);
+            joined.appendAssumeCapacity(' ');
+            joined.appendSliceAssumeCapacity(c2.comment);
+            break :result .{ .comment = joined.toOwnedSlice() };
+        },
         .op_define => result: {
             const value = try self.eval(i.rhs.*, env);
             try env.insertVar(i.lhs.ident.token.src.?, value);

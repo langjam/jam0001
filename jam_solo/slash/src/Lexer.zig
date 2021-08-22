@@ -100,7 +100,7 @@ fn lexNumber(self: *Self) Token {
 fn lexOcto(self: *Self) Token {
     var token = Token{
         .ty = .punct_octo,
-        .offset = self.i.?,
+        .offset = self.i.? + 2,
     };
 
     if (self.skip('=')) {
@@ -120,7 +120,7 @@ fn lexOcto(self: *Self) Token {
             }
         }
 
-        token.src = self.bytes[token.offset .. self.i.? + 1];
+        token.src = std.mem.trim(u8, self.bytes[token.offset .. self.i.? - 1], " ");
     }
 
     return token;
