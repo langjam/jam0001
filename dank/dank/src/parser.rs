@@ -167,6 +167,7 @@ peg::parser!(pub grammar dank() for str {
     pub rule literal() -> Value<'input>
     =  n:$(['0'..='9']+ ("." ['0'..='9']*)?) { Value::Num(n.parse().unwrap()) }
         / "\"" s:$([^ '"' | '\n']*) "\"" { Value::Str(s.into())}
+        / "\'" s:$([^ '\'' | '\n']*) "\'" { Value::Str(s.into())}
         / "true"  { Value::Bool(true) }
         / "false" { Value::Bool(false) }
         / "null" { Value::Null }

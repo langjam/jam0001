@@ -18,3 +18,5 @@ print clock();
 
 i_was_generated(7);
 
+
+print 'single quoted string';
