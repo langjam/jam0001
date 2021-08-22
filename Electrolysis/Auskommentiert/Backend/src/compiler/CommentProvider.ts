@@ -13,4 +13,5 @@ export abstract class CommentProvider {
     abstract moveCommentDown(commentId : string) : void;
 
     abstract notifyContentChanged() : void;
+    abstract swapFull(idFirstComment: string, idSecondComment: string) : void;
 }

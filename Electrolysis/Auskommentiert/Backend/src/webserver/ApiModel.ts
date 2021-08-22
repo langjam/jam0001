@@ -45,8 +45,11 @@ export class ApiModel {
             let result = posts.filter( post => post.id === id)
             if(result.length > 0) {
                 let vm = new VM(this.mModel.makeCommentProvider(id))
-                vm.run();
+                vm.run().catch((e) => {
+                    console.error(e);
+                });
             }
+            res.sendStatus(200);
         } else {
             comment.id = this.mModel.getNexUniqueId();
             this.mModel.addComment(id, comment);
