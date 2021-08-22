@@ -257,6 +257,9 @@ export class Model {
     get allCommentBases() : Map<string, CommentBase> {
         return this.mCommentsMap;
     }
+    notifyChange() {
+        this.mCallback();
+    }
     vote(id: string, value: number) {
         let component : CommentBase | undefined = this.mCommentsMap.get(id);
         component?.vote(value);
