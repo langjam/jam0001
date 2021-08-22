@@ -14,9 +14,15 @@ impl Default for Env {
         let mut default = Self { env: Default::default() };
 
         default.env.insert(String::from("+"), Exp::Fn(|args| {
-            println!("Called +");
+            let answer: f64 = args.iter().map(|v| {
+                match v {
+                    Value::Float(f) => *f,
+                    Value::Integer(i) => *i as f64,
+                    _ => panic!("you can only add numbers, silly"),
+                }
+            }).sum();
 
-            Value::String(String::from("lol"))
+            Value::Float(answer)
         }));
 
         default
@@ -40,7 +46,7 @@ impl fmt::Display for Exp {
         match self {
             Exp::String(s) => write!(f, "{}", s),
             Exp::Integer(i) => todo!(),
-            Exp::Float(f) => todo!(),
+            Exp::Float(float) => write!(f, "{}", float),
             Exp::Boolean(b) => todo!(),
             Exp::Datetime(dt) => todo!(),
             Exp::Array(a) => todo!(),
