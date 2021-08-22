@@ -7,10 +7,11 @@ mod values;
 fn main() {
     let script = parse::parse(
         "test_script",
-        "struct Rational {
+        "
+struct Rational {
     numerator: Number,
     denominator: Number,
-}
+};
 
 pi = Rational {
     numerator: 54,

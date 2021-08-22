@@ -15,9 +15,10 @@ use crate::ast::{
 
 pub fn parse(name: &str, input: &str) -> Result<Script, String> {
     use nom::branch::alt;
+    use nom::combinator::all_consuming;
     use nom::multi::many0;
 
-    let statements = many0(parse_ast)(input)
+    let statements = all_consuming(many0(ws(parse_ast)))(input)
         .map_err(|e| format!("Error parsing file {}: {}", name, e))?
         .1;
 
@@ -115,14 +116,14 @@ pub fn struct_value(input: &str) -> IResult<&str, ValueAst> {
                 |v| v.map(|s| s.to_string()),
             ),
             delimited(
-                char('{'),
+                ws(char('{')),
                 many0(
                     terminated(
                         ws(field_value),
                         ws(char(',')),
                     ),
                 ),
-                char('}'),
+                ws(char('}')),
             ),
         ),
         |(name, fields)| {
@@ -213,7 +214,7 @@ pub fn parse_ast(input: &str) -> IResult<&str, Ast> {
         pair(
             terminated(
                 identifier,
-                char('='),
+                ws(char('=')),
             ),
             parse_value,
         ),
@@ -225,10 +226,13 @@ pub fn parse_ast(input: &str) -> IResult<&str, Ast> {
         |struct_type| Ast::TypeDef(struct_type),
     );
 
-    alt((
-        parse_value,
-        parse_type,
-    ))(input)
+    terminated(
+        alt((
+            parse_value,
+            parse_type,
+        )),
+        ws(char(';')),
+    )(input)
 }
 
 pub fn parse_struct_type(input: &str) -> IResult<&str, StructTypeAst> {
@@ -348,7 +352,9 @@ mod test {
 
     #[test]
     fn field_accesses() {
-        let res = parse_value("foo.bar").expect("parse").1;
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("foo.bar").expect("parse").1;
         match res {
             ValueAst::FieldAccess(source, field) => {
                 match *source {
@@ -363,7 +369,9 @@ mod test {
 
     #[test]
     fn comment_accesses() {
-        let res = parse_value("foo!bar").expect("parse").1;
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("foo!bar").expect("parse").1;
         match res {
             ValueAst::CommentAccess(source, field) => {
                 match *source {
@@ -378,7 +386,9 @@ mod test {
 
     #[test]
     fn value_defs() {
-        let res = parse_ast("foo=42").expect("parse").1;
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_ast)("foo=42;").expect("parse").1;
         match res {
             Ast::ValueDef(name, ValueAst::Number(42)) => assert_eq!("foo", name),
             _ => assert!(false, "invalid result type"),
@@ -387,7 +397,9 @@ mod test {
 
     #[test]
     fn type_defs() {
-        let res = parse_ast("struct Color { red: Number, green: Number, blue: Number, }").expect("parse").1;
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_ast)("struct Color { red: Number, green: Number, blue: Number, };").expect("parse").1;
         match res {
             Ast::TypeDef(s) => {
                 assert_eq!(Some("Color".into()), s.name);
