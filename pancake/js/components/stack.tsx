@@ -11,8 +11,8 @@ export function Stack(props: StackProps) {
             <div className='stack'>
                 {
                     // TODO replace dummy with `props.state.currentStack`
-                    dummyStack.map((value)=> {
-                        return <div>{valueString(value)}</div>
+                    (props.state?.stack || []).map((value, i)=> {
+                        return <div key={i}>{valueString(value)}</div>
                     })
                 }
             </div>
