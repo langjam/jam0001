@@ -17,9 +17,19 @@ class Env:
     def set_value(self, key, value):
         self.table[key] = value
 
+    def assign_value(self, key, value):
+        env = self
+        while env is not None:
+            if key in env.table:
+                env[key] = value
+                return
+            env = env.parent
+        raise Exception(f"Runtime Error: {key} not found")
+
 
 class Fun:
-    def __init__(self, params, body):
+    def __init__(self, name, params, body):
+        self.name = name
         self.params = params
         self.arity = len(params)
         self.body = body
@@ -61,7 +71,7 @@ class Interpreter:
     def function(self, expr):
         name = self.expression(expr["name"])
         params = [self.expression(param) for param in expr["params"]]
-        function = Fun(params, expr["body"])
+        function = Fun(name, params, expr["body"])
         self.env.set_value(name, function)
 
     def if_stmt(self, expr):
@@ -93,13 +103,35 @@ class Interpreter:
                 return value
             case Ast.CALL:
                 return self.call(expr)
+            case Ast.ASSIGNMENT:
+                key = self.expression(expr["name"])
+                value = self.expression(expr["value"])
+                self.env.assign_value(key, value)
+                return value
             case _:
                 raise Exception("Internal Error")
 
     def call(self, expr):
-        callee = self.expression(expr["callee"])
-        if not isinstance(callee, Fun):
-            raise Exception(f"Runtime Error: {callee} is not callable")
+        function = self.expression(expr["callee"])
+
+        if not isinstance(function, Fun):
+            raise Exception(f"Runtime Error: {function} is not callable")
+
+        if len(expr["arguments"]) != function.arity:
+            raise Exception(f"Runtime Error: incorrect number "
+                            f"of arguments provided to function {function.name}")
+
+        self.env = Env(self.env)
+
+        args = [self.expression(arg) for arg in expr["arguments"]]
+
+        for param, arg in zip(function.params, args):
+            self.env.set_value(param, arg)
+
+        for stmt_or_dclr in function.body:
+            self.evaluate(stmt_or_dclr)
+
+        self.env = self.env.parent
 
     def unary(self, expr):
         value = self.expression(expr["argument"])
