@@ -96,6 +96,15 @@ class Number(Operand):
     def evaluate(self):
         return self.value
 
+class StringLiteral(Operand):
+    def __init__(self, value: str):
+        self.value = value
+
+    def __repr__(self):
+        return f"String {self.value}"
+
+    def evaluate(self):
+        return self.value
 
 class Variable(Operand):
     def __init__(self, varname: str):
@@ -307,6 +316,11 @@ builtin_funcs = {
         param_names=[], 
         effect = lambda: set_var("the number", int(input("Please enter a number:"))),
         return_var = "the number"
+    ),
+    BuiltInFunction(
+        func_name = "Prints", 
+        param_names = ["the string"], 
+        effect = lambda: print(get_var("the string"))        
     )
 }
 
