@@ -5,14 +5,19 @@
 ## Content
 
 1. [Compiling the Interpreter](#Compiling-the-Interpreter)
-2. [Variable Assignment](#Variable-assignment-)
-3. [Variable calling](#Variable-calling-)
-4. [Arithmetic operations](#Arithmetic-Operations-)
-5. [Function Definition](#Function-Definition-)
-6. [Function Calling](#Function-Calling-)
-7. [For Loops](#For-Loops-)
-8. [If Statements](#If-Statements-)
-9. [Internal Functions](#Internal-Functions-)
+2. [Starting the Interpreter](#Starting-the-Interpreter)
+3. [Variable Assignment](#Variable-assignment-)
+4. [Variable calling](#Variable-calling-)
+5. [Arithmetic operations](#Arithmetic-Operations-)
+6. [Function Definition](#Function-Definition-)
+7. [Function Calling](#Function-Calling-)
+8. [For Loops](#For-Loops-)
+9. [Forever Loops](#Forever-Loops-)
+10. [If Statements](#If-Statements-)
+11. [Internal Functions](#Internal-Functions-)
+12. [Booleans](#Booleans)
+13. [Classes](#classes)
+14. [DocStrings](#DocStrings)
 
 ## Compiling the Interpreter
 
@@ -29,6 +34,12 @@ run `pyinstaller comstruct.py application_stack_utils.py executor.py internals.p
 We have no idea if it'll run on other platforms too. We (Chris and Flo) both use arch btw. If you have any suggestions
 or tests for other platforms, we'll be happy to add them to this readme. Don't hesitate to open an issue
 on [this repo](https://github.com/Floeckchengrafik/jam0001).
+
+## Starting the Interpreter
+If you [compiled the Interpreter](#Compiling-the-Interpreter), you can run the binary file in dist/ like this:
+`comstruct.exe example.cmstr`<br>
+If not, you can run `cd src && python comstruct.py example.cmstr`<br>
+Of course, replace example.cmstr with whatever your filename is
 
 # Code Documentation
 
@@ -68,7 +79,13 @@ Note: operation can be one of the following characters: +, -, *, /, %
 ### For Loops: <br>
 |Format|Example|
 |---|---|
-|`for("<name>" : <operation> : { /* loop body */ })?`|`for ("x" : intrange(0:20) : { out("This is test nr. " : y)? }?`|
+|`for("<name>" : <operation> : { /* loop body */ })?`|`for ("x" : intrange(0:20) : { out("This is test nr. " : y)? }?)`|
+
+### Forever Loops: <br>
+|Format|Example|
+|---|---|
+|`forever({ /* loop body */ })?`|`forever ({ out("This Loop will run infinite")? })?`|
+
 
 ### If Statements: <br> 
 |Format|Example|
@@ -158,52 +175,52 @@ Note: operation can be one of the following characters: +, -, *, /, %
   1. The string to check
   2. The prefix
 
-####string_endswith()
+#### string_endswith()
 
 - Checks if the string ends in a given suffix
 - args:
   1. The string to check
   2. The suffix
 
-####string_islower()
+#### string_islower()
 
 - Checks if the string is lowercase
 - args:
   1. The string to check
 
-####string_isupper()
+#### string_isupper()
 
 - Checks if the string is uppercase
 - args:
   1. The string to check
 
-####string_lower()
+#### string_lower()
 
 - Sets a string to lowercase
 - args:
   1. The string to change
 
-####string_upper()
+#### string_upper()
 
 - Sets a string to uppercase
 - args:
   1. The string to change
 
-####string_removeprefix()
+#### string_removeprefix()
 
 - Removes a given prefix of a string
 - args:
   1. The string to change
   2. the prefix to remove
 
-####string_removesuffix()
+#### string_removesuffix()
 
 - Removes a given suffix of a string
 - args:
   1. The string to change
   2. The suffix to remove
 
-####string_replace()
+#### string_replace()
 
 - Replaces something in a string with something else
 - args:
@@ -211,9 +228,45 @@ Note: operation can be one of the following characters: +, -, *, /, %
   2. The old string
   3. The replacement string
 
-####string_split()
+#### string_split()
 
 - Splits a string by the given characters
 - args:
  1. The string to split
  2. The separator
+
+#### string_contains()
+
+- Splits a string by the given characters
+- args:
+ 1. The string to check
+ 2. The part string
+
+### None
+None is the keyword for a non-existing Value, equal to null in other languages
+
+### Booleans
+
+#### True
+#### False
+
+A boolean is a value that could be either True or False
+
+### Classes
+
+|Format|Example|
+|---|---|
+|`<name> = class({ /* class body */})?`|`foo = class({ comment = function({ out("Hello World")? })? })?`|
+
+To Instance a class, use `<name>([args])?`<br>
+To run a class method, use `<class_instance_name>.<method_name>([args])?`
+
+#### Constructors
+You define a constructor using `comment = function ({ /* Constructor body here */ })?`.
+You name the constructor comment, because the theme of [this jam](https://github.com/langjam/jam0001) is "first-class-comments", and the constructor is the `first` thing that gets executed in a `class`.
+
+
+## DocStrings
+
+DocStrings are nedded when you want to pass a variable to a class or method.
+You can start a DocString with `/*` and end it with `*/`. To pass an argument to a class / function, you write `- param <name>`
