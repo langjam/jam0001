@@ -1,6 +1,6 @@
 use train::vm::Data;
 use train::interface::{Communicator, CommunicatorError};
-use std::{thread, io};
+use std::io;
 use train::ast::{Station, Train};
 
 pub(crate) struct CliRunner {}

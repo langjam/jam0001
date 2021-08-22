@@ -11,6 +11,12 @@ async function ask_for_input() {
 let socket;
 window.addEventListener("load", () => {
     socket = startSocket()
+
+    const current_error = window.localStorage.getItem("error");
+    if (current_error !== null && typeof current_error !== "undefined") {
+        error(current_error);
+        window.localStorage.removeItem("error");
+    }
 })
 
 let w = window.innerWidth;
@@ -53,7 +59,7 @@ function loadData(path) {
 
             for(const station of stations) {
                 grid.addStation(new Station(
-                    createVector(station["x"], station["y"]), station["type"], station["stoppers"],
+                    createVector(station["x"], station["y"]), station["type"], station["name"], station["stoppers"],
                 ))
             }
 
@@ -63,6 +69,24 @@ function loadData(path) {
                 )
             }
 
+            for(const line of lines) {
+                const station_id = line["station_id"];
+                const station_name = stations[station_id]["name"];
+                const station_track = line["station_track"];
+                const path = line["path"];
+
+                let s;
+                if (lineLookup.has(station_name)) {
+                    s = lineLookup.get(station_name)
+                } else {
+                    s = new Map()
+                }
+
+                s.set(station_track, path)
+                lineLookup.set(station_name, s)
+            }
+
+            document.getElementById("loading").style.display = "none";
         })
     })
 
@@ -177,4 +201,19 @@ window.onresize = function() {
     resizeCanvas(w, h);
 
     document.getElementById("controls").style.height = `${controlsHeight}px`;
+}
+
+let error_timeout = null;
+function error(message) {
+    const error_elem = document.getElementById("error");
+    error_elem.innerText = message;
+
+    if (error_timeout !== null) {
+        clearTimeout(error_timeout);
+    }
+
+    error_elem.style.visibility = "visible";
+    error_timeout = setTimeout(() => {
+        error_elem.style.visibility = "hidden";
+    }, 10 * 1000)
 }

@@ -101,7 +101,7 @@ mod tests {
                 };
                 assert_eq!(train, expected)
             }
-            Err(err) => {
+            Err(_err) => {
                 assert!(false);
             }
         }

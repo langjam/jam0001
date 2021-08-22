@@ -1,6 +1,7 @@
 
 const TILE_SIZE = 50;
 const OP_SIZE = TILE_SIZE * 3/4
+const TRAIN_SPEED = .1;
 
 const TILE_TYPE = {
     Horizontal: {name: "track_straight_EW.png", img: null},
@@ -66,6 +67,8 @@ let stationForeground;
 let stationBackground;
 let stopper;
 let stationTypeImages = {}
+let lineLookup = new Map();
+
 
 function preloadTrain() {
     locomotiveBackground = loadImage("tiles/locomotive_background.png");
@@ -97,27 +100,28 @@ class Grid {
     stations
 
     constructor() {
-        this.grid = new Map()
-        this.trains = []
-        this.stations = []
+        this.grid = new Map();
+        this.trains = new Map();
+        this.stations = new Map();
     }
+
 
     addTile(coordinate, tile, rotation=DIRECTION.North) {
         this.grid.set(coordinate, {tile: tile, rotation: rotation})
     }
 
     addTrain(train) {
-        this.trains.push(train)
+        this.trains.set(train.identifier, train)
     }
 
     addStation(station) {
-        this.stations.push(station)
+        this.stations.set(station.name, station)
     }
 
     draw() {
 
         for (const i of this.stations) {
-            i.drawBackground()
+            i[1].drawBackground()
         }
 
         for (const i of this.grid) {
@@ -145,13 +149,17 @@ class Grid {
         }
 
         for (const i of this.trains) {
-            i.draw()
+            i[1].draw()
         }
 
 
         for (const i of this.stations) {
-            i.drawForeground()
+            i[1].drawForeground()
         }
+    }
+
+    hasTrain(train_identifier) {
+        return this.trains.has(train_identifier)
     }
 }
 
@@ -160,25 +168,91 @@ class Train {
     accent
     accent1
     direction
+    identifier
 
-    constructor(location, accent, accent1, direction) {
+    path
+    animation_count
+    path_index
+    traveling_to
+    traveling_from
+
+    constructor(location, accent, accent1, direction, identifier) {
         this.location = location;
         this.accent = accent;
         this.accent1 = accent1;
         this.direction = direction;
+        this.path = null;
+        this.identifier = identifier;
+        this.animation_count = 0;
+        this.traveling_to = null;
+        this.traveling_from = null;
+    }
+
+    travelAlongPath(path) {
+        this.path = path
+        this.animation_count = 0;
+        this.path_index = 0
+        if (path.length > 1) {
+            this.traveling_to = this.path[this.path_index + 1];
+            this.traveling_from = this.path[this.path_index];
+        } else {
+            // if path length is 1, don't bother
+            this.path = null;
+        }
+    }
+
+    update() {
+        if (this.animation_count > 1) {
+            this.animation_count = 0
+            this.path_index += 1;
+
+            if (this.path_index + 1 > this.path.length - 1) {
+                this.path = null;
+                return
+            } else {
+                this.traveling_to = this.path[this.path_index + 1]
+                this.traveling_from = this.path[this.path_index]
+            }
+        }
+
+        if (this.traveling_to[0] > this.traveling_from[0]) {
+            this.direction = DIRECTION.East;
+        } else if (this.traveling_to[0] < this.traveling_from[0]) {
+            this.direction = DIRECTION.West;
+        }else if (this.traveling_to[1] > this.traveling_from[1]) {
+            this.direction = DIRECTION.South;
+        }
+
+        const x = lerp(this.traveling_from[0], this.traveling_to[0], this.animation_count)
+        const y = lerp(this.traveling_from[1], this.traveling_to[1], this.animation_count)
+
+        console.log(x, y, this.traveling_from, this.traveling_to, this.animation_count)
+
+        this.location.x = x;
+        this.location.y = y;
+
+        this.animation_count += TRAIN_SPEED;
     }
 
     draw() {
+        if (this.path !== null) {
+            this.update()
+        }
+
         push()
 
 
         translate(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE)
+
+        translate(TILE_SIZE / 2, TILE_SIZE / 2);
         switch (this.direction) {
             case DIRECTION.North: rotate(radians(-90)); break;
             case DIRECTION.East: break;
             case DIRECTION.South: rotate(radians(90)); break;
             case DIRECTION.West: rotate(radians(180)); break;
         }
+        translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
+
 
         image(locomotiveBackground, 0, 0, TILE_SIZE, TILE_SIZE)
         image(locomotiveAccent[this.accent], 0, 0, TILE_SIZE, TILE_SIZE)
@@ -193,11 +267,13 @@ class Station {
     location
     stopped
     station_type
+    name
 
-    constructor(location, station_type, stopped = []) {
+    constructor(location, station_type, name, stopped = []) {
         this.location = location;
         this.stopped = stopped;
         this.station_type = station_type;
+        this.name = name;
     }
 
     drawBackground() {
@@ -273,8 +349,18 @@ class Station {
             }
         }
 
+        push()
         translate(TILE_SIZE * 5/8, TILE_SIZE * 5/8);
         image(stationTypeImages[this.station_type], 0, 0, OP_SIZE, OP_SIZE)
+        pop()
+
+        push()
+        translate(TILE_SIZE, -TILE_SIZE * (1/8));
+        fill(255)
+        stroke(255)
+        textAlign(CENTER, CENTER);
+        text(this.name, 0, 0)
+        pop()
 
         pop()
     }

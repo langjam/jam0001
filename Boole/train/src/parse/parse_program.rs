@@ -38,7 +38,7 @@ mod tests {
             Ok(program) => {
                 println!("{:?}", program);
             }
-            Err(err) => {
+            Err(_err) => {
                 assert!(false);
             }
         }

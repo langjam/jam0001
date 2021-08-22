@@ -16,7 +16,7 @@ ATTRACTION = 0.5
 
 
 class Station:
-    def __init__(self, id, inputs, to, type):
+    def __init__(self, id, inputs, to, type, name):
         self.id = id
         self.inputs = inputs
         self.to = to
@@ -26,6 +26,7 @@ class Station:
         self.force_x = 0
         self.force_y = 0
         self.port_locs = dict()
+        self.name = name
 
     def sim(self, dt):
         self.x += self.force_x * dt
@@ -409,7 +410,7 @@ class World:
                     tiles.add(Tile(path[i][0], path[i][1], "ES"))
 
         data = {
-            "stations" : [{"x":station.x,"y":station.y,"stoppers":station_data[i],"type":station.type} for (i,station) in enumerate(self.stations)],
+            "stations" : [{"x":station.x,"y":station.y,"stoppers":station_data[i],"type":station.type, "name": station.name} for (i,station) in enumerate(self.stations)],
             "lines" : [{"station_id":line[0], "station_track":line[1],"path":line[3]} for line in lines],
             "tiles" : [{"x":tile.x,"y":tile.y,"type":tile.type} for tile in tiles]
         }
@@ -441,7 +442,7 @@ if __name__ == '__main__':
         data = json.load(f)
     pprint(data)
 
-    stations = [Station(id, d["inputs"], d["to"], d["type"]) for id, d in enumerate(data)]
+    stations = [Station(id, d["inputs"], d["to"], d["type"], d["name"]) for id, d in enumerate(data)]
     stations = StationGroup.build(stations)
     # stations.plot()
     stations.scale(5)

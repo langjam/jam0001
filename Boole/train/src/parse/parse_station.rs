@@ -76,7 +76,7 @@ mod tests {
                 };
                 assert_eq!(station, expected)
             }
-            Err(err) => {
+            Err(_err) => {
                 assert!(false);
             }
         }

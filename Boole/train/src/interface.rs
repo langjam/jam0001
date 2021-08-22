@@ -1,8 +1,6 @@
 use crate::ast::{Station, Train};
-use std::sync::mpsc::{Sender, Receiver, channel, RecvError, SendError};
-use std::sync::{Arc, Mutex};
-use std::collections::{HashMap, HashSet};
-use std::sync::atomic::{AtomicI64, Ordering};
+
+
 use thiserror::Error;
 use std::string::FromUtf8Error;
 
@@ -15,11 +13,6 @@ pub enum CommunicatorError {
     FromUTF8Error(#[from] FromUtf8Error)
 }
 
-impl<T> From<std::sync::mpsc::SendError<T>> for CommunicatorError {
-    fn from(s: SendError<T>) -> Self {
-        Self::SendError
-    }
-}
 
 pub trait Communicator {
     fn ask_for_input(&self) -> Result<Vec<i64>, CommunicatorError>;

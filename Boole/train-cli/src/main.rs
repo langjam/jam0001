@@ -2,7 +2,6 @@ mod frontend;
 
 use clap::{App, Arg};
 use clap::crate_authors;
-use crate::frontend::cli;
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
@@ -14,7 +13,7 @@ use crate::frontend::cli::CliRunner;
 #[tokio::main(flavor = "multi_thread", worker_threads = 5)]
 async fn main() {
     pretty_env_logger::env_logger::builder()
-        .filter_level(log::LevelFilter::Info)
+        .filter_level(log::LevelFilter::Debug)
         .init();
 
 

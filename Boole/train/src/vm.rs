@@ -412,7 +412,7 @@ impl Data {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::mpsc::channel;
+    
 
     use crate::ast::{Program, SecondClassPassenger, Station, Target, Train};
     use crate::interface::{Communicator, CommunicatorError};
@@ -420,7 +420,7 @@ mod tests {
     use crate::parse::parser::Span;
     use crate::vm::Data;
     use crate::wishes::{ColorChoice, TrainConfig};
-    use std::time::Duration;
+    
 
     struct VMInterface;
     impl VMInterface {
@@ -434,21 +434,21 @@ mod tests {
             Ok(vec![0])
         }
 
-        fn print(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
+        fn print(&self, _data: Vec<i64>) -> Result<(), CommunicatorError> {
             Ok(())
         }
 
-        fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
+        fn print_char(&self, _data: Vec<i64>) -> Result<(), CommunicatorError> {
             Ok(())
         }
 
         fn move_train(
             &self,
-            from_station: Station,
-            to_station: Station,
-            train: Train,
-            start_track: usize,
-            end_track: usize,
+            _from_station: Station,
+            _to_station: Station,
+            _train: Train,
+            _start_track: usize,
+            _end_track: usize,
         ) -> Result<(), CommunicatorError> {
             Ok(())
         }

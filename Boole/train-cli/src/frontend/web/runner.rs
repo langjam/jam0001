@@ -8,22 +8,23 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
 use std::io::Write;
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 use crate::frontend::web::MessageToWebpage;
 use futures_util::SinkExt;
-use std::sync::mpsc::Sender;
 use thiserror::Error;
+use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Serialize)]
 struct VisualizerStation {
     r#type: Operation,
     inputs: usize,
     to: Vec<Vec<usize>>,
+    name: String,
 }
 
 pub struct WebRunner {
     program: Program,
-    response_tx: Sender<MessageToWebpage>,
+    response_tx: UnboundedSender<MessageToWebpage>,
 }
 
 #[derive(Debug, Error)]
@@ -39,7 +40,7 @@ pub enum GenerateVisualizerDataError {
 }
 
 impl WebRunner {
-    pub fn new(program: Program, response_tx: Sender<MessageToWebpage>) -> Self {
+    pub fn new(program: Program, response_tx: UnboundedSender<MessageToWebpage>) -> Self {
         Self {
             program,
             response_tx,
@@ -47,7 +48,7 @@ impl WebRunner {
     }
 
     pub fn send(&self, m: MessageToWebpage) -> Result<(), CommunicatorError> {
-        self.response_tx.send(m)?;
+        self.response_tx.send(m).map_err(|_| CommunicatorError::SendError)?;
         Ok(())
     }
 
@@ -71,6 +72,7 @@ impl WebRunner {
                 r#type: station.operation,
                 inputs: station.operation.input_track_count(),
                 to,
+                name: station.name.to_string()
             })
         }
 

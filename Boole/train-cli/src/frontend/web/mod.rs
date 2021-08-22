@@ -2,25 +2,17 @@ pub mod runner;
 
 use warp::Filter;
 use std::time::Duration;
-use futures_util::stream::{StreamExt, SplitSink};
-use futures_util::{SinkExt, FutureExt};
+use futures_util::stream::StreamExt;
 use futures_util::join;
-use std::sync::mpsc::{channel, Sender};
+use tokio::sync::mpsc::unbounded_channel;
 use serde::{Serialize, Deserialize};
-use std::collections::HashMap;
-use std::sync::{Arc, MutexGuard};
-use tokio::sync::Mutex;
-use warp::ws::{Message, WebSocket};
-use serde_json::Error;
-use train::interface::{Communicator, CommunicatorError};
+use std::sync::Arc;
+use warp::ws::WebSocket;
 use train::vm::Data;
 use train::ast::{Station, Train, Program};
-use crate::frontend::cli::CliRunner;
 use std::sync::atomic::{AtomicI64, Ordering};
 use crate::frontend::web::runner::{WebRunner, send, GenerateVisualizerDataError};
 use thiserror::Error;
-use std::future::Future;
-use std::path::PathBuf;
 
 #[derive(Serialize)]
 #[serde(tag = "type")]
@@ -73,17 +65,18 @@ async fn receive_message_wrapper(ws: WebSocket, program: Program, connection_id:
 async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) -> Result<(), ReceiveMessageError> {
     let (mut ws_tx, mut ws_rx) = ws.split();
 
-    let (mut response_tx, response_rx) = channel();
+    let (response_tx, response_rx) = unbounded_channel();
 
-    let mut runner = WebRunner::new(program.clone(), response_tx);
+    let runner = WebRunner::new(program.clone(), response_tx);
     let mut vm = Data::new(program);
 
 
-    let visualizer_path = match runner.generate_visualizer_file(connection_id) {
+    let visualizer_res = runner.generate_visualizer_file(connection_id);
+    let visualizer_path = match visualizer_res {
         Ok(i) => i,
         Err(e) => {
-            send(&mut ws_tx, &MessageToWebpage::CreateDataError);
-            Err(e.into())
+            send(&mut ws_tx, &MessageToWebpage::CreateDataError).await;
+            return Err(e.into());
         }
     };
 
@@ -118,17 +111,17 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
     });
 
     tokio::task::spawn(async move {
-        let rx = response_rx;
+        let mut rx = response_rx;
 
         send(&mut ws_tx, &MessageToWebpage::VisualizerData{path: format!("{:?}", visualizer_path)}).await;
 
         loop {
-            let res = rx.recv();
+            let res = rx.recv().await;
 
             match res {
-                Ok(i) => send(&mut ws_tx, &i).await,
-                Err(e) => {
-                    log::error!("receive after send: {}", e);
+                Some(i) => send(&mut ws_tx, &i).await,
+                None => {
+                    log::error!("receive error: (disconnected)");
                     break;
                 },
             }
