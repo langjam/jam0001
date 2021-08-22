@@ -1,0 +1,20 @@
+
+// This file shows some comment handling.
+
+let x = /* Hello, world! */;
+print(x);
+let y = // Hello, @todo!;
+print(y);
+
+// @trace
+fn has_comments(x, b) {
+    let y = x + 1; // @todo: add more code
+    return y;
+}
+
+let sum = 0;
+for x in range(3) {
+    // @fixme: maybe this should be different?
+    sum = sum + has_comments(x, true);
+}
+print(sum);

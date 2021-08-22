@@ -1,0 +1,32 @@
+
+fn build(args) {
+    for arg in args {
+        print("Parsing Source File '", arg, "'");
+        let input = read(arg);
+        if input.class == "Error" {
+            print("Error reading source file: ", input.msg);
+        }
+        let ast = parse(input, arg);
+        if ast.class == "Error" {
+            print("Parse error: ", ast.msg);
+        }
+
+        for elem in ast.elements {
+            print(elem.class);
+            if elem.class == "ASTLetStmt" {
+                print("  Before: ", elem.value);
+                elem.value = ASTBinaryExpr {
+                    op: "+",
+                    lhs: elem.value,
+                    rhs: ASTIntLiteral {
+                        value: 1
+                    }
+                };
+                print("  After: ", elem.value);
+            }
+        }
+
+        print("Executing Modified Source File '", arg, "'");
+        eval(ast);
+    }
+}

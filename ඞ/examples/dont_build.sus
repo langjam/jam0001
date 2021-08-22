@@ -1,0 +1,11 @@
+
+fn build(args) {
+    print("I dislike your program.");
+    print("Instead of executing your file, I will now count to 10");
+    for i in range(1, 11) {
+        print(i);
+    }
+    for x in ["Hello, ", "World"] {
+        print(x);
+    }
+}
