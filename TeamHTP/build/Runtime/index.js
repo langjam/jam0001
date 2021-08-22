@@ -5,6 +5,30 @@ import { get_parser, UnexpectedToken } from "../mouthful";
 import { makeTransformer } from "../transformer";
 const transformer = makeTransformer({});
 const parser = get_parser({ transformer });
+Array.prototype['at'] = function (index) {
+    return this[index];
+};
+Number.prototype['to'] = function (upTo) {
+    return Array.from({ length: upTo - this }, (x, i) => i + this);
+};
+Boolean.prototype['not'] = function () {
+    return !this;
+};
+Boolean.prototype['ifTrue'] = function (then) {
+    if (this)
+        return then();
+};
+Boolean.prototype['ifFalse'] = function (then) {
+    if (!this)
+        return then();
+};
+Boolean.prototype['ifFalse$ifTrue'] = function (f, t) {
+    if (this)
+        return t();
+    else
+        return f();
+};
+Object['from$get'] = (from, get) => from[get];
 class Runtime {
     evalScope;
     tagDefs;
