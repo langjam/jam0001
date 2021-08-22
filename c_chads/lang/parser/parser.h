@@ -62,8 +62,8 @@ struct Parser_Node {
             strview_t val; 
         } string;
         struct {
-            enum Parser_Number_Kind kind;
             strview_t val; 
+            enum Parser_Number_Kind kind;
         } number;
         struct {
             strview_t val; 
