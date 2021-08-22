@@ -41,24 +41,26 @@ export class VM {
                 if(this.evaluateExpression(comment.ast.whileExpression) !== true) {
                     break;
                 }
-                let current = this.mASTProvider.getFirstChildComment(comment.id);
-                //console.log("Starting");
-                while(current !== undefined) {
-                    //console.log("Doing sth")
-                    //console.log(current);
-                    this.traverse(current);
-                    //console.log("Did sth");
-                    current = this.mASTProvider.getNextComment(current.id);
-                }
-                //console.log("Done");
+                this.evaluteChildren(comment);
             }
         } else if(comment.ast.kind === AST.ASTKinds.AssignmentComment) {
             //console.log("Set " + comment.ast.varName);
             this.mVariables[this.mVariables.length - 1].set(comment.ast.varName, this.evaluateExpression(comment.ast.rhsExpr));
         } else if(comment.ast.kind === AST.ASTKinds.FunctionCall) {
             this.evalFunction(comment.ast);
+        } else if(comment.ast.kind === AST.ASTKinds.IfComment) {
+            if(this.evaluateExpression(comment.ast.condition) === true) {
+                this.evaluteChildren(comment);
+            }
         } else {
             throw new Error("Unknown kind " + comment.ast["kind"]);
+        }
+    }
+    private evaluteChildren(comment : WrappedComment) {
+        let current = this.mASTProvider.getFirstChildComment(comment.id);
+        while(current !== undefined) {
+            this.traverse(current);
+            current = this.mASTProvider.getNextComment(current.id);
         }
     }
     private evalFunctionParams(params : AST.FunctionParameters | null):VMValue[] {

@@ -24,11 +24,19 @@ model.addPost({
             date: 200,
             children: [
                 {
-                    id: "33",
-                    content: "log(x, sqrt(x))",
+                    id: "36",
+                    content: "if x<=5:",
                     upvotes: -5,
                     date: 300,
-                    children: []
+                    children: [
+                        {
+                            id: "33",
+                            content: "log(x, sqrt(x))",
+                            upvotes: -5,
+                            date: 400,
+                            children: []
+                        }
+                    ]
                 },
                 {
                     id: "35",
