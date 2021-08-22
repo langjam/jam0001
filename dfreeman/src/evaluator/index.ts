@@ -19,9 +19,9 @@ export type Value =
   | BooleanValue
   | NumberValue
   | CommentValue
-  | FunctionValue
   | VoidValue
-  | ADTConstructorValue
+  | FunctionValue
+  | NativeFunctionValue
   | ADTInstanceValue;
 
 export class VoidValue {
@@ -56,15 +56,23 @@ export class FunctionValue {
   ) {}
 }
 
-export class ADTConstructorValue {
-  public readonly kind = 'ADTConstructor';
-  public constructor(public readonly name: string, public readonly params: ReadonlyArray<string>) {}
+export class NativeFunctionValue {
+  public readonly kind = 'NativeFunction';
+  public constructor(
+    public readonly name: string,
+    public readonly params: ReadonlyArray<string>,
+    public readonly body: (
+      this: NativeFunctionValue,
+      scope: Scope,
+      args: ReadonlyArray<Value>
+    ) => Value
+  ) {}
 }
 
 export class ADTInstanceValue {
   public readonly kind = 'ADTInstance';
   public constructor(
-    public readonly adtConstructor: ADTConstructorValue,
+    public readonly adtConstructor: NativeFunctionValue,
     public readonly args: ReadonlyArray<Value>
   ) {}
 }
@@ -101,11 +109,23 @@ export class Scope {
   }
 }
 
+export type Definition = {
+  value?: Value;
+  meta?: CommentValue;
+};
+
 export class Evaluator {
   private readonly globalScope = new Scope();
 
+  public constructor(
+    private readonly definitions: Record<string, { value?: Value; meta?: CommentValue }> = {}
+  ) {
+    this.registerDefinitions();
+  }
+
   public reset(): void {
     this.globalScope.clear();
+    this.registerDefinitions();
   }
 
   public execute(script: Script): void {
@@ -140,6 +160,18 @@ export class Evaluator {
     }
 
     return unreachable(expression);
+  }
+
+  private registerDefinitions(): void {
+    for (let [name, { value, meta }] of Object.entries(this.definitions)) {
+      if (value) {
+        this.globalScope.define(name, value);
+      }
+
+      if (meta) {
+        this.globalScope.defineMeta(name, meta);
+      }
+    }
   }
 
   private evaluateNumber(expr: NumberLiteral): NumberValue {
@@ -181,7 +213,7 @@ export class Evaluator {
 
   private evaluateCall(expr: CallExpression, outerScope: Scope): Value {
     let callee = this.evaluate(expr.callee, outerScope);
-    if (callee.kind !== 'Function' && callee.kind !== 'ADTConstructor') {
+    if (callee.kind !== 'Function' && callee.kind !== 'NativeFunction') {
       throw new TypeError(expr.callee.loc, `Tried to call a non-function value`);
     }
 
@@ -190,8 +222,8 @@ export class Evaluator {
     }
 
     let args = expr.args.map((arg) => this.evaluate(arg, outerScope));
-    if (callee.kind === 'ADTConstructor') {
-      return new ADTInstanceValue(callee, args);
+    if (callee.kind === 'NativeFunction') {
+      return callee.body(outerScope, args);
     }
 
     let innerScope = new Scope(callee.scope);
@@ -206,10 +238,13 @@ export class Evaluator {
     return value ?? new VoidValue();
   }
 
-  private evaluateConstructor(expr: ADTConstructor): ADTConstructorValue {
-    return new ADTConstructorValue(
+  private evaluateConstructor(expr: ADTConstructor): NativeFunctionValue {
+    return new NativeFunctionValue(
       expr.name.value,
-      expr.params.map((param) => param.value)
+      expr.params.map((param) => param.value),
+      function (scope, args) {
+        return new ADTInstanceValue(this, args);
+      }
     );
   }
 

@@ -45,7 +45,7 @@ export class Identifier {
 
   public toString(): string {
     if (this.isMeta) {
-      return `${this.value}#${this.metaValue}`;
+      return `${this.value}#${this.metaValue ?? ''}`;
     } else {
       return this.value;
     }
@@ -82,7 +82,6 @@ export class DefDeclaration {
 }
 
 interface ScriptDeclaration {
-  declaration: Declaration;
   value: Expression | null;
   meta: SemanticComment | null;
 }
@@ -96,13 +95,13 @@ export class Script {
     for (let [meta, declaration] of input) {
       if (declaration.kind === 'DefDeclaration') {
         let { name, value } = declaration;
-        declarations.set(name.value, { meta, declaration, value });
+        declarations.set(name.value, { meta, value });
       } else if (declaration.kind === 'ADTDeclaration') {
         let { name, constructors } = declaration;
         for (let constructor of constructors) {
-          declarations.set(constructor.name.value, { meta: null, declaration, value: constructor });
+          declarations.set(constructor.name.value, { meta: null, value: constructor });
         }
-        declarations.set(name.value, { meta, declaration, value: null });
+        declarations.set(name.value, { meta, value: null });
       } else {
         unreachable(declaration);
       }

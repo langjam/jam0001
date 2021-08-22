@@ -1,5 +1,24 @@
-import { Parser, TokenizerState } from 'feldspar';
+import React from 'react';
+import { TokenizerState } from 'feldspar';
+import { parser } from '../parser';
 import { LineToken, LineTokensResult, TextMode, Tokenizer } from './ace';
+import { IAceEditorProps } from 'react-ace';
+import ReactAce from 'react-ace/lib/ace';
+
+import 'ace-builds/src-noconflict/theme-tomorrow_night_eighties';
+
+export const YackEditor: React.FC<IAceEditorProps> = (props) => {
+  return (
+    <ReactAce
+      mode={YackMode}
+      style={{ width: '100%', height: '100%' }}
+      theme="tomorrow_night_eighties"
+      showPrintMargin={false}
+      setOptions={{ useSoftTabs: true, tabSize: 2, ...props.setOptions }}
+      {...props}
+    />
+  );
+};
 
 const TokenMap: Record<string, string> = {
   DefKeyword: 'keyword',
@@ -20,22 +39,22 @@ const TokenMap: Record<string, string> = {
   CommentExampleDescription: 'comment',
 };
 
-export class YackMode extends TextMode {
-  public constructor(parser: Parser) {
+class YackModeInstance extends TextMode {
+  public constructor() {
     super();
-    this.$tokenizer = new YackTokenizer(parser);
+    this.$tokenizer = new YackTokenizer();
   }
 }
 
-export class YackTokenizer implements Tokenizer {
+class YackTokenizer implements Tokenizer {
   private statesByName = new Map<string, TokenizerState>();
 
-  public constructor(private readonly parser: Parser) {}
+  public constructor() {}
 
   public getLineTokens(line: string, initialState = '<INITIAL>'): LineTokensResult {
     try {
       let state = this.hydrateState(initialState);
-      let result = this.parser.tokenize(line + '\n', state);
+      let result = parser.tokenize(line + '\n', state);
 
       let tokens: Array<LineToken> = [];
       let offset = 0;
@@ -95,3 +114,5 @@ export class YackTokenizer implements Tokenizer {
     return stack;
   }
 }
+
+export const YackMode = new YackModeInstance();

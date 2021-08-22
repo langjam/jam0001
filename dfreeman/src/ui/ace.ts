@@ -1,4 +1,4 @@
-import ace from 'ace-builds';
+import Ace from 'ace-builds';
 
 export type LineToken = {
   type: string;
@@ -18,6 +18,6 @@ export interface TextMode {
   $tokenizer: Tokenizer;
 }
 
-export const TextMode = ace.require('ace/mode/text').Mode as {
+export const TextMode = Ace.require('ace/mode/text').Mode as {
   new (): TextMode;
 };
