@@ -20,7 +20,7 @@ type alias Stack =
 
 encodeStack : Stack -> JsonE.Value
 encodeStack =
-    JsonE.list encodeValue
+    List.reverse >> JsonE.list encodeValue
 
 
 
@@ -158,8 +158,7 @@ dealWithAtom atom runtime =
                                 Just v ->
                                     case v of
                                         Fun f ->
-                                            Debug.log "next runtime" <|
-                                                next runtime
+                                            eval f runtime |> next
 
                                         other ->
                                             push other runtime |> next
@@ -210,6 +209,45 @@ push atom runtime =
     { runtime | stack = atom :: runtime.stack }
 
 
+pop : Runtime -> ( Runtime, Maybe Value )
+pop runtime =
+    if List.isEmpty runtime.stack then
+        ( panic runtime, Nothing )
+
+    else
+        let
+            x =
+                List.head runtime.stack
+
+            stack =
+                Maybe.withDefault [] <| List.tail runtime.stack
+        in
+        ( { runtime | stack = stack }, x )
+
+
+eval : Func -> Command
+eval f runtime =
+    if argsLeft f == 0 then
+        case execute f of
+            Just value ->
+                push value runtime
+
+            Nothing ->
+                panic runtime
+
+    else
+        let
+            ( runtime_, maybeValue ) =
+                pop runtime
+        in
+        case maybeValue of
+            Nothing ->
+                runtime_
+
+            Just top ->
+                eval (app f top) runtime_
+
+
 {-| `Func` is a restricted function that only has access to its arguments.
 It can be partially applied since every `Func` is curried.
 -}
@@ -247,6 +285,11 @@ app f v =
 argsLeft : Func -> Int
 argsLeft f =
     Array.length f.args - f.argi
+
+
+execute : Func -> Maybe Value
+execute f =
+    f.func f.args
 
 
 

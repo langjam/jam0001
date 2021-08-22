@@ -4735,6 +4735,163 @@ var $author$project$Language$Core$commands = $elm$core$Dict$fromList(
 		[
 			_Utils_Tuple2('next', $author$project$Language$Core$next)
 		]));
+var $elm$core$Array$setHelp = F4(
+	function (shift, index, value, tree) {
+		var pos = $elm$core$Array$bitMask & (index >>> shift);
+		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+		if (_v0.$ === 'SubTree') {
+			var subTree = _v0.a;
+			var newSub = A4($elm$core$Array$setHelp, shift - $elm$core$Array$shiftStep, index, value, subTree);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$SubTree(newSub),
+				tree);
+		} else {
+			var values = _v0.a;
+			var newLeaf = A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, values);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$Leaf(newLeaf),
+				tree);
+		}
+	});
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$set = F3(
+	function (index, value, array) {
+		var len = array.a;
+		var startShift = array.b;
+		var tree = array.c;
+		var tail = array.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			tree,
+			A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, tail)) : A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A4($elm$core$Array$setHelp, startShift, index, value, tree),
+			tail));
+	});
+var $author$project$Language$Core$app = F2(
+	function (f, v) {
+		return {
+			argi: f.argi + 1,
+			args: A3($elm$core$Array$set, f.argi, v, f.args),
+			func: f.func
+		};
+	});
+var $elm$core$Array$length = function (_v0) {
+	var len = _v0.a;
+	return len;
+};
+var $author$project$Language$Core$argsLeft = function (f) {
+	return $elm$core$Array$length(f.args) - f.argi;
+};
+var $author$project$Language$Core$execute = function (f) {
+	return f.func(f.args);
+};
+var $author$project$Language$Core$panic = function (runtime) {
+	return _Utils_update(
+		runtime,
+		{ok: false});
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$isEmpty = function (xs) {
+	if (!xs.b) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$List$tail = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(xs);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Language$Core$pop = function (runtime) {
+	if ($elm$core$List$isEmpty(runtime.stack)) {
+		return _Utils_Tuple2(
+			$author$project$Language$Core$panic(runtime),
+			$elm$core$Maybe$Nothing);
+	} else {
+		var x = $elm$core$List$head(runtime.stack);
+		var stack = A2(
+			$elm$core$Maybe$withDefault,
+			_List_Nil,
+			$elm$core$List$tail(runtime.stack));
+		return _Utils_Tuple2(
+			_Utils_update(
+				runtime,
+				{stack: stack}),
+			x);
+	}
+};
+var $author$project$Language$Core$push = F2(
+	function (atom, runtime) {
+		return _Utils_update(
+			runtime,
+			{
+				stack: A2($elm$core$List$cons, atom, runtime.stack)
+			});
+	});
+var $author$project$Language$Core$eval = F2(
+	function (f, runtime) {
+		_eval:
+		while (true) {
+			if (!$author$project$Language$Core$argsLeft(f)) {
+				var _v0 = $author$project$Language$Core$execute(f);
+				if (_v0.$ === 'Just') {
+					var value = _v0.a;
+					return A2($author$project$Language$Core$push, value, runtime);
+				} else {
+					return $author$project$Language$Core$panic(runtime);
+				}
+			} else {
+				var _v1 = $author$project$Language$Core$pop(runtime);
+				var runtime_ = _v1.a;
+				var maybeValue = _v1.b;
+				if (maybeValue.$ === 'Nothing') {
+					return runtime_;
+				} else {
+					var top = maybeValue.a;
+					var $temp$f = A2($author$project$Language$Core$app, f, top),
+						$temp$runtime = runtime_;
+					f = $temp$f;
+					runtime = $temp$runtime;
+					continue _eval;
+				}
+			}
+		}
+	});
 var $elm$core$Dict$get = F2(
 	function (targetKey, dict) {
 		get:
@@ -4772,20 +4929,6 @@ var $author$project$Language$Core$jump = F2(
 			runtime,
 			{ip: ip});
 	});
-var $elm$core$Debug$log = _Debug_log;
-var $author$project$Language$Core$panic = function (runtime) {
-	return _Utils_update(
-		runtime,
-		{ok: false});
-};
-var $author$project$Language$Core$push = F2(
-	function (atom, runtime) {
-		return _Utils_update(
-			runtime,
-			{
-				stack: A2($elm$core$List$cons, atom, runtime.stack)
-			});
-	});
 var $author$project$Language$Core$Char = function (a) {
 	return {$: 'Char', a: a};
 };
@@ -4819,8 +4962,8 @@ var $author$project$Language$Core$toValue = function (atom) {
 			return _Debug_todo(
 				'Language.Core',
 				{
-					start: {line: 302, column: 13},
-					end: {line: 302, column: 23}
+					start: {line: 345, column: 13},
+					end: {line: 345, column: 23}
 				})('unreachable');
 	}
 };
@@ -4843,10 +4986,8 @@ var $author$project$Language$Core$dealWithAtom = F2(
 						var v = name.a;
 						if (v.$ === 'Fun') {
 							var f = v.a;
-							return A2(
-								$elm$core$Debug$log,
-								'next runtime',
-								$author$project$Language$Core$next(runtime));
+							return $author$project$Language$Core$next(
+								A2($author$project$Language$Core$eval, f, runtime));
 						} else {
 							var other = v;
 							return $author$project$Language$Core$next(
@@ -4892,9 +5033,6 @@ var $elm$core$Array$getHelp = F3(
 			}
 		}
 	});
-var $elm$core$Array$tailIndex = function (len) {
-	return (len >>> 5) << 5;
-};
 var $elm$core$Array$get = F2(
 	function (index, _v0) {
 		var len = _v0.a;
