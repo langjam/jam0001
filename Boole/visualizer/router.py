@@ -158,12 +158,19 @@ class World:
 
     def a_star(self, station, goal):
 
-        open_set = set()
+        open_set = PriorityQueue()
 
-        open_set.add((station.x, station.y, 0))
-        open_set.add((station.x + 1, station.y, 0))
-        open_set.add((station.x, station.y + 1, 0))
-        open_set.add((station.x + 1, station.y + 1, 0))
+        open_set.put((0,(station.x, station.y, 0)))
+        open_set.put((0,(station.x + 1, station.y, 0)))
+        open_set.put((0,(station.x, station.y + 1, 0)))
+        open_set.put((0,(station.x + 1, station.y + 1, 0)))
+
+
+        extra_set = set()
+        extra_set.add((station.x, station.y, 0))
+        extra_set.add((station.x + 1, station.y, 0))
+        extra_set.add((station.x, station.y + 1, 0))
+        extra_set.add((station.x + 1, station.y + 1, 0))
 
         goal, port = self.stations[goal[0]], goal[1]
 
@@ -183,14 +190,15 @@ class World:
         came_from = dict()
         g_score = defaultdict(lambda: inf)
         f_score = defaultdict(lambda: inf)
-        for loc in open_set:
+        for loc in extra_set:
             g_score[loc] = 0
             f_score[loc] = goal.dist(loc[:2])
 
         # TODO jumps moeten alle nodes weergeven en corners detecten
 
-        while open_set:
-            current = min(open_set, key=lambda x: f_score[x])
+        while not open_set.empty():
+            # current = min(open_set, key=lambda x: f_score[x])
+            current = open_set.get()[1]
             if current[:2] in goal_set or (
                     current[:2] in self.filled and self.filled[current[:2]][1] == goal.id and self.filled[current[:2]][
                 2] == port and self.filled[current[:2]][0] != 0):
@@ -200,7 +208,7 @@ class World:
                 #     print("YUS")
                 return self.reconstruct(came_from, current, goal.id, port)
 
-            open_set.remove(current)
+            # open_set.remove(current)
 
             if (current[0] + 1, current[1]) not in self.filled or self.filled[(current[0] + 1, current[1])][
                                                                   1:] == (goal.id, port) or (
@@ -211,8 +219,8 @@ class World:
                 if tentative_score < g_score[neighbour]:
                     came_from[neighbour] = current
                     g_score[neighbour] = tentative_score
-                    f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
-                    open_set.add(neighbour)
+                    # f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
+                    open_set.put((tentative_score + goal.dist(neighbour[:2]),neighbour))
             else:
                 if self.filled[(current[0] + 1, current[1])][0] == 2 and (
                         current[0] + 2, current[1]) not in self.filled:
@@ -224,8 +232,8 @@ class World:
                         came_from[neighbour] = intermediate
                         came_from[intermediate] = current
                         g_score[neighbour] = tentative_score
-                        f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
-                        open_set.add(neighbour)
+                        # f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
+                        open_set.put((tentative_score + goal.dist(neighbour[:2]), neighbour))
 
             if (current[0] - 1, current[1]) not in self.filled or self.filled[(current[0] - 1, current[1])][
                                                                   1:] == (goal.id, port) or (
@@ -236,8 +244,8 @@ class World:
                 if tentative_score < g_score[neighbour]:
                     came_from[neighbour] = current
                     g_score[neighbour] = tentative_score
-                    f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
-                    open_set.add(neighbour)
+                    # f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
+                    open_set.put((tentative_score + goal.dist(neighbour[:2]),neighbour))
             else:
                 if self.filled[(current[0] - 1, current[1])][0] == 2 and (
                         current[0] - 2, current[1]) not in self.filled:
@@ -249,8 +257,8 @@ class World:
                         came_from[neighbour] = intermediate
                         came_from[intermediate] = current
                         g_score[neighbour] = tentative_score
-                        f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
-                        open_set.add(neighbour)
+                        # f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
+                        open_set.put((tentative_score + goal.dist(neighbour[:2]), neighbour))
 
             if (current[0], current[1] + 1) not in self.filled or self.filled[(current[0], current[1] + 1)][
                                                                   1:] == (goal.id, port) or (
@@ -261,8 +269,8 @@ class World:
                 if tentative_score < g_score[neighbour]:
                     came_from[neighbour] = current
                     g_score[neighbour] = tentative_score
-                    f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
-                    open_set.add(neighbour)
+                    # f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
+                    open_set.put((tentative_score + goal.dist(neighbour[:2]),neighbour))
             else:
                 if self.filled[(current[0], current[1] + 1)][0] == 2 and (
                         current[0], current[1] + 2) not in self.filled:
@@ -274,8 +282,8 @@ class World:
                         came_from[neighbour] = intermediate
                         came_from[intermediate] = current
                         g_score[neighbour] = tentative_score
-                        f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
-                        open_set.add(neighbour)
+                        # f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
+                        open_set.put((tentative_score + goal.dist(neighbour[:2]), neighbour))
 
             if (current[0], current[1] - 1) not in self.filled or self.filled[(current[0], current[1] - 1)][
                                                                   1:] == (goal.id, port) or (
@@ -286,8 +294,8 @@ class World:
                 if tentative_score < g_score[neighbour]:
                     came_from[neighbour] = current
                     g_score[neighbour] = tentative_score
-                    f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
-                    open_set.add(neighbour)
+                    # f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
+                    open_set.put((tentative_score + goal.dist(neighbour[:2]),neighbour))
             else:
                 if self.filled[(current[0], current[1] - 1)][0] == 2 and (
                         current[0], current[1] - 2) not in self.filled:
@@ -299,8 +307,8 @@ class World:
                         came_from[neighbour] = intermediate
                         came_from[intermediate] = current
                         g_score[neighbour] = tentative_score
-                        f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
-                        open_set.add(neighbour)
+                        # f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
+                        open_set.put((tentative_score + goal.dist(neighbour[:2]), neighbour))
 
     def reconstruct(self, came_from, current, goal, port):
         total_path = [current[:2]]
@@ -526,7 +534,7 @@ if __name__ == '__main__':
     stations = [Station(id, d["inputs"], d["to"], d["type"], d["name"]) for id, d in enumerate(data)]
     stations = StationGroup.build(stations)
     # stations.plot()
-    stations.scale(5)
+    stations.scale(4)
     # stations.plot()
     print("Stations placed")
 
