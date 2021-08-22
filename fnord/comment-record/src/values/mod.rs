@@ -7,6 +7,48 @@ pub enum Value {
     Struct(StructValue),
 }
 
+impl std::fmt::Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Value::Unit => write!(f, "()"),
+            Value::Number(n) => write!(f, "{}", n),
+            Value::Text(t) => write!(f, "{:?}", t),
+            Value::Comment(c) => {
+                let trimmed = c.text.trim_end();
+                for line in trimmed.split('\n') {
+                    write!(f, "# {}\n", line)?;
+                }
+                if let Value::Struct(s) = &c.record {
+                    for (name, value) in &s.fields {
+                        // TODO: typed fields here???
+                        if let Value::Text(text) = &value.value {
+                            write!(f, "# {}: {}\n", name, text)?;
+                        }
+                    }
+                }
+                Ok(())
+            }
+            Value::Struct(s) => {
+                write!(f, "{}", Value::Comment(s.comment.clone()))?;
+                if let Some(name) = &s.name {
+                    write!(f, "{} ", name)?;
+                }
+                write!(f, "{{\n")?;
+
+                for (name, field) in &s.fields {
+                    let field_comment = format!("{}", Value::Comment(field.comment.clone())).replace("\n", "\n    ");
+                    let field_value = format!("{}", field.value).replace("\n", "\n    ");
+
+                    write!(f, "    {}", field_comment)?;
+                    write!(f, "{}: {},\n", name, field_value)?;
+                }
+
+                write!(f, "}}\n")
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct CommentValue(std::rc::Rc<CommentValueData>);
 

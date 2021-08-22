@@ -147,6 +147,7 @@ notpi2 = NotPi{};
     let result = env.run_script(&script);
 
     if let Some(value) = result {
-        println!(" => {:?}", value);
+        debug!(" => {:?}", value);
+        println!(" => {}", value);
     }
 }
