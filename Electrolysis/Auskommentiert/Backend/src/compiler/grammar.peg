@@ -7,7 +7,7 @@ WhileComment := 'while' _ whileExpression=Expression ':'
 
 ManipulationComment := ManipulationCommentBase
 ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate
-ManipulationCommentSwap := swapKind={'swapContent' | 'swapFull'} _ target=CommentSelector
+ManipulationCommentSwap := 'swap' _ target=CommentSelector
 ManipulationCommentMove := 'move' _ target=CommentSelector _ nav=Navigations
 ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
 

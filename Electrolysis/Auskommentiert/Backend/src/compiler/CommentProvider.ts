@@ -11,4 +11,6 @@ export abstract class CommentProvider {
     abstract moveCommentRight(commentId : string) : void;
     abstract moveCommentUp(commentId : string) : void;
     abstract moveCommentDown(commentId : string) : void;
+
+    abstract notifyContentChanged() : void;
 }

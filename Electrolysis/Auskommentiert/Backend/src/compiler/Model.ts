@@ -208,6 +208,7 @@ class ModelCommentProvider extends CommentProvider {
                 parentsSiblings.splice(i + 1, 0, srcComment);
                 parent.children.splice(parent.children.indexOf(srcComment), 1);
                 srcComment.parentId = parentsParentId;
+                this.mModel.notifyChange();
                 break;
             }
         }
@@ -220,6 +221,9 @@ class ModelCommentProvider extends CommentProvider {
     }
     moveCommentDown(commentId : string) : void {
 
+    }
+    notifyContentChanged() : void {
+        this.mModel.notifyChange();
     }
 }
 
@@ -236,19 +240,22 @@ export class Model {
             let comment = this.parseComment(post.id, topLevelComment);
             comments.push(comment);
         }
-        this.mCommentsMap.set(post.id, new ModelPost(post.title, post.content, post.id, "", post.upvotes, post.date, comments));
+        let newPost = new ModelPost(post.title, post.content, post.id, "", post.upvotes, post.date, comments);
+        this.mCommentsMap.set(post.id, newPost);
         this.mCallback();
     }
-    getNexUniqueId() : number {
-        return this.mCounter++;
+    getNexUniqueId() : string {
+        return String(this.mCounter++);
     }
     addComment(commentId : string, commentJson : any) {
         let commentObj : ModelComment = this.parseComment(commentId, commentJson)
         this.mCommentsMap.get(commentId)?.addChild(commentObj);
         this.mCommentsMap.set(commentObj.id, commentObj);
+        commentObj.parentId = commentId;
         this.mCallback();
     }
     makeCommentProvider(postId : string) : CommentProvider {
+        console.log(this.mCommentsMap.get(postId));
         return new ModelCommentProvider(this, postId);
     }
     get posts() : ModelPost[] {
@@ -314,7 +321,7 @@ export class Model {
         return comm;
     }
     toObject() {
-        console.log(this.posts)
+        //console.log(this.posts)
         return {
             topics: this.posts.map(post => post.toObject())
         }

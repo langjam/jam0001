@@ -12,7 +12,7 @@ model.addPost({
     children: [
         {
             id: "1",
-            content: "swapContent {get 2 comments below 1 down}",
+            content: "swap {get 2 comments below 1 down}",
             upvotes: -5,
             date: 100,
             children: []

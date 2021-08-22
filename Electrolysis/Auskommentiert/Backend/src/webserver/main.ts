@@ -22,7 +22,7 @@ app.post("/api/create_topic", (req : express.Request, res : express.Response) =>
     api.createTopic(req, res);
 });
 app.post("/api/create_comment", (req : express.Request, res : express.Response) => {
-    console.log(req.body)
+    //console.log(req.body)
     api.createComment(req, res);
 });
 app.post("/api/upvote", (req: express.Request, res: express.Response) => {

@@ -2,6 +2,7 @@ import * as AST from './grammar';
 import {CommentProvider} from "./CommentProvider";
 import { inspect } from 'util';
 import { WrappedComment } from './WrappedComment';
+import { sleep } from './Util';
 
 class VMFunction {
     private mParamCount : number;
@@ -49,32 +50,34 @@ export class VM {
         }
         return String(value);
     }
-    private traverse(comment : WrappedComment) : VMValue | undefined {
+    private async traverse(comment : WrappedComment) : Promise<VMValue | undefined> {
         if(comment.content === "")
             return;
+        await sleep(100);
         let ast = comment.parseAST();
         //console.log(ast);
         if(ast.kind === AST.ASTKinds.WhileComment) {
             while(true) {
-                let cond = this.evaluateExpression(comment, ast.whileExpression);
+                let cond = await this.evaluateExpression(comment, ast.whileExpression);
                 if(cond !== true) {
                     break;
                 }
-                this.evaluteChildren(comment);
+                await this.evaluteChildren(comment);
             }
         } else if(ast.kind === AST.ASTKinds.SetComment) {
             let comments = this.findComments(comment, ast.target);
-            let target = this.evaluateExpression(comment, ast.value);
+            let target = await this.evaluateExpression(comment, ast.value);
             for(let c of comments.array) {
                 if(!(c instanceof WrappedComment)) {
                     throw new Error("Not a comment!");
                 }
                 c.content = this.stringify(target);
             }
+            this.mASTProvider.notifyContentChanged();
             
         } else if(ast.kind === AST.ASTKinds.IfComment) {
-            if(this.evaluateExpression(comment, ast.condition) === true) {
-                this.evaluteChildren(comment);
+            if(await this.evaluateExpression(comment, ast.condition) === true) {
+                await this.evaluteChildren(comment);
             }
         } else if(ast.kind === AST.ASTKinds.ManipulationCommentSwap) {
             let target = this.findComments(comment, ast.target);
@@ -86,7 +89,6 @@ export class VM {
             }
             let commentA = target.array[0] as WrappedComment;
             let commentB = target.array[1] as WrappedComment;
-            let swapKind = ast.swapKind;
             // TODO SWAP
             //this.mASTProvider.swapComments(commentA, commentB);
         } else if(ast.kind === AST.ASTKinds.ManipulationCommentMove) {
@@ -128,34 +130,34 @@ export class VM {
             return this.evaluateExpression(comment, ast as AST.Expression);
         }
     }
-    private evaluteChildren(comment : WrappedComment) {
+    private async evaluteChildren(comment : WrappedComment) {
         let current = this.mASTProvider.getFirstChildComment(comment.id);
         while(current !== undefined) {
-            this.traverse(current);
+            await this.traverse(current);
             current = this.mASTProvider.getNextComment(current.id);
         }
     }
-    private evalFunctionParams(parentComment : WrappedComment, params : AST.FunctionParameters | null):VMValue[] {
+    private async evalFunctionParams(parentComment : WrappedComment, params : AST.FunctionParameters | null):Promise<VMValue[]> {
         let ret : VMValue[] = [];
         if(params === null) {
             return ret;
         }
-        ret.push(this.evaluateExpression(parentComment, params.value));
+        ret.push(await this.evaluateExpression(parentComment, params.value));
         let restOfParams = params.next?.nextParam;
         if(restOfParams === undefined) {
             return ret;
         }
-        return ret.concat(this.evalFunctionParams(parentComment, restOfParams));
+        return ret.concat(await this.evalFunctionParams(parentComment, restOfParams));
     }
-    private evalFunction(parentComment : WrappedComment, funcCall : AST.FunctionCall) : VMValue {
-        let func = this.evaluateExpression(parentComment, funcCall.funcName);
-        let params = this.evalFunctionParams(parentComment, funcCall.params);
+    private async evalFunction(parentComment : WrappedComment, funcCall : AST.FunctionCall) : Promise<VMValue> {
+        let func = await this.evaluateExpression(parentComment, funcCall.funcName);
+        let params = await this.evalFunctionParams(parentComment, funcCall.params);
         if(func instanceof VMFunction) {
             return func.callback(params);
         }
         throw new Error(func + " is not a function!");
     }
-    private evaluateExpression(parentComment : WrappedComment, expression : AST.Expression) : VMValue {
+    private async evaluateExpression(parentComment : WrappedComment, expression : AST.Expression) : Promise<VMValue> {
         if(expression.kind === AST.ASTKinds.AtomicExpression_1) {
             return true;
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_2) {
@@ -180,50 +182,50 @@ export class VM {
             return this.evaluateExpression(parentComment, expression.sub);
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_6) {
             // list creation
-            return new VMValueArray(this.evalFunctionParams(parentComment, expression.listParams));
+            return new VMValueArray(await this.evalFunctionParams(parentComment, expression.listParams));
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_8) {
             // list creation
             return expression.str.map((ch) => ch.char).join("");
         } else if(expression.kind === AST.ASTKinds.AddExpression) {
-            let lhs = this.evaluateExpression(parentComment, expression.lhs);
-            let rhs = this.evaluateExpression(parentComment, expression.rhs);
+            let lhs = await this.evaluateExpression(parentComment, expression.lhs);
+            let rhs = await this.evaluateExpression(parentComment, expression.rhs);
             if(lhs instanceof VMValueArray && rhs instanceof VMValueArray) {
                 return new VMValueArray(lhs.array.concat(rhs.array));
             }
             return lhs as any + (rhs as any);
         } else if(expression.kind === AST.ASTKinds.SubExpression) {
-            return this.evaluateExpression(parentComment, expression.lhs) as any - (this.evaluateExpression(parentComment, expression.rhs) as any);
+            return (await this.evaluateExpression(parentComment, expression.lhs) as any) - (await this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.MulExpression) {
-            return this.evaluateExpression(parentComment, expression.lhs) as any * (this.evaluateExpression(parentComment, expression.rhs) as any);
+            return (await this.evaluateExpression(parentComment, expression.lhs) as any) * (await this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.DivExpression) {
-            return this.evaluateExpression(parentComment, expression.lhs) as any / (this.evaluateExpression(parentComment, expression.rhs) as any);
+            return (await this.evaluateExpression(parentComment, expression.lhs) as any) / (await this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.LessThanExpression) {
-            return this.evaluateExpression(parentComment, expression.lhs) as any < (this.evaluateExpression(parentComment, expression.rhs) as any);
+            return (await this.evaluateExpression(parentComment, expression.lhs) as any) < (await this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.MoreThanExpression) {
-            return this.evaluateExpression(parentComment, expression.lhs) as any > (this.evaluateExpression(parentComment, expression.rhs) as any);
+            return (await this.evaluateExpression(parentComment, expression.lhs) as any) > (await this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.LessEqualExpression) {
-            return this.evaluateExpression(parentComment, expression.lhs) as any <= (this.evaluateExpression(parentComment, expression.rhs) as any);
+            return (await this.evaluateExpression(parentComment, expression.lhs) as any) <= (await this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.MoreEqualExpression) {
-            return this.evaluateExpression(parentComment, expression.lhs) as any >= (this.evaluateExpression(parentComment, expression.rhs) as any);
+            return (await this.evaluateExpression(parentComment, expression.lhs) as any) >= (await this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.FunctionCall) {
-            return this.evalFunction(parentComment, expression);
+            return (await this.evalFunction(parentComment, expression));
         } else if(expression.kind === AST.ASTKinds.GetLengthExpression) {
-            let l = this.evaluateExpression(parentComment, expression.list);
+            let l = await this.evaluateExpression(parentComment, expression.list);
             if(!(l instanceof VMValueArray)) {
                 throw new Error("Not an array!");
             }
             return (l as VMValueArray).array.length;
         } else if(expression.kind === AST.ASTKinds.IndexExpression) {
-            let l = this.evaluateExpression(parentComment, expression.list);
+            let l = await this.evaluateExpression(parentComment, expression.list);
             if(!(l instanceof VMValueArray)) {
                 throw new Error("Not an array!");
             }
-            let index = this.evaluateExpression(parentComment, expression.index);
+            let index = await this.evaluateExpression(parentComment, expression.index);
             return l.array[Number(index)];
         } else if(expression.kind === AST.ASTKinds.CommentSelector) {
             return this.findComments(parentComment, expression);
         } else if(expression.kind === AST.ASTKinds.EvalExpression) {
-            let comments = this.evaluateExpression(parentComment, expression.toEval);
+            let comments : VMValue = await this.evaluateExpression(parentComment, expression.toEval);
             if(!(comments instanceof VMValueArray)) {
                 throw new Error("You can only evaluate comments, not " + comments);
             }
@@ -231,15 +233,17 @@ export class VM {
                 if(!(comments.array[0] instanceof WrappedComment)) {
                     throw new Error("Not a comment!");
                 }
-                let ret = this.traverse(comments.array[0]);
+                let ret = await this.traverse(comments.array[0]);
                 return ret;
             }
-            return new VMValueArray(comments.array.map((c) => {
+            let ret = [];
+            for(let c of comments.array) {
                 if(!(c instanceof WrappedComment)) {
                     throw new Error("Not a comment!");
                 }
-                return this.traverse(c)
-            }));
+                ret.push(await this.traverse(c));
+            }
+            return new VMValueArray(ret);
         }
         throw new Error("Unknown kind " + expression["kind"]);
         return false;

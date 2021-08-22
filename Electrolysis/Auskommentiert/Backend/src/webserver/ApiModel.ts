@@ -75,7 +75,7 @@ export class ApiModel {
         if(direction === Direction.UP) {
             other = commentProv.getPrevComment(obj.id);
         }
-        console.log(other)
+        //console.log(other)
         if(other !== undefined) {
             this.mModel.swapFull(obj.id, other.id);
         }
@@ -96,6 +96,6 @@ export class ApiModel {
         this.mCallbacks.push(ws);
     }
     removeCallback(ws: WebSocket ) {
-        delete this.mCallbacks[this.mCallbacks.indexOf(ws)];
+        this.mCallbacks.splice(this.mCallbacks.indexOf(ws), 1);
     }
 }

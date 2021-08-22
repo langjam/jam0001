@@ -6,7 +6,7 @@
 * WhileComment := 'while' _ whileExpression=Expression ':'
 * ManipulationComment := ManipulationCommentBase
 * ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate
-* ManipulationCommentSwap := swapKind={'swapContent' | 'swapFull'} _ target=CommentSelector
+* ManipulationCommentSwap := 'swap' _ target=CommentSelector
 * ManipulationCommentMove := 'move' _ target=CommentSelector _ nav=Navigations
 * ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
 * SetComment := 'set ' _ target=CommentSelector  _ 'to' _ value=Expression
@@ -61,8 +61,6 @@ export enum ASTKinds {
     ManipulationCommentBase_2 = "ManipulationCommentBase_2",
     ManipulationCommentBase_3 = "ManipulationCommentBase_3",
     ManipulationCommentSwap = "ManipulationCommentSwap",
-    ManipulationCommentSwap_$0_1 = "ManipulationCommentSwap_$0_1",
-    ManipulationCommentSwap_$0_2 = "ManipulationCommentSwap_$0_2",
     ManipulationCommentMove = "ManipulationCommentMove",
     ManipulationCommentRotate = "ManipulationCommentRotate",
     ManipulationCommentRotate_$0_1 = "ManipulationCommentRotate_$0_1",
@@ -146,12 +144,8 @@ export type ManipulationCommentBase_2 = ManipulationCommentMove;
 export type ManipulationCommentBase_3 = ManipulationCommentRotate;
 export interface ManipulationCommentSwap {
     kind: ASTKinds.ManipulationCommentSwap;
-    swapKind: ManipulationCommentSwap_$0;
     target: CommentSelector;
 }
-export type ManipulationCommentSwap_$0 = ManipulationCommentSwap_$0_1 | ManipulationCommentSwap_$0_2;
-export type ManipulationCommentSwap_$0_1 = string;
-export type ManipulationCommentSwap_$0_2 = string;
 export interface ManipulationCommentMove {
     kind: ASTKinds.ManipulationCommentMove;
     target: CommentSelector;
@@ -434,30 +428,17 @@ export class Parser {
     public matchManipulationCommentSwap($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentSwap> {
         return this.run<ManipulationCommentSwap>($$dpth,
             () => {
-                let $scope$swapKind: Nullable<ManipulationCommentSwap_$0>;
                 let $scope$target: Nullable<CommentSelector>;
                 let $$res: Nullable<ManipulationCommentSwap> = null;
                 if (true
-                    && ($scope$swapKind = this.matchManipulationCommentSwap_$0($$dpth + 1, $$cr)) !== null
+                    && this.regexAccept(String.raw`(?:swap)`, $$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$target = this.matchCommentSelector($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.ManipulationCommentSwap, swapKind: $scope$swapKind, target: $scope$target};
+                    $$res = {kind: ASTKinds.ManipulationCommentSwap, target: $scope$target};
                 }
                 return $$res;
             });
-    }
-    public matchManipulationCommentSwap_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentSwap_$0> {
-        return this.choice<ManipulationCommentSwap_$0>([
-            () => this.matchManipulationCommentSwap_$0_1($$dpth + 1, $$cr),
-            () => this.matchManipulationCommentSwap_$0_2($$dpth + 1, $$cr),
-        ]);
-    }
-    public matchManipulationCommentSwap_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentSwap_$0_1> {
-        return this.regexAccept(String.raw`(?:swapContent)`, $$dpth + 1, $$cr);
-    }
-    public matchManipulationCommentSwap_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentSwap_$0_2> {
-        return this.regexAccept(String.raw`(?:swapFull)`, $$dpth + 1, $$cr);
     }
     public matchManipulationCommentMove($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentMove> {
         return this.run<ManipulationCommentMove>($$dpth,
