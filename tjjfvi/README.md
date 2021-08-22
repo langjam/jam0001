@@ -2,7 +2,7 @@
 
 > a language featuring a comment trace, written during a comment race
 
-Scrapped together in the last 4 hours of the jam.
+Hacked together in the last 4 hours of the jam.
 
 ## Usage
 
