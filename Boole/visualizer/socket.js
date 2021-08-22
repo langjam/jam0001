@@ -81,6 +81,12 @@ function startSocket() {
 
                     break;
                 }
+                case "Print": {
+                    const station = grid.stations.get(message.station.name);
+                    station.last_print = message.message;
+
+                    break;
+                }
             }
         }
     })

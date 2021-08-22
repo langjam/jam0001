@@ -19,10 +19,8 @@ use thiserror::Error;
 pub enum MessageToWebpage{
     AskForInput(i64),
     Print {
-        message: Vec<i64>
-    },
-    PrintChar{
-        message: Vec<i64>
+        message: String,
+        station: Station,
     },
     MoveTrain {
         from_station: Station,
