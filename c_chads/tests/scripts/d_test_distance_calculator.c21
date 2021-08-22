@@ -1,14 +1,14 @@
 # Doigt's classical "Distance Calculator", this one is a more primitive version but whatever...
-main := proc () {
+main := proc () void {
 
     x1 := 3;
     y1 := 5;
     x2 := 1;
     y2 := 6;
 
-    square := proc (a : number) { return a * a; };
+    square := proc (a : float) float { return a * a; };
 
-    square_root := proc (a : number) {
+    square_root := proc (a : float) float {
 
         if (!a || a == 1) { return a; }
 

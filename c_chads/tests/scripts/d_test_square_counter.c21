@@ -1,5 +1,5 @@
 # Doigt's classical "Square Counter", because everyone needs a program that prints squares eternally...
-main := proc () {
+main := proc () void {
 
     a := 1;
     b := 3;
