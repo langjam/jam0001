@@ -1,8 +1,11 @@
 use std::borrow::Cow;
 
 use crate::ast::*;
-use crate::data::Object;
-use crate::{data::Value, env::Env};
+use crate::ast_proxy::AstProxy;
+use crate::{
+    data::{NativeObj, Object, Value},
+    env::Env,
+};
 
 #[derive(Debug)]
 pub struct Evaluator<'a, 'b: 'a> {
@@ -133,9 +136,16 @@ impl<'a, 'b> Evaluator<'a, 'b> {
         for line in block {
             // TODO: allow comments to actually modify the next statement
             let replacement = if let CommentBody::Stmt(ref mut stmt) = line.body {
-                // We do not evaluate nested comments.
+                // NOTE: We do not evaluate nested comments.
                 // QQQ: how should we handle errors occurring at comment-time?
                 self.buf_stack.push(String::new());
+
+                let mut previous_ast = self.env.get(&"AST".into()).cloned();
+
+                self.env.add(
+                    "AST".into(),
+                    AstProxy::new(line.stmt.clone()).move_to_heap().into(),
+                );
 
                 let is_success = match self.eval_stmt(stmt) {
                     Signal::Error(e) => {
@@ -146,12 +156,17 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     _ => Some(()),
                 };
 
+                self.env.remove(&"AST".into());
+                if let Some(value) = previous_ast.take() {
+                    self.env.update_or_add("AST".into(), value);
+                }
+
                 let code = self.arena.alloc(self.buf_stack.pop().unwrap());
                 is_success.and_then(move |_| {
                     crate::parser::dank::file(code)
                         .map(|ast| Stmt {
                             span: 0..0,
-                            kind: StmtKind::UnscopedBlock(ast.statements),
+                            kind: StmtKind::UnscopedBlock(ast.statements).alloc(),
                         })
                         .map_err(|e| {
                             eprintln!("The printed code wasn't valid, ignoring it: {:?}. Code was:\n```\n{}\n```", e, code);
@@ -176,7 +191,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
     }
 
     fn eval_comments_in_stmt(&mut self, stmt: &mut Stmt<'a>) {
-        match &mut stmt.kind {
+        match &mut *stmt.kind.borrow_mut() {
             StmtKind::LetDecl(_, init) => init
                 .as_mut()
                 .map(|e| self.eval_comments_in_expr(e))
@@ -213,7 +228,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
     }
 
     fn eval_comments_in_expr(&mut self, expr: &mut Expr<'a>) {
-        match &mut expr.kind {
+        match &mut *expr.kind.borrow_mut() {
             ExprKind::ObjectLiteral(pairs) => pairs
                 .iter_mut()
                 .for_each(|(_, e)| self.eval_comments_in_expr(e)),
@@ -264,7 +279,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
     }
 
     fn eval_expr(&mut self, expr: &Expr<'a>) -> Signal<'a> {
-        match &expr.kind {
+        match &*expr.kind.borrow() {
             ExprKind::Literal(l) => l.clone().into(),
             ExprKind::Variable(v) => match self.env.get(v).cloned() {
                 Some(v) => v.into(),
@@ -440,7 +455,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
     }
 
     fn eval_stmt(&mut self, stmt: &Stmt<'a>) -> Signal<'a> {
-        match &stmt.kind {
+        match &*stmt.kind.borrow() {
             StmtKind::Print(args) => {
                 for (i, a) in args.iter().enumerate() {
                     let value = self.eval_expr(a)?;

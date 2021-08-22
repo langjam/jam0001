@@ -108,6 +108,28 @@ where
         }
         None
     }
+
+    /// Removes the entry with the given name, returning the index of its scope.
+    pub fn remove(&mut self, name: &K) -> Option<usize> {
+        for i in (0..self.scopes.len()).rev() {
+            let scope = &mut self.scopes[i];
+            if scope.remove(name).is_some() {
+                return Some(self.scopes.len() - i - 1);
+            }
+        }
+        None
+    }
+
+    /// Updates the deepest entry with the given name if present.
+    /// If not, adds it to the current scope.
+    pub fn update_or_add(&mut self, name: K, value: T)
+    where
+        T: Clone,
+    {
+        if self.update(&name, value.clone()).is_none() {
+            self.add(name, value);
+        }
+    }
 }
 
 impl<K, T> Default for Env<K, T>

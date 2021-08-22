@@ -14,7 +14,7 @@ dependencies = [
 [[package]]
 name = "ast2str"
 version = "0.1.0"
-source = "git+https://github.com/optimalstrategy/ast2str#2351c57a3547dbfd218aa216e8c1f95f3302e50b"
+source = "git+https://github.com/optimalstrategy/ast2str#68fd4a329c3d17007c218a04ce03640adda9cd92"
 dependencies = [
  "ast2str-derive",
  "ast2str-lib",
@@ -23,7 +23,7 @@ dependencies = [
 [[package]]
 name = "ast2str-derive"
 version = "0.2.1"
-source = "git+https://github.com/optimalstrategy/ast2str#2351c57a3547dbfd218aa216e8c1f95f3302e50b"
+source = "git+https://github.com/optimalstrategy/ast2str#68fd4a329c3d17007c218a04ce03640adda9cd92"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -33,7 +33,7 @@ dependencies = [
 [[package]]
 name = "ast2str-lib"
 version = "0.2.0"
-source = "git+https://github.com/optimalstrategy/ast2str#2351c57a3547dbfd218aa216e8c1f95f3302e50b"
+source = "git+https://github.com/optimalstrategy/ast2str#68fd4a329c3d17007c218a04ce03640adda9cd92"
 
 [[package]]
 name = "atty"

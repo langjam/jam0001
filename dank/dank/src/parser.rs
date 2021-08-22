@@ -8,13 +8,13 @@ macro_rules! op_node {
     ($x:ident, $y:ident, $kind:expr) => {
         Expr {
             span: $x.span.start..$y.span.end,
-            kind: ExprKind::Binary(Box::new($x), $kind, Box::new($y)),
+            kind: ExprKind::Binary(Box::new($x), $kind, Box::new($y)).alloc(),
         }
     };
     ($x:ident, $kind:expr) => {
         Expr {
             span: $x.span.clone(),
-            kind: ExprKind::Unary($kind, Box::new($x)),
+            kind: ExprKind::Unary($kind, Box::new($x)).alloc(),
         }
     };
 }
@@ -74,45 +74,45 @@ peg::parser!(pub grammar dank() for str {
 
     pub rule binding() -> Stmt<'input>
     =  start:position!() "let" ___ i:ident() ___ initializer:("=" ___ i:expr() {i})? end:position!() {
-        Stmt { kind: StmtKind::LetDecl(i.into(), initializer.map(Box::new)), span: start..end }
+        Stmt { kind: StmtKind::LetDecl(i.into(), initializer.map(Box::new)).alloc(), span: start..end }
     }
 
     pub rule stmt() -> Stmt<'input>
-         = p:print() ___ ";" {p}
-         / b:binding() ___ ";" {b}
+         = b:binding() ___ ";" {b}
          / w:while_loop() {w}
          / i:if_stmt() {i}
          / b:block() {b}
          / f:func() {f}
-         / start:position!() "break" ___ ";" end:position!() { Stmt { span: start..end, kind: StmtKind::Break } }
-         / start:position!() "continue" ___ ";" end:position!() { Stmt { span: start..end, kind: StmtKind::Continue } }
+         / start:position!() "break" ___ ";" end:position!() { Stmt { span: start..end, kind: StmtKind::Break.alloc() } }
+         / start:position!() "continue" ___ ";" end:position!() { Stmt { span: start..end, kind: StmtKind::Continue.alloc() } }
          / start:position!() "return" ___ value:expr()? ";" end:position!() {
-            Stmt { span: start..end, kind: StmtKind::Return(value.map(Box::new)) }
+            Stmt { span: start..end, kind: StmtKind::Return(value.map(Box::new)).alloc() }
          }
          / start:position!() name:ident() ___ "=" ___ value:expr() ___ ";" end:position!() {
-          Stmt { span: start..end, kind: StmtKind::Assignment(name.into(), Box::new(value)) }
+          Stmt { span: start..end, kind: StmtKind::Assignment(name.into(), Box::new(value)).alloc() }
          }
          / start:position!() obj:access()  ___ "=" ___ value:expr() ___ ";" end:position!() {?
-           if let ExprKind::Property(prop, obj) = obj.kind {
+           if let ExprKind::Property(prop, obj) = &*obj.kind.borrow() {
                Ok(Stmt {
                    span: start..end,
-                   kind: StmtKind::PropAssignment(obj, prop, Box::new(value))
+                   kind: StmtKind::PropAssignment(obj.clone(), prop.clone(), Box::new(value)).alloc()
                })
            } else {
                Err("Invalid assignment target: expected a property, but got a different node.")
            }
          }
-         / e:expr() ___ ";" end:position!() { Stmt {  span: e.span.start..end, kind: StmtKind::ExprStmt(Box::new(e)) } }
+         / e:expr() ___ ";" end:position!() { Stmt {  span: e.span.start..end, kind: StmtKind::ExprStmt(Box::new(e)).alloc() } }
+         / p:print() ___ ";" {p}
 
 
     pub rule func() -> Stmt<'input>
-    = start:position!() "fn" ___ name:ident() _ "(" args:ident() ** ("," ___) ")" ___ body:block() end:position!()
+    = start:position!() "fn" [' ' | '\t']+ ___ name:ident() _ "(" args:ident() ** ("," ___) ")" ___ body:block() end:position!()
     {
         Stmt { span: start..end, kind: StmtKind::FuncDecl(Box::new(Function {
             name: name.into(),
             args: args.into_iter().map(Into::into).collect(),
-            body: match body.kind { StmtKind::Block(b) => b, _ => unreachable!() }
-        })) }
+            body: match &*body.kind.borrow() { StmtKind::Block(b) => b.clone(), _ => unreachable!() }
+        })).alloc() }
     }
 
     pub rule lambda() -> Expr<'input>
@@ -121,21 +121,21 @@ peg::parser!(pub grammar dank() for str {
       Expr { span: start..end, kind: ExprKind::LambdaLiteral(Box::new(Function {
         name: format!("lambda@{}:{}", start, end).into(),
         args: args.into_iter().map(Into::into).collect(),
-        body: match body.kind { StmtKind::Block(b) => b, _ => unreachable!() }
-    })) }
+        body: match &*body.kind.borrow() { StmtKind::Block(b) => b.clone(), _ => unreachable!() }
+    })).alloc() }
     }
 
     pub rule block() -> Stmt<'input>
     = start:position!() "{" ___ statements:(s:line_comment() ___ {s})* ___ "}" end:position!() {
         Stmt {
             span: start..end,
-            kind:  StmtKind::Block(statements)
+            kind:  StmtKind::Block(statements).alloc()
         }
     }
 
     pub rule while_loop() -> Stmt<'input>
     = start:position!() "while" _ c:expr() ___ b:block() {
-        Stmt { span: start..b.span.end, kind: StmtKind::While(Box::new(c), Box::new(b)) }
+        Stmt { span: start..b.span.end, kind: StmtKind::While(Box::new(c), Box::new(b)).alloc() }
     }
 
     pub rule if_stmt() -> Stmt<'input>
@@ -145,7 +145,7 @@ peg::parser!(pub grammar dank() for str {
           kind: StmtKind::If(Box::new(If {
               branches: std::iter::once((c, then)).chain(branches).collect(),
               otherwise
-          }))
+          })).alloc()
       }
     }
 
@@ -185,17 +185,17 @@ peg::parser!(pub grammar dank() for str {
     #[cache_left_rec]
     pub rule access() -> Expr<'input>
     = start:position!() obj:access()  "." prop:ident() end:position!() {
-        Expr { span: start..end, kind: ExprKind::Property(prop.into(), Box::new(obj)) }
+        Expr { span: start..end, kind: ExprKind::Property(prop.into(), Box::new(obj)).alloc() }
       }
       / start:position!() callee:access() "(" args:expr() ** ("," ___) ")" end:position!() {
-        Expr { span: start..end, kind: ExprKind::Call(Box::new(callee), args) }
+        Expr { span: start..end, kind: ExprKind::Call(Box::new(callee), args).alloc() }
       }
       / primary()
 
     pub rule primary() -> Expr<'input>
         = lambda()
-        / start:position!() l:literal() end:position!() { Expr { kind: ExprKind::Literal(l), span: start..end }}
-        / start:position!() i:ident() end:position!() { Expr { kind: ExprKind::Variable(i.into()), span: start..end } }
+        / start:position!() l:literal() end:position!() { Expr { kind: ExprKind::Literal(l).alloc(), span: start..end }}
+        / start:position!() i:ident() end:position!() { Expr { kind: ExprKind::Variable(i.into()).alloc(), span: start..end } }
         / "(" _ e:expr() _ ")" { e }
         / object()
 
@@ -205,21 +205,21 @@ peg::parser!(pub grammar dank() for str {
           end:position!() {
             Expr {
                 span: start..end,
-                kind: ExprKind::ObjectLiteral(entries.into_iter().map(|(k, v)| {(k.into(), v)}).collect())
+                kind: ExprKind::ObjectLiteral(entries.into_iter().map(|(k, v)| {(k.into(), v)}).collect()).alloc()
             }
         }
 
     pub rule literal() -> Value<'input>
     =  n:$(['0'..='9']+ ("." ['0'..='9']*)?) { Value::Num(n.parse().unwrap()) }
-        / "\"" s:$([^ '"' | '\n']*) "\"" { Value::Str(s.into())}
-        / "\'" s:$([^ '\'' | '\n']*) "\'" { Value::Str(s.into())}
+        / "\"" s:$([^ '"']*) "\"" { Value::Str(unescape(s).into())}
+        / "\'" s:$([^ '\'']*) "\'" { Value::Str(unescape(s).into())}
         / "true"  { Value::Bool(true) }
         / "false" { Value::Bool(false) }
         / "null" { Value::Null }
 
     rule print() -> Stmt<'input>
-         = start:position!() "print" _ args:(expr() ** ("," ___)) end:position!()
-         { Stmt { kind: StmtKind::Print(args), span: Span { start, end } } }
+         = start:position!() "print" [' ' | '\t']+ args:(expr() ** ("," ___)) end:position!()
+         { Stmt { kind: StmtKind::Print(args).alloc(), span: Span { start, end } } }
 
     rule string() -> &'input str
         = s:$(['a'..='z'|'A'..='Z'|'0'..='9'|'_']*) { s }
@@ -245,7 +245,13 @@ peg::parser!(pub grammar dank() for str {
 
     /// Parses an entire identifier, ensuring no reserved keywords are used
     rule ident() -> &'input str
-        = i:quiet!{ $(ident_start() ident_chars()*) } { i }
+        = i:quiet!{ $(ident_start() ident_chars()*) } {?
+              if ["null", "false", "true", "fn", "return", "print"].contains(&i) {
+                  Err("Cannot use a reserved keyword as an identifier")
+              } else {
+                  Ok(i)
+              }
+          }
 
     rule line() -> LineComment<'input>
         = _ l:line_comment() __ { l }
@@ -259,6 +265,72 @@ peg::parser!(pub grammar dank() for str {
             Ast { statements: lines }
         }
 });
+
+#[inline]
+fn unescape(s: &str) -> String {
+    let mut out = String::from(s);
+    unescape_in_place(&mut out);
+    out
+}
+
+// Adapted from https://docs.rs/snailquote/0.3.0/x86_64-pc-windows-msvc/src/snailquote/lib.rs.html.
+/// Unescapes the given string in-place. Returns `None` if the string contains an invalid escape sequence.
+pub(crate) fn unescape_in_place(s: &mut String) -> Option<()> {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(ch) = chars.next() {
+        if ch == '\\' {
+            if let Some(next) = chars.next() {
+                let escape = match next {
+                    'a' => Some('\u{07}'),
+                    'b' => Some('\u{08}'),
+                    'v' => Some('\u{0B}'),
+                    'f' => Some('\u{0C}'),
+                    'n' => Some('\n'),
+                    'r' => Some('\r'),
+                    't' => Some('\t'),
+                    '\'' => Some('\''),
+                    '"' => Some('"'),
+                    'e' | 'E' => Some('\u{1B}'),
+                    'u' => Some(parse_unicode(&mut chars)?),
+                    _ => None,
+                };
+                match escape {
+                    Some(esc) => {
+                        out.push(esc);
+                    }
+                    None => {
+                        out.push(ch);
+                        out.push(next);
+                    }
+                }
+            }
+        } else {
+            out.push(ch);
+        }
+    }
+    *s = out;
+    Some(())
+}
+
+// Adapted from https://docs.rs/snailquote/0.3.0/x86_64-pc-windows-msvc/src/snailquote/lib.rs.html.
+fn parse_unicode<I>(chars: &mut I) -> Option<char>
+where
+    I: Iterator<Item = char>,
+{
+    match chars.next() {
+        Some('{') => {}
+        _ => {
+            return None;
+        }
+    }
+
+    let unicode_seq: String = chars.take_while(|&c| c != '}').collect();
+
+    u32::from_str_radix(&unicode_seq, 16)
+        .ok()
+        .and_then(char::from_u32)
+}
 
 #[cfg(test)]
 pub mod tests {
@@ -759,7 +831,7 @@ Ast
         let test = r#"
             {}
             {
-                print("code inside the block");
+                print "code inside the block";
                 let x = 5;
             }
         "#;
@@ -795,7 +867,7 @@ Ast
     #[test]
     fn while_loop() {
         let test = r#"
-        while true { print("hello" + "world"); }
+        while true { print "hello" + "world"; }
         while true { break; continue; }
         "#;
         test_eq!(

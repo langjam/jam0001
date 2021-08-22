@@ -2,6 +2,7 @@
 #![feature(ptr_metadata)]
 
 pub mod ast;
+pub mod ast_proxy;
 pub mod data;
 pub mod env;
 pub mod eval;

@@ -29,6 +29,13 @@ pub trait NativeObj<'s>: std::fmt::Debug {
     fn get_prop(&self, name: Cow<'s, str>) -> Signal<'s>;
     fn set_prop(&self, name: Cow<'s, str>, value: Value<'s>) -> Signal<'s>;
 
+    fn move_to_heap(self) -> Ptr<dyn NativeObj<'s> + 's>
+    where
+        Self: Sized + 's,
+    {
+        Ptr::new(self)
+    }
+
     fn native_eq(&self, other: &dyn NativeObj<'s>) -> bool {
         let (this, _) = (self as *const Self).to_raw_parts();
         let (other, _) = (other as *const dyn NativeObj<'s>).to_raw_parts();
@@ -40,12 +47,12 @@ pub trait NativeObj<'s>: std::fmt::Debug {
     }
 }
 
-impl<'s> std::cmp::PartialEq for dyn NativeObj<'s> + 'static {
+impl<'s> std::cmp::PartialEq for dyn NativeObj<'s> + 's {
     fn eq(&self, other: &Self) -> bool {
         self.native_eq(other)
     }
 }
-impl<'s> std::cmp::PartialOrd for dyn NativeObj<'s> + 'static {
+impl<'s> std::cmp::PartialOrd for dyn NativeObj<'s> + 's {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.native_ord(other)
     }
@@ -89,7 +96,7 @@ pub enum Value<'s> {
     Obj(ObjPtr<'s>),
     Fn(Ptr<Function<'s>>),
     NativeFn(Ptr<NativeFn<'s>>),
-    NativeObj(Ptr<dyn NativeObj<'s>>),
+    NativeObj(Ptr<dyn NativeObj<'s> + 's>),
 }
 
 impl<'s> std::cmp::PartialEq for Value<'s> {
@@ -208,5 +215,11 @@ impl<'s> From<bool> for Value<'s> {
 impl<'s> From<Ptr<NativeFn<'s>>> for Value<'s> {
     fn from(b: Ptr<NativeFn<'s>>) -> Self {
         Value::NativeFn(b)
+    }
+}
+
+impl<'s> From<Ptr<dyn NativeObj<'s> + 's>> for Value<'s> {
+    fn from(o: Ptr<dyn NativeObj<'s> + 's>) -> Self {
+        Self::NativeObj(o)
     }
 }

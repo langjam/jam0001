@@ -2,6 +2,14 @@
 //     print "print 'This function can be accessed only at comment time execution';";
 //     print "print '" + x + "';";
 // }
+//
+// fn print_ast() {
+//      print "print '" + AST.tree + "';";
+// }
+//
+
+// print_ast()
+let x = 7;
 
 // this is a test comment
 // abc

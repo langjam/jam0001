@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, cell::RefCell, rc::Rc};
 
 use ast2str::AstToStr;
 
@@ -128,13 +128,24 @@ pub enum ExprKind<'a> {
 #[derive(Debug, Clone, PartialEq, AstToStr)]
 pub struct Expr<'a> {
     #[forward]
-    pub kind: ExprKind<'a>,
+    pub kind: Rc<RefCell<ExprKind<'a>>>,
     pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, AstToStr)]
 pub struct Stmt<'a> {
     #[forward]
-    pub kind: StmtKind<'a>,
+    pub kind: Rc<RefCell<StmtKind<'a>>>,
     pub span: Span,
+}
+
+impl<'a> StmtKind<'a> {
+    pub fn alloc(self) -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(self))
+    }
+}
+impl<'a> ExprKind<'a> {
+    pub fn alloc(self) -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(self))
+    }
 }
