@@ -9,6 +9,14 @@ just try to get where they want to go and carry some data with them.
 
 For some examples, please refer to the [shunting yard](shunting_yard)
 
+# Creators:
+
+This is the submission of Team Boole:
+* Jonathan Dönszelmann <jonabent@gmail.com> (github: @jonay2000)
+* Julius de Jeu <julius@voidcorp.nl> (github: @jonay2000)
+* Jonathan Brouwer <jonathantbrouwer@gmail.com> (github: @jonathanbrouwer)
+* Noah Jadoenathmisier <n.j.m.jadoenathmisier@student.tudelft.nl> (github: @noahiscool13)
+
 # Compilation instructions
 ```bash
 cargo run -- -shunting_yard/truth_machine.train
