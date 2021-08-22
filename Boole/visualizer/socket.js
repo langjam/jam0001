@@ -63,12 +63,15 @@ function startSocket() {
                         }
                     }
 
+                    const prim_color = message["train"]["config"]["primary_color"].toLowerCase();
+                    const sec_color = message["train"]["config"]["secondary_color"].toLowerCase();
+
 
                     if (!grid.hasTrain(train_identifier)) {
                         grid.addTrain(new Train(
                             line_start_location,
-                            COLOR.DarkGreen,
-                            COLOR.Brown,
+                            prim_color,
+                            sec_color,
                             direction,
                             train_identifier,
                         ))
