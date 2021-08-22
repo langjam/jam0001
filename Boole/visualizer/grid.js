@@ -93,6 +93,7 @@ let cloud;
 let stationTypeImages = {}
 let lineLookup = new Map();
 let decorations = []
+let carriageColour = {};
 
 function updateFinishedValue() {
     document.getElementById("finishedValue").innerText = `${stopcount}/${grid.trains.size}`
@@ -126,6 +127,7 @@ function preloadTrain() {
         const color = COLOR[i];
         locomotiveAccent[color] = loadImage(`tiles/locomotive_accent_${color}.png`)
         locomotiveAccent1[color] = loadImage(`tiles/locomotive_accent1_${color}.png`)
+        carriageColour[color] = loadImage(`tiles/carriage_${color}.png`)
     }
 
     stationBackground = loadImage("tiles/station_bottom.png")
@@ -217,6 +219,10 @@ class Grid {
         for (const i of this.stations) {
             i[1].drawForeground()
         }
+
+        for (const i of this.trains) {
+            i[1].drawLate()
+        }
     }
 
     hasTrain(train_identifier) {
@@ -264,6 +270,13 @@ class Cloud {
     }
 }
 
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+}
+
+
 class Train {
     location
     accent
@@ -277,7 +290,12 @@ class Train {
     traveling_to
     traveling_from
 
-    constructor(location, prim, sec, direction, identifier) {
+    first_class_messages
+
+    cart_locations = []
+    length
+
+    constructor(location, prim, sec, direction, identifier, first_class_messages, length) {
         this.location = location;
         this.accent = sec;
         this.accent1 = prim;
@@ -287,9 +305,14 @@ class Train {
         this.animation_count = 0;
         this.traveling_to = null;
         this.traveling_from = null;
+        this.length = length;
 
         this.clouds = []
         this.ticks_since_last_cloud = 0;
+
+        this.first_class_messages = first_class_messages
+        this.current_message = ""
+        this.ticks_left = getRandomInt(100, 1000);
     }
 
     travelAlongPath(path) {
@@ -344,7 +367,43 @@ class Train {
         this.location.x = x;
         this.location.y = y;
 
+        this.cart_locations = [];
+        for (let i = 0; i < this.length; i++) {
+            const n = i + 1;
+            if (this.path_index - n >= 0) {
+                const x = lerp(this.path[this.path_index - n][0], this.path[this.path_index - n + 1][0], this.animation_count);
+                const y = lerp(this.path[this.path_index - n][1], this.path[this.path_index - n + 1][1], this.animation_count);
+
+                let direction;
+                if (this.path[this.path_index - n][0] < this.path[this.path_index - n + 1][0]) {
+                    direction = DIRECTION.East;
+                } else if (this.path[this.path_index - n][0] > this.path[this.path_index - n + 1][0]) {
+                    direction = DIRECTION.West;
+                }else if (this.path[this.path_index - n][1] < this.path[this.path_index - n + 1][1]) {
+                    direction = DIRECTION.South;
+                }else {
+                    direction = DIRECTION.North;
+                }
+
+
+                this.cart_locations.push([createVector(x, y), direction])
+            }
+        }
+
+        console.log(this.cart_locations);
+
         this.animation_count += TRAIN_SPEED;
+
+        this.ticks_left -= 1;
+        if (this.ticks_left <= 0 && this.first_class_messages.length > 0) {
+            if(this.current_message === "") {
+                this.current_message = this.first_class_messages[getRandomInt(0, this.first_class_messages.length)];
+                this.ticks_left = getRandomInt(100, 150);
+            } else {
+                this.current_message = "";
+                this.ticks_left = getRandomInt(500, 1500);
+            }
+        }
     }
 
     draw() {
@@ -371,12 +430,32 @@ class Train {
         image(locomotiveAccent[this.accent], 0, 0, TILE_SIZE, TILE_SIZE)
         image(locomotiveAccent1[this.accent1], 0, 0, TILE_SIZE, TILE_SIZE)
         image(locomotiveForeground, 0, 0, TILE_SIZE, TILE_SIZE)
+
         pop()
+
+        for (const i of this.cart_locations) {
+            push()
+            const location = i[0];
+            const direction = i[1];
+
+            translate(location.x * TILE_SIZE, location.y * TILE_SIZE)
+            translate(TILE_SIZE / 2, TILE_SIZE / 2);
+            switch (direction) {
+                case DIRECTION.North: rotate(radians(-90)); break;
+                case DIRECTION.East: break;
+                case DIRECTION.South: rotate(radians(90)); break;
+                case DIRECTION.West: rotate(radians(180)); break;
+            }
+            translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
+
+            image(carriageColour[this.accent], 0, 0, TILE_SIZE, TILE_SIZE)
+            pop()
+        }
 
         push()
         if (this.path !== null) {
             this.ticks_since_last_cloud += 1;
-            if (this.ticks_since_last_cloud > 2) {
+            if (this.ticks_since_last_cloud > 2 / TRAIN_SPEED / 10) {
                 this.ticks_since_last_cloud = 0;
                 this.clouds.push(new Cloud(createVector(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE)));
             }
@@ -390,6 +469,22 @@ class Train {
             }
         }
         this.clouds = new_clouds;
+        pop()
+    }
+
+    drawLate() {
+        push()
+        translate(this.location.x * TILE_SIZE, this.location.y * TILE_SIZE)
+        if (this.current_message !== "") {
+            push();
+            translate(TILE_SIZE, -TILE_SIZE * (3 / 8));
+            fill(255);
+            stroke(255);
+            textAlign(CENTER, CENTER);
+            textSize(18);
+            text(this.current_message, 0, 0);
+            pop();
+        }
         pop()
     }
 }

@@ -99,6 +99,14 @@ function startSocket() {
 
                     const prim_color = message["train"]["config"]["primary_color"].toLowerCase();
                     const sec_color = message["train"]["config"]["secondary_color"].toLowerCase();
+                    const length = message["train"]["config"]["length"];
+
+
+                    console.log("length: ", length)
+                    const messages = []
+                    for (fcp of message["train"]["first_class_passengers"]) {
+                        messages.push(fcp.name + ": " + fcp.data);
+                    }
 
 
                     if (!grid.hasTrain(train_identifier)) {
@@ -108,6 +116,8 @@ function startSocket() {
                             sec_color,
                             direction,
                             train_identifier,
+                            messages,
+                            length,
                         ))
                     }
 
