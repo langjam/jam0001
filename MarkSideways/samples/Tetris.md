@@ -321,7 +321,7 @@ Given an ID# from 0 through 6, return a tetris piece in an array.
 
 The numbers in the array correspond to the color that should be used within the current level's theme. 1 is always white, and 2 and 3 are accent colors. 
 
-** 0: The I Beam **
+**0: The I Beam**
 ```
 if id == 0 {
     return [
@@ -333,7 +333,7 @@ if id == 0 {
 }
 ```
 
-** 1: The Square **
+**1: The Square**
 ```
 else if id == 1 {
     return [
@@ -345,7 +345,7 @@ else if id == 1 {
 }
 ```
 
-** 2: The T Piece **
+**2: The T Piece**
 ```
 else if id == 2 {
     return [
@@ -357,7 +357,7 @@ else if id == 2 {
 }
 ```
 
-** 3: The S Piece **
+**3: The S Piece**
 ```
 else if id == 3 {
     return [
@@ -369,7 +369,7 @@ else if id == 3 {
 }
 ```
 
-** 4: The L Piece **
+**4: The L Piece**
 ```
 else if id == 4 {
     return [
@@ -381,7 +381,7 @@ else if id == 4 {
 }
 ```
 
-** 5: The Z Piece **
+**5: The Z Piece**
 ```
 else if id == 5 {
     return [
@@ -393,7 +393,7 @@ else if id == 5 {
 }
 ```
 
-** 6: The Backwards L **
+**6: The Backwards L**
 ```
 else if id == 6 {
     return [
@@ -447,6 +447,8 @@ if !this.isOverlayValid() {
 
 ### Overlay Transpose
 
+This transposes the current overlay matrix across the diagonal.
+
 ```
 for y = 0 till 4 {
     for x = y + 1 till 4 {
@@ -459,6 +461,8 @@ for y = 0 till 4 {
 
 ### Overlay Flip
 
+This flips the current overlay matrix across the x = 1 axis. Note that this is effectively only swapping two columns and the 4th column is ignored. The 4th column is only used by the I-Beam and it uses tranpose-only. Flipping the first 3 columns creates a more natural feeling tetris rotation.
+
 ```
 for y = 0 till 4 {
     t = this.overlay[0][y];
@@ -469,8 +473,11 @@ for y = 0 till 4 {
 
 ### Check for Clear Lines
 
+To check for newly cleared lines, we loop through each row and track whether or not we see any gaps in it. If we do, break out of the loop for that row.
+
+As we counter lines that are filled, we add them to an array called `linesToClear`.
+
 ```
-    linesToKeep = [];
     linesToClear = [];
     for y = 0 till 20 {
         hasHoles = false;
@@ -480,45 +487,75 @@ for y = 0 till 4 {
                 break;
             }
         }
-        if hasHoles {
-            linesToKeep.add(y);
-        } else {
+        if !hasHoles {
             linesToClear.add(y);
         }
     }
+```
 
+If we manage to not find any lines that need to be cleared, we're done! We don't know to take any further action and interactive mode can continue.
+
+```
     if linesToClear.length == 0 {
         return;
     }
+```
 
+However, if we find any lines to clear, we should save this array for the animation and trigger it by setting the `clearingCounter` field to a non-null value.
+
+```
     this.clearingLines = linesToClear;
     this.clearingCounter = 0;
 ```
 
 ### Perform Clearing Line Update
 
+This function will slowly perform the line clearing animation frame-by-frame. We start by determining how far into the animation we are. We can do this by dividing the current clearingCounter by the maximum value for the counter.
 ```
 progress = 1.0 * this.clearingCounter / this.clearingCounterMax;
+```
+
+Once we know how far into the animation we are, we decide how many cells we should erase from the left (animation clears from left to right)
+
+```
 clearThroughX = floor(progress * 10);
+```
+We then loop through each of the rows that's being cleared and set the cells to 0 that are up to `clearThroughX`.
+```
 for i = 0 till this.clearingLines.length {
     y = this.clearingLines[i];
     for x = 0 till clearThroughX {
         this.grid[x][y] = 0;
     }
 }
+```
 
+If the counter reaches its maximum value, then it's time to do some housekeeping and return to interactive mode. 
+
+We remove the lines and collapse the grid and insert new empty lines at the top (done mostly by Remove And Collapse Lines). We can also update the titlebar to indicate how many lines we've cleared so far. 
+
+By setting the `clearingLines` field back to null, this indicates to the update phase that we are now back in interactive move and the animation is truly done.
+```
 if this.clearingCounter == this.clearingCounterMax {
     this.linesCleared += this.clearingLines.length;
     this.removeAndCollapseLines(this.clearingLines);
     this.clearingCounter = null;
     game_set_title("Tetris / Lines: " + this.linesCleared);
     this.clearingLines = null;
-} else {
+}
+```
+
+If we still have a ways to go, increment the `clearingCounter`.
+
+```
+else {
     this.clearingCounter++;
 }
 ```
 
 ### Generate Color Themes
+
+Each time you clear 10 lines, you move up a level. Each level has different colors. To define these configurations, we start by defining some re-usable colors.
 
 ```
 WHITE = [240, 240, 240];
@@ -535,7 +572,11 @@ BROWN = [128, 64, 0];
 TAN = [200, 150, 100];
 PINK = [255, 180, 225];
 CYAN = [0, 255, 255];
+```
 
+Each level theme has 3 colors composed of white and two accent colors. This is a list of the accent colors by level. This list is finite, and so when higher levels are reached, they'll repeat.
+
+```
 themesByLevel = [
     [CERULEAN, GREEN],
     [ORANGE, YELLOW],
@@ -548,7 +589,11 @@ themesByLevel = [
     [BLUE, CYAN],
     [ORANGE, RED],
 ];
+```
 
+We take the list of accent colors and do some processing on them. We join it up with `WHITE` and then compute tinted light and dark versions of each one. These color variations will be used to create textured bevels on all the blocks.
+
+```
 themes = [];
 for i = 0 till themesByLevel.length {
     pair = themesByLevel[i];
@@ -569,6 +614,10 @@ for i = 0 till themesByLevel.length {
             255 - (255 - g) * 2 / 3,
             255 - (255 - b) * 2 / 3]);
     }
+```
+Once we have the three color configurations for each of the color tints, we add them to a list. The index of this list will be the level number.
+
+```
     themes.add([
         colors, darkColors, lightColors
     ]);
@@ -581,13 +630,25 @@ return themes;
 
 - `lines` - a list of the lines to remove
 
+This shifts the lines designated by the y coordinates in the input argument list down to collapse the grid when these lines need to be removed.
+
+We loop through the rows with two different pointers. One of the pointers is the actual final line number which starts from the bottom. We must start from the bottom so as to not accidentally overwrite cells we want to keep. 
 ```
 actualLine = 19;
+```
+
+We loop backwards through every line whether or not we want to keep it. If the line number is the last line in the input list, we know we want to get rid of it. 
+
+```
 for y = 19 thru 0 {
     keepThisLine = lines.length == 0 || lines[lines.length - 1] != y;
     if !keepThisLine {
         lines.pop();
     }
+```
+If we keep the line, copy the values from the current row to the `actualLine` row. Move the `actualLine` pointer up by one.
+
+```
     if keepThisLine {
         for x = 0 till 10 {
             this.grid[x][actualLine] = this.grid[x][y];
@@ -595,7 +656,10 @@ for y = 19 thru 0 {
         actualLine--;
     }
 }
+```
+If we don't keep the line, we do nothing, including not decrementing `actualLine`. This means that when we get to the top, `acutalLine` will be lacking. We fill in the rest of the rows missing with 0's.
 
+```
 while actualLine >= 0 {
     for x = 0 till 10 {
         this.grid[x][actualLine] = 0;
@@ -606,28 +670,42 @@ while actualLine >= 0 {
 
 ### Render Phase
 
-```
+This renders the Tetris Grid to the screen.
 
+We first determine the dimensions and location of the grid:
+```
 tile_size = 20;
 grid_width = tile_size * 10;
 grid_height = tile_size * 20;
 grid_left = (640 - grid_width) / 2;
 grid_top = (480 - grid_height) / 2;
+```
 
+Next we figure out what colors to use when drawing the blocks, based on the current level.
+
+```
 level = this.linesCleared / 10;
 colors = this.colorThemes[level % this.colorThemes.length];
-
 fullColors = colors[0];
 darkColors = colors[1];
 lightColors = colors[2];
+```
 
+We draw a black background over the full dimensions of the grid.
+```
 game_draw_rectangle(grid_left, grid_top, grid_width, grid_height, 0, 0, 0);
+```
 
+Now we loop through each cell...
+```
 
 px = grid_left;
 for x = 0 till 10 {
     py = grid_top;
     for y = 0 till 20 {
+```
+We check to see if the cell has a block in it. If the `blockId` is 0, we still need to check the overlay and see if that contains any cells. 
+```
         colorId = this.grid[x][y];
         if colorId == 0 && this.overlay != null {
             if 
@@ -638,14 +716,25 @@ for x = 0 till 10 {
                 colorId = this.overlay[x - this.overlayX][y - this.overlayY];
             }
         }
+```
+
+If colorId is set to a non-zero value, that means that there's a block in either the grid or the overlay. For rendering, we don't care where it came from, just that we need to draw it to the screen...
+
+```
         if colorId > 0 {
             rgb = fullColors[colorId];
             darkRgb = darkColors[colorId];
             lightRgb = lightColors[colorId];
-            
+```
+
+We draw a series of 3 squares of slightly different sizes and offsets to create a shaded bevel effect for each block. The thickness of this bevel is 2 pixels.
+```
             game_draw_rectangle(px, py, tile_size, tile_size, darkRgb[0], darkRgb[1], darkRgb[2]);
             game_draw_rectangle(px, py, tile_size - 2, tile_size - 2, lightRgb[0], lightRgb[1], lightRgb[2]);
             game_draw_rectangle(px + 2, py + 2, tile_size - 4, tile_size - 4, rgb[0], rgb[1], rgb[2]);
+```
+We update the pixel coordinates of the cell as we loop. 
+```
         }
         py += tile_size;
     }
