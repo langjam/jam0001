@@ -337,8 +337,8 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                     case '*': *rp = lv * rv; break;
                     case '/': *rp = lv / rv; break;
 
-                    case '<': *rp = lv < rv; break;
-                    case '>': *rp = lv > rv; break;
+                    case '<': ret.type = IT_INT; ret.data.intg.val = lv < rv; break;
+                    case '>': ret.type = IT_INT; ret.data.intg.val = lv > rv; break;
                     }
                 } else {
                     float *lv = &left.data.flt.val, *rv = &right.data.flt.val;
@@ -348,9 +348,9 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                     case '*': *rp = *lv *= *rv; break;
                     case '/': *rp = *lv /= *rv; break;
 
-                    case '>': *rp = *lv >= *rv; break;
-                    case '<': *rp = *lv <= *rv; break;
-                    case '=': *rp = *lv == *rv; break;
+                    case '<': ret.type = IT_INT; ret.data.intg.val = *lv <= *rv; break;
+                    case '>': ret.type = IT_INT; ret.data.intg.val = *lv >= *rv; break;
+                    case '=': ret.type = IT_INT; ret.data.intg.val = *lv == *rv; break;
                     }
                 }
                 
