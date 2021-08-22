@@ -35,6 +35,18 @@ $ python3.10 main.py <filepath>
 
 Some classic examples can be found in `fib.acad`, `helloworld.acad`, and `fizzbuzz.acad`.
 
+## Implementation
+
+The implementation is a simple tree-walking interpreter.
+
+The data types are:
+
+- Number
+- String
+- Null
+- Boolean
+- Dictionary
+
 ## Grammar
 
 The grammar of academia is heavily inspired by Lox with the addition of academia's special comments and a dictionary as the single container type.
