@@ -7,40 +7,40 @@ env = internal_env.copy()
 
 class ComstructExecutor:
     def __init__(self, object_tree):
-        for node in object_tree:
-            self.walkTree(node)
-
-    def walkTree(self, node):
         global env
+        for node in object_tree:
+            self.walkTree(node, env)
+
+    def walkTree(self, node, _env):
 
         if isinstance(node, StatementNode.MathNode):
             if node.type == "+":
-                return self.walkTree(node.var1) + self.walkTree(node.var2)
+                return self.walkTree(node.var1, _env) + self.walkTree(node.var2, _env)
             elif node.type == "-":
-                return self.walkTree(node.var1) - self.walkTree(node.var2)
+                return self.walkTree(node.var1, _env) - self.walkTree(node.var2, _env)
             elif node.type == "*":
-                return self.walkTree(node.var1) * self.walkTree(node.var2)
+                return self.walkTree(node.var1, _env) * self.walkTree(node.var2, _env)
             elif node.type == "/":
-                return self.walkTree(node.var1) / self.walkTree(node.var2)
+                return self.walkTree(node.var1, _env) / self.walkTree(node.var2, _env)
             elif node.type == "%":
-                return self.walkTree(node.var1) % self.walkTree(node.var2)
+                return self.walkTree(node.var1, _env) % self.walkTree(node.var2, _env)
         elif isinstance(node, StatementNode.EqualNode):
-            return self.walkTree(node.var1) == self.walkTree(node.var2)
+            return self.walkTree(node.var1, _env) == self.walkTree(node.var2, _env)
         elif isinstance(node, StatementNode.NotEqualNode):
-            return self.walkTree(node.var1) != self.walkTree(node.var2)
+            return self.walkTree(node.var1, _env) != self.walkTree(node.var2, _env)
         elif isinstance(node, StatementNode.GreaterThanNode):
-            return self.walkTree(node.var1) > self.walkTree(node.var2)
+            return self.walkTree(node.var1, _env) > self.walkTree(node.var2, _env)
         elif isinstance(node, StatementNode.GreaterOrEqualsThanNode):
-            return self.walkTree(node.var1) >= self.walkTree(node.var2)
+            return self.walkTree(node.var1, _env) >= self.walkTree(node.var2, _env)
         elif isinstance(node, StatementNode.SmallerThanNode):
-            return self.walkTree(node.var1) < self.walkTree(node.var2)
+            return self.walkTree(node.var1, _env) < self.walkTree(node.var2, _env)
         elif isinstance(node, StatementNode.SmallerOrEqualsThanNode):
-            return self.walkTree(node.var1) <= self.walkTree(node.var2)
+            return self.walkTree(node.var1, _env) <= self.walkTree(node.var2, _env)
         elif isinstance(node, StatementNode.VarAssignNode):
-            env[node.var_name] = self.walkTree(node.var_value)
-            return env[node.var_name]
+            _env[node.var_name] = self.walkTree(node.var_value, _env)
+            return _env[node.var_name]
         elif isinstance(node, StatementNode.VarNode):
-            return env[node.var_name]
+            return _env[node.var_name]
         elif isinstance(node, StatementNode.LiterallyNode):
             if node.walk_function is not None:
                 node.walk_function(self.walkTree, node)
@@ -66,7 +66,7 @@ class ComstructExecutor:
                         break
 
                 if stmt_node:
-                    ret_evt = self.walkTree(stmt_node)
+                    ret_evt = self.walkTree(stmt_node, _env)
 
                     if can_return:
                         ret = ret_evt
@@ -78,12 +78,12 @@ class ComstructExecutor:
             return node
         elif isinstance(node, StatementNode.FunctionCallNode):
             processed_args = []
-            node_call = env[node.func_name].content
+            node_call = _env[node.func_name].content
 
             for arg in node.args:
-                processed_args.append(self.walkTree(arg))
+                processed_args.append(self.walkTree(arg, _env))
             if node_call == "internal":
-                return self.walkTree(internals[node.func_name](processed_args))
+                return self.walkTree(internals[node.func_name](processed_args), _env)
 
             for stmt_node in node_call.content:
                 if type(stmt_node) == StatementNode.FunctionDescriptionNode:
@@ -93,8 +93,8 @@ class ComstructExecutor:
             if node_call.description is None:
                 node_call.description = []
 
-            old_env = env
-            new_env = env.copy()
+            old_env = _env
+            new_env = _env.copy()
             i = 0
             for elem in node_call.description:
                 if elem[0] != "param":
@@ -109,7 +109,7 @@ class ComstructExecutor:
 
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             for func_node in node_call.content:
-                ret_evt = self.walkTree(func_node)
+                ret_evt = self.walkTree(func_node, _env)
                 can_return = False
                 for item in node_call.description:
                     if item[0] == "returns":
@@ -127,16 +127,16 @@ class ComstructExecutor:
         elif isinstance(node, StatementNode.ClassInstanciacionNode):
             uid = uuid.uuid4().hex
 
-            classnode: StatementNode.ClassDefinitionNode = env[node.class_name]
+            classnode: StatementNode.ClassDefinitionNode = _env[node.class_name]
 
-            old_env = env
+            old_env = _env
             env = {}
 
             for stmt_node in classnode.content:
                 if type(stmt_node) != StatementNode.VarAssignNode:
                     print("[EXEC] Tried to do something different than assigning a var inside a class.")
                     continue
-                self.walkTree(stmt_node)
+                self.walkTree(stmt_node, env)
 
             new_env = env
             env = old_env
@@ -148,17 +148,17 @@ class ComstructExecutor:
             ret: StatementNode.GenericNode = StatementNode.LiterallyNode(0)
             prev = None
             try:
-                prev = env[node.varname]
+                prev = _env[node.varname]
             except LookupError:
                 pass
             for i in node.tgetfrm:
-                env[node.varname] = i
-                ret = self.walkTree(StatementNode.ExecuteStoredProcedureNode(node.execute))
+                _env[node.varname] = i
+                ret = self.walkTree(StatementNode.ExecuteStoredProcedureNode(node.execute), _env)
 
             if prev is not None:
-                env[node.varname] = prev
+                _env[node.varname] = prev
             else:
-                del env[node.varname]
+                del _env[node.varname]
 
             return ret
         else:

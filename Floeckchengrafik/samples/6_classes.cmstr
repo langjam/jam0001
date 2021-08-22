@@ -12,7 +12,7 @@ myclass = class({
          * This is the Constructor of the myclass-Class
          * - param hello , a String to print first
          */
-         hw = hello + " World!"
+         hw = hello + " World!"?
     })?
 
     hworld = function({
