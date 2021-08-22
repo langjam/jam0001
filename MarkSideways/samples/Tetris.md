@@ -1,5 +1,7 @@
 # Tetris
 
+![](tetris.jpg)
+
 > As with all MarkSideways programs, this is *NOT* just a markdown file that refers to code. The markdown file itself *IS* the code that MarkSideways interprets. You can run this program by running `python ms.py samples/Tetris.md`
 
 This document is an implementation of Tetris. It uses SDL2 (via PyGame). To play, use the arrow keys to move the piece around. Push the down arrow to drop the piece quickly, and up arrow to turn it clockwise and spacebar to turn it counter-clockwise.
