@@ -5,7 +5,6 @@
 open Kl_parsing
 
 exception SyntaxError of (Lexing.position * string)
-exception Warning of string
 exception CompileError of string
 exception DeveloperError of string
 

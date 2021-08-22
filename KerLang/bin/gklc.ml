@@ -58,6 +58,4 @@ let () =
   end;
   parse_file !input_files
   |> Kerlang.Kl_codegen.emit_kl_ir
-  |> fun x ->
-  Kerlang.Kl_codegen.print_info x;
-  Kerlang.Kl_codegen.realize (open_out !output_file) (Option.get !output_lang) x
+  |> Kerlang.Kl_codegen.realize (open_out !output_file) (Option.get !output_lang)
