@@ -17,6 +17,9 @@ class Ast(Enum):
     STRING = auto()
     NULL = auto()
     NUMBER = auto()
+    DICTIONARY = auto()
+    CALL = auto()
+    MEMBER = auto()
 
 
 class Parser:
@@ -250,13 +253,21 @@ class Parser:
 
     def call(self):
         expr = self.primary()
+        line = expr["line"]
 
         token = self.peek()
         while True:
             match token:
                 case {"type": TokenType.PUNCTUATOR, "value": "("}:
-                    # TODO
+                    args = self.arguments()
+                    expr = {"type": Ast.CALL,
+                            "callee": expr,
+                            "arguments": args,
+                            "line": line}
                     token = self.peek()
+                case {"type": TokenType.PUNCTUATOR, "value": "["}:
+                    # TODO
+                    pass
                 case _:
                     return expr
 
@@ -280,11 +291,12 @@ class Parser:
             case {"type": TokenType.IDENTIFIER, "value": value}:
                 return {"type": Ast.IDENTIFIER, "value": value, "line": token["line"]}
             case _:
-                raise Exception(
-                    f"Unidentified token: {token['value']} on line: {token['line']}")
+                raise Exception(f"Unidentified token: "
+                                f"{token['value']} on line: {token['line']}")
 
     def dictionary(self):
         token = self.peek()
+        line = token["line"]
         items = []
 
         while True:
@@ -300,6 +312,10 @@ class Parser:
                     token = self.peek()
                     if token["type"] != TokenType.PUNCTUATOR or token["value"] != "}":
                         self.expect(TokenType.PUNCTUATOR, ",")
+
+        self.expect(TokenType.PUNCTUATOR, "}")
+
+        return {"type": Ast.DICTIONARY, "items": items, "line": line}
 
     def peek(self):
         token = next(self.lexer)
