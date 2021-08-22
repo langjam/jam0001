@@ -49,3 +49,5 @@
 		- [ ] - execution
 			- [x] - figure out what to do with stacks
 			- [ ] - fix returns if and used
+- [ ] - meta
+	- [ ] - replace occurances of ``fmt.Print(some_error)`` with ``log.Fatal()``
