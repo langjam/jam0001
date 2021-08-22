@@ -28,12 +28,12 @@ func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
 	}
 
 	ev := Evaluator{
-		negative: []string{"0", "0", "0", "0", "0"},
+		negative: e.negative,
 		positive: args,
 		zero: e.zero,
 		comments: e.comments}
 
-	for i, comment := range comments {
+	for _, comment := range comments {
 		_, ok := ev.comments[comment]
 		if !ok {
 			fmt.Println("Trying to call non existant comment.")
@@ -48,13 +48,12 @@ func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
 		ev.positive = ev.positive[ev.maxRef:]
 		ev.maxRef = 0
 
-		val := ev.eval_expr(ev.comments[comment])
+		ev.eval_expr(ev.comments[comment])
 
-		if i == len(comments) - 1 {
-			e.zero = ev.zero
-			return val
-		}
 	}
+
+	e.zero = ev.zero
+	e.negative = ev.negative
 
 	return shared.Node{}
 }

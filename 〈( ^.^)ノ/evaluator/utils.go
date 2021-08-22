@@ -49,6 +49,10 @@ func (e *Evaluator) getRefValue(ref string) string {
 		return e.zero
 	}
 
+	if varIndex > e.maxRef {
+		e.maxRef = varIndex
+	}
+
 	arr := e.positive
 	if varIndex < 0 {
 		arr = e.negative
@@ -56,12 +60,15 @@ func (e *Evaluator) getRefValue(ref string) string {
 	}
 
 	if len(arr) < varIndex {
-		fmt.Println("Variable ref", ref, ": out of range.")
-		os.Exit(1)
-	}
+		toAppend := make([]string, varIndex - len(arr))
 
-	if varIndex > e.maxRef {
-		e.maxRef = varIndex
+		if varIndex < 0 {
+			e.negative = append(e.negative, toAppend...)
+		} else {
+			e.positive = append(e.positive, toAppend...)
+		}
+
+		return ""
 	}
 
 	return arr[varIndex-1]
