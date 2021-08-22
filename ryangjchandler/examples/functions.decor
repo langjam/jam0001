@@ -38,3 +38,15 @@ fn {
 }
 
 math()
+
+/*
+ * @identifier multiple_params
+ * @param one
+ * @param two
+ */
+fn {
+    println(one)
+    println(two)
+}
+
+multiple_params("Ryan", "Is the best")

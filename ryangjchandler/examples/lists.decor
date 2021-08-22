@@ -15,3 +15,7 @@ for name in names {
 for i, _ in names {
     println(i)
 }
+
+for i, name in names {
+    println(i + ". " + name)
+}

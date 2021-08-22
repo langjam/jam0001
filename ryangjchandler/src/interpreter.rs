@@ -309,7 +309,18 @@ impl<'i> Interpreter<'i> {
                             },
                             (Value::Number(l), Value::Number(r)) => {
                                 Value::Number(l + r)
-                            }
+                            },
+                            (Value::String(mut l), Value::Number(r)) => {
+                                l.push_str(r.to_string().as_str());
+
+                                Value::String(l)
+                            },
+                            (Value::Number(l), Value::String(r)) => {
+                                let mut buffer = l.to_string();
+                                buffer.push_str(r.as_str());
+
+                                Value::String(buffer)
+                            },
                             _ => todo!()
                         }
                     },
