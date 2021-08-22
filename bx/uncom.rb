@@ -298,6 +298,22 @@ class Uncom
 			data.push(s.last) if s.length > 0
 			@func_stacks.pop()
 			return try_apply_stacks()
+
+		# [ -> push dict + vars stacks
+		elsif word == "["
+			@dict.push({})
+			@vars.push({})
+			return false # no funcs called
+		# ] -> pop dict + vars stacks
+		elsif word == "]"
+			if @dict.length < 3 then
+				raise "UNBALENCED ]"
+				return false # no funcs called
+			end
+			@dict.pop
+			@vars.pop
+			return false # no funcs called
+
 		# . -> clear func and data stacks
 		elsif word == "." then
 			data.pop(data.length)
@@ -351,6 +367,9 @@ and #these are normal words
 	["1 # 2 3 4", [1]],
 	["{1 2 3} quote?", [true]],
 	["{1 {2} 3} quote?", [true]],
+	["{1 {2} 3} quote?", [true]],
+	["x= 1 [x= 2 [x= 3 x] x] x", [3, 2, 1]],
+	["$x= 0 x= 1 [x= 2 [x= 3 $x x] x] x", [0, 3, 2, 1]],
 	].each_with_index {|t, idx|
 		raise "failed test number #{idx + 1}" if do_source(t[0]).data != t[1]
 	}
