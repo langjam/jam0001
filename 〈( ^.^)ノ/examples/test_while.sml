@@ -1,5 +1,6 @@
 
-print("hello") // hello
-m("10") // ten
+print(m("$1 * $1")) // square
+set($1 $1) // pop
+print(m("$1 + $1")) // 2-times
 
-print("hello, hello and ten"())
+"square, pop and 2-times"(5 10)

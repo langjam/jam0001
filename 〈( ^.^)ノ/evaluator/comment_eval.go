@@ -40,7 +40,8 @@ func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
 			os.Exit(1)
 		}
 
-		ev.positive = ev.positive[e.maxRef:]
+		ev.positive = ev.positive[ev.maxRef:]
+		ev.maxRef = 0
 
 		val := ev.eval_expr(ev.comments[comment])
 
