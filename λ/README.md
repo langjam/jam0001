@@ -4,6 +4,8 @@
 
 `boros` (Shortened from [Ouroboros](https://en.wikipedia.org/wiki/Ouroboros)) is a functional programming language that supports `first-class comments`, developed during the [2021 Lang Jam](https://github.com/langjam/jam0001).
 
+[*(Main `boros` repo)*](https://github.com/aionescu/boros)
+
 ## Build instructions
 
 ### Prerequisites
