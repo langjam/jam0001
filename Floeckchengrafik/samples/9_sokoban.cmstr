@@ -2,18 +2,6 @@
  * Example 9: Sokoban *
  **********************/
 
-/*
-
-# # # # # # #
-# . . . . ඞ #
-# # . . ■ . #
-# . . # # # #
-# . . 𝄪 . . #
-# . . . . . #
-# # # # # # #
-
- */
-
 
 printlvl = function({
    /*
@@ -74,6 +62,7 @@ ispospossible = function({
     * This function evaluates if its possible for the player to perform certain actions
     * For this, it needs the
     * - param level to look up the tiles, the
+    * - param movtiles to evaluate the boxes, the
     * - param char for obvious reasons and finally the
     * - param movement to analyze the situation. It
     * - returns a boolean if the move is valid.
@@ -95,6 +84,27 @@ ispospossible = function({
 
     if (string_startswith(grid_char : "#") : {
         valid = false?
+    })?
+
+    for ("tile" : movtiles : {
+        tile_x = list_get(tile : 0)?
+        tile_y = list_get(tile : 1)?
+
+        if (tile_x == char_x && tile_y == char_y : {
+            box_x = char_x + action_x?
+            box_y = char_y + action_y?
+
+            box_grid_line = list_get(level : box_x)?
+            box_grid_char = list_get(box_grid_line : box_y)?
+
+            if (string_startswith(box_grid_char : "#") : {
+                valid = false?
+            })?
+
+            if(valid : {
+                \\ move
+            })?
+        })?
     })?
 
     valid?
@@ -143,20 +153,36 @@ banner = [
 ]?
 
 level = [
-   ["#" : "#" : "#" : "#" : "#" : "#" : "#"] :
-   ["#" : "." : "." : "." : "." : "." : "#"] :
-   ["#" : "#" : "." : "." : "." : "." : "#"] :
-   ["#" : "." : "." : "#" : "#" : "#" : "#"] :
-   ["#" : "." : "." : "x" : "." : "." : "#"] :
-   ["#" : "." : "." : "." : "." : "." : "#"] :
-   ["#" : "#" : "#" : "#" : "#" : "#" : "#"]
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "#" : "#" : "#" : "#" : " " : " " : " " : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "." : "." : "#" : "#" : "#" : "#" : "#" ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "#" : "." : "#" : "#" : "." : "." : "#" ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "." : "." : "." : "." : "." : "." : "#" ] :
+    [ "#" : "#" : "#" : "#" : "#" : "#" : "#" : "#" : "#" : "." : "#" : "#" : "#" : "." : "." : "." : "#" ] :
+    [ "#" : "x" : "x" : "x" : "x" : "." : "." : "#" : "#" : "." : "." : "." : "." : "." : "#" : "#" : "#" ] :
+    [ "#" : "x" : "x" : "x" : "x" : "." : "." : "." : "." : "." : "." : "." : "." : "." : "#" : "#" : " " ] :
+    [ "#" : "x" : "x" : "x" : "x" : "." : "." : "#" : "#" : "." : "." : "." : "." : "." : "." : "#" : " " ] :
+    [ "#" : "#" : "#" : "#" : "#" : "#" : "#" : "#" : "#" : "." : "." : "." : "." : "." : "#" : "#" : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "." : "." : "." : "." : "." : "#" : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "#" : "#" : "." : "#" : "#" : "." : "#" : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "." : "." : "." : "#" : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : " " : " " : "#" : "#" : "#" : "#" : "#" : "#" : " " ]
 ]?
 
-char = [1:5]?
+char = [ 7 : 14 ]?
 
 movtiles = [
-    [2:4]
-    \\ [4:3]
+    [  2 : 11 ] :
+    [  3 : 14 ] :
+    [  5 : 10 ] :
+    [  5 : 13 ] :
+    [  6 : 9  ] :
+    [  6 : 11 ] :
+    [  6 : 12 ] :
+    [  7 : 9  ] :
+    [  7 : 12 ] :
+    [  8 : 11 ] :
+    [  9 : 10 ] :
+    [  9 : 12 ]
 ]?
 
 ACTION_W = [ 0-1 :   0 ]?
@@ -169,7 +195,7 @@ forever({
     command = readline("Use w, a, s, d to move, x to exit: ")?
 
     if(string_startswith(command : "w") : {
-        if(ispospossible(level : char : ACTION_W) : {
+        if(ispospossible(level : movtiles : char : ACTION_W) : {
             out("Up valid")?
             char_x = list_get(char :0)?
             char_y = list_get(char :1)?
@@ -186,7 +212,7 @@ forever({
     })?
 
     if(string_startswith(command : "a") : {
-        if(ispospossible(level : char : ACTION_A) : {
+        if(ispospossible(level : movtiles : char : ACTION_A) : {
             out("Left valid")?
             char_x = list_get(char :0)?
             char_y = list_get(char :1)?
@@ -203,7 +229,7 @@ forever({
     })?
 
     if(string_startswith(command : "s") : {
-        if(ispospossible(level : char : ACTION_S) : {
+        if(ispospossible(level : movtiles : char : ACTION_S) : {
             out("Right valid")?
             char_x = list_get(char :0)?
             char_y = list_get(char :1)?
@@ -220,7 +246,7 @@ forever({
     })?
 
     if(string_startswith(command : "d") : {
-        if(ispospossible(level : char : ACTION_D) : {
+        if(ispospossible(level : movtiles : char : ACTION_D) : {
             out("Down valid")?
             char_x = list_get(char :0)?
             char_y = list_get(char :1)?
