@@ -113,6 +113,11 @@ Result<NonnullRefPtr<ASTNode>, ParseError> Parser::parse_expression()
         if (peek().type == Token::Type::Eof)
             return *primary;
 
+        if (peek().type == Token::Type::Comma) {
+            (void)consume();
+            return *primary;
+        }
+
         if (peek().type == Token::Type::OpenParen) {
             primary = parse_call(primary->value());
             if (primary->is_error())

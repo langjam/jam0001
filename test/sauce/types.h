@@ -63,4 +63,5 @@ struct Context {
     Vector<HashMap<String, Value>> scope;
     Vector<HashMap<Comment*, Vector<Value>>> comment_scope;
     Vector<Comment*> unassigned_comments;
+    size_t last_call_scope_start { 0 };
 };

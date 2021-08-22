@@ -108,9 +108,11 @@ void FunctionNode::dump(int indent)
 Value FunctionNode::execute(Context& context)
 {
     auto scope = context.scope;
-    scope.take_first();
+    for (size_t i = 0; i < context.last_call_scope_start; ++i)
+        scope.take_first();
     auto cscope = context.comment_scope;
-    cscope.take_first();
+    for (size_t i = 0; i < context.last_call_scope_start; ++i)
+        cscope.take_first();
     return {
         FunctionValue {
             NonnullRefPtr<FunctionNode>(*this),
@@ -147,8 +149,11 @@ Value Call::execute(Context& context)
             return Value { move(crs) };
         }
         if (auto ptr = callee.value.template get_pointer<FunctionValue>()) {
-            auto last_scope = context.scope.size();
-            auto last_cscope = context.comment_scope.size();
+            auto last_scope = move(context.scope);
+            auto last_cscope = move(context.comment_scope);
+
+            auto last_stack_start = context.last_call_scope_start;
+            context.last_call_scope_start = context.scope.size();
 
             context.scope.extend(ptr->scope);
             context.comment_scope.extend(ptr->comment_scope);
@@ -177,11 +182,10 @@ Value Call::execute(Context& context)
             if (ptr->node->return_())
                 result = scope.get(ptr->node->return_()->name()).value();
 
-            while (context.scope.size() > last_scope)
-                context.scope.take_last();
-            while (context.comment_scope.size() > last_cscope)
-                context.comment_scope.take_last();
+            context.scope = move(last_scope);
+            context.comment_scope = move(last_cscope);
             context.unassigned_comments = move(old_comments);
+            context.last_call_scope_start = last_stack_start;
 
             return result;
         }

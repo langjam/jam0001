@@ -1,6 +1,7 @@
 #include "parser.h"
 #include <AK/Format.h>
 #include <AK/Function.h>
+#include <AK/Random.h>
 #include <AK/StringView.h>
 #include <AK/TypeCasts.h>
 #include <errno.h>
@@ -62,88 +63,103 @@ Value lang$print(Context&, void* ptr, size_t count)
 }
 
 template<typename Operator>
+static void fold_append(auto& accumulator, auto&& arg)
+{
+    Variant<Empty, int> value { Empty {} };
+    if constexpr (requires { arg.template has<int>(); }) {
+        if (arg.template has<Empty>() || arg.template has<int>())
+            value = arg.template downcast<Empty, int>();
+        else if (arg.template has<NonnullRefPtr<CommentResolutionSet>>()) {
+            for (auto& entry : arg.template get<NonnullRefPtr<CommentResolutionSet>>()->values)
+                fold_append<Operator>(accumulator, entry.value);
+            return;
+        }
+    } else if constexpr (IsSame<RemoveCVReference<decltype(arg)>, int>) {
+        value = arg;
+    }
+
+    if (accumulator.template has<Empty>()) {
+        accumulator = value;
+    } else if (accumulator.template has<int>()) {
+        if (value.template has<int>()) {
+            accumulator = Operator {}(accumulator.template get<int>(), value.template get<int>());
+        }
+    }
+};
+
+template<typename Operator>
 Value lang$fold_op(Context&, void* ptr, size_t count)
 {
     Span<Value> args { reinterpret_cast<Value*>(ptr), count };
     Variant<Empty, int> accumulator { Empty {} };
-    auto append = [&](auto&& arg) {
-        Variant<Empty, int> value { Empty {} };
-        if constexpr (requires { arg.template has<int>(); }) {
-            if (arg.template has<Empty>() || arg.template has<int>())
-                value = arg.template downcast<Empty, int>();
-        } else if constexpr (IsSame<RemoveCVReference<decltype(arg)>, int>) {
-            value = arg;
-        }
-
-        if (accumulator.template has<Empty>()) {
-            accumulator = value;
-        } else if (accumulator.template has<int>()) {
-            if (value.template has<int>()) {
-                accumulator = Operator {}(accumulator.template get<int>(), value.template get<int>());
-            }
-        }
-    };
     for (auto& arg : args) {
         arg.value.visit(
-            [&](Empty) { append(Empty {}); },
-            [&](FunctionValue const&) { append(String("<function>"sv)); },
-            [&](NonnullRefPtr<Type> const&) { append(String("<type>"sv)); },
+            [&](Empty) { fold_append<Operator>(accumulator, Empty {}); },
+            [&](FunctionValue const&) { fold_append<Operator>(accumulator, String("<function>"sv)); },
+            [&](NonnullRefPtr<Type> const&) { fold_append<Operator>(accumulator, String("<type>"sv)); },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) {
                 for (auto& entry : crs->values)
-                    append(entry.value);
+                    fold_append<Operator>(accumulator, entry.value);
             },
-            [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
-            [&](RecordValue const& rv) { append(String("<record>")); },
-            [&](auto const& value) { append(value); });
+            [&](NativeFunctionType const&) { fold_append<Operator>(accumulator, String("<fn>"sv)); },
+            [&](RecordValue const& rv) { fold_append<Operator>(accumulator, String("<record>")); },
+            [&](auto const& value) { fold_append<Operator>(accumulator, value); });
     }
     return { move(accumulator).downcast<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType, RecordValue>() };
 }
+
+static void add_append(auto& accumulator, auto&& arg)
+{
+    Variant<Empty, int, String> value { Empty {} };
+    if constexpr (requires { arg.template has<int>(); }) {
+        if (arg.template has<Empty>() || arg.template has<int>() || arg.template has<String>())
+            value = arg.template downcast<Empty, int, String>();
+        else if (arg.template has<NonnullRefPtr<CommentResolutionSet>>()) {
+            for (auto& entry : arg.template get<NonnullRefPtr<CommentResolutionSet>>()->values)
+                add_append(accumulator, entry.value);
+            return;
+        }
+    } else {
+        value = arg;
+    }
+
+    if (accumulator.template has<Empty>()) {
+        accumulator = value;
+    } else if (accumulator.template has<String>()) {
+        if (!value.template has<Empty>()) {
+            StringBuilder builder;
+            builder.append(accumulator.template get<String>());
+            value.visit([&](auto& x) { builder.appendff("{}", x); }, [](Empty) {});
+            accumulator = builder.build();
+        }
+    } else if (accumulator.template has<int>()) {
+        if (value.template has<int>()) {
+            accumulator = accumulator.template get<int>() + value.template get<int>();
+        } else if (value.template has<String>()) {
+            StringBuilder builder;
+            value.visit([&](auto& x) { builder.appendff("{}", x); }, [](Empty) {});
+            builder.append(value.get<String>());
+            accumulator = builder.build();
+        }
+    }
+};
 
 Value lang$add(Context&, void* ptr, size_t count)
 {
     Span<Value> args { reinterpret_cast<Value*>(ptr), count };
     Variant<Empty, int, String> accumulator { Empty {} };
-    auto append = [&](auto&& arg) {
-        Variant<Empty, int, String> value { Empty {} };
-        if constexpr (requires { arg.template has<int>(); }) {
-            if (arg.template has<Empty>() || arg.template has<int>() || arg.template has<String>())
-                value = arg.template downcast<Empty, int, String>();
-        } else {
-            value = arg;
-        }
-
-        if (accumulator.template has<Empty>()) {
-            accumulator = value;
-        } else if (accumulator.template has<String>()) {
-            if (!value.template has<Empty>()) {
-                StringBuilder builder;
-                builder.append(accumulator.get<String>());
-                value.visit([&](auto& x) { builder.appendff("{}", x); }, [](Empty) {});
-                accumulator = builder.build();
-            }
-        } else if (accumulator.template has<int>()) {
-            if (value.template has<int>()) {
-                accumulator = accumulator.template get<int>() + value.template get<int>();
-            } else if (value.template has<String>()) {
-                StringBuilder builder;
-                value.visit([&](auto& x) { builder.appendff("{}", x); }, [](Empty) {});
-                builder.append(value.get<String>());
-                accumulator = builder.build();
-            }
-        }
-    };
     for (auto& arg : args) {
         arg.value.visit(
-            [&](Empty) { append(String("<empty>"sv)); },
-            [&](FunctionValue const&) { append(String("<function>"sv)); },
-            [&](NonnullRefPtr<Type> const&) { append(String("<type>"sv)); },
+            [&](Empty) { add_append(accumulator, String("<empty>"sv)); },
+            [&](FunctionValue const&) { add_append(accumulator, String("<function>"sv)); },
+            [&](NonnullRefPtr<Type> const&) { add_append(accumulator, String("<type>"sv)); },
             [&](NonnullRefPtr<CommentResolutionSet> const& crs) {
                 for (auto& entry : crs->values)
-                    append(entry.value);
+                    add_append(accumulator, entry.value);
             },
-            [&](NativeFunctionType const&) { append(String("<fn>"sv)); },
-            [&](RecordValue const& rv) { append(String("<record>"sv)); },
-            [&](auto const& value) { append(value); });
+            [&](NativeFunctionType const&) { add_append(accumulator, String("<fn>"sv)); },
+            [&](RecordValue const& rv) { add_append(accumulator, String("<record>"sv)); },
+            [&](auto const& value) { add_append(accumulator, value); });
     }
     return { move(accumulator).downcast<Empty, int, String, NonnullRefPtr<Type>, FunctionValue, NonnullRefPtr<CommentResolutionSet>, NativeFunctionType, RecordValue>() };
 }
@@ -287,10 +303,21 @@ struct Equal {
     int operator()(int a, int b) { return a == b; }
 };
 
+struct Flat {
+    template<typename T>
+    T operator()(T a, T b)
+    {
+        if (get_random<bool>())
+            return a;
+        return b;
+    }
+};
+
 void initialize_base(Context& context)
 {
     context.scope.empend();
     context.comment_scope.empend();
+    context.last_call_scope_start = 0;
 
     auto& scope = context.scope.last();
 
@@ -305,6 +332,7 @@ void initialize_base(Context& context)
     scope.set("loop", { NativeFunctionType { lang$loop, { "native loop flow operation" } } });
     scope.set("gt", { NativeFunctionType { lang$fold_op<Greater>, { "native comparison greater_than operation" } } });
     scope.set("eq", { NativeFunctionType { lang$fold_op<Equal>, { "native comparison equality operation" } } });
+    scope.set("collapse", { NativeFunctionType { lang$fold_op<Flat>, { "native probability collapse flatten operation" } } });
 }
 
 int main(int argc, char** argv)

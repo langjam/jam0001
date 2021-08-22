@@ -1,18 +1,18 @@
 // the name of a print function
 add("p" "r" "i" "n" "t");
 
-// accumulator type
-let acc = record { i a b };
-
 // fibonacci function
 { |n|: res
+    // accumulator type
+    record { i a b };
+
     // step function
-    let step = { |rec|: res
-        let res = acc(
+    { |rec|: res
+        let res = <accumulator type>(
             add(rec.i 1)
             rec.b
             add(rec.a rec.b)
-        )
+        );
     };
 
     // stop condition
@@ -22,8 +22,18 @@ let acc = record { i a b };
 
     let res = loop(
         <accumulator type>(0 0 1)
-        step
+        <step func>
         <stop cond>).a;
 };
 
-!<add(<name of print> " native")>(<fib>(10));
+// one option
+{:x let x = <fib>(2); };
+// one option
+{:x let x = <fib>(5); };
+// one option
+{:x let x = <fib>(13); };
+// one option
+{:x let x = <fib>(10); };
+
+// Can't resist having randomness?
+!<add(<name of print> " native")>(collapse(<one option>()));
