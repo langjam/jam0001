@@ -1,0 +1,15 @@
+let x = {"value": 5, "next": null};
+x["next"] = {"value": 6, "next": null};
+x["next"]["next"] = {"value": 7, "next": {"value": 8, "next": null}};
+
+function print_list(x) {
+    while (x != null) {
+        print /* [1] value of node */;
+        x = /* [2] go to next node */;
+    }
+}
+
+print_list(x);
+
+/* [[1]] {{ x["value"] }} */
+/* [[2]] {{ x["next"] }} */
