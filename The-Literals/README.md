@@ -5,12 +5,25 @@ Welcome to **Commentinator**, a language for the first [langjam](https://github.
 ### Authors
 Written by [badlydrawnrod](https://github.com/badlydrawnrod|badlydrawnrod) and [Lorne Hyde](https://github.com/LorneHyde).
 
+## Inspiration
+Bad comments are worse than no comments at all. A particularly egregious style of bad comments is the one in which comments merely describe what the next line is doing, without providing any context.
+
+For example:
+```cpp
+// Increment the counter.
+++counter;
+```
+Commentinator is inspired by this commenting style, and makes such comments executable. It may be possible one day to write a program that is valid in both Commentinator and another language.
+
 # Running Commentinator
 ## Pre-requisites
 Commentinator requires Python 3.6 or better to run, mostly because it uses f-strings. It does not require any external packages.
 
+## Platforms
+The authors have successfully run Commentinator under Python 3.8.5 on **Ubuntu** and under Python 3.9.6 on **Windows 10**.
+
 ## Usage
-Simply run commentinator as follows, making sure to substitute `python3` with whatever the command line is for running Python on your system.
+Simply run Commentinator as follows, making sure to substitute `python3` with the command line for running Python 3 on your system.
 
 ```
 $ python3 commentinator.py [filename]
@@ -20,6 +33,23 @@ Alternatively...
 
 ```
 $ python3 -m commentinator [filename]
+```
+
+# Examples
+There are a number of samples in the `samples/` directory. At the time of writing, the following samples are known to work.
+
+- `fib.comment` - calculates the nth fibonacci number and prints it using a **Built-in**.
+- `string_literal.comment` - prints a string literal using a **Built-in**.
+
+### fib.comment
+```
+$ python3 -m commentinator samples/fib.comment
+55
+```
+### string_literal.comment
+```
+$ python3 -m commentinator samples/string_literal.comment
+Hello
 ```
 
 # Syntax Guide
@@ -80,7 +110,7 @@ An if statement consists of an `If` keyword, followed by a **Condition**, a `the
 ```
 
 ## Variable Assignment Statement
-A variable assignment statement takes the form `Set`, followed by an identifier (which may contain spaces) followed by the keyword `to`, followed by an **Expression**.
+A variable assignment statement takes the form `Set`, followed by an identifier (which may contain spaces) followed by the keyword `to`, followed by an **Expression** or a string literal such as `"Hello"`.
 ```
 // Set x to 5.
 ```
@@ -95,10 +125,22 @@ A function call statement consists of a function name, in imperative form, follo
 ### Function Names
 As described above, function names are given in third person singular form, e.g., `Opens the pod bay doors`. However, functions must be invoked in imperative form, e.g., `Open the pod bay doors`.
 
-The following example invokes a function named `Calculates the nth fibonacci number`, and sets the named parameter `n` to 10. The result is placed into a variable called `fibonacci number`. Note that function invocation is imperative, even though the function name is third person. *This is a revolution in imperative programming.*
+The following example invokes a function named `Calculates the nth fibonacci number`, and sets the named parameter `n` to 10. The result is placed into a variable called `fibonacci number`. Note that function invocation is imperative, even though the function name is third person. __*This is a revolution in imperative programming*__.
 
 ### Argument List
 If present, this is a number of bindings from expressions to named function parameters. The first binding takes the form `with` *parameter name* `as` *expression*. Subsequent bindings are similar, but `with` is replaced by `and`.
 
 ### Postfix Assignment
 This is the equivalent of a variable assignment statement, but is used for the result of a function call. If present, it follows the function name and its optional parameters, and takes the form `and call it` followed by a variable name.
+
+## Built-ins
+There are a number of built-in functions.
+
+- `Prints a number`, which is invoked as `Print a number`.
+- `Print`, which prints a string literal.
+
+## Expressions
+Expressions in Commentator are exceedingly basic. They can be a variable or a number, or a binary operator where the operands are variables or numbers. There is no operator precedence, because an expression can only contain one binary operator.
+
+## Comments
+All lines that are not part of a Function Header, or are not introduced by a single line comment `//` are ignored.
