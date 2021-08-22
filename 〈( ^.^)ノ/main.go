@@ -9,6 +9,7 @@ import (
 	"github.com/grossamos/jam0001/evaluator"
 	"github.com/grossamos/jam0001/lexer"
 	"github.com/grossamos/jam0001/parser"
+	"github.com/grossamos/jam0001/shared"
 )
 
 func main() {
@@ -22,11 +23,11 @@ func main() {
 
 	// run lexer
 	toks := lexer.RunLexer(code)
-	// fmt.Println(toks)
+	fmt.Println(toks)
 
 	// run parser
 	nodes, comments := parser.GenerateAst(toks)
-	// shared.Node{IsExpression: true, Children: nodes}.Print("")
+	shared.Node{IsExpression: true, Children: nodes}.Print("")
 
 	// run evaluator
 	evaluator.RunEvaluator(nodes, comments)
