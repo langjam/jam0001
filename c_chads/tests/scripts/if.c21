@@ -1,0 +1,8 @@
+main := proc() int {
+    x := 16;
+    y := 15;
+
+    if (x > y) {
+        print("X is greater than Y");
+    };
+};

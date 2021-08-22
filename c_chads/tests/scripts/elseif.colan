@@ -1,0 +1,10 @@
+main := proc () void {
+    x := 5;
+    a := 5;
+    c := 4;
+    if (a > c*2)
+        print("first branch");
+    else if (x > 8) {
+        print("third branch");
+    } else print("fourth branch");
+};

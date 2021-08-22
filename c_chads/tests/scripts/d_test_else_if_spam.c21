@@ -1,0 +1,13 @@
+# Doigt's classical "If Else If Spam", man I don't even know what *else* to say...
+main := proc () void {
+
+    temperature_celsius = 5; # this would ideally be random but right now it's just always cold
+    if (temperature_celsius < .) { print("Welcome to Sibera!"); }
+    else if (temperature_celsius < 5) { print("It's cold!"); }
+    else if (temperature_celsius < 10) { print("It's cold."); }
+    else if (temperature_celsius < 15) { print("It's slightly cold."); }
+    else if (temperature_celsius < 25) { print("The weather is comfortable."); }
+    else if (temperature_celsius < 30) { print("It's warming up."); }
+    else if (temperature_celsius < 35) { print("It's hot."); }
+    else { print("Hey, your hair is on fire, I'm on fire too! Is this fine? Yeah this is fine."); }
+}
