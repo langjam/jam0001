@@ -11,41 +11,34 @@ model.addPost({
     date: 100,
     children: [
         {
+            id: "5",
+            content: "[]",
+            upvotes: -5,
+            date: 100,
+            children: []
+        },
+        {
             id: "10",
-            content: "l is [1, 2, 3]",
-            upvotes: -5,
-            date: 100,
-            children: []
-        },
-        {
-            id: "12",
-            content: "l[5] is 10",
-            upvotes: -5,
-            date: 100,
-            children: []
-        },
-        {
-            id: "31",
-            content: "x is 0",
+            content: "0",
             upvotes: -5,
             date: 100,
             children: []
         },
         {
             id: "32",
-            content: "while x < 10:",
+            content: "while ${get 1 comment 1 up} < 10:",
             upvotes: 1,
             date: 200,
             children: [
                 {
                     id: "36",
-                    content: "if x<=5:",
+                    content: "if ${get 1 comment 1 left 1 up}<=5:",
                     upvotes: -5,
                     date: 300,
                     children: [
                         {
                             id: "33",
-                            content: "log(x, sqrt(x), l.length)",
+                            content: "log(${get 1 comment 2 left 1 up}, ${get 1 comment 2 left 2 up})",
                             upvotes: -5,
                             date: 400,
                             children: []
@@ -54,7 +47,14 @@ model.addPost({
                 },
                 {
                     id: "35",
-                    content: "x is x + 1",
+                    content: "set {get 1 comment 1 left 1 up} to ${get 1 comment 1 left 1 up} + 1",
+                    upvotes: -5,
+                    date: 400,
+                    children: []
+                },
+                {
+                    id: "100",
+                    content: "set {get 1 comment 1 left 2 up} to (${get 1 comment 1 left 2 up} + [${get 1 comment 1 left 1 up}])",
                     upvotes: -5,
                     date: 400,
                     children: []

@@ -1,6 +1,6 @@
 start := comment=Comment _ $
 
-Comment := WhileComment | ManipulationComment | AssignmentComment | IfComment | FunctionCall
+Comment := WhileComment | ManipulationComment | SetComment | IfComment | Expression
 _ := ' '*
 
 WhileComment := 'while' _ whileExpression=Expression ':'
@@ -10,11 +10,12 @@ ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | M
 ManipulationCommentSwap := 'swap' _ target=CommentSelector
 ManipulationCommentMove := 'move' _ target=CommentSelector
 ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
-CommentSelector := count='[0-9]+' _ 'comments' _ dir={'above' | 'below'}
+
+SetComment := 'set ' _ target=CommentSelector  _ 'to' _ value=Expression
+
+CommentSelector := '{' _ 'get' _ count='[0-9]+' _ {'comment' | 'comments'} _ navigations={distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* _ '}'
 
 IfComment := 'if' _ condition=Expression _ ':'
-
-AssignmentComment := varName=VarName indexPart={_ '\[' _ index=Expression _ '\]'}? _ 'is' _ rhsExpr=Expression
 
 VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
 Expression := ComparisionExpression
@@ -29,16 +30,18 @@ LineExpression := AddExpression | SubExpression | DotExpression
 AddExpression :=  lhs=LineExpression _ '\+' _ rhs=DotExpression
 SubExpression :=  lhs=LineExpression _ '\-' _ rhs=DotExpression
 
-DotExpression := MulExpression | DivExpression | PostfixExpression
-MulExpression := lhs=DotExpression _ '\*' _ rhs=PostfixExpression
-DivExpression := lhs=DotExpression _ '\/' _ rhs=PostfixExpression
+DotExpression := MulExpression | DivExpression | PrefixExpression
+MulExpression := lhs=DotExpression _ '\*' _ rhs=PrefixExpression
+DivExpression := lhs=DotExpression _ '\/' _ rhs=PrefixExpression
+
+PrefixExpression := EvalExpression | PostfixExpression
+EvalExpression := '\$' _ toEval=PostfixExpression
 
 PostfixExpression := FunctionCall | GetLengthExpression | IndexExpression | AtomicExpression
 
 FunctionParameters := value=Expression _ next={',' _ nextParam=FunctionParameters}?
 FunctionCall := funcName=AtomicExpression _ '\(' _ params=FunctionParameters? _ '\)'
-
 GetLengthExpression := list=AtomicExpression _ '.length'
-IndexExpression := list = AtomicExpression _ '\[' _ index=Expression _ '\]'
+IndexExpression := list=AtomicExpression _ '\[' _ index=Expression _ '\]'
 
-AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)' | '\[' listParams=FunctionParameters? '\]'
+AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)' | '\[' listParams=FunctionParameters? '\]' | CommentSelector

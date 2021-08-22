@@ -18,16 +18,33 @@ class VMFunction {
     }
 }
 
-type VMValue = number | string | boolean | null | VMFunction | VMValue[];
+class FoundComments {
+    private mComments : WrappedComment[];
+    constructor(comments : WrappedComment[]) {
+        this.mComments = comments;
+    }
+    get comments() {
+        return this.mComments;
+    }
+}
+class VMValueArray {
+    private mArray : VMValue[];
+    constructor(array : VMValue[]) {
+        this.mArray = array;
+    }
+    get array() {
+        return this.mArray;
+    }
+}
+
+type VMValue = number | string | boolean | undefined | VMFunction | VMValueArray | FoundComments;
 
 export class VM {
     private mASTProvider : CommentProvider;
-    private mVariables : Map<String, VMValue>[] = [];
     constructor(astProvider : CommentProvider) {
         this.mASTProvider = astProvider;
     }
     public async run() {
-        this.mVariables.push(new Map());
         let currentComment = this.mASTProvider.getFirstComment();
         
         while(currentComment !== undefined) {
@@ -35,31 +52,38 @@ export class VM {
             currentComment = this.mASTProvider.getNextComment(currentComment.id);
         }
     }
-    private traverse(comment : WrappedComment) {
-        if(comment.ast.kind === AST.ASTKinds.WhileComment) {
+    private stringify(value : VMValue) : string {
+        if(value instanceof VMValueArray) {
+            return "[" + value.array.map(c => this.stringify(c)).join(", ") + "]";
+        }
+        return String(value);
+    }
+    private traverse(comment : WrappedComment) : VMValue | undefined {
+        if(comment.content === "")
+            return;
+        let ast = comment.parseAST();
+        //console.log(ast);
+        if(ast.kind === AST.ASTKinds.WhileComment) {
             while(true) {
-                if(this.evaluateExpression(comment.ast.whileExpression) !== true) {
+                let cond = this.evaluateExpression(comment, ast.whileExpression);
+                if(cond !== true) {
                     break;
                 }
                 this.evaluteChildren(comment);
             }
-        } else if(comment.ast.kind === AST.ASTKinds.AssignmentComment) {
-            // check for index
-            if(comment.ast.indexPart === null) {
-                this.mVariables[this.mVariables.length - 1].set(comment.ast.varName, this.evaluateExpression(comment.ast.rhsExpr));
-                return;
+        } else if(ast.kind === AST.ASTKinds.SetComment) {
+            let comments = this.findComments(comment, ast.target);
+            let target = this.evaluateExpression(comment, ast.value);
+            for(let c of comments.comments) {
+                c.content = this.stringify(target);
             }
-            let list = this.mVariables[this.mVariables.length - 1].get(comment.ast.varName) as VMValue[];
-            let index = this.evaluateExpression(comment.ast.indexPart.index);
-            list[Number(index)] = this.evaluateExpression(comment.ast.rhsExpr);
-        } else if(comment.ast.kind === AST.ASTKinds.FunctionCall) {
-            this.evalFunction(comment.ast);
-        } else if(comment.ast.kind === AST.ASTKinds.IfComment) {
-            if(this.evaluateExpression(comment.ast.condition) === true) {
+            
+        } else if(ast.kind === AST.ASTKinds.IfComment) {
+            if(this.evaluateExpression(comment, ast.condition) === true) {
                 this.evaluteChildren(comment);
             }
         } else {
-            throw new Error("Unknown kind " + comment.ast["kind"]);
+            return this.evaluateExpression(comment, ast as AST.Expression);
         }
     }
     private evaluteChildren(comment : WrappedComment) {
@@ -69,82 +93,133 @@ export class VM {
             current = this.mASTProvider.getNextComment(current.id);
         }
     }
-    private evalFunctionParams(params : AST.FunctionParameters | null):VMValue[] {
+    private evalFunctionParams(parentComment : WrappedComment, params : AST.FunctionParameters | null):VMValue[] {
         let ret : VMValue[] = [];
         if(params === null) {
             return ret;
         }
-        ret.push(this.evaluateExpression(params.value));
+        ret.push(this.evaluateExpression(parentComment, params.value));
         let restOfParams = params.next?.nextParam;
         if(restOfParams === undefined) {
             return ret;
         }
-        return ret.concat(this.evalFunctionParams(restOfParams));
+        return ret.concat(this.evalFunctionParams(parentComment, restOfParams));
     }
-    private evalFunction(funcCall : AST.FunctionCall) : VMValue {
-        let func = this.evaluateExpression(funcCall.funcName);
-        let params = this.evalFunctionParams(funcCall.params);
+    private evalFunction(parentComment : WrappedComment, funcCall : AST.FunctionCall) : VMValue {
+        let func = this.evaluateExpression(parentComment, funcCall.funcName);
+        let params = this.evalFunctionParams(parentComment, funcCall.params);
         if(func instanceof VMFunction) {
             return func.callback(params);
         }
         throw new Error(func + " is not a function!");
     }
-    private evaluateExpression(expression : AST.Expression) : VMValue {
+    private evaluateExpression(parentComment : WrappedComment, expression : AST.Expression) : VMValue {
         if(expression.kind === AST.ASTKinds.AtomicExpression_1) {
             return true;
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_2) {
             return false;
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_3) {
-            let val = this.mVariables[this.mVariables.length - 1].get(expression.varName);
-            if(val === undefined) {
-                if(expression.varName === "log") {
-                    return new VMFunction(1, (p : VMValue[]) => {
-                        console.log(p);
-                    });
-                } else if(expression.varName === "sqrt") {
-                    return new VMFunction(1, (p : VMValue[]) => {
-                        return Math.sqrt(p[0] as number);
-                    });
-                }
-                throw new Error(val + " is not defined");
+
+            if(expression.varName === "log") {
+                return new VMFunction(1, (p : VMValue[]) => {
+                    console.log(p.map(p => this.stringify(p)).join(" "));
+                });
+            } else if(expression.varName === "sqrt") {
+                return new VMFunction(1, (p : VMValue[]) => {
+                    return Math.sqrt(p[0] as number);
+                });
             }
-            return val;
+            throw new Error(expression.varName + " is not defined");
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_4) {
             // numeric literal
             return Number(expression.num);
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_5) {
             // sub expression
-            return this.evaluateExpression(expression.sub);
+            return this.evaluateExpression(parentComment, expression.sub);
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_6) {
             // list creation
-            return this.evalFunctionParams(expression.listParams);
+            return new VMValueArray(this.evalFunctionParams(parentComment, expression.listParams));
         } else if(expression.kind === AST.ASTKinds.AddExpression) {
-            return this.evaluateExpression(expression.lhs) as any + (this.evaluateExpression(expression.rhs) as any);
+            let lhs = this.evaluateExpression(parentComment, expression.lhs);
+            let rhs = this.evaluateExpression(parentComment, expression.rhs);
+            if(lhs instanceof VMValueArray && rhs instanceof VMValueArray) {
+                return new VMValueArray(lhs.array.concat(rhs.array));
+            }
+            return lhs as any + (rhs as any);
         } else if(expression.kind === AST.ASTKinds.SubExpression) {
-            return this.evaluateExpression(expression.lhs) as any - (this.evaluateExpression(expression.rhs) as any);
+            return this.evaluateExpression(parentComment, expression.lhs) as any - (this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.MulExpression) {
-            return this.evaluateExpression(expression.lhs) as any * (this.evaluateExpression(expression.rhs) as any);
+            return this.evaluateExpression(parentComment, expression.lhs) as any * (this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.DivExpression) {
-            return this.evaluateExpression(expression.lhs) as any / (this.evaluateExpression(expression.rhs) as any);
+            return this.evaluateExpression(parentComment, expression.lhs) as any / (this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.LessThanExpression) {
-            return this.evaluateExpression(expression.lhs) as any < (this.evaluateExpression(expression.rhs) as any);
+            return this.evaluateExpression(parentComment, expression.lhs) as any < (this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.MoreThanExpression) {
-            return this.evaluateExpression(expression.lhs) as any > (this.evaluateExpression(expression.rhs) as any);
+            return this.evaluateExpression(parentComment, expression.lhs) as any > (this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.LessEqualExpression) {
-            return this.evaluateExpression(expression.lhs) as any <= (this.evaluateExpression(expression.rhs) as any);
+            return this.evaluateExpression(parentComment, expression.lhs) as any <= (this.evaluateExpression(parentComment, expression.rhs) as any);
         } else if(expression.kind === AST.ASTKinds.MoreEqualExpression) {
-            return this.evaluateExpression(expression.lhs) as any >= (this.evaluateExpression(expression.rhs) as any);
-        } else if(expression.kind == AST.ASTKinds.FunctionCall) {
-            return this.evalFunction(expression);
-        } else if(expression.kind == AST.ASTKinds.GetLengthExpression) {
-            let l = this.evaluateExpression(expression.list);
-            return (l as VMValue[]).length;
-        } else if(expression.kind == AST.ASTKinds.IndexExpression) {
-            let l = this.evaluateExpression(expression.list) as VMValue[];
-            let index = this.evaluateExpression(expression.index);
-            return l[Number(index)];
+            return this.evaluateExpression(parentComment, expression.lhs) as any >= (this.evaluateExpression(parentComment, expression.rhs) as any);
+        } else if(expression.kind === AST.ASTKinds.FunctionCall) {
+            return this.evalFunction(parentComment, expression);
+        } else if(expression.kind === AST.ASTKinds.GetLengthExpression) {
+            let l = this.evaluateExpression(parentComment, expression.list);
+            if(!(l instanceof VMValueArray)) {
+                throw new Error("Not an array!");
+            }
+            return (l as VMValueArray).array.length;
+        } else if(expression.kind === AST.ASTKinds.IndexExpression) {
+            let l = this.evaluateExpression(parentComment, expression.list);
+            if(!(l instanceof VMValueArray)) {
+                throw new Error("Not an array!");
+            }
+            let index = this.evaluateExpression(parentComment, expression.index);
+            return l.array[Number(index)];
+        } else if(expression.kind === AST.ASTKinds.CommentSelector) {
+            return this.findComments(parentComment, expression);
+        } else if(expression.kind === AST.ASTKinds.EvalExpression) {
+            let comments = this.evaluateExpression(parentComment, expression.toEval);
+            if(!(comments instanceof FoundComments)) {
+                throw new Error("You can only evaluate comments, not " + comments);
+            }
+            if(comments.comments.length == 1) {
+                let ret = this.traverse(comments.comments[0]);
+                return ret;
+            }
+            return new VMValueArray(comments.comments.map((c) => this.traverse(c)));
         }
         throw new Error("Unknown kind " + expression["kind"]);
         return false;
+    }
+    findComments(parentComment : WrappedComment, expression : AST.CommentSelector): FoundComments {
+        let count = Number(expression.count);
+        let current : WrappedComment = parentComment;
+        let next : WrappedComment | undefined;
+        for(let nav of expression.navigations) {
+            for(let i = 0; i < Number(nav.distance); ++i) {
+                switch (nav.dir) {
+                    case "up":
+                        next = this.mASTProvider.getPrevComment(current.id);
+                        break;
+                    case "down":
+                        next = this.mASTProvider.getNextComment(current.id);
+                        break;
+                    case "left":
+                        next = this.mASTProvider.getParentComment(current.id);
+                        break;
+                    case "right":
+                        next = this.mASTProvider.getFirstChildComment(current.id);
+                        break;
+                
+                    default:
+                        throw new Error("This shouldn't happen!");
+                }
+                if(next === undefined) {
+                    throw new Error("Can't navigate there!");
+                }
+                current = next;
+            }
+        }
+        return new FoundComments([current]);
     }
 }
