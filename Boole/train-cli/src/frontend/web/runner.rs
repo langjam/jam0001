@@ -135,12 +135,22 @@ impl Communicator for WebRunner {
         todo!()
     }
 
-    fn print(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
-        self.send(MessageToWebpage::Print{message: data})
+    fn print(&self, station: Station, data: Vec<i64>) -> Result<(), CommunicatorError> {
+        let mut str = String::new();
+        for (i, data) in data.into_iter().enumerate() {
+            if i != 0 {
+                str += ", ";
+            }
+            str += &data.to_string();
+        }
+
+        self.send(MessageToWebpage::Print{station, message: str})
     }
 
-    fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
-        self.send(MessageToWebpage::PrintChar{message: data})
+    fn print_char(&self, station: Station, data: Vec<i64>) -> Result<(), CommunicatorError> {
+        let char_data = data.iter().map(|x| (x&0xFF) as u8).collect();
+        let str = String::from_utf8(char_data)?;
+        self.send(MessageToWebpage::Print{station, message: str})
     }
 
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), CommunicatorError> {

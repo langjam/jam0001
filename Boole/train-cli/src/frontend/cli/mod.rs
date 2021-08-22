@@ -43,12 +43,12 @@ impl Communicator for CliRunner {
         }
     }
 
-    fn print(&self, data: Vec<i64>) -> Result<(), train::interface::CommunicatorError> {
+    fn print(&self, station: Station, data: Vec<i64>) -> Result<(), train::interface::CommunicatorError> {
         log::info!("OUTPUT: {:?}", data);
         Ok(())
     }
 
-    fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
+    fn print_char(&self, station: Station, data: Vec<i64>) -> Result<(), CommunicatorError> {
         let char_data = data.iter().map(|x| (x&0xFF) as u8).collect();
         log::info!("OUTPUT: {}", String::from_utf8(char_data)?);
         Ok(())

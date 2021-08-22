@@ -388,34 +388,40 @@ class World:
 
         tiles = set()
 
-        for road in self.roads:
+        for id,road in enumerate(self.roads):
             path = road[3]
 
             for i in range(1, len(path) - 1):
-                if abs(path[i - 1][0] - path[i + 1][0]) == 2:
-                    tiles.add(Tile(path[i][0], path[i][1], "Horizontal"))
-                if abs(path[i - 1][1] - path[i + 1][1]) == 2:
-                    tiles.add(Tile(path[i][0], path[i][1], "Vertical"))
+                for j in range(id):
+                    if path[i] in self.roads[j][3]:
+                        tiles.remove(Tile(path[i][0], path[i][1], "CROSSING"))
+                        tiles.add(Tile(path[i][0], path[i][1], "CROSSING"))
+                        break
+                else:
+                    if abs(path[i - 1][0] - path[i + 1][0]) == 2:
+                        tiles.add(Tile(path[i][0], path[i][1], "Horizontal"))
+                    if abs(path[i - 1][1] - path[i + 1][1]) == 2:
+                        tiles.add(Tile(path[i][0], path[i][1], "Vertical"))
 
-                if path[i - 1][0] == path[i][0] - 1 and path[i + 1][1] == path[i][1] - 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "WN"))
-                if path[i - 1][1] == path[i][1] - 1 and path[i + 1][0] == path[i][0] - 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "WN"))
+                    if path[i - 1][0] == path[i][0] - 1 and path[i + 1][1] == path[i][1] - 1:
+                        tiles.add(Tile(path[i][0], path[i][1], "WN"))
+                    if path[i - 1][1] == path[i][1] - 1 and path[i + 1][0] == path[i][0] - 1:
+                        tiles.add(Tile(path[i][0], path[i][1], "WN"))
 
-                if path[i - 1][0] == path[i][0] + 1 and path[i + 1][1] == path[i][1] - 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "NE"))
-                if path[i - 1][1] == path[i][1] - 1 and path[i + 1][0] == path[i][0] + 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "NE"))
+                    if path[i - 1][0] == path[i][0] + 1 and path[i + 1][1] == path[i][1] - 1:
+                        tiles.add(Tile(path[i][0], path[i][1], "NE"))
+                    if path[i - 1][1] == path[i][1] - 1 and path[i + 1][0] == path[i][0] + 1:
+                        tiles.add(Tile(path[i][0], path[i][1], "NE"))
 
-                if path[i - 1][0] == path[i][0] - 1 and path[i + 1][1] == path[i][1] + 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "SW"))
-                if path[i - 1][1] == path[i][1] + 1 and path[i + 1][0] == path[i][0] - 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "SW"))
+                    if path[i - 1][0] == path[i][0] - 1 and path[i + 1][1] == path[i][1] + 1:
+                        tiles.add(Tile(path[i][0], path[i][1], "SW"))
+                    if path[i - 1][1] == path[i][1] + 1 and path[i + 1][0] == path[i][0] - 1:
+                        tiles.add(Tile(path[i][0], path[i][1], "SW"))
 
-                if path[i - 1][0] == path[i][0] + 1 and path[i + 1][1] == path[i][1] + 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "ES"))
-                if path[i - 1][1] == path[i][1] + 1 and path[i + 1][0] == path[i][0] + 1:
-                    tiles.add(Tile(path[i][0], path[i][1], "ES"))
+                    if path[i - 1][0] == path[i][0] + 1 and path[i + 1][1] == path[i][1] + 1:
+                        tiles.add(Tile(path[i][0], path[i][1], "ES"))
+                    if path[i - 1][1] == path[i][1] + 1 and path[i + 1][0] == path[i][0] + 1:
+                        tiles.add(Tile(path[i][0], path[i][1], "ES"))
 
         data = {
             "stations" : [{"x":station.x,"y":station.y,"stoppers":station_data[i],"type":station.type, "name": station.name} for (i,station) in enumerate(self.stations)],

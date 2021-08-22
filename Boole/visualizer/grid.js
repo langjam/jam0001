@@ -3,17 +3,27 @@ const TILE_SIZE = 50;
 const OP_SIZE = TILE_SIZE * 3/4
 const TRAIN_SPEED = .1;
 
+const DIRECTION = {
+    North: "north",
+    East: "east",
+    South: "south",
+    West: "west",
+}
+
 const TILE_TYPE = {
-    Horizontal: {name: "track_straight_EW.png", img: null},
-    Vertical: {name: "track_straight_NS.png", img: null},
+    Horizontal: {name: "track_straight_EW.png", img: null, rot: DIRECTION.North},
+    Vertical: {name: "track_straight_NS.png", img: null, rot: DIRECTION.North},
 
-    NE: {name: "track_corner_NE.png", img: null},
-    ES: {name: "track_corner_ES.png", img: null},
-    SW: {name: "track_corner_SW.png", img: null},
-    WN: {name: "track_corner_WN.png", img: null},
+    NE: {name: "track_corner_NE.png", img: null, rot: DIRECTION.North},
+    ES: {name: "track_corner_ES.png", img: null, rot: DIRECTION.North},
+    SW: {name: "track_corner_SW.png", img: null, rot: DIRECTION.North},
+    WN: {name: "track_corner_WN.png", img: null, rot: DIRECTION.North},
 
-    T_LEFT: {name: "T_crossing_left.png", img: null},
-    CROSSING: {name: "crossing.png", img: null}
+    T_WEST: {name: "T_crossing_left.png", img: null, rot: DIRECTION.North},
+    T_NORTH: {name: "T_crossing_left.png", img: null, rot: DIRECTION.East},
+    T_EAST: {name: "T_crossing_left.png", img: null, rot: DIRECTION.South},
+    T_SOUTH: {name: "T_crossing_left.png", img: null, rot: DIRECTION.West},
+    CROSSING: {name: "crossing.png", img: null, rot: DIRECTION.North}
 }
 
 const COLOR = {
@@ -50,13 +60,6 @@ const STATION_TYPE = {
     "switch_eqz": "op_switch%20eq.png",
     "switch_gtez": "op_switch%20gte.png",
     "switch_empty": "op_switch%20empty.png",
-}
-
-const DIRECTION = {
-    North: "north",
-    East: "east",
-    South: "south",
-    West: "west",
 }
 
 let locomotiveBackground;
@@ -106,8 +109,8 @@ class Grid {
     }
 
 
-    addTile(coordinate, tile, rotation=DIRECTION.North) {
-        this.grid.set(coordinate, {tile: tile, rotation: rotation})
+    addTile(coordinate, tile) {
+        this.grid.set(coordinate, {tile: tile, rotation: tile.rot})
     }
 
     addTrain(train) {
@@ -226,7 +229,7 @@ class Train {
         const x = lerp(this.traveling_from[0], this.traveling_to[0], this.animation_count)
         const y = lerp(this.traveling_from[1], this.traveling_to[1], this.animation_count)
 
-        console.log(x, y, this.traveling_from, this.traveling_to, this.animation_count)
+        // console.log(x, y, this.traveling_from, this.traveling_to, this.animation_count)
 
         this.location.x = x;
         this.location.y = y;
@@ -274,6 +277,7 @@ class Station {
         this.stopped = stopped;
         this.station_type = station_type;
         this.name = name;
+        this.last_print = "";
     }
 
     drawBackground() {
@@ -361,6 +365,17 @@ class Station {
         textAlign(CENTER, CENTER);
         text(this.name, 0, 0)
         pop()
+
+        if (this.last_print !== "") {
+            push();
+            translate(TILE_SIZE, -TILE_SIZE * (5 / 8));
+            fill(255);
+            stroke(255);
+            textAlign(CENTER, CENTER);
+            textSize(18);
+            text(this.last_print, 0, 0);
+            pop();
+        }
 
         pop()
     }
