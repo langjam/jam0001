@@ -36,7 +36,7 @@ pub fn parse_wishes(input: &Vec<FirstClassPassenger>) -> TrainConfig {
     let primary_color = combine_colors(primary_colors);
     let secondary_color = combine_colors(secondary_colors);
     let length = if lengths.len() > 0 {
-        (lengths.iter().sum::<usize>() + 1) / lengths.len()
+        lengths.iter().sum::<usize>() / lengths.len()
     } else {
         2
     };

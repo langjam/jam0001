@@ -31,6 +31,11 @@ const TILE_TYPE = {
     Decoration4: {name: "decoration4.png", img:null, rotate: DIRECTION.North},
     Decoration5: {name: "decoration5.png", img:null, rotate: DIRECTION.North},
 
+    water1: {name: "water1.png", img:null, rotate: DIRECTION.North},
+    water2: {name: "water2.png", img:null, rotate: DIRECTION.North},
+    water_lily: {name: "water_lily.png", img:null, rotate: DIRECTION.North},
+    water_sand: {name: "water_sand.png", img:null, rotate: DIRECTION.North},
+
 }
 
 const COLOR = {
@@ -307,7 +312,7 @@ class Train {
 
         this.first_class_messages = first_class_messages
         this.current_message = ""
-        this.ticks_left = getRandomInt(50, 100);
+        this.ticks_left = getRandomInt(100, 1000);
     }
 
     travelAlongPath(path) {
@@ -396,7 +401,7 @@ class Train {
                 this.ticks_left = getRandomInt(100, 150);
             } else {
                 this.current_message = "";
-                this.ticks_left = getRandomInt(200, 250);
+                this.ticks_left = getRandomInt(500, 1500);
             }
         }
     }
