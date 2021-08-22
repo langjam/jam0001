@@ -36,15 +36,16 @@ and comment l = parse
     let c = Lexing.lexeme lexbuf in
     raise (SyntaxError ("invalid token '" ^ c ^ "' found while parsing a comment"))
   }
-  | eof       { raise (SyntaxError "unexcpected enf of file while parsing a comment") }
+  | eof       { raise (SyntaxError "unexpected end of file while parsing a comment") }
 
 and defun l = parse
   | white     { defun l lexbuf }
   | newline   { next_line lexbuf; defun l lexbuf }
+  | "/*"      { comment (ref []) lexbuf }
   | "function " (word as fname) ";" { Spec (true, fname, l) }
-  | "yolo " (word as fname) ";" { Spec (false, fname, l) }
+  | "function " (word as fname) { Spec (true, fname, l) } (* semicolons are optional *)
   | _         {
     let c = Lexing.lexeme lexbuf in
     raise (SyntaxError ("invalid token '" ^ c ^ "' found while parsing a function definition"))
   }
-  | eof       { raise (SyntaxError "unexcpected enf of file while parsing a function declaration") }
+  | eof       { raise Eof }

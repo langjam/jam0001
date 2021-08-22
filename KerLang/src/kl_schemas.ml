@@ -1,21 +1,21 @@
 (** {1 Schemas}
 
-  Using a parser combinator approach to do NLP stuff
+    Using a parser combinator approach to do NLP stuff
 *)
 
 (** A [('a, 'b)] schema is a chunk of code that analyses a sequence of ['a]
-  and produces a ['b] *)
+    and produces a ['b] *)
 type ('a, 'b) schema = 'a list -> ('b * 'a list) option
 
 (** [check pred] is a simple [('a, 'a)] schema that detect an ['a] satisfying [pred]
-  and returns it *)
+    and returns it *)
 let check (pred : 'a -> bool) : ('a, 'a) schema = function
   | [] -> None
   | x::xs ->
     if pred x then Some (x, xs) else None
 
 (** [let* x = schema1 in schema2] is a schema perform the [schema1] analysis and then the [schema2]
-  analysis (where [schema2] may depend on [x]) *)
+    analysis (where [schema2] may depend on [x]) *)
 let (let*) (schm : ('a, 'b) schema) (f : 'b -> ('a, 'c) schema) : ('a, 'c) schema = fun input ->
   match schm input with
   | None -> None

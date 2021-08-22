@@ -1,5 +1,5 @@
 (**
-  Centralized exception handling for the KerLang compiler
+   Centralized exception handling for the KerLang compiler
 *)
 
 open Kl_parsing
@@ -13,6 +13,10 @@ let warning msg =
 
 let error msg =
   Printf.eprintf "\x1b[1;31merror:\x1b[0m %s\n" msg; exit 1
+
+let dev_error msg =
+  Printf.eprintf "\x1b[1;31mimplementation-bug-error:\x1b[0m %s\n" msg;
+  Printf.eprintf "\x1b[1;36mnote:\x1b[0m this is a bug in the KerLang implementation, this is not your fault\n"; exit 1
 
 let syntax_error pos msg =
   Printf.eprintf "\x1b[1;31merror: (%a) \x1b[0m %s\n" print_position pos msg; exit 1

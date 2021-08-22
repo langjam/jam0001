@@ -31,55 +31,55 @@ type function_result =
   | Function of expr
   | Yolo of expr list
 
-  let rec pp_expr oc (expr : expr) =
-    match expr with
-    | Leaf value -> pp_value oc value
-    | Node operation -> pp_operation oc operation
-  
-  and pp_value oc (value: value) =
-    match value with
-    | Arg id -> Printf.fprintf oc "x%d" id
-    | Cst value -> Printf.fprintf oc "%d" value
-    | Var name -> Printf.fprintf oc "%s" name
-    | Hole -> Printf.fprintf oc "{??}"
-  
-  and pp_operation oc (operation : operation) =
-    match operation with
-    | If (cond, ifcase, elsecase) ->
-      Printf.fprintf oc "(if %a then %a else %a)"
-        pp_expr cond
-        pp_expr ifcase
-        pp_expr elsecase
-    | Sum (a, b) ->
-      Printf.fprintf oc "(%a + %a)" pp_expr a pp_expr b
-    | Diff (a, b) ->
-      Printf.fprintf oc "(%a - %a)" pp_expr a pp_expr b
-    | Prod (a, b) ->
-      Printf.fprintf oc "(%a * %a)" pp_expr a pp_expr b
-    | Div (a, b) ->
-      Printf.fprintf oc "(%a / %a)" pp_expr a pp_expr b
-    | App (func_name, value_list) ->
-      Printf.fprintf oc "(%s " func_name;
-      List.iter (fun value -> Printf.fprintf oc "%a " pp_expr value) value_list;
-      Printf.fprintf oc ")"
-    | Rec value_list ->
-      Printf.fprintf oc "(rec ";
-      List.iter (fun value -> Printf.fprintf oc "%a " pp_expr value) value_list;
-      Printf.fprintf oc ")"
-  
-  let pp_cconstraint oc (cc: cconstraint) =
-    match cc with
-    | Takes how_many_args ->
-      Printf.fprintf oc "- Takes %d arguments\n" how_many_args
-    | Let (var_name, expr) ->
-      Printf.fprintf oc "- Let %s be %a" var_name pp_expr expr
-    | Returns expr ->
-      Printf.fprintf oc "- Returns %a" pp_expr expr
-    | Uses expr_list ->
-      Printf.fprintf oc "- Uses";
-      List.iter (fun expr -> Printf.fprintf oc "%s" "\n  * "; pp_expr oc expr) expr_list
-    | Nothing ->
-      Printf.fprintf oc "- Has comments for humans\n"  
+let rec pp_expr oc (expr : expr) =
+  match expr with
+  | Leaf value -> pp_value oc value
+  | Node operation -> pp_operation oc operation
+
+and pp_value oc (value: value) =
+  match value with
+  | Arg id -> Printf.fprintf oc "x%d" id
+  | Cst value -> Printf.fprintf oc "%d" value
+  | Var name -> Printf.fprintf oc "%s" name
+  | Hole -> Printf.fprintf oc "{??}"
+
+and pp_operation oc (operation : operation) =
+  match operation with
+  | If (cond, ifcase, elsecase) ->
+    Printf.fprintf oc "(if %a then %a else %a)"
+      pp_expr cond
+      pp_expr ifcase
+      pp_expr elsecase
+  | Sum (a, b) ->
+    Printf.fprintf oc "(%a + %a)" pp_expr a pp_expr b
+  | Diff (a, b) ->
+    Printf.fprintf oc "(%a - %a)" pp_expr a pp_expr b
+  | Prod (a, b) ->
+    Printf.fprintf oc "(%a * %a)" pp_expr a pp_expr b
+  | Div (a, b) ->
+    Printf.fprintf oc "(%a / %a)" pp_expr a pp_expr b
+  | App (func_name, value_list) ->
+    Printf.fprintf oc "(%s " func_name;
+    List.iter (fun value -> Printf.fprintf oc "%a " pp_expr value) value_list;
+    Printf.fprintf oc ")"
+  | Rec value_list ->
+    Printf.fprintf oc "(rec ";
+    List.iter (fun value -> Printf.fprintf oc "%a " pp_expr value) value_list;
+    Printf.fprintf oc ")"
+
+let pp_cconstraint oc (cc: cconstraint) =
+  match cc with
+  | Takes how_many_args ->
+    Printf.fprintf oc "- Takes %d arguments\n" how_many_args
+  | Let (var_name, expr) ->
+    Printf.fprintf oc "- Let %s be %a" var_name pp_expr expr
+  | Returns expr ->
+    Printf.fprintf oc "- Returns %a" pp_expr expr
+  | Uses expr_list ->
+    Printf.fprintf oc "- Uses";
+    List.iter (fun expr -> Printf.fprintf oc "%s" "\n  * "; pp_expr oc expr) expr_list
+  | Nothing ->
+    Printf.fprintf oc "- Has comments for humans\n"  
 
 type comment_function = {
   name : string;
@@ -111,11 +111,11 @@ let print_comment_function {name; n_args; declarations; result; _} =
     Printf.printf "- constraints for %s are'nt sufficient to build a function\n" name;
     Printf.printf "- known context to synthesize a function:\n";
     List.iteri (fun i expr ->
-      Printf.printf "  %d : %a\n" i pp_expr expr) ctx
+        Printf.printf "  %d : %a\n" i pp_expr expr) ctx
   | Function e ->
     Printf.printf "- known context:\n";
     List.iter (fun (name, expr) ->
-      Printf.printf "  \"%s\" : %a\n" name pp_expr expr) declarations;
+        Printf.printf "  \"%s\" : %a\n" name pp_expr expr) declarations;
     Printf.printf "- generated function is:\n";
     Printf.printf "  %a\n" pp_expr e;
     if has_holes e then begin
@@ -132,7 +132,7 @@ let split_lines (comment : tok list) : tok list list =
 
 let tok_pos = function
   | Int (p, _) | Word (p, _) -> p
-  | Sep -> failwith "sep has no position"
+  | Sep -> dev_error "sep has no position"
 
 let string_of_tok = function
   | Int (_, n) -> string_of_int n
@@ -146,7 +146,7 @@ let rec string_of_comment = function
 
 let look_for (kw : string) (comment : tok list) : tok list * tok list =
   let rec search (prev : tok list) = function
-    | [] -> failwith ("expected keyword " ^ kw)
+    | [] -> dev_error ("expected keyword " ^ kw)
     | t::q -> if string_of_tok t = kw then (List.rev prev, q)
       else search (t::prev) q
   in search [] comment
@@ -160,13 +160,13 @@ let split_kw (kw : string) (comment : tok list) : tok list list =
 
 let parse_value (decl : (string * expr) list) (comment : tok list) : value =
   let rec build_value res = function
-  | [] -> if List.mem_assoc res decl then Var res
-  else raise (SyntaxError (tok_pos (List.hd comment), "no variable named " ^ res))
-  | t::q ->
-    begin match string_of_tok t with
-    | "something" -> Hole
-    | s -> build_value (res ^ " " ^ s) q
-    end
+    | [] -> if List.mem_assoc res decl then Var res
+      else raise (SyntaxError (tok_pos (List.hd comment), "no variable named " ^ res))
+    | t::q ->
+      begin match string_of_tok t with
+        | "something" -> Hole
+        | s -> build_value (res ^ " " ^ s) q
+      end
   in match comment with
   | [] -> Hole
   | (Int (_, n))::_ -> Cst n
@@ -174,8 +174,8 @@ let parse_value (decl : (string * expr) list) (comment : tok list) : value =
     match string_of_tok t with
     | "argument" ->
       begin match q with
-      | Int (_, n)::_ -> Arg n
-      | _ -> raise (SyntaxError (tok_pos t, "expected argument index"))
+        | Int (_, n)::_ -> Arg n
+        | _ -> raise (SyntaxError (tok_pos t, "expected argument index"))
       end
     | "something" -> Hole
     | s -> build_value s q
@@ -183,46 +183,46 @@ let parse_value (decl : (string * expr) list) (comment : tok list) : value =
 let parse_operation (decl : (string * expr) list) (comment : tok list) : operation =
   let f x = Leaf (parse_value decl x) in
   let rec search (prev : tok list) = function
-    | [] -> failwith "no operation"
+    | [] -> dev_error "no operation"
     | t::q -> (
         match string_of_tok t with
         | "if" ->
           begin try
-            let a, b = look_for "and" q in
-            let b, _ = look_for "otherwise" b in
-            If (f a, f (List.rev prev), f b)
-          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+              let a, b = look_for "and" q in
+              let b, _ = look_for "otherwise" b in
+              If (f a, f (List.rev prev), f b)
+            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "sum" ->
           begin try
-            let _, b = look_for "of" q in
-            let a, b = look_for "and" b in
-            Sum (f a, f b)
-          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+              let _, b = look_for "of" q in
+              let a, b = look_for "and" b in
+              Sum (f a, f b)
+            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "difference" ->
           begin try
-            let _, b = look_for "of" q in
-            let a, b = look_for "and" b in
-            Diff (f a, f b)
-          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+              let _, b = look_for "of" q in
+              let a, b = look_for "and" b in
+              Diff (f a, f b)
+            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "product" ->
           begin try
-            let _, b = look_for "of" q in
-            let a, b = look_for "and" b in
-            Prod (f a, f b)
-          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+              let _, b = look_for "of" q in
+              let a, b = look_for "and" b in
+              Prod (f a, f b)
+            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "division" ->
           begin try
-            let _, b = look_for "of" q in
-            let a, b = look_for "and" b in
-            Div (f a, f b)
-          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+              let _, b = look_for "of" q in
+              let a, b = look_for "and" b in
+              Div (f a, f b)
+            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "application" ->
           begin try
-            let _, b = look_for "of" q in
-            let a, b = look_for "on" b in
-            let s = string_of_comment a and l = split_kw "and" b in
-            if s = "self" then Rec (List.map f l) else App (s, List.map f l)
-          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+              let _, b = look_for "of" q in
+              let a, b = look_for "on" b in
+              let s = string_of_comment a and l = split_kw "and" b in
+              if s = "self" then Rec (List.map f l) else App (s, List.map f l)
+            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | _ -> search (t::prev) q
       )
   in search [] comment
@@ -240,8 +240,8 @@ let rec parse_statement (decl : (string * expr) list) (comment : tok list) : cco
       end
     | "let" ->
       begin try
-        let a, b = look_for "be" q in Let (string_of_comment a, f b)
-      with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+          let a, b = look_for "be" q in Let (string_of_comment a, f b)
+        with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
     | "return" | "returns" -> Returns (f q)
     | "use" | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
     | _ -> parse_statement decl q
@@ -258,41 +258,41 @@ let generate_function (Spec (_, name, comment)) =
       | Let (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
       | Returns e ->
         let r = match f.result with
-        | Yolo [] -> Function e
-        | Yolo _ ->
-          begin
-            located_warning (tok_pos (List.hd c)) (name ^ " was in yolo mode, now using return value");
-            Function e
-          end
-        | Function _ ->
-          begin
-            located_warning (tok_pos (List.hd c)) (name ^ " already has a return value, still using old return value");
-            f.result
-          end
+          | Yolo [] -> Function e
+          | Yolo _ ->
+            begin
+              located_warning (tok_pos (List.hd c)) (name ^ " was in yolo mode, now using return value");
+              Function e
+            end
+          | Function _ ->
+            begin
+              located_warning (tok_pos (List.hd c)) (name ^ " already has a return value, still using old return value");
+              f.result
+            end
         in build_function {f with result = r} q
       | Uses l ->
         let r = match f.result with
-        | Yolo [] -> Yolo l
-        | Yolo l' -> Yolo (l' @ l)
-        | Function e ->
-          begin
-            located_warning (tok_pos (List.hd c)) (name ^ " already has a return value, ignoring yolo mode");
-            Function e
-          end
+          | Yolo [] -> Yolo l
+          | Yolo l' -> Yolo (l' @ l)
+          | Function e ->
+            begin
+              located_warning (tok_pos (List.hd c)) (name ^ " already has a return value, ignoring yolo mode");
+              Function e
+            end
         in build_function {f with result = r} q
   in
   let res = build_function {
-    name; n_args = 0; declarations = []; result = Yolo []
-  } comments
+      name; n_args = 0; declarations = []; result = Yolo []
+    } comments
   in
   print_comment_function res; res
-  
+
 
 let rec complete_holes decl (remain : expr list) = function
   | Leaf Hole ->
     begin match remain with
-    | [] -> failwith "unable to complete holes"
-    | e::q -> complete_holes decl q e
+      | [] -> dev_error "unable to complete holes"
+      | e::q -> complete_holes decl q e
     end
   | Leaf (Var s) -> complete_holes decl remain (List.assoc s decl)
   | Leaf v -> Leaf v, remain
