@@ -87,8 +87,15 @@ impl Evaluator {
                 };
                 Value::VarRef { name }
             }
-            "ASTListLiteral" => match obj.get_field("elements")? {
-                list @ Value::List { .. } => list,
+            "ASTListLiteral" => match obj.get_field_mut("elements")? {
+                Value::List { elems } => {
+                    let mut list_elems = Vec::new();
+                    for elem in elems {
+                        let mut list_elem = self.eval_ast(elem)?;
+                        list_elems.push(self.deref_val(&mut list_elem)?.clone());
+                    }
+                    Value::List { elems: list_elems }
+                }
                 _ => unreachable!(),
             },
             "ASTBinaryExpr" => self.eval_bin_op(obj)?,
@@ -150,7 +157,8 @@ impl Evaluator {
                     Value::String(s) => s,
                     _ => unreachable!(),
                 };
-                let mut target = self.eval_ast(obj.get_field_mut("target")?)?;
+                let target = obj.get_field_mut("target")?;
+                let mut target = self.eval_ast(target)?;
                 let elems = match self.deref_val(&mut target)? {
                     Value::List { elems } => elems,
                     v => return Err(format!("Cannot iterate over {}", v)),
@@ -163,7 +171,11 @@ impl Evaluator {
                 self.create_var(name.clone(), Value::None);
                 'all_its: for elem in elems {
                     let loop_var = unsafe { &mut *self.get_var(&name).unwrap() };
-                    *loop_var = self.eval_ast(elem)?;
+                    *loop_var = if matches!(elem, Value::ObjectRef(_)) {
+                        self.eval_ast(elem)?
+                    } else {
+                        elem.clone()
+                    };
                     for stmt in &mut *body {
                         self.eval_ast(stmt)?;
                         if self.returning.is_some() {
@@ -325,9 +337,7 @@ impl Evaluator {
                                 }
                                 let mut elems = Vec::with_capacity((stop - start) as usize);
                                 for i in start..stop {
-                                    elems.push(ast_obj! { "ASTIntLiteral";
-                                        "value" => Value::Int(i)
-                                    });
+                                    elems.push(Value::Int(i));
                                 }
                                 Value::List { elems }
                             }
