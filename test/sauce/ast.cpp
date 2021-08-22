@@ -211,17 +211,39 @@ Value Call::execute(Context& context)
 
             auto& fields = type_ptr->decl.template get<Vector<TypeName>>();
             Vector<Value> values;
-            size_t index = 0;
-            for (auto& type_name : fields) {
-                if (arguments.size() <= index)
-                    values.append({ Empty {} });
-                else
-                    values.append(
-                        create<Call>(
-                            static_ptr_cast<ASTNode>(create<SyntheticNode>(Value { type_name.type })),
-                            Vector { static_ptr_cast<ASTNode>(create<SyntheticNode>(arguments[index])) })
-                            ->run(context));
-                ++index;
+            bool did_initialize = false;
+            if (arguments.size() > 0 && arguments.size() < fields.size()) {
+                if (auto rv = arguments[0].value.template get_pointer<RecordValue>()) {
+                    if (auto rfields = rv->type->decl.template get_pointer<Vector<TypeName>>()) {
+                        if (rfields->size() >= fields.size()) {
+                            size_t index = 0;
+                            for (auto& entry : rv->members) {
+                                values.append(
+                                    create<Call>(
+                                        static_ptr_cast<ASTNode>(create<SyntheticNode>(Value { fields[index].type })),
+                                        Vector { static_ptr_cast<ASTNode>(create<SyntheticNode>(entry)) })
+                                        ->run(context));
+                                ++index;
+                            }
+                            did_initialize = true;
+                        }
+                    }
+                }
+            }
+
+            if (!did_initialize) {
+                size_t index = 0;
+                for (auto& type_name : fields) {
+                    if (arguments.size() <= index)
+                        values.append({ Empty {} });
+                    else
+                        values.append(
+                            create<Call>(
+                                static_ptr_cast<ASTNode>(create<SyntheticNode>(Value { type_name.type })),
+                                Vector { static_ptr_cast<ASTNode>(create<SyntheticNode>(arguments[index])) })
+                                ->run(context));
+                    ++index;
+                }
             }
             return { RecordValue { *type_ptr, move(values) } };
         }
@@ -248,9 +270,13 @@ Value Variable::execute(Context& context)
         if (!scope.contains(m_name))
             continue;
 
-        auto& value = scope.find(m_name)->value;
-        if (m_type)
-            TODO();
+        auto value = scope.find(m_name)->value;
+        if (m_type) {
+            value = create<Call>(
+                *m_type,
+                Vector { static_ptr_cast<ASTNode>(create<SyntheticNode>(value)) })
+                ->run(context);
+        }
 
         return value;
     }
@@ -358,6 +384,12 @@ void Assignment::dump(int indent)
 Value Assignment::execute(Context& context)
 {
     auto value = m_value->run(context);
+    if (m_variable->type()) {
+        value = create<Call>(
+                *const_cast<RefPtr<ASTNode>&>(m_variable->type()),
+                Vector { static_ptr_cast<ASTNode>(create<SyntheticNode>(value)) })
+                ->run(context);
+    }
     context.scope.last().set(m_variable->name(), value);
     return value;
 }
