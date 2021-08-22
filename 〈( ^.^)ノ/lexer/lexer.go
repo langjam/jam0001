@@ -42,7 +42,8 @@ func (l *Lexer) makeTokens() ([]shared.Token, error) {
 		if l.currentChar == 's' || l.currentChar == 'm' || l.currentChar == 'a' ||
 			l.currentChar == 'n' || l.currentChar == 'w' || l.currentChar == 'T' ||
 			l.currentChar == 'F' || l.currentChar == 'p' || l.currentChar == 'i' ||
-			l.currentChar == 'd' || l.currentChar == 'b' {
+			l.currentChar == 'd' || l.currentChar == 'g' || l.currentChar == 'l' ||
+			l.currentChar == 'b' {
 			var instToken shared.Token
 			instToken, err = l.makeIdentifierToken()
 			tokens = append(tokens, instToken)

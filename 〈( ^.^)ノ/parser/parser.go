@@ -146,6 +146,10 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 		"break": 0,
 		"inz":   4,
 		"dnz":   3,
+		"grow":  2,
+		"peek":  2,
+		"place": 3,
+		"len":   1,
 		"and":   2}[ins]) {
 
 		return &IncorrectSignatureError{ins, pos}

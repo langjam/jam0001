@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -79,7 +80,7 @@ func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
 		return instruction_args[0], err
 
 	case lexer.II_smile:
-		smiles := []string{"〈( ^.^)ノ", "(>̯-̮<̯)", "(/^▽^)/", "(⌐■_■)", "( ¬_¬)"}
+		smiles := []string{"〈( ^.^)ノ", "(>̯-̮<̯)", "(/^▽^)/", "(⌐■_■)", "( ¬_¬)", "(O.o )"}
 
 		return makeStringNode(smiles[rand.Int()%len(smiles)]), err
 
@@ -137,6 +138,61 @@ func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
 		split = append(split[:pos], split[pos+1:]...)
 
 		return makeStringNode(strings.Join(split, ",")), err
+	case lexer.II_peek:
+		args, err := e.eval_children(instruction_args)
+
+		arr := strings.Split(args[0].Val.Value, "\n")
+
+		index, err := strconv.Atoi(args[1].Val.Value)
+		if err != nil {
+			log.Fatal((&TypeError{"expected int", args[1].Val.Pos}).Error())
+		}
+
+		if index > len(arr) {
+			log.Fatal((&OutOfRangeError{index, len(arr), args[1].Val.Pos}).Error())
+		}
+
+		return makeStringNode(arr[index]), err
+	case lexer.II_place:
+		args, err := e.eval_children(instruction_args)
+
+		arr := strings.Split(args[0].Val.Value, "\n")
+
+		index, err := strconv.Atoi(args[1].Val.Value)
+		if err != nil {
+			log.Fatal((&TypeError{"expected int", args[1].Val.Pos}).Error())
+		}
+
+		if index > len(arr) {
+			log.Fatal((&OutOfRangeError{index, len(arr), args[1].Val.Pos}).Error())
+		}
+
+		arr[index] = args[2].Val.Value
+
+		return makeStringNode(strings.Join(arr, "\n")), err
+	case lexer.II_grow:
+		args, err := e.eval_children(instruction_args)
+
+		arr := strings.Split(args[0].Val.Value, "\n")
+
+		toAdd, err := strconv.Atoi(args[1].Val.Value)
+		if err != nil {
+			log.Fatal((&TypeError{"expected int", args[1].Val.Pos}).Error())
+		}
+
+		arr = append(arr, make([]string, toAdd)...)
+
+		for i := len(arr) - toAdd; i < len(arr); i++ {
+			arr[i] = "0"
+		}
+
+		return makeStringNode(strings.Join(arr, "\n")), err
+
+	case lexer.II_len:
+		args, err := e.eval_children(instruction_args)
+		arr := strings.Split(args[0].Val.Value, "\n")
+
+		return makeNumberNode(strconv.Itoa(len(arr))), err
 		// TODO: add default which throws error
 	}
 	return shared.Node{}, err
