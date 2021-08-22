@@ -70,6 +70,7 @@ internals = {
     "string_removesuffix": lambda args: args[0].removesuffix(args[1]),
     "string_replace": lambda args: args[0].replace(args[1], args[2]),
     "string_split": lambda args: args[0].split(args[1]),
+    "string_contains": lambda args: args[1] in args[0],
     "sleep": lambda args: time.sleep(args[0] / 1000)
 }
 
@@ -103,5 +104,6 @@ env = {
     "string_removesuffix": StatementNode.FunctionDefinitionNode("internal"),
     "string_replace": StatementNode.FunctionDefinitionNode("internal"),
     "string_split": StatementNode.FunctionDefinitionNode("internal"),
+    "string_contains": StatementNode.FunctionDefinitionNode("internal"),
     "sleep": StatementNode.FunctionDefinitionNode("internal"),
 }
