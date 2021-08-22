@@ -1,26 +1,53 @@
 # Tetris
 
-This is not quite tetris yet.
+> As with all MarkSideways programs, this is *NOT* just a markdown file that refers to code. The markdown file itself *IS* the code that MarkSideways interprets. You can run this program by running `python ms.py samples/Tetris.md`
+
+This document is an implementation of Tetris. It uses SDL2 (via PyGame). To play, use the arrow keys to move the piece around. Push the down arrow to drop the piece quickly, and up arrow to turn it clockwise and spacebar to turn it counter-clockwise.
+
+As you progress the pieces fall faster. Every 10 line clears moves you to the next level and the colors of the pieces change. You can see how many lines you've cleared in the title bar, which updates in real time.
+
+To start things off, we create a new Tetris window using the `game_create_window` method:
 
 ```
 game_create_window("Tetris", 640, 480, 30);
+```
 
+We then create a new instance of the object TetrisGameInstance.
+
+```
 game_instance = TetrisGameInstance.init();
+```
 
+We now see the main game loop. `game_is_quit()` will tell us if the user pressed the close button, `Ctrl + W`, or `Alt + F4`. `game_fill_screen` will fill the entire game window with a charcoal color and `game_get_events()` returns a list of strings that represent the key presses and releases that have occurred since the previous frame.
+```
 while !game_is_quit() {
     game_fill_screen(40, 40, 40);
     events = game_get_events();
+
+```
+
+We then call the update and render methods of our tetris game instance.
+
+```
     game_instance.updatePhase(events);
     game_instance.renderPhase();
-    
+```
+
+Finally, when we're done with this frame, we call `game_end_frame()` which tells SDL to refresh the screen and to pause a brief moment so that the frame rate runs at a constant rate.
+
+```    
     game_end_frame();
 }
 ```
 
 ### Make Grid
 
+This is a helper function to create a 2-D array of a given width and height.
+
 - `width` - width of the grid
 - `height` - height of the grid
+
+Of course with arrays, width and height are subjective since memory isn't spatial in this way. Throughout this program, the x coordinate will be considered to be the primary dimension and the y coordinate will be considered to be the secondary (nested) dimension.
 
 ```
 cols = [];
@@ -36,19 +63,45 @@ return cols;
 
 ## Tetris Game Instance
 
+We now arrive at the constructor for the game instance itself. This sets the various persistent fields required for the game itself.
+
+This is the main grid which is 10x20 cells (10 wide, 20 tall)
 ```
 this.grid = makeGrid(10, 20);
+```
+
+These are the overlay fields. This represents a 4x4 grid overlay that can move around the grid containing the active piece. We start out with no piece.
+```
 this.overlay = null;
 this.overlayX = 0;
 this.overlayY = 0;
+```
+
+Some pieces do not spin and instead just tranpose each time you try to rotate them. The I-beam and square follow this pattern. This field will be set to true if the overlay contains either of those.
+```
 this.overlayUsesTranspose = false;
+```
+
+This keeps track of the total number lines that have been cleared so far. The level is calculated from this value.
+```
 this.linesCleared = 0;
+```
+
+This is a counter we update each frame to determine when it's time to let gravity move the active piece down by one space.
+```
 this.fallCounter = 0;
+```
+
+The following fields are used to run the clearing animation when you clear lines.
+```
 this.clearingCounterMax = 30;
 this.clearingCounter = null;
 this.clearingLines = null;
-this.colorThemes = this.generateColorThemes();
+```
 
+This is a list of various color themes for various levels. It's an array of arrays of arrays.
+```
+this.colorThemes = this.generateColorThemes();
 ```
 
 ### Update Phase
@@ -56,7 +109,6 @@ this.colorThemes = this.generateColorThemes();
 - `events` - list of key presses and releases since the last frame
 
 ```
-
 if this.clearingCounter != null {
     this.performClearingLineUpdate();
 } else {
