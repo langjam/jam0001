@@ -1,0 +1,31 @@
+% crochet
+
+open crochet.debug;
+local singleton app;
+
+command main: (Args is list) do
+  condition
+    when Args first === "parse" => app show-ast: (Args at: 2);
+    when Args first === "run" => app run: (Args at: 2);
+  end
+end
+
+command main-html: Root do
+  belle start-ide-with-root: Root;
+end
+
+command app run: Source do
+  handle
+    let Program = belle parse: Source;
+    let VM = belle make-vm: Program;
+    let Result = VM run-to-completion;
+  with
+    on belle.display(Value) => transcript write: Value to-output;
+  end
+  nothing;
+end
+
+command app show-ast: Source do
+  let Program = belle parse: Source;
+  transcript write: (belle pretty-print: Program);
+end
