@@ -80,7 +80,7 @@ func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
 		return instruction_args[0], err
 
 	case lexer.II_smile:
-		smiles := []string{"〈( ^.^)ノ", "(>̯-̮<̯)", "(/^▽^)/", "(⌐■_■)", "( ¬_¬)", "(O.o )"}
+		smiles := []string{"〈( ^.^)ノ", "(>̯-̮<̯)", "(/^▽^)/", "(⌐■_■)", "( ¬_¬)", "( o.O)"}
 
 		return makeStringNode(smiles[rand.Int()%len(smiles)]), err
 

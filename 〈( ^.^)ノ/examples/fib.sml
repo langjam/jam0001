@@ -8,7 +8,7 @@ set($-1 $-3) // load
 
 "save, calc and load"() // fib
 
-while (1) {
+while (m("$-1 != 2584")) {
   "fib"()
   print($-1)
 }

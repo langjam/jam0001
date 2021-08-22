@@ -11,11 +11,17 @@ func stringIsTrue(val string) bool {
 
 func (e *Evaluator) eval_while(expr shared.Node) (shared.Node, error) {
 	hasBreak := hasBreak(expr)
-	evaled_expr, err := e.eval_expr(expr.Children[1])
-	if err != nil {
-		return shared.Node{}, err
-	}
-	for stringIsTrue(evaled_expr.Val.Value) {
+
+	for  {
+		evaled_expr, err := e.eval_expr(expr.Children[1])
+		if err != nil {
+			return shared.Node{}, err
+		}
+
+		if !stringIsTrue(evaled_expr.Val.Value) {
+			break
+		}
+
 		_, err = e.eval_expr(expr.Children[2])
 		if err != nil {
 			return shared.Node{}, err
@@ -24,7 +30,7 @@ func (e *Evaluator) eval_while(expr shared.Node) (shared.Node, error) {
 		}
 	}
 
-	return shared.Node{}, err
+	return shared.Node{}, nil
 }
 
 func hasBreak(expr shared.Node) (exists bool) {

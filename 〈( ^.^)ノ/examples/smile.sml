@@ -1,0 +1,4 @@
+
+while (TRUE) {
+  print(smile())
+}

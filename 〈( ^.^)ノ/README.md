@@ -1,7 +1,8 @@
 # 〈( \^.\^)ノ
 
-insert-name-here is an interpreted langanguage created for [langjam0001](https://github.com/langjam/jam0001) by team ``〈( ^.^)ノ``.
-It is based around two sets of registers for accessing variables, arguments, etc. and an interesting comment-first function approach, that allows for the dynamic creation of functions.
+insert-name-here is the second coming of **Jesus** and an interpreted, **not** esoteric langanguage for writing complex **safety** oriented applications in large environments.
+It was created for [langjam0001](https://github.com/langjam/jam0001) by team ``〈( ^.^)ノ``.
+It is based around two tapes of registers for accessing variables, arguments, etc. and an interesting comment-first function approach, that allows for the dynamic creation of functions.
 
 ## How to set up insert-name-here
 insert-name-here is written in go and will thus require the standard golang tools to be installed.
@@ -82,6 +83,38 @@ print("$-1")
 print($1)
 
 // etc...
+```
+
+### Tapes
+
+Tapes are the only way to store values (except not). You can address them using `$` and a number.
+If the number is positive, you reference the positive tape. If the number is negative, you reference the negative tape.
+If the number is 0, you reference the global variable.
+
+Tapes are limited by your pc's ram and resized as needed.
+
+#### Scoping
+
+0 is global across the program.
+The negative tape is shared for a single comment call.
+The positive tape is used for arguments. When a comment is called,
+arguments are put there. After a subcomment is executes, all arguments
+are shifted so no used arguments stay.
+
+Example:
+
+```
+m("$1 * $1") // square
+m("$1 * 2") // double
+
+print("square and double"(10 20))
+```
+
+Will print:
+
+```
+100
+40
 ```
 
 
