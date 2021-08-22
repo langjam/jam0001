@@ -99,6 +99,9 @@ class ComstructExecutor:
 
             return ClassClass(uuid.uuid4().hex, _env, clazz.content.content, self, node.args)
 
+        elif isinstance(node, StatementNode.ClassMethodExecuteNode):
+            return env[node.clazz].runFunc(node.name, node.args, self)
+
         elif isinstance(node, StatementNode.FunctionCallNode):
             processed_args = []
             node_call = _env[node.func_name].content
@@ -165,71 +168,85 @@ class ComstructExecutor:
                 del _env[node.varname]
 
             return ret
+
         else:
             return node
 
 
 class ClassClass:
-    def __init__(self, uid, environment, calls, executor, args):
-        self.calls: list = calls
+    def __init__(self, uid, environment, calls, executor: ComstructExecutor, args):
+        self.calls: list = []
         self.uid = uid
         self.env = environment
+
+        try:
+            self.env[self.uid]
+        except KeyError:
+            self.env[self.uid] = dict()
+
+        new_env = {**self.env[self.uid], **self.env}
+        checker = new_env.copy()
+
+        for call in calls:
+            if type(call) == StatementNode.VarAssignNode:
+                executor.walkTree(call, new_env)
+
+        for item in new_env.items():
+            try:
+                if checker[item[0]] != item[1]:
+                    self.env[self.uid][item[0]] = item[1]
+            except KeyError:
+                self.env[self.uid][item[0]] = item[1]
 
         self.__runConstructor(args, executor)
 
     def __runConstructor(self, args, executor: ComstructExecutor):
-        for node in self.calls:
-            if type(node) == StatementNode.VarAssignNode and node.var_name == "comment":
-                self.__runFunc("comment", args, executor)
-                return
+        if "comment" in self.env[self.uid].keys():
+            self.runFunc("comment", args, executor)
 
-    def __runFunc(self, m, args, executor: ComstructExecutor):
-        for node in self.calls:
-            if type(node) == StatementNode.VarAssignNode and node.var_name == m:
-                contents = self.env[node.var_value.func_name].content
+    def runFunc(self, m, args, executor: ComstructExecutor):
+        contents = self.env[self.uid][m].content.content
 
-                try:
-                    c = self.env[self.uid]
-                except KeyError:
-                    self.env[self.uid] = dict()
+        backup = {}
+        to_delete = []
+        new_env: dict = {**self.env.copy(), **self.env[self.uid]}
 
-                backup = {}
-                to_delete = []
-                new_env: dict = {**self.env.copy(), **self.env[self.uid]}
+        gd = prepareDescription(contents, args)
 
-                for param in prepareDescription(contents, args)[0]:
-                    try:
-                        backup[param[0]] = self.env[param[0]]
-                    except KeyError:
-                        to_delete.append(param[0])  # Argument not prev. defined as a variable, so deleted after exec
+        for param in gd[0]:
+            try:
+                backup[param[0]] = self.env[param[0]]
+            except KeyError:
+                to_delete.append(param[0])  # Argument not prev. defined as a variable, so deleted after exec
 
-                    new_env[param[0]] = param[1]
+            new_env[param[0]] = param[1]
 
-                executor.walkTree(
-                    StatementNode.ExecuteStoredProcedureNode(
-                        StatementNode.StoredProcedureNode(
-                            contents
-                        )
-                    ),
-                    new_env
+        ret = executor.walkTree(
+            StatementNode.ExecuteStoredProcedureNode(
+                StatementNode.StoredProcedureNode(
+                    contents
                 )
+            ),
+            new_env
+        )
 
-                for param in to_delete:
-                    del new_env[param]
+        for param in to_delete:
+            del new_env[param]
 
-                checker_env: dict = {**self.env.copy(), **self.env[self.uid]}
+        checker_env: dict = {**self.env.copy(), **self.env[self.uid]}
 
-                for it in new_env.copy().items():
-                    if new_env[it[0]] == checker_env[it[0]]:
-                        del new_env[it[0]]
+        for it in new_env.copy().items():
+            try:
+                if new_env[it[0]] == checker_env[it[0]]:
+                    del new_env[it[0]]
+            except KeyError:
+                pass
 
-                print(f"F(): {new_env}")
+        self.env[self.uid] = {**self.env[self.uid], **new_env}
 
-                self.env[self.uid] = {**self.env[self.uid], **new_env}
+        return ret if gd[1] else None
 
-                return
-
-        raise ElementNotFoundException(f"Function {m} not found!")
+        # raise ElementNotFoundException(f"Function {m} not found!")
 
 
 class ElementNotFoundException(Exception):

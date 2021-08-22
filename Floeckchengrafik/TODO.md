@@ -11,7 +11,7 @@
 - [x] Implement length()
 - [x] Implement exit()
 - [x] Implement Lists
-- [ ] **Implement Classes**
+- [x] Implement Classes
 - [x] Implement If
 - [x] Implement for
 - [ ] Submit a PR (before the end of the jam)

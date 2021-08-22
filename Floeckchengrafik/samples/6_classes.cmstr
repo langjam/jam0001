@@ -14,7 +14,6 @@ myclass = class({
          * This is the Constructor of the myclass-Class
          * - param hello , a String to print first
          */
-         out(1)?
          hw = hello + " World!"?
     })?
 
@@ -23,7 +22,7 @@ myclass = class({
          * This is the hworld-function of the myclass-Class
          */
 
-         out("hw")?
+         out(hw)?
     })?
 })?
 

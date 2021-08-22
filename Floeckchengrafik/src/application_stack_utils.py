@@ -98,8 +98,8 @@ class StatementNode:
 
     class ClassMethodExecuteNode(GenericNode):
 
-        def __init__(self, class_class, name, args):
-            self.class_class = class_class
+        def __init__(self, clazz, name, args):
+            self.clazz = clazz
             self.name = name
             self.args = args
 
