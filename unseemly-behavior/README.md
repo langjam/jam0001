@@ -1,3 +1,5 @@
+Traditional comments provide insight into code at runtime. First-class comments provide insight dynamically. 
+
 Commentary is a language in which comments can also serve a logging function.
 Commentary's syntax is stolen from Rust, thought it's quite limited.
 
@@ -37,4 +39,6 @@ Due to a limitation in Unseemly, only 1- and 2- argument functions are supported
 Also, to my great embarassement, I discoverd that recursive functions don't quite work,
  and I didn't have time to implement a recurisve `let` to implement them with.
 
+The implementation is in `commentary.unseemly`. `build_a_language.unseemly` is mostly 
+pre-existing code that adds some very basic features to Unseemly, which is *extremely* barebones. 
 
