@@ -10,10 +10,13 @@ comments.
 
 ## Execution
 
+First, you have to install `npm`.
+
 In order do execute the language interpreter, you have to do the following:
 
 1. Go to Auskommentiert/Backend and run `npm install && npm run start_webserver`
-2. Go to Auskommntiert/Frontend and `npm install && npm start`
+2. Open another Terminal
+3. Go to Auskommentiert/Frontend and `npm install && npm start`
 
 After you have installed all dependencies and started the server, you can pick
 one topic in the frontend. You may find some example Topics. If you want to
@@ -21,12 +24,14 @@ create your own, simply click on `Create Topic`. Sadly, you cannot edit your
 comments after creation, so be aware of what you are typing. You can however
 delete comments and write them again.
 
-Everything you do (include program execution) will get written to `state.json`.
-If you want to store you current state before execution, consider creating a
-copy of `state.json`.
+Everything you do (including program execution) will get written to
+`state.json`. If you want to store you current state before execution, consider
+creating a copy of `state.json`.
 
 In order to execute a topic, comment `run` directly under the topic body.
 
+One thing to be aware of is: you can see all modifications on comments live.
+Meaning, your program will execute very slowly.
 
 ## Grammar
 
