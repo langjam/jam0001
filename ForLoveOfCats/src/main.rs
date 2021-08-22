@@ -116,6 +116,12 @@ enum TreeNode {
 		rhs: Box<TreeNode>,
 	},
 
+	Assign {
+		name: String,
+		index_expr: Box<TreeNode>,
+		expr: Box<TreeNode>,
+	},
+
 	Read {
 		name: String,
 	},
@@ -239,6 +245,25 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> Result<TreeNode> {
 			TreeNode::Set {
 				name: name.to_string(),
 				rhs,
+			}
+		}
+
+		"assign" => {
+			let name = if let Some(Token::Ident(name)) = tokens.next() {
+				name
+			} else {
+				return parse_error!("Needed name to assign");
+			};
+
+			let index_expr = Box::new(parse_expression(tokens)?);
+			let expr = Box::new(parse_expression(tokens)?);
+
+			expect_token!(tokens, Token::CloseParen)?;
+
+			TreeNode::Assign {
+				name: name.to_string(),
+				index_expr,
+				expr,
 			}
 		}
 
@@ -484,20 +509,37 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 		TreeNode::LambdaLiteral(lambda) => Value::Lambda(Lambda::clone(lambda)),
 
 		TreeNode::Define { name, rhs } => {
-			state.push_scope();
 			let value = evaluate(state, rhs);
-			state.pop_scope();
-
 			state.define(name, value.clone());
 			value
 		}
 
 		TreeNode::Set { name, rhs } => {
-			state.push_scope();
 			let value = evaluate(state, rhs);
-			state.pop_scope();
-
 			state.set(name, value.clone());
+			value
+		}
+
+		TreeNode::Assign {
+			name,
+			index_expr,
+			expr,
+		} => {
+			let index = evaluate(state, index_expr);
+			let index = unwrap_integer(state, &index);
+			let index = unwrap_usize(state, index);
+
+			let value = evaluate(state, expr);
+
+			let mut target = state.read(name);
+			match &mut target {
+				Value::List(list) => list[index] = value.clone(),
+				_ => {
+					runtime_error!(state, "Cannot assign to value of non-list type");
+				}
+			};
+			state.set(name, target);
+
 			value
 		}
 

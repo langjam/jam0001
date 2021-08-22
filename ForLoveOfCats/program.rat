@@ -1,11 +1,18 @@
 (block
 	(define values (list "Hello!" 25 (+ 5 9) "Haha" 96))
+	(print "Original values:" values)
 
-	(define index 1)
+	(print "")
+	(print "Manual iteration w/modification:")
+	(define index 0)
 	(while (< index (len values))
 		(block
-			(print (lookup values index))
+			(print " " (lookup values index))
+			(assign values index index)
 			(set index (+ index 1))
 		)
 	)
+
+	(print "")
+	(print "New values:" values)
 )
