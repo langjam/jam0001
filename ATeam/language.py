@@ -7,7 +7,7 @@ def remove_comments(string):
     string = re.sub(r"--\[\[.*?\]\]", '', string, re.MULTILINE | re.S)
     string = re.sub(r"/\*.*?\*/", '', string, re.MULTILINE | re.S)
     string = re.sub(r"<!--.*?-->", '', string, re.MULTILINE | re.S)
-    string = re.sub(r"(\*.*?\*)", '', string, re.MULTILINE | re.S)
+    string = re.sub(r"\(\*.*?\*\)", '', string, re.MULTILINE | re.S)
     string = re.sub(r"\{-.*?-\}", '', string, re.MULTILINE | re.S)
     string = re.sub(r"=begin .*?=end", '', string, re.MULTILINE | re.S)
     string = re.sub(r"%.*?%", '', string, re.MULTILINE | re.S)
