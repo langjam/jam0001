@@ -118,6 +118,7 @@ impl Data {
                     if let Some(x) = station.trains[0].front() {
                         let zz = x.lock()?;
                         if let Ok(_) = interface.print(
+                            station.station.clone(),
                             zz.train
                                 .second_class_passengers
                                 .iter()
@@ -134,6 +135,7 @@ impl Data {
                     if let Some(x) = station.trains[0].front() {
                         let zz = x.lock()?;
                         if let Ok(_) = interface.print_char(
+                            station.station.clone(),
                             zz.train
                                 .second_class_passengers
                                 .iter()

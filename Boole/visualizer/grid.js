@@ -226,7 +226,7 @@ class Train {
         const x = lerp(this.traveling_from[0], this.traveling_to[0], this.animation_count)
         const y = lerp(this.traveling_from[1], this.traveling_to[1], this.animation_count)
 
-        console.log(x, y, this.traveling_from, this.traveling_to, this.animation_count)
+        // console.log(x, y, this.traveling_from, this.traveling_to, this.animation_count)
 
         this.location.x = x;
         this.location.y = y;
@@ -274,6 +274,7 @@ class Station {
         this.stopped = stopped;
         this.station_type = station_type;
         this.name = name;
+        this.last_print = "";
     }
 
     drawBackground() {
@@ -361,6 +362,17 @@ class Station {
         textAlign(CENTER, CENTER);
         text(this.name, 0, 0)
         pop()
+
+        if (this.last_print !== "") {
+            push();
+            translate(TILE_SIZE, -TILE_SIZE * (5 / 8));
+            fill(255);
+            stroke(255);
+            textAlign(CENTER, CENTER);
+            textSize(18);
+            text(this.last_print, 0, 0);
+            pop();
+        }
 
         pop()
     }
