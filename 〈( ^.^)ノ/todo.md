@@ -36,9 +36,16 @@
 		- [x] - set
 		- [ ] - not
 		- [x] - print
+		- [ ] - del
+		- [ ] - ins
+		- [ ] - inz
+		- [ ] - dnz
+		- [ ] - smile
+
 	- [x] - referencing variables
-	- [ ] - replacing refs in strings
+	- [x] - replacing refs in strings
 	- [ ] - comments
-		- [ ] - ast generation
+		- [x] - ast generation
 		- [ ] - execution
-			- [ ] - figure out what to do with stacks
+			- [x] - figure out what to do with stacks
+			- [ ] - fix returns if and used
