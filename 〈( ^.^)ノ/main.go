@@ -20,8 +20,13 @@ func main() {
 	debugMode := false
 
 	// do initial checks
+	if contains(os.Args, "--version") {
+		fmt.Println("〈( ^.^)ノ\tv0.1")
+		return
+	}
 	if len(os.Args) == 1 {
 		fmt.Println("Please provide a file to run")
+		return
 	}
 	if len(os.Args) > 2 && contains(os.Args, "--debug") {
 		debugMode = true
