@@ -1,0 +1,105 @@
+[LOCOMOTIVE]
+start at Delft track 1
+[FIRST CLASS]
+Jan: this is a nice long lime green train!
+Pieter: It has some blue accents as well!
+[SECOND CLASS]
+
+[LOCOMOTIVE]
+start at Harlingen track 2
+[FIRST CLASS]
+Mark: this train has a brown colour
+[SECOND CLASS]
+Thomas: 2
+
+[LOCOMOTIVE]
+start at Weert track 2
+[FIRST CLASS]
+Sem: this train has a light green colour
+[SECOND CLASS]
+Julius: 2
+
+[LOCOMOTIVE]
+start at Hoorn track 2
+[FIRST CLASS]
+Gerrit: This train has a very pretty yellow colour!
+Marijke: I like the blue detail.
+Sara: The train is very short though...
+[SECOND CLASS]
+Jonathan: 1
+
+[LOCOMOTIVE]
+start at Utrecht track 2
+[FIRST CLASS]
+robert: The train has a nice dark red locomotive and is big
+jan: NO! It is a orange red color!
+yeet: It has a brown stripe which is ugly
+peter: Medium train is intermediate
+[SECOND CLASS]
+jonathan: 3
+
+{Delft}
+operation: input
+track 1: go to Amsterdam track 1
+
+{Rotterdam}
+operation: duplicate
+track 1: go to Stavoren track 1
+track 2: go to Stavoren track 2
+
+{Stavoren}
+operation: transfer
+track 1: go to Ommen track 1
+track 2: go to Harlingen track 1
+
+{Harlingen}
+operation: mod
+track 1: go to Schiedam track 1
+track 2: go to Harlingen track 2
+
+{Schiedam}
+operation: switch eq
+track 1: go to Heilo track 1
+track 2: go to Castricum track 1
+
+{Heilo}
+operation: delete top
+track 1: go to Weert track 1
+
+{Castricum}
+operation: delete top
+track 1: go to Utrecht track 1
+
+{Weert}
+operation: div
+track 1: go to Amsterdam track 1
+track 2: go to Breukelen track 1
+
+{Utrecht}
+operation: mul
+track 1: go to Hoorn track 1
+track 2: go to Steenwijk track 1
+
+{Hoorn}
+operation: add
+track 1: go to Amsterdam track 1
+track 2: go to Beverwijk track 1
+
+{Amsterdam}
+operation: print number
+track 1: go to Rotterdam track 1
+
+{Breukelen}
+operation: nothing
+track 1: go to Weert track 2
+
+{Steenwijk}
+operation: nothing
+track 1: go to Utrecht track 2
+
+{Beverwijk}
+operation: nothing
+track 1: go to Hoorn track 2
+
+{Ommen}
+operation: delete
