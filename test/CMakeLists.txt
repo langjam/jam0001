@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.17)
 project(test)
 
 set(CMAKE_CXX_STANDARD 20)
-add_compile_options(-ggdb3 -O0)
+add_compile_options(-O3)
 
 include(serenity/AK/CMakeLists.txt)
 

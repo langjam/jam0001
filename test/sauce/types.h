@@ -65,3 +65,5 @@ struct Context {
     Vector<Comment*> unassigned_comments;
     size_t last_call_scope_start { 0 };
 };
+
+Value& flatten(Value& input);

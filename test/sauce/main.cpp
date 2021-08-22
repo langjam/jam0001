@@ -65,16 +65,16 @@ Value lang$print(Context&, void* ptr, size_t count)
 template<typename Operator>
 static void fold_append(auto& accumulator, auto&& arg)
 {
-    Variant<Empty, int> value { Empty {} };
+    Variant<Empty, int, String> value { Empty {} };
     if constexpr (requires { arg.template has<int>(); }) {
         if (arg.template has<Empty>() || arg.template has<int>())
-            value = arg.template downcast<Empty, int>();
+            value = arg.template downcast<Empty, int, String>();
         else if (arg.template has<NonnullRefPtr<CommentResolutionSet>>()) {
             for (auto& entry : arg.template get<NonnullRefPtr<CommentResolutionSet>>()->values)
                 fold_append<Operator>(accumulator, entry.value);
             return;
         }
-    } else if constexpr (IsSame<RemoveCVReference<decltype(arg)>, int>) {
+    } else if constexpr (IsSame<RemoveCVReference<decltype(arg)>, int> || IsSame<RemoveCVReference<decltype(arg)>, String>) {
         value = arg;
     }
 
@@ -84,6 +84,10 @@ static void fold_append(auto& accumulator, auto&& arg)
         if (value.template has<int>()) {
             accumulator = Operator {}(accumulator.template get<int>(), value.template get<int>());
         }
+    } else if (accumulator.template has<String>()) {
+        if (value.template has<String>()) {
+            accumulator = Operator {}(accumulator.template get<String>(), value.template get<String>());
+        }
     }
 };
 
@@ -91,7 +95,7 @@ template<typename Operator>
 Value lang$fold_op(Context&, void* ptr, size_t count)
 {
     Span<Value> args { reinterpret_cast<Value*>(ptr), count };
-    Variant<Empty, int> accumulator { Empty {} };
+    Variant<Empty, int, String> accumulator { Empty {} };
     for (auto& arg : args) {
         arg.value.visit(
             [&](Empty) { fold_append<Operator>(accumulator, Empty {}); },
@@ -183,6 +187,16 @@ static bool truth(Value const& condition)
             else
                 return true;
         });
+}
+
+Value& flatten(Value& input)
+{
+    if (auto ptr = input.value.get_pointer<NonnullRefPtr<CommentResolutionSet>>()) {
+        if ((*ptr)->values.size() == 1)
+            return flatten((*ptr)->values.first());
+    }
+
+    return input;
 }
 
 Value lang$cond(Context&, void* ptr, size_t count)
@@ -279,28 +293,65 @@ Value lang$loop(Context& context, void* ptr, size_t count)
     return value;
 }
 
+Value lang$nth(Context&, void* ptr, size_t count)
+{
+    Span<Value> args { reinterpret_cast<Value*>(ptr), count };
+    if (args.size() < 2)
+        return { Empty {} };
+
+    auto index = flatten(args[0]).value.get_pointer<int>();
+    auto subject = flatten(args[1]).value.get_pointer<String>();
+
+    if (!index || !subject)
+        return { Empty {} };
+
+    return { String::repeated(subject->operator[](*index), 1) };
+}
+
+Value lang$slice(Context&, void* ptr, size_t count)
+{
+    Span<Value> args { reinterpret_cast<Value*>(ptr), count };
+    if (args.size() < 3)
+        return { Empty {} };
+
+    auto index = flatten(args[0]).value.get_pointer<int>();
+    auto size = flatten(args[1]).value.get_pointer<int>();
+    auto subject = flatten(args[2]).value.get_pointer<String>();
+
+    if (!index || !size || !subject)
+        return { Empty {} };
+
+    return { subject->substring(*index, *size) };
+}
+
 struct Sub {
     int operator()(int a, int b) { return a - b; }
+    int operator()(String const&, String const&) { return 0; }
 };
 
 struct Mul {
     int operator()(int a, int b) { return a * b; }
+    int operator()(String const&, String const&) { return 0; }
 };
 
 struct Div {
     int operator()(int a, int b) { return a / b; }
+    int operator()(String const&, String const&) { return 0; }
 };
 
 struct Mod {
     int operator()(int a, int b) { return a % b; }
+    int operator()(String const&, String const&) { return 0; }
 };
 
 struct Greater {
     int operator()(int a, int b) { return a > b; }
+    int operator()(String const& a, String const& b) { return a > b; }
 };
 
 struct Equal {
     int operator()(int a, int b) { return a == b; }
+    int operator()(String const& a, String const& b) { return a == b; }
 };
 
 struct Flat {
@@ -333,6 +384,8 @@ void initialize_base(Context& context)
     scope.set("gt", { NativeFunctionType { lang$fold_op<Greater>, { "native comparison greater_than operation" } } });
     scope.set("eq", { NativeFunctionType { lang$fold_op<Equal>, { "native comparison equality operation" } } });
     scope.set("collapse", { NativeFunctionType { lang$fold_op<Flat>, { "native probability collapse flatten operation" } } });
+    scope.set("nth", { NativeFunctionType { lang$nth, { "native string indexing operation" } } });
+    scope.set("slice", { NativeFunctionType { lang$slice, { "native string slicing operation" } } });
 
     // types
     scope.set("int", { create<Type>(NativeType::Int) });

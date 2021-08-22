@@ -195,18 +195,22 @@ Value Call::execute(Context& context)
                 if (arguments.is_empty()) {
                     return { Empty {} };
                 }
+                auto& first = flatten(arguments.first());
                 switch (*type) {
                 case NativeType::Any:
-                    return arguments.first();
+                    return first;
                 case NativeType::Int:
-                    if (arguments.first().value.template has<int>())
-                        return arguments.first();
-                    return { Empty {} }; // FIXME: String -> Int conversion
+                    if (first.value.template has<int>())
+                        return first;
+                    if (first.value.template has<String>())
+                        return { first.value.template get<String>()[0] };
                 case NativeType::String:
-                    if (arguments.first().value.template has<String>())
-                        return arguments.first();
-                    return { Empty {} }; // FIXME: Int -> String conversion
+                    if (first.value.template has<String>())
+                        return first;
+                    if (first.value.template has<int>())
+                        return { String::repeated(first.value.template get<int>(), 1) };
                 }
+                return { Empty {} };
             }
 
             auto& fields = type_ptr->decl.template get<Vector<TypeName>>();

@@ -1,0 +1,172 @@
+let replace_at = { |index value str|: res
+    let res = add(slice(0 index str) value slice(add(index 1) sub(str.length index 1) str));
+};
+
+let generate_zeros = { |count|: res
+    let acc = record { i s };
+    let step = { |a|: res
+        let res = acc(add(a.i 1) add(a.s string(0)));
+    };
+    let stop = { |a|: res
+        let res = eq(a.i count);
+    };
+    let res = loop(acc(0 "") step stop).s;
+};
+
+let interpret = { |input|
+    let state = record {
+        i: int
+        loop: int
+        tape: string
+        tape_index: int
+        insn: int
+    };
+    let step = { |s|: res
+        let ch = nth(s.i input);
+
+        // next
+        { |s|: res
+            let res = state(
+                add(s.i 1)
+                s.loop
+                s.tape
+                add(s.tape_index 1)
+                add(s.insn 1)
+            );
+        };
+        // previous
+        { |s|: res
+            let res = state(
+                add(s.i 1)
+                s.loop
+                s.tape
+                sub(s.tape_index 1)
+                add(s.insn 1)
+            );
+        };
+        // increment cell
+        { |s|: res
+            let res = state(
+                add(s.i 1)
+                s.loop
+                replace_at(s.tape_index string(add(int(nth(s.tape_index s.tape)) 1)) s.tape)
+                s.tape_index
+                add(s.insn 1)
+            );
+        };
+        // decrement cell
+        { |s|: res
+            let res = state(
+                add(s.i 1)
+                s.loop
+                replace_at(s.tape_index string(sub(int(nth(s.tape_index s.tape)) 1)) s.tape)
+                s.tape_index
+                add(s.insn 1)
+            );
+        };
+        // putchar the character in cell
+        { |s|: res
+            print(nth(s.tape_index s.tape));
+            let res = state(
+                add(s.i 1)
+                s.loop
+                s.tape
+                s.tape_index
+                add(s.insn 1)
+            );
+        };
+        // dummy getchar
+        { |s|: res
+            let res = state(
+                add(s.i 1)
+                s.loop
+                replace_at(s.tape_index "a" s.tape)
+                s.tape_index
+                add(s.insn 1)
+            );
+        };
+        // noop
+        { |s|: res
+            let res = state(
+                add(s.i 1)
+                s.loop
+                s.tape
+                s.tape_index
+                add(s.insn 1)
+            );
+        };
+        // bf loop
+        { |s|: res
+            let iftrue = { |s|: res
+                let init = state(
+                    sub(s.i 1)
+                    1
+                    s.tape
+                    s.tape_index
+                    add(s.insn 1)
+                );
+                let step = { |s|: res
+                    let ch = nth(sub(s.i 1) input);
+                    let res = state(
+                        sub(s.i 1)
+                        cond(
+                            eq(ch "[") sub(s.loop 1)
+                            eq(ch "]") add(s.loop 1)
+                            s.loop)
+                        s.tape
+                        s.tape_index
+                        s.insn
+                    );
+                };
+                let stop = { |s|: res
+                    let res = cond(gt(s.loop 0) 0 1);
+                };
+                let res = loop(init step stop);
+            };
+            let res = cond(int(nth(s.tape_index s.tape)) iftrue <noop>)(s);
+        };
+
+        let res = cond(
+            eq(ch ">") <next>
+            eq(ch "<") <prev>
+            eq(ch "+") <increment>
+            eq(ch "-") <decrement>
+            eq(ch ".") <putchar>
+            eq(ch ",") <getchar>
+            eq(ch "[") <noop>
+            eq(ch "]") <bf loop>
+            <noop>
+        )(s);
+
+        // print("==" collapse(s.insn) "== index" collapse(s.i) "of" input.length "insn" ch "tape index" collapse(s.tape_index) "char at tape" int(nth(s.tape_index s.tape)));
+        // print(res);
+    };
+    let stop = { |s|: res
+        let res = eq(s.i input.length);
+    };
+    let init = state(
+        0
+        0
+        generate_zeros(30000)
+        0
+        0
+    );
+    loop(init step stop);
+};
+
+let example = { |input|: res let res = { interpret(input) }; };
+
+// example: hello world
+example("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.")
+
+// example: fibonacci
+example(">++++[>++++++<-]>-[[<+++++>>+<-]>-]<<[<]>>>>--.<<<-.>>>-.<.<.>---.<<+++.>>>++.<<---.[>]<<.")
+
+// example: all powers of two
+// example(">++++++++++>>+<+[[+++++[>++++++++<-]>.<++++++[>--------<-]+<<]>.>[->[<++>-[<++>-[<++>-[<++>-[<-------->>[-]++<-[<++>-]]]]]]<[>+<-]+>>]<<]")
+
+// example: random
+// example(">>++>+<[[>>]+>>+[-[++++++[>+++++++>+<<-]>-.>[<------>-]++<<]<[>>[-]]>[>[-<<]+<[<+<]]+<<]>>]")
+
+// Keep in mind that this will take a _very_ long time! select a specific example to maybe get it to run faster :P
+<hello world example>();
