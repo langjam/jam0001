@@ -21,7 +21,7 @@ let parse_file f =
     let pos = lexbuf.Lexing.lex_curr_p in
     print_syntax_error pos msg
 
-let usage_msg = Sys.argv.(0) ^ " [-verbose] <file1> -o <output>"
+let usage_msg = Sys.argv.(0) ^ " [-verbose] <srcfile> -o <output>"
 
 let verbose = ref false
 let input_files = ref ""
