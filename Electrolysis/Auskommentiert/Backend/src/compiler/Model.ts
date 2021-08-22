@@ -278,6 +278,7 @@ export class Model {
     vote(id: string, value: number) {
         let component : CommentBase | undefined = this.mCommentsMap.get(id);
         component?.vote(value);
+        this.notifyChange();
     }
     swapFull(idFirst: string,  idSecond: string) {
         let entryOne = this.mCommentsMap.get(idFirst);
@@ -323,7 +324,7 @@ export class Model {
 
             this.mCommentsMap.delete(id);
             if(parent !== undefined) {
-                parent.children.slice(parent.children.indexOf(comment), 1);
+                parent.children.splice(parent.children.indexOf(comment), 1);
             }
         }
         this.notifyChange();
