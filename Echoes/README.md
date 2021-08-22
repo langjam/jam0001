@@ -19,6 +19,7 @@ loop :n > 0 {
 ```
 
 ## Dependencies
+* Linux - you must use Linux to compile and run this program. Tested on Ubuntu 20.04. Not tested with WSL.
 * Git - to clone this repository
 * GNU Make - to build the project
 * GCC - to compile stuff
