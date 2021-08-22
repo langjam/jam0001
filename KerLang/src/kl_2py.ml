@@ -1,7 +1,5 @@
 
-(** Python3 code generator - To transpile to Python3.
-    Call emit_ast_as_function to print the generated code of a function,
-    given its name and its AST. *)
+(** Python3 code generator - To transpile to Python3. *)
 
 
 open Kl_IR
