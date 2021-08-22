@@ -207,11 +207,11 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 .map(|e| self.eval_comments_in_expr(e))
                 .unwrap_or(()),
             StmtKind::FuncDecl(f) => {
-                self.eval_comments_in_block(&mut f.body);
+                self.eval_comments_in_stmt(&mut f.body);
             }
             StmtKind::ExprStmt(expr) => self.eval_comments_in_expr(expr),
             StmtKind::Print(args) => args.iter_mut().for_each(|e| self.eval_comments_in_expr(e)),
-            StmtKind::Block(b) => self.eval_comments_in_block(b),
+            StmtKind::Block(b) => self.eval_comments_in_block(&mut b.statements),
             StmtKind::While(_, stmt) => self.eval_comments_in_stmt(stmt),
             StmtKind::If(r#if) => {
                 r#if.branches.iter_mut().for_each(|(c, b)| {
@@ -243,7 +243,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 .iter_mut()
                 .for_each(|(_, e)| self.eval_comments_in_expr(e)),
             ExprKind::LambdaLiteral(f) => {
-                self.eval_comments_in_block(&mut f.body);
+                self.eval_comments_in_stmt(&mut f.body);
             }
             ExprKind::Binary(l, _, r) => {
                 self.eval_comments_in_expr(l);
@@ -401,7 +401,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 for (arg, arg_value) in func.args.iter().zip(args.into_iter()) {
                     self.env.add(arg.clone(), arg_value);
                 }
-                let result = self.eval_block(&func.body);
+                let result = self.eval_stmt(&func.body);
                 let _ = self.env.pop();
                 result.map_return()
             }
@@ -500,7 +500,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 let value = self.eval_expr(value)?;
                 self.set_prop(&obj, prop.clone(), value)?;
             }
-            StmtKind::Block(b) => return self.eval_block(b),
+            StmtKind::Block(b) => return self.eval_block(&b.statements),
             StmtKind::UnscopedBlock(b) => return self.eval_unscoped_block(b),
             StmtKind::ExprStmt(e) => {
                 self.eval_expr(e)?;

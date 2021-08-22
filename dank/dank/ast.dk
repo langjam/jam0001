@@ -8,8 +8,16 @@ let y = 5;
 print z;
 
 
-// dbg(AST.code);
+// fn rename(name) {
+//     AST.name = name;
+// }
+
+
+// please rename this to "func".
 fn test(a, b, c) {
     return a + b + c;
 }
+
+print func(1, 2, 3);
+
 

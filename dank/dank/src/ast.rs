@@ -38,7 +38,7 @@ pub struct LineComment<'a> {
 pub struct Function<'a> {
     pub name: Cow<'a, str>,
     pub args: Vec<Cow<'a, str>>,
-    pub body: Vec<LineComment<'a>>,
+    pub body: Stmt<'a>,
 }
 
 #[derive(Debug, Clone, PartialEq, AstToStr)]
@@ -52,6 +52,12 @@ pub struct If<'a> {
     pub otherwise: Option<Stmt<'a>>,
 }
 
+#[derive(Debug, Clone, PartialEq, AstToStr)]
+pub struct Block<'a> {
+    #[forward]
+    pub statements: Vec<LineComment<'a>>,
+}
+
 #[derive(EnumKind, Debug, Clone, PartialEq, AstToStr)]
 #[enum_kind(StmtKindName)]
 pub enum StmtKind<'a> {
@@ -62,7 +68,7 @@ pub enum StmtKind<'a> {
     FuncDecl(#[forward] Ptr<Function<'a>>),
     ExprStmt(#[rename = "expr"] ExprPtr<'a>),
     Print(#[rename = "args"] Vec<Expr<'a>>),
-    Block(#[rename = "statements"] Vec<LineComment<'a>>),
+    Block(#[rename = "statements"] Block<'a>),
     UnscopedBlock(#[rename = "statements"] Vec<LineComment<'a>>),
     If(Ptr<If<'a>>),
     While(

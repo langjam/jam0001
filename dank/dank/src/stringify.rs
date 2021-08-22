@@ -35,6 +35,7 @@ impl<'s> Stringify for Stmt<'s> {
             ),
             StmtKind::Block(b) => {
                 let lines = b
+                    .statements
                     .iter()
                     .filter_map(|line| line.stmt.as_ref())
                     .map(|stmt| indent(indent_level, stmt.stringify_impl(indent_level + 1)))
@@ -153,12 +154,7 @@ impl<'s> Stringify for Function<'s> {
                 .map(|a| a.to_string())
                 .collect::<Vec<_>>()
                 .join(", "),
-            self.body
-                .iter()
-                .filter_map(|line| line.stmt.as_ref())
-                .map(|stmt| indent(indent_level, stmt.stringify_impl(indent_level + 1)))
-                .collect::<Vec<String>>()
-                .join("\n"),
+            self.body.stringify_impl(indent_level),
             indent(indent_level.saturating_sub(1), "}".into()),
         )
     }

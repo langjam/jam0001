@@ -89,7 +89,7 @@ peg::parser!(pub grammar dank() for str {
             Stmt { span: start..end, kind: StmtKind::Return(value.map(Box::new)).alloc() }
          }
          / start:position!() ( "please" / "do" ) _ func:ident_with_whitespace() _
-                             args:( "with" [' ' | '\t'] args:(expr() ++ ("," _)) _ "."? {args})? _ ";"?
+                             args:( ( "with" / ( ( "this" " " )?  "to" ) ) [' ' | '\t'] args:(expr() ++ ("," _)) _ "."? {args})? _ ";"?
            end:position!() {
             Stmt {
                 span: start..end,
@@ -125,7 +125,7 @@ peg::parser!(pub grammar dank() for str {
         Stmt { span: start..end, kind: StmtKind::FuncDecl(Box::new(Function {
             name: name.into(),
             args: args.into_iter().map(Into::into).collect(),
-            body: match &*body.kind.borrow() { StmtKind::Block(b) => b.clone(), _ => unreachable!() }
+            body,
         })).alloc() }
     }
 
@@ -135,7 +135,7 @@ peg::parser!(pub grammar dank() for str {
       Expr { span: start..end, kind: ExprKind::LambdaLiteral(Box::new(Function {
         name: format!("lambda@{}:{}", start, end).into(),
         args: args.into_iter().map(Into::into).collect(),
-        body: match &*body.kind.borrow() { StmtKind::Block(b) => b.clone(), _ => unreachable!() }
+        body,
     })).alloc() }
     }
 
@@ -143,7 +143,7 @@ peg::parser!(pub grammar dank() for str {
     = start:position!() "{" ___ statements:(s:line_comment() ___ {s})* ___ "}" end:position!() {
         Stmt {
             span: start..end,
-            kind:  StmtKind::Block(statements).alloc()
+            kind:  StmtKind::Block(Block { statements }).alloc()
         }
     }
 
@@ -261,7 +261,7 @@ peg::parser!(pub grammar dank() for str {
     /// Parses an entire identifier, ensuring no reserved keywords are used
     rule ident() -> &'input str
         = i:quiet!{ $(ident_start() ident_chars()*) } {?
-              if ["null", "false", "true", "fn", "return", "print", "with"].contains(&i) {
+              if ["null", "false", "true", "fn", "return", "print", "with", "to", "this"].contains(&i) {
                   Err("Cannot use a reserved keyword as an identifier")
               } else {
                   Ok(i)

@@ -1,7 +1,7 @@
 use ast2str::AstToStr;
 
 use crate::{
-    ast::{Expr, ExprKind, Stmt, StmtKind, StmtKindName},
+    ast::*,
     data::{NativeObj, Value},
     eval::{EvalError, Signal},
     stringify::Stringify,
@@ -41,6 +41,18 @@ where
     fn from(o: Option<T>) -> Self {
         o.map(|n| n.into()).unwrap_or(Self::Empty)
     }
+}
+
+macro_rules! parse {
+    ($self:ident, $what:ident, $value:expr) => {{
+        let new_value = $self.arena.alloc($value.to_string());
+        match $crate::parser::dank::$what(new_value) {
+            Ok(expr) => expr,
+            Err(e) => {
+                return Self::syntax_error(stringify!($what), new_value, e);
+            }
+        }
+    }};
 }
 
 #[derive(Debug)]
@@ -91,16 +103,12 @@ impl<'s> AstProxy<'s> {
                 *binding_name = value.to_string().into();
             }
             StmtKind::LetDecl(_, initializer) if name == "initializer" => {
-                let new_value = self.arena.alloc(value.to_string());
-                let new_expr = match crate::parser::dank::expr(new_value) {
-                    Ok(expr) => expr,
-                    Err(e) => {
-                        return Self::syntax_error("expression", new_value, e);
-                    }
-                };
+                let new_expr = parse!(self, expr, value);
                 *initializer = Some(Box::new(new_expr));
             }
-            StmtKind::FuncDecl(_) => todo!(),
+            StmtKind::FuncDecl(func) if ["name", "args", "body"].contains(&&*name) => {
+                self.update_func_prop(func, name, value)?;
+            }
             StmtKind::ExprStmt(_) => todo!(),
             StmtKind::Print(_) => todo!(),
             StmtKind::Block(_) => todo!(),
@@ -142,7 +150,9 @@ impl<'s> AstProxy<'s> {
                     None => Some(Value::Null),
                 }
             }
-            StmtKind::FuncDecl(_) => todo!(),
+            StmtKind::FuncDecl(func) if ["name", "args", "body"].contains(&&*name) => {
+                self.extract_func_prop(func, name).into()
+            }
             StmtKind::ExprStmt(_) => todo!(),
             StmtKind::Print(_) => todo!(),
             StmtKind::Block(_) => todo!(),
@@ -174,6 +184,32 @@ impl<'s> AstProxy<'s> {
             ExprKind::Unary(_, _) => todo!(),
             _ => None,
         }
+    }
+
+    fn extract_func_prop(&self, func: &Function<'s>, name: std::borrow::Cow<'s, str>) -> Value<'s> {
+        match &*name {
+            "name" => Value::Str(func.name.clone()),
+            "args" => todo!(),
+            "body" => self.alloc(func.body.clone()),
+            _ => unreachable!(),
+        }
+    }
+
+    fn update_func_prop(
+        &self,
+        func: &mut Function<'s>,
+        name: std::borrow::Cow<'s, str>,
+        value: Value<'s>,
+    ) -> Signal<'s> {
+        match &*name {
+            "name" => func.name = value.to_string().into(),
+            "args" => todo!(),
+            "body" => {
+                func.body = parse!(self, block, value);
+            }
+            _ => unreachable!(),
+        }
+        Value::Null.into()
     }
 
     fn syntax_error(
