@@ -92,29 +92,39 @@ impl Env {
             ValueAst::Struct(s) => {
                 let name = s.name.clone();
 
-                let mut comment = if let Some(n) = &s.name {
+                let (fields, mut comment) = if let Some(n) = &s.name {
                     println!("resolving named struct: {:?}", n);
                     let resolved_type = self.type_registry.get(n).ok_or_else(|| format!("type not found: {}", n))?;
                     match resolved_type {
-                        ResolvedType::Struct(s) => s.comment.inner().clone(),
+                        ResolvedType::Struct(s) => (s.fields.clone(), s.comment.inner().clone()),
                         _ => return Err(format!("type not a struct: {}", n)),
                     }
                 }
                 else {
-                    CommentValueData::empty()
+                    (vec![], CommentValueData::empty())
                 };
                 println!("prior comment: {:?}", comment);
                 comment.extend_with_lines(&s.comment.lines);
                 let comment = comment.into();
                 println!("new comment: {:?}", comment);
 
+                let field_comments = fields.into_iter()
+                    .map(|f| (f.name.clone(), f.comment.inner().clone()))
+                    .collect::<std::collections::HashMap<_, _>>();
+
                 let mut fields = std::collections::HashMap::new();
                 for field_value in &s.fields {
+                    let mut field_comment = field_comments
+                        .get(&field_value.name)
+                        .map(|f| f.clone())
+                        .unwrap_or_else(CommentValueData::empty);
+                    field_comment.extend_with_lines(&field_value.comment.lines);
+                    let field_comment = field_comment.into();
                     fields.insert(
                         field_value.name.clone(),
                         FieldValue {
                             value: self.evaluate(&field_value.value)?,
-                            comment: CommentValue::from_lines(&field_value.comment.lines),
+                            comment: field_comment,
                         },
                     );
                 }
