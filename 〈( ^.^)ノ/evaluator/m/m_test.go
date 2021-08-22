@@ -3,7 +3,7 @@ package m
 import "testing"
 
 func TestNormal(t *testing.T) {
-	res, err := Do("(1 + 2) * 3", []string{}, []string{})
+	res, err := Do("(1 + 2) * 3")
 	if err != nil {
 		t.Errorf("Got error: %s", err.Error())
 	}
@@ -14,7 +14,7 @@ func TestNormal(t *testing.T) {
 }
 
 func TestRefs(t *testing.T) {
-	res, err := Do("($1 + 2) * 3", []string{}, []string{"3"})
+	res, err := Do("($1 + 2) * 3")
 	if err != nil {
 		t.Errorf("Got error: %s", err.Error())
 	}
