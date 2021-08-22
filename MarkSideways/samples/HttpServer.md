@@ -4,6 +4,12 @@
 
 This is a server that serves some HTML and JavaScript as the frontend (via GET requests) and has an API endpoint that handles JSON POST requests. This mimics a minimalistic Twitter where you can post messages and it periodically loads messages on the server and displays them along with the time they were posted.
 
+When run and accessed on localhost, it looks like this:
+
+![](httpserver.jpg)
+
+This demo primarily utilizes two built-in functions in MarkSideways: `http_server_create_handler` &amp; `http_server_start`.
+
 To start, we determine the port number. If no port is specified as a command line argument, then we use `8080`.
 
 ```
