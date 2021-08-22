@@ -1,0 +1,5 @@
+{- B -}
+for i iota 5 [
+	println i
+]
+{- b -}
