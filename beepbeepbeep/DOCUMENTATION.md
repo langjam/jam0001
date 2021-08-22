@@ -575,4 +575,4 @@ These patterns don't fit into other categories.
 * A sequence of 1 or more ASCII digit characters.
 
 ### `<Quote>`
-* A string inside double quotes. Escapes are parsed identically to Rust, allowing most common escapes as well as `\uXXXX` / `\n{XXXXXX}`.
+* A string inside double quotes. Escapes are parsed identically to Rust, allowing most common escapes as well as `\uXXXX` / `\U{XXXXXX}`.
