@@ -73,22 +73,36 @@ $uncom_words = {}
 
 class UnComment
 	# NOTE: MAKE SURE THAT THE LENGTH OF THE SOURCE STRING NEVER GETS CHANGED
+
 	def initialize(source, start, len)
 		@source = source
 		@start = start
 		@len = len
+
 		# TODO: save what it looks like at start, so we know what it's variable is called
+
+		name = ""
+		@name = source[start + 1, len - 2].split("").each_with_index do |c, idx|
+			name += c
+			break "" if " \n\t".include? c
+			break name[..-2] if c == ":"
+			break "" if idx == len - 3
+		end
+	end
+
+	def name
+		@name
 	end
 
 	def is_commented?
 		# TODO: check source to see if we're commnted
 	end
 
-	def comment
+	def comment!
 		# TODO: install comment
 	end
 
-	def uncomment
+	def uncomment!
 		# TODO: un do the comment
 	end
 
@@ -246,13 +260,11 @@ class Uncom
 			return try_apply_stacks()
 		end
 
-		# comment -> ?????
-		if word.is_a? UnComment then
-			# TODO: check if comment is named and do variable storage
-
-			# 8. decide on when their vars get bound
-			# 9. comments get bound inside do_word
-			return false
+		# comment -> check name and set variable
+		if word.is_a?(UnComment) then
+			return false if word.name == ""
+			data.push(word)
+			return do_word(word.name + "=")
 		end
 
 		# found global -> do word
@@ -280,7 +292,6 @@ class Uncom
 
 	def do_word_special(word)
 		# TODO
-		# [ ] to push / pop local frames, make sure to raise error on underflow
 		# } to pop return stack, make sure to raise error on underflow
 
 		# ( -> push data + func stacks
@@ -329,6 +340,16 @@ class Uncom
 		{name + "=" => UnFunc.new(name + "=", [:any], lambda {|x| vars[name] = x ; nil }),
 		name => UnFunc.new(name, [], lambda { vars[name] })}
 	end
+
+	def read_words() # good for degging reader
+		words = []
+		loop do
+			w = next_word
+			words.push(w)
+			break if w == "halt"
+		end
+		return words
+	end
 end
 
 def do_source(source)
@@ -370,6 +391,12 @@ and #these are normal words
 	["{1 {2} 3} quote?", [true]],
 	["x= 1 [x= 2 [x= 3 x] x] x", [3, 2, 1]],
 	["$x= 0 x= 1 [x= 2 [x= 3 $x x] x] x", [0, 3, 2, 1]],
+	['1 2 3 #name: dookies
+	name comment?', [1, 2, 3, true]],
+	['name= 42 [#name: dookies
+	name comment?] name', [true, 42]],
+	['#$name: dookies
+	[$name comment?]', [true]],
 	].each_with_index {|t, idx|
 		raise "failed test number #{idx + 1}" if do_source(t[0]).data != t[1]
 	}
