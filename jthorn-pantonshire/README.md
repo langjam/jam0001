@@ -1,15 +1,15 @@
-Welcome to Superfluous!
+# Superfluous
 
-# Build Instructions
+## Build Instructions
 
 1. [Install Rust](https://www.rust-lang.org/tools/install) if you do not already have it installed.
 2. Change directory to `langjam/` and run `cargo build` or `cargo build --release`.
 3. The executable will be at `target/debug/langjam` or `target/release/langjam`.
 
 
-# Usage
+## Usage
 
-In this language, the semantics of a program is determined by the comments above functions.
+In Superfluous, the semantics of a program is determined by the comments above functions.
 
 ```
 // A function which prints "all your base are belong to us"
@@ -20,10 +20,8 @@ function main() {
 
 For example, the above program prints "all your base are belong to us", not "hello world"!
 
-Also for convenience, you can either use "function" or "#" to express functions
 
-
-## Functions
+### Functions
 To declare a function, use `function <name>()` (or shorthand `# <name>()`), with a comment above it to define the function's behaviour.
 
 ```
@@ -31,7 +29,7 @@ To declare a function, use `function <name>()` (or shorthand `# <name>()`), with
 function a()
 
 //prints list [1,2,3]
-# listPrint()
+function listPrint()
 ```
 
 Optionally, the comment may start with `"this function"` or `"a function which"`.
@@ -76,61 +74,55 @@ function main()
 function average(a, b)
 ```
 
-## Main Function
+### Main Function
 The entry point to a program is a function called `main` which takes no arguments.
 
-## Constants and variables
-Variables can be set using `stores|storing <expression> in <variable name>`.
-
-A constant can be set using `constant <name> is <expression>`. Once set, it cannot be reassigned.
+### Variables
+Variables can be set using `stores <expression> in <variable name>`.
 
 ```
-//constant pi is 3.14
-# pi()
-
 //stores 1 in x
-# x()
-
-//storing 1 in x
-# x()
+function x()
 ```
-Conditional, looping and chaining syntax respectively:
 
-- `if <expression> <statement> else|otherwise <statement>`
-- `repeatedly <statement> <number of iterations> times`
-- `<statement> then <statement>*`
+### Chaining statements
+Statements can be chained using the `then` keyword.
 
-## Conditional statements, looping and statement chaining
 ```
-//if 5==6 prints "true" else "false"
-# decision()
+// This function stores "world" in x, then prints "hello", then prints x
+function chain()
+```
+
+### Conditional statements and looping
+```
+//if 5==6 prints "true" else prints "false"
+function decision()
 
 //repeatedly (prints "hello") 5 times
-# looping()
-
-//prints "hello" then prints "world"
-# chain()
+function looping()
 ```
-## Native Functions
+
+### Built-in Functions
 
 The `measure` function returns the length of a string or list.
 
 The `print` function prints all of the arguments passed to it.
 
-The `random` function returns a random integer
+The `random` function returns a random integer.
+
+The `get` function takes a string or a list and an index, and returns the character / element at that index.
+
+The `type` function returns the name of the type of its argument.
 
 ```
-//measure list [1,2,3] 
-# listLength()
+//measures list [1,2,3]
+function listLength()
 
-//measure "Hello world"
-# stringLength()
+//measures "Hello world"
+function stringLength()
 
 //prints "a"
-# printa()
-
-//print "a"
-# printsa()
+function printa()
 
 // A function which randoms then returns it
 function getRandomNumber() {
@@ -138,7 +130,10 @@ function getRandomNumber() {
 }
 
 ```
-## Higher-orderism
+
+### Higher-orderism
+Functions can be passed into functions:
+
 ```
 //twices print, "hello"
 function main()
@@ -148,13 +143,13 @@ function main()
 function twice(f, a)
 
 ```
-# Example programs
+## Example programs
 
 The `langjam/example_programs/` directory contains several example programs.
 
 Here are a few of them:
 
-## Fibonacci sequence
+### Fibonacci sequence
 ```
 // This function fibonaccis 20 then prints it
 function main()
@@ -166,7 +161,7 @@ function fibonacci(n)
 ```
 
 
-## A mapping function
+### A mapping function
 ```
 // This function maps increment, list[1, 2, 3] then prints it
 function main()
@@ -180,6 +175,3 @@ function increment(x)
 // then stores i + 1 in i) count times, then returns res
 function map(f, l)
 ```
-
-
-
