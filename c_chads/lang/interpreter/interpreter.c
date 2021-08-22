@@ -16,6 +16,9 @@ static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Val
             case IT_INT:
                 printf("%d", arg->data.intg.val);
             break;
+            case IT_FLOAT:
+                printf("%f", arg->data.flt.val);
+            break;
             case IT_STRING:
                 printf("%.*s", (int)arg->data.string.str.size, arg->data.string.str.view);
             break;
@@ -113,6 +116,7 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
 
 static enum Interpreter_Type resolve_type(strview_t name) {
     if (strview_eq(name, strview_from("int")))    return IT_INT;    else 
+    if (strview_eq(name, strview_from("float")))  return IT_FLOAT;  else 
     if (strview_eq(name, strview_from("string"))) return IT_STRING;
 
     return IT_VOID;
@@ -188,8 +192,23 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
             };
         break;
         case PN_NUMBER:
-            ret.type = IT_INT;
-            ret.data.intg.val = atoi(node->data.number.val.view);
+
+            if (node->data.number.kind != PNM_FLT) {
+                ret.type = IT_INT;
+                int base, offs;
+
+                switch (node->data.number.kind) {
+                case PNM_HEX: base = 16; offs = 2; break;
+                case PNM_BIN: base = 2;  offs = 2; break;
+                case PNM_OCT: base = 8;  offs = 1; break;
+                default:      base = 10; offs = 0; break;
+                }
+
+                ret.data.intg.val = (int)strtol(node->data.number.val.view + offs, NULL, base);
+            } else {
+                ret.type = IT_FLOAT;
+                ret.data.flt.val = strtof(node->data.number.val.view, NULL);
+            }
         break;
         case PN_IDENT: {
             ret = *get_var(node->data.ident.val);
