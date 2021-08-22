@@ -196,7 +196,12 @@ bool lexer_tokenize(struct Lexer* const lexer) {
     // try to tokenize `else`
     if (lexer_match_keyword(lexer, "else", 4, TokenNameElse))
         return true;
-
+    // try to tokenize `loop`
+    if (lexer_match_keyword(lexer, "loop", 4, TokenNameLoop))
+        return true;
+    // try to tokenize `break`
+    if (lexer_match_keyword(lexer, "break", 5, TokenNameLoop))
+        return true;
     lexer_error(lexer, "Unrecognized token");
     return false;
 }

@@ -61,17 +61,20 @@ struct Expr {
 enum NodeType {
     NodeTypeLog = 1,
     NodeTypeSet,
-    NodeTypeIf
-};
-
-struct ElseStatementNode {
-
+    NodeTypeIf,
+    NodeTypeLoop,
+    NodeTypeBreak
 };
 
 struct IfStatementNode {
-    struct Expr *expr;
+    struct Expr *condition;
     struct Node **block;
     struct Node **else_block;
+};
+
+struct LoopNode {
+    struct Expr *condition;
+    struct Node **block;
 };
 
 struct Node {
@@ -83,6 +86,7 @@ struct Node {
             struct Expr *expr;    
         } set;
         struct IfStatementNode if_stat;
+        struct LoopNode loop;
     } value;
 };
 

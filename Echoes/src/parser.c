@@ -393,12 +393,12 @@ static struct Value *parser_parse_node_routine(struct Parser* const parser) {
 
 static struct Node *parser_parse_if_statement(struct Parser* const parser) {
     struct Node *node;
+    struct Lexer old_state = parser->lexer;
     struct IfStatementNode if_stat = {
         .block = NULL,
         .else_block = NULL,
-        .expr = NULL
+        .condition = NULL
     };
-    struct Lexer old_state = parser->lexer;
     // is there something?
     if (!lexer_tokenize(&parser->lexer))
         return NULL;
@@ -407,7 +407,7 @@ static struct Node *parser_parse_if_statement(struct Parser* const parser) {
         parser->lexer = old_state;
         return NULL;
     }
-    if (!(if_stat.expr = parser_parse_expr(parser))) {
+    if (!(if_stat.condition = parser_parse_expr(parser))) {
         parser_error(parser, "Expected an expression after if keyword");
     }
     if (!(if_stat.block = parser_parse_block(parser))) {
@@ -431,11 +431,56 @@ end:
     return node;
 }
 
+static struct Node *parser_parse_break(struct Parser* const parser) {
+    struct Node *node;
+    struct Lexer old_state = parser->lexer;
+    // is there something?
+    if (!lexer_tokenize(&parser->lexer))
+        return NULL;
+    // verify it starts with 'if'
+    if (parser->lexer.token.name != TokenNameBreak) {
+        parser->lexer = old_state;
+        return NULL;
+    }
+    node = malloc(sizeof(struct Node));
+    node->type = NodeTypeBreak;
+    return node;
+}
+
+static struct Node *parser_parse_loop(struct Parser* const parser) {
+    struct Node *node;
+    struct Lexer old_state = parser->lexer;
+    struct LoopNode loop = {
+        .block = NULL,
+        .condition = NULL
+    };
+    // is there something?
+    if (!lexer_tokenize(&parser->lexer))
+        return NULL;
+    // verify it starts with 'loop'
+    if (parser->lexer.token.name != TokenNameLoop) {
+        parser->lexer = old_state;
+        return NULL;
+    }
+    if (!(loop.condition = parser_parse_expr(parser))) {
+        parser_error(parser, "Expected an expression after if keyword");
+    }
+    if (!(loop.block = parser_parse_block(parser))) {
+        parser_error(parser, "Expected block after expression");
+    }
+    parser_expect_newline(parser);
+    node = malloc(sizeof(struct Node));
+    node->type = NodeTypeLoop;
+    node->value.loop = loop;
+    return node;
+}
+
 static struct Node *parser_parse_node(struct Parser* const parser) {
     struct Node *node;
-    if ((node = parser_parse_node_set(parser)) ||
-        (node = parser_parse_node_log(parser)) ||
-        (node = parser_parse_if_statement(parser))) {
+    if ((node = parser_parse_node_set(parser))     ||
+        (node = parser_parse_node_log(parser))     ||
+        (node = parser_parse_if_statement(parser)) ||
+        (node = parser_parse_loop(parser))) {
         return node;
     }
     return NULL;
