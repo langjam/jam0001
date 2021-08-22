@@ -1,8 +1,5 @@
-```
-git clone https://github.com/xyzzyapps/loom.git
-cd loom
-virtualenv env
-source env/bin/activate
-pip install -r requirements.txt
-python loom.py < test.py
-```
+Submission for langjam#0001
+
+see https://xyzzyapps.github.io/loom for the docs and setup.  
+repo https://github.com/xyzzyapps/loom
+
