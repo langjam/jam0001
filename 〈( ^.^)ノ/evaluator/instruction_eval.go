@@ -40,6 +40,7 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 		mResult, err := m.Do(mathInput)
 		if err != nil {
 			fmt.Println("MathError: expression invalid: ", mathInput)
+			os.Exit(1)
 		}
 		return makeNumberNode(mResult)
 	}
