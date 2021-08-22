@@ -146,7 +146,7 @@ dealWithAtom atom runtime =
             in
             case command of
                 Just alter ->
-                    alter runtime
+                    alter runtime |> next
 
                 Nothing ->
                     case label of
@@ -182,6 +182,7 @@ commands =
     Dict.fromList
         [ ( "next", next )
         , ( "flip", flip )
+        , ( "exit", exit )
         ]
 
 
@@ -193,6 +194,11 @@ next runtime =
 jump : Int -> Command
 jump ip runtime =
     { runtime | ip = ip }
+
+
+exit : Command
+exit runtime =
+    { runtime | ok = False }
 
 
 flip : Command
@@ -352,14 +358,14 @@ toValue atom =
             Debug.todo "unreachable"
 
 
-toInt : Value -> Maybe Int
+toInt : Value -> Int
 toInt value =
     case value of
         Int int ->
-            Just int
+            int
 
         _ ->
-            Nothing
+            Debug.todo "oops"
 
 
 toChar : Value -> Maybe Char
@@ -403,5 +409,13 @@ add =
 
 sum : Executioner
 sum =
-    MaybeX.traverseArray toInt
-        >> Maybe.map (Array.toList >> List.sum >> Int)
+    Array.map toInt >> Array.toList >> List.sum >> Int >> Just
+
+
+sub : Executioner
+sub args =
+    let
+        int id =
+            toInt <| Maybe.withDefault (Int 0) <| Array.get id args
+    in
+    Just <| Int (int 0 - int 1)
