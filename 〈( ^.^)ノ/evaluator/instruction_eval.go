@@ -3,6 +3,9 @@ package evaluator
 import (
 	"fmt"
 	"os"
+	"math/rand"
+	"strconv"
+	"strings"
 
 	"github.com/grossamos/jam0001/evaluator/m"
 	"github.com/grossamos/jam0001/lexer"
@@ -45,7 +48,8 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 		return makeNumberNode(mResult)
 
 	case lexer.II_not:
-		input := instruction_args[0].Val.Value
+		args := e.eval_children(instruction_args)
+		input := args[0].Val.Value
 
 		out := ""
 
@@ -62,6 +66,54 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 
 		instruction_args[0].Val.Value = out
 		return instruction_args[0]
+
+	case lexer.II_smile:
+		smiles := []string{"〈( ^.^)ノ", "(>̯-̮<̯)", "(/^▽^)/", "(⌐■_■)", "( ¬_¬)"}
+
+		return makeStringNode(smiles[rand.Int()%len(smiles)])
+
+	case lexer.II_inz:
+		args := e.eval_children(instruction_args)
+		if !stringIsTrue(args[0].Val.Value) {
+			break
+		}
+
+		split := splitComments(args[1].Val.Value)	
+
+		pos, err := strconv.Atoi(args[2].Val.Value)
+		if err != nil {
+			// TODO
+		}
+
+		// pass by reference hell
+		out := make([]string, len(split))
+		copy(out, split)
+		out = append(
+			out[:pos],
+			args[3].Val.Value)
+		out = append(out, split[pos:]...)
+
+		return makeStringNode(strings.Join(out, ","))
+	case lexer.II_dnz:
+		args := e.eval_children(instruction_args)
+		if !stringIsTrue(args[0].Val.Value) {
+			break
+		}
+
+		split := splitComments(args[1].Val.Value)	
+
+		pos, err := strconv.Atoi(args[2].Val.Value)
+		if err != nil {
+			// TODO
+		}
+
+		if pos >= len(split) -1 {
+			break
+		}
+
+		split = append(split[:pos], split[pos+1:]...)
+
+		return makeStringNode(strings.Join(split, ","))
 	}
 	return shared.Node{}
 }

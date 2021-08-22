@@ -10,6 +10,9 @@ const II_print = "print"
 const II_while = "while"
 const II_true = "TRUE"
 const II_false = "FALSE"
+const II_smile = "smile"
+const II_inz = "inz"
+const II_dnz = "dnz"
 
 const instruction_size_min = 3
 const instruction_size_max = 5
@@ -33,6 +36,10 @@ func (l *Lexer) makeIdentifierToken() (shared.Token, error) {
 		return shared.Token{Type: shared.TTinstruction, Value: II_and, Pos: l.pos}, nil
 	} else if string(inst) == II_not {
 		return shared.Token{Type: shared.TTinstruction, Value: II_not, Pos: l.pos}, nil
+	} else if string(inst) == II_dnz {
+		return shared.Token{Type: shared.TTinstruction, Value: II_dnz, Pos: l.pos}, nil
+	} else if string(inst) == II_inz {
+		return shared.Token{Type: shared.TTinstruction, Value: II_inz, Pos: l.pos}, nil
 	}
 
 	for i := instruction_size_min; i < instruction_size_max; i++ {
@@ -48,6 +55,8 @@ func (l *Lexer) makeIdentifierToken() (shared.Token, error) {
 		return shared.Token{Type: shared.TTconst, Value: II_false, Pos: l.pos}, nil
 	} else if string(inst)[:4] == II_true {
 		return shared.Token{Type: shared.TTconst, Value: II_true, Pos: l.pos}, nil
+	} else if string(inst) == II_smile {
+		return shared.Token{Type: shared.TTinstruction, Value: II_smile, Pos: l.pos}, nil
 	}
 
 	return shared.Token{}, &IllegalInstructionError{string(inst), l.pos}

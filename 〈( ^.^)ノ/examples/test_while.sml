@@ -1,5 +1,4 @@
 
-print(not("TRUE"))
-print(not("FALSE"))
-print(not("132"))
-print(not("0"))
+set($1 "read, print, loop")
+print(inz(1 $1 1 "eval"))
+print(dnz(1 $1 0))

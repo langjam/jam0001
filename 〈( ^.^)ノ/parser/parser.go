@@ -145,6 +145,9 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 		"m":     1,
 		"print": 1,
 		"not":   1,
+		"smile": 0,
+		"inz":   4,
+		"dnz":   3,
 		"and":   2}[ins]) {
 
 		fmt.Println((&IncorrectSignatureError{ins, pos}).Error())

@@ -7,15 +7,20 @@ import (
 	"github.com/grossamos/jam0001/shared"
 )
 
-func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
-	wholeComment := e.unrefString(expr.Children[0].Val.Value)
+func splitComments(input string) (comments []string) {
+	andSplit := strings.Split(input, " and ")
 
-	andSplit := strings.Split(wholeComment, " and ")
-
-	comments := []string{}
 	for _, part := range andSplit {
 		comments = append(comments, strings.Split(part, ",")...)
 	}
+
+	return
+}
+
+func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
+	wholeComment := e.unrefString(expr.Children[0].Val.Value)
+
+	comments := splitComments(wholeComment)
 
 	for i := range comments {
 		comments[i] = strings.TrimSpace(comments[i])

@@ -80,3 +80,11 @@ func makeNumberNode(number string) shared.Node {
 		Value: number},
 		IsExpression: false, Children: []shared.Node{}}
 }
+
+func makeStringNode(val string) shared.Node {
+	return shared.Node{
+		Val: shared.Token{
+			Type:  shared.TTstring,
+			Value: val},
+		IsExpression: false, Children: []shared.Node{}}
+}

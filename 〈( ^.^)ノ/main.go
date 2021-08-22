@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"io/ioutil"
+	"math/rand"
 
 	"github.com/grossamos/jam0001/evaluator"
 	"github.com/grossamos/jam0001/lexer"
@@ -11,6 +13,8 @@ import (
 )
 
 func main() {
+	rand.Seed(time.Now().Unix())
+
 	dat, err := ioutil.ReadFile("examples/test_while.sml")
 	if err != nil {
 		panic(err)
