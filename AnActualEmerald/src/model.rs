@@ -36,10 +36,11 @@ pub enum Keyword {
     And,
     Or,
     In,
-    If,
+    If, // TODO: Implement control flow
     For,
     While,
     End,
+    Waste, // Where the useless keywords go
 }
 
 #[derive(Debug, Clone)]

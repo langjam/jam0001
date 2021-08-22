@@ -21,6 +21,7 @@ pub fn describe(terms: Vec<Box<Term>>) -> (VM, Vec<Box<Term>>) {
         }
     }
 
+    //Split up the 'VM' and the instructions to avoid mutable borrowing headaches
     (
         VM {
             heap,
@@ -74,6 +75,7 @@ fn desc_func<'a>(
 
 #[derive(Default, Debug)]
 pub struct VM {
+    // I don't really know what a heap is and at this point I'm afraid to ask
     heap: HashMap<String, Box<Func>>,
     vars: HashMap<String, Value>,
 }
@@ -90,6 +92,7 @@ pub fn run(ctx: &mut VM, instr: Vec<Box<Term>>) -> Value {
             _ => {
                 let v = step(ctx, &mut iter);
                 if v.1 {
+                    //only return here if something's actually returning
                     return v.0;
                 }
             }
@@ -173,6 +176,7 @@ fn step<'a>(ctx: &mut VM, instr: &mut Peekable<std::slice::Iter<'a, Box<Term>>>)
     (Value::None, false)
 }
 
+// Panic! at the Rust code
 fn run_func(ctx: &mut VM, func: &Func, args: Option<Box<Term>>) -> Value {
     let mut func_ctx = VM::default();
     func_ctx.heap = ctx.heap.clone();
