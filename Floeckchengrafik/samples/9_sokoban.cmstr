@@ -93,8 +93,6 @@ ispospossible = function({
     grid_line = list_get(level : char_x)?
     grid_char = list_get(grid_line : char_y)?
 
-    out(grid_char)?
-
     if (string_startswith(grid_char : "#") : {
         valid = false?
     })?
@@ -102,6 +100,37 @@ ispospossible = function({
     valid?
 })?
 
+
+checkwin = function({
+   /*
+    * This function evaluates if the user won the game
+    * For this, it needs the
+    * - param level to look up the tiles and the
+    * - param movtiles to check if everything is on place
+    */
+
+    incorrect = false?
+
+    for ("tile" : movtiles : {
+        tile_x = list_get(tile : 0)?
+        tile_y = list_get(tile : 1)?
+
+        grid_line = list_get(level : tile_x)?
+        grid_char = list_get(grid_line : tile_y)?
+
+        if (grid_char != "x" : {
+            incorrect = true?
+        })?
+
+        if(!!incorrect : {
+            out()?
+            out("You won!")?
+            out()?
+            readline("Press enter to exit!")?
+            exit()?
+        })?
+    })?
+})?
 
 banner = [
     " ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄   ▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄    ▄ " :
@@ -127,6 +156,7 @@ char = [1:5]?
 
 movtiles = [
     [2:4]
+    \\ [4:3]
 ]?
 
 ACTION_W = [ 0-1 :   0 ]?
@@ -209,4 +239,6 @@ forever({
     if(string_startswith(command : "x") : {
         exit()?
     })?
+
+    checkwin(level : movtiles)?
 })?
