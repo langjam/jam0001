@@ -32,7 +32,6 @@ public class BeeLanguage {
         this.sourceDirectory = sourceDirectory;
         this.sourceFiles = new HashSet<>();
         this.sourceFiles.add(mainFile);
-        this.showAlerts = true;
         this.availableCoresNumber = Runtime.getRuntime().availableProcessors();
     }
 
