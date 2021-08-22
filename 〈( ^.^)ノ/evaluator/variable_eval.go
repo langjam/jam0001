@@ -27,5 +27,5 @@ func (e *Evaluator) setRefValue(ref, value string) {
 		arr = append(arr, "")
 	}
 
-	arr[varIndex] = value
+	arr[varIndex-1] = value
 }

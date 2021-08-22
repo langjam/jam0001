@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/grossamos/jam0001/shared"
 )
@@ -11,7 +12,7 @@ type Parser struct {
 	toks         []shared.Token
 	openParen    int
 	neededBlocks int
-	comments     map[string]shared.Node
+	Comments     map[string]shared.Node
 }
 
 func (p *Parser) makeAst() []shared.Node {
@@ -79,11 +80,19 @@ func (p *Parser) makeAst() []shared.Node {
 
 			index := len(out) - 1
 
-			out[index] = shared.Node{
-				IsExpression: true,
-				Children: []shared.Node{
-					{Val: tok},
-					out[index]}}
+			if out[index].Children[0].Val.Value == "and" {
+				out[index].Children[1] = shared.Node{
+					IsExpression: true,
+					Children: []shared.Node{
+						{Val: tok},
+						out[index].Children[1]}}
+			} else {
+				out[index] = shared.Node{
+					IsExpression: true,
+					Children: []shared.Node{
+						{Val: tok},
+						out[index]}}
+			}
 
 		case shared.TTwhile:
 			p.neededBlocks += 1
@@ -111,7 +120,7 @@ func (p *Parser) makeAst() []shared.Node {
 	return out
 }
 
-func GenerateAst(toks []shared.Token) []shared.Node {
+func GenerateAst(toks []shared.Token) ([]shared.Node, map[string]shared.Node) {
 	parser := Parser{toks, 0, 0, map[string]shared.Node{}}
 	ast := parser.makeAst()
 	if parser.neededBlocks != 0 {
@@ -120,8 +129,9 @@ func GenerateAst(toks []shared.Token) []shared.Node {
 	}
 
 	parser.Parse(shared.Node{IsExpression: true, Children: ast})
+	shared.Node{IsExpression: true, Children: ast}.Print("")
 
-	return ast
+	return ast, parser.Comments
 }
 
 func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Position) {
@@ -135,7 +145,7 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 		"m":     1,
 		"print": 1,
 		"not":   1,
-		"and":   1}[ins]) {
+		"and":   2}[ins]) {
 
 		fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
 		os.Exit(1)
@@ -144,10 +154,13 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 	if ins == "and" {
 		if args[0].Children[0].Val.Type == shared.TTwcomment {
 			args[0].Children[0].Val.Type = shared.TTwcommentAnd
+			p.Parse(args[0])
 		} else {
 			fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
 			os.Exit(1)
 		}
+
+		return
 	}
 
 	for _, arg := range args[0].Children {
@@ -169,12 +182,14 @@ func (p *Parser) parseCall(args []shared.Node) {
 func (p *Parser) parseComment(content string, add bool, value []shared.Node) {
 	p.Parse(value[0])
 
+	content = strings.TrimSpace(content)
+
 	if add {
-		p.comments[content] = shared.Node{
+		p.Comments[content] = shared.Node{
 			IsExpression: true,
-			Children:     append(p.comments[content].Children, value...)}
+			Children:     append(p.Comments[content].Children, value[0].Children...)}
 	} else {
-		p.comments[content] = value[0]
+		p.Comments[content] = value[0]
 	}
 }
 
@@ -216,7 +231,7 @@ func (p *Parser) Parse(tree shared.Node) {
 		case shared.TTwcomment, shared.TTwcommentAnd:
 			p.parseComment(
 				child.Val.Value,
-				child.Val.Type == shared.TTwcomment,
+				child.Val.Type == shared.TTwcommentAnd,
 				tree.Children[1:])
 		case shared.TTwhile:
 			p.parseWhile(tree.Children[1:])
