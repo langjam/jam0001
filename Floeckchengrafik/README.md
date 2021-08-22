@@ -31,7 +31,7 @@ shell go to the Floeckchengrafik/src folder of the cloned repo and
 run `pyinstaller comstruct.py application_stack_utils.py executor.py internals.py lexer.py parser.py -c -F -p . --distpath ../dist --collect-all sly`
 .
 
-We have no idea if it'll run on other platforms too. We (Chris and Flo) both use arch btw. If you have any suggestions
+We have no idea if it'll run on other platforms too. We (Chris and Flo) both [use arch btw](https://i.redd.it/z22mv8adan771.png). If you have any suggestions
 or tests for other platforms, we'll be happy to add them to this readme. Don't hesitate to open an issue
 on [this repo](https://github.com/Floeckchengrafik/jam0001).
 
