@@ -2,18 +2,26 @@ use std::io::{self, Write};
 
 use crate::value::Value;
 
-pub fn is_std_fn(name: &str) -> bool {
-    match name {
-        "print" => true,
-        _ => false,
+macro_rules! std_fns {
+    ($($p:pat => $e:expr),*) => {
+        pub fn is_std_fn(name: &str) -> bool {
+            match name {
+                $($p => true),*,
+                _ => false,
+            }
+        }
+
+        pub fn call_std_fn(name: &str, args: &[Value]) -> Option<Value> {
+            match name {
+                $($p => Some($e(args))),*,
+                _ => None,
+            }
+        }
     }
 }
 
-pub fn call_std_fn(name: &str, args: &[Value]) -> Option<Value> {
-    match name {
-        "print" => Some(print(args)),
-        _ => None,
-    }
+std_fns! {
+    "print" => print
 }
 
 pub fn print(args: &[Value]) -> Value {
