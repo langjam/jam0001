@@ -23,10 +23,10 @@ main := proc () void {
             if (a_split == middle) { return middle; };
             else if (middle > a_split) { end = middle; };
             else { start = middle; };
-        };
+        }
 
         return start;
-    };
+    }
 
     result = square_root(square(x2 - x1) - square(y2 - y1));
     print(result);
