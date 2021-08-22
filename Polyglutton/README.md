@@ -21,7 +21,7 @@ You can run a Polyglutton program with any of
 
 * `nodejs polyglutton.poly hello_world1.poly` (Javascript)
 * `python3 polyglutton.poly hello_world1.poly` (Python 3)
-* `./polyglutton.exe hello_world1.poly` (Haskell, post-compilation with `ghc -x hs polyglutton.poly -o polyglutton.exe`)
+* `ghc -x hs polyglutton.poly` and then running the resulting executable with `./polyglutton hello_world1.poly`  (Haskell)
 
 Both input and further arguments will be passed to the program (though input will be taken all at once at the start of the program, so if it appears to hang try sending EOF, usually Ctrl-D). 
 
