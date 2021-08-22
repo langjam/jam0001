@@ -88,6 +88,7 @@ let cloud;
 let stationTypeImages = {}
 let lineLookup = new Map();
 let decorations = []
+let carriageColour = {};
 
 function updateFinishedValue() {
     document.getElementById("finishedValue").innerText = `${stopcount}/${grid.trains.size}`
@@ -121,6 +122,7 @@ function preloadTrain() {
         const color = COLOR[i];
         locomotiveAccent[color] = loadImage(`tiles/locomotive_accent_${color}.png`)
         locomotiveAccent1[color] = loadImage(`tiles/locomotive_accent1_${color}.png`)
+        carriageColour[color] = loadImage(`tiles/carriage_${color}.png`)
     }
 
     stationBackground = loadImage("tiles/station_bottom.png")
@@ -285,6 +287,9 @@ class Train {
 
     first_class_messages
 
+    cart_locations = []
+    length
+
     constructor(location, prim, sec, direction, identifier, first_class_messages) {
         this.location = location;
         this.accent = sec;
@@ -295,6 +300,7 @@ class Train {
         this.animation_count = 0;
         this.traveling_to = null;
         this.traveling_from = null;
+        this.length = length;
 
         this.clouds = []
         this.ticks_since_last_cloud = 0;
@@ -356,6 +362,31 @@ class Train {
         this.location.x = x;
         this.location.y = y;
 
+        this.cart_locations = [];
+        for (let i = 0; i < this.length; i++) {
+            const n = i + 1;
+            if (this.path_index - n >= 0) {
+                const x = lerp(this.path[this.path_index - n][0], this.path[this.path_index - n + 1][0], this.animation_count);
+                const y = lerp(this.path[this.path_index - n][1], this.path[this.path_index - n + 1][1], this.animation_count);
+
+                let direction;
+                if (this.path[this.path_index - n][0] < this.path[this.path_index - n + 1][0]) {
+                    direction = DIRECTION.East;
+                } else if (this.path[this.path_index - n][0] > this.path[this.path_index - n + 1][0]) {
+                    direction = DIRECTION.West;
+                }else if (this.path[this.path_index - n][1] < this.path[this.path_index - n + 1][1]) {
+                    direction = DIRECTION.South;
+                }else {
+                    direction = DIRECTION.North;
+                }
+
+
+                this.cart_locations.push([createVector(x, y), direction])
+            }
+        }
+
+        console.log(this.cart_locations);
+
         this.animation_count += TRAIN_SPEED;
 
         this.ticks_left -= 1;
@@ -396,6 +427,25 @@ class Train {
         image(locomotiveForeground, 0, 0, TILE_SIZE, TILE_SIZE)
 
         pop()
+
+        for (const i of this.cart_locations) {
+            push()
+            const location = i[0];
+            const direction = i[1];
+
+            translate(location.x * TILE_SIZE, location.y * TILE_SIZE)
+            translate(TILE_SIZE / 2, TILE_SIZE / 2);
+            switch (direction) {
+                case DIRECTION.North: rotate(radians(-90)); break;
+                case DIRECTION.East: break;
+                case DIRECTION.South: rotate(radians(90)); break;
+                case DIRECTION.West: rotate(radians(180)); break;
+            }
+            translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
+
+            image(carriageColour[this.accent], 0, 0, TILE_SIZE, TILE_SIZE)
+            pop()
+        }
 
         push()
         if (this.path !== null) {

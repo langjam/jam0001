@@ -17,6 +17,8 @@ use std::sync::atomic::{AtomicI64, Ordering};
 use tokio::task::block_in_place;
 use tokio::sync::Mutex;
 use tokio::task;
+use std::num::ParseIntError;
+use std::time::Duration;
 
 #[derive(Serialize)]
 struct VisualizerStation {
@@ -43,6 +45,9 @@ pub enum GenerateVisualizerDataError {
 
     #[error("generating visualizer data (in python) failed")]
     GenerateVisualizerData,
+
+    #[error("parse error: {0}")]
+    ParseNumber(#[from] ParseIntError),
 }
 
 impl WebRunner {
@@ -128,20 +133,21 @@ impl WebRunner {
         // }
 
         log::info!("python id: {}", child.id());
-        let mut x: u64 = 0;
-        // let memlimit = std::env::var("PYTHON_MEMLIMIT")?.parse()?;
+        let memlimit = if let Ok(e) = std::env::var("PYTHON_MEMLIMIT") {
+            e.parse()?
+        } else {
+            8000000
+        };
         while let Ok(None) = child.try_wait() {
-
+            tokio::time::sleep(Duration::from_secs(1)).await;
             let usage = WebRunner::python_mem_usage(child.id());
-            if x % 100 == 0 {
-                log::info!("Python is using {} kb of memory ({} mb, {} gb)", usage, usage/1024, usage/1024/1024);
-            }
 
-            if usage > 8000000 {
+                log::info!("Python is using {} kb of memory ({} mb, {} gb)", usage, usage/1024, usage/1024/1024);
+
+
+            if usage > memlimit {
                 child.kill().unwrap();
             }
-            tokio::task::yield_now().await;
-            x += 1;
         }
 
         let status = child.wait()?;
