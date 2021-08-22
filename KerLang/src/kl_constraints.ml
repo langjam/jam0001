@@ -1,24 +1,23 @@
 open Kl_parsing
 
-type value =
+type expr =
+  | Leaf of value
+  | Node of operation
+
+and value =
   | Arg of int
   | Cst of int
   | Var of string
   | Hole
 
-type operation =
-  | If of value * value * value
-  | Sum of value * value
-  | Diff of value * value
-  | Prod of value * value
-  | Div of value * value
-  | App of string * value list
-  (* IDEA : apply to a hole (SOMETHING) !!! *)
-  | Rec of value list
-
-type expr =
-  | Leaf of value
-  | Node of operation
+and operation =
+  | If of expr * expr * expr
+  | Sum of expr * expr
+  | Diff of expr * expr
+  | Prod of expr * expr
+  | Div of expr * expr
+  | App of string * expr list
+  | Rec of expr list
 
 type cconstraint =
   | Takes of int
@@ -96,7 +95,7 @@ let parse_value (decl : (string * expr) list) (comment : tok list) : value =
     | s -> build_value s q
 
 let parse_operation (decl : (string * expr) list) (comment : tok list) : operation =
-  let f = parse_value decl in
+  let f x = Leaf (parse_value decl x) in
   let rec search (prev : tok list) = function
     | [] -> failwith "no operation"
     | t::q -> (
@@ -175,12 +174,12 @@ let generate_function (Spec (_, name, comment)) =
         | Yolo [] -> Function e
         | Yolo _ ->
           begin
-            print_warning (tok_pos (List.hd c)) (name ^ " was in yolo mode, using return value");
+            print_warning (tok_pos (List.hd c)) (name ^ " was in yolo mode, now using return value");
             Function e
           end
         | Function _ ->
           begin
-            print_warning (tok_pos (List.hd c)) (name ^ " already has a return value, using old return value");
+            print_warning (tok_pos (List.hd c)) (name ^ " already has a return value, still using old return value");
             f.result
           end
         in build_function {f with result = r} q
@@ -198,34 +197,82 @@ let generate_function (Spec (_, name, comment)) =
     name; n_args = 0; declarations = []; result = Yolo []
   } comments
 
+let rec complete_holes decl (remain : expr list) = function
+  | Leaf Hole ->
+    begin match remain with
+    | [] -> failwith "unable to complete holes"
+    | e::q -> complete_holes decl q e
+    end
+  | Leaf (Var s) -> complete_holes decl remain (List.assoc s decl)
+  | Leaf v -> Leaf v, remain
+  | Node op ->
+    match op with
+    | If (a, b, c) ->
+      let a, remain = complete_holes decl remain a in
+      let b, remain = complete_holes decl remain b in
+      let c, remain = complete_holes decl remain c in
+      (Node (If (a, b, c))), remain
+    | Sum (a, b) ->
+      let a, remain = complete_holes decl remain a in
+      let b, remain = complete_holes decl remain b in
+      (Node (Sum (a, b))), remain
+    | Diff (a, b) ->
+      let a, remain = complete_holes decl remain a in
+      let b, remain = complete_holes decl remain b in
+      (Node (Diff (a, b))), remain
+    | Prod (a, b) ->
+      let a, remain = complete_holes decl remain a in
+      let b, remain = complete_holes decl remain b in
+      (Node (Prod (a, b))), remain
+    | Div (a, b) ->
+      let a, remain = complete_holes decl remain a in
+      let b, remain = complete_holes decl remain b in
+      (Node (Div (a, b))), remain
+    | App (s, l) ->
+      let r = ref remain in
+      let f e = let u, v = complete_holes decl !r e in r := v; u in
+      let l = List.map f l in
+      (Node (App (s, l))), !r
+    | Rec l ->
+      let r = ref remain in
+      let f e = let u, v = complete_holes decl !r e in r := v; u in
+      let l = List.map f l in
+      (Node (Rec l)), !r
+
+let rec compile_yolo decl = function
+  | [] -> print_compile_error "unable to complete yolo"
+  | e::q ->
+    try let res, _ = complete_holes decl q e in res
+    with Failure _ -> compile_yolo decl q
+
 let rec compile_function ftable { result; declarations; _ } =
   match result with
   | Function e -> compile_expr ftable declarations e
-  | _ -> Kl_IR.Cst 0
+  | Yolo l -> compile_expr ftable declarations (compile_yolo declarations l)
 
 and compile_expr ftable env = function
   | Leaf v -> compile_value ftable env v
   | Node v -> compile_operation ftable env v
 
-and compile_operation ftable env =
-  let compile_val = compile_value ftable env in
-  function
-  | If (cond, br1, br2) ->
-    Kl_IR.If (compile_val cond, compile_val br1, compile_val br2)
-  | Sum (e1, e2) ->
-    Kl_IR.add (compile_val e1) (compile_val e2)
-  | Diff (e1, e2) ->
-    Kl_IR.sub (compile_val e1) (compile_val e2)
-  | Prod (e1, e2) ->
-    Kl_IR.mul (compile_val e1) (compile_val e2)
-  | Div (e1, e2) ->
-    Kl_IR.div (compile_val e1) (compile_val e2)
-  | App (fname, vals) ->
-    Kl_IR.(app (func ~name:(Some fname) (List.assoc fname ftable)) (List.map compile_val vals))
-  | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map compile_val vs)
-
 and compile_value ftable env = function
   | Arg x -> Kl_IR.Var (x - 1)
   | Cst n -> Kl_IR.Cst n
   | Var x -> List.assoc x env |> compile_expr ftable env
-  | Hole -> failwith "remaning hole in expression, can't compile it down to Kl_IR"
+  | Hole -> print_compile_error "remaning hole in expression, can't compile it down to Kl_IR"
+
+and compile_operation ftable env =
+  let compile_ex = compile_expr ftable env in
+  function
+  | If (cond, br1, br2) ->
+    Kl_IR.If (compile_ex cond, compile_ex br1, compile_ex br2)
+  | Sum (e1, e2) ->
+    Kl_IR.add (compile_ex e1) (compile_ex e2)
+  | Diff (e1, e2) ->
+    Kl_IR.sub (compile_ex e1) (compile_ex e2)
+  | Prod (e1, e2) ->
+    Kl_IR.mul (compile_ex e1) (compile_ex e2)
+  | Div (e1, e2) ->
+    Kl_IR.div (compile_ex e1) (compile_ex e2)
+  | App (fname, vals) ->
+    Kl_IR.(app (func ~name:(Some fname) (List.assoc fname ftable)) (List.map compile_ex vals))
+  | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map compile_ex vs)
