@@ -24,8 +24,8 @@
 * DotExpression := MulExpression | DivExpression | AtomicExpression
 * MulExpression := lhs=DotExpression _ '\*' _ rhs=AtomicExpression
 * DivExpression := lhs=DotExpression _ '\/' _ rhs=AtomicExpression
-* FunctionParameters := Expression next={',' FunctionParameters}?
-* FunctionCall := funcName=Expression _ '\(' _ FunctionParameters? _ '\)'
+* FunctionParameters := value=Expression _ next={',' _ nextParam=FunctionParameters}?
+* FunctionCall := funcName=Expression _ '\(' _ params=FunctionParameters? _ '\)'
 * AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+'
 */
 type Nullable<T> = T | null;
@@ -198,14 +198,17 @@ export interface DivExpression {
 }
 export interface FunctionParameters {
     kind: ASTKinds.FunctionParameters;
+    value: Expression;
     next: Nullable<FunctionParameters_$0>;
 }
 export interface FunctionParameters_$0 {
     kind: ASTKinds.FunctionParameters_$0;
+    nextParam: FunctionParameters;
 }
 export interface FunctionCall {
     kind: ASTKinds.FunctionCall;
     funcName: Expression;
+    params: Nullable<FunctionParameters>;
 }
 export type AtomicExpression = AtomicExpression_1 | AtomicExpression_2 | AtomicExpression_3 | AtomicExpression_4;
 export interface AtomicExpression_1 {
@@ -742,13 +745,15 @@ export class Parser {
     public matchFunctionParameters($$dpth: number, $$cr?: ErrorTracker): Nullable<FunctionParameters> {
         return this.run<FunctionParameters>($$dpth,
             () => {
+                let $scope$value: Nullable<Expression>;
                 let $scope$next: Nullable<Nullable<FunctionParameters_$0>>;
                 let $$res: Nullable<FunctionParameters> = null;
                 if (true
-                    && this.matchExpression($$dpth + 1, $$cr) !== null
+                    && ($scope$value = this.matchExpression($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
                     && (($scope$next = this.matchFunctionParameters_$0($$dpth + 1, $$cr)) || true)
                 ) {
-                    $$res = {kind: ASTKinds.FunctionParameters, next: $scope$next};
+                    $$res = {kind: ASTKinds.FunctionParameters, value: $scope$value, next: $scope$next};
                 }
                 return $$res;
             });
@@ -756,12 +761,14 @@ export class Parser {
     public matchFunctionParameters_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<FunctionParameters_$0> {
         return this.run<FunctionParameters_$0>($$dpth,
             () => {
+                let $scope$nextParam: Nullable<FunctionParameters>;
                 let $$res: Nullable<FunctionParameters_$0> = null;
                 if (true
                     && this.regexAccept(String.raw`(?:,)`, $$dpth + 1, $$cr) !== null
-                    && this.matchFunctionParameters($$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$nextParam = this.matchFunctionParameters($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.FunctionParameters_$0, };
+                    $$res = {kind: ASTKinds.FunctionParameters_$0, nextParam: $scope$nextParam};
                 }
                 return $$res;
             });
@@ -770,17 +777,18 @@ export class Parser {
         return this.run<FunctionCall>($$dpth,
             () => {
                 let $scope$funcName: Nullable<Expression>;
+                let $scope$params: Nullable<Nullable<FunctionParameters>>;
                 let $$res: Nullable<FunctionCall> = null;
                 if (true
                     && ($scope$funcName = this.matchExpression($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.regexAccept(String.raw`(?:\()`, $$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ((this.matchFunctionParameters($$dpth + 1, $$cr)) || true)
+                    && (($scope$params = this.matchFunctionParameters($$dpth + 1, $$cr)) || true)
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.regexAccept(String.raw`(?:\))`, $$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.FunctionCall, funcName: $scope$funcName};
+                    $$res = {kind: ASTKinds.FunctionCall, funcName: $scope$funcName, params: $scope$params};
                 }
                 return $$res;
             });
