@@ -10,7 +10,19 @@ myclass = class({
     comment = function({
         /*
          * This is the Constructor of the myclass-Class
-         * - param
+         * - param hello , a String to print first
          */
+         hw = hello + " World!"
+    })?
+
+    hworld = function({
+        /*
+         * This is the Constructor of the myclass-Class
+         */
+
+         out(hw)?
     })?
 })?
+
+inst = myclass("Hello")?
+inst.hworld()?
