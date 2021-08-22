@@ -74,18 +74,25 @@ let split_kw (kw : string) (comment : tok list) : tok list list =
   in split [] [] comment
 
 let parse_value (comment : tok list) : value =
-  match comment with
+  let rec build_value res = function
+  | [] -> Var res
+  | t::q ->
+    begin match string_of_tok t with
+    | "something" -> Hole
+    | s -> build_value (res ^ " " ^ s) q
+    end
+  in match comment with
   | [] -> Hole
   | (Int (_, n))::_ -> Cst n
   | t::q ->
-    let kwd = string_of_tok t in
-    if kwd = "argument" then begin
-      match q with
+    match string_of_tok t with
+    | "argument" ->
+      begin match q with
       | Int (_, n)::_ -> Arg n
       | _ -> print_syntax_error (tok_pos t) "expected argument index"
-    end else if kwd = "something" then
-      Hole
-    else Var kwd
+      end
+    | "something" -> Hole
+    | s -> build_value s q
     (* TODO check variable name *)
 
 let parse_operation (comment : tok list) : operation =
