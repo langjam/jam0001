@@ -7,6 +7,10 @@
     height: 100vh;
 }
 
+.app-comment {
+    background-color: #a89984;
+}
+
 .header {
     overflow: hidden;
     background-color: #282828;
@@ -40,14 +44,19 @@
     justify-content: flex-start;
     align-items: center;
     height: 512px;
-    color: #1d2021;
 }
 
 .stack > div {
     width: 100%;
     margin: 8px;
-    background-color: #928374; // #fabd2f; //#d5c4a1;
+    background-color: #fabd2f; // #fabd2f; //#d5c4a1;
+    color: #1d2021;
     border-radius: 8px;
+}
+
+.stack-comment > div {
+    background-color: #3c383c;//#928374;
+    color: white;
 }
 
 button {

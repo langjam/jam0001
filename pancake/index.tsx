@@ -15,8 +15,12 @@ function App() {
 	const ports = React.useMemo(() => Elm.Main.init().ports, []);
 	const runtime = React.useMemo(() => new Runtime(ports, setState, setResult), []);
 
+    const classNames = state?.universe === 'comment'
+        ? 'app app-comment'
+        : 'app';
+
 	return (
-		<div className='app'>
+		<div className={classNames}>
 			<Header runtime={runtime} />
 			<Body
 				runtime={runtime}

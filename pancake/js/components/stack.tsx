@@ -5,10 +5,14 @@ interface StackProps {
 }
 
 export function Stack(props: StackProps) {
+    const classNames = props.state?.universe === 'comment'
+        ? 'stack stack-comment'
+        : 'stack';
+
     return (
         <div style={{ textAlign: 'center'}}>
             <h1>Stack</h1>
-            <div className='stack'>
+            <div className={classNames}>
                 {
                     // TODO replace dummy with `props.state.currentStack`
                     (props.state?.stack || []).map((value, i)=> {

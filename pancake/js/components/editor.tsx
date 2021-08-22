@@ -67,13 +67,12 @@ function onLoad(editor: Ace.Editor) {
 
 const defaultValue = `\
 1
-2
-+
-3
+# 3
+flip
 4
-+
-+
 5
-6
-
+# 2
+# flip
++
+halt
 `;

@@ -1,4 +1,5 @@
 export interface StateInfo {
+    universe: string,
     currentLine: number;
     activeLines: number[];
     stack: Value[]
