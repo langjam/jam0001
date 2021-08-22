@@ -1,7 +1,7 @@
 - [x] Create File Structure
 - [x] The Theme: "first class comments"
 - [x] Decide for a name `comstruct` and
-  theme `the constructor is named comment and a comment is defined using comment: This is an example`
+  theme `the constructor is named comment and a comment is defined using comment: This is an example » !Not anymore`
 - [x] Decide for Tokens
 - [x] Decide for a Language tree
 - [x] Implement the Lexer
