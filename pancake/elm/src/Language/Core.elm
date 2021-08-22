@@ -439,7 +439,7 @@ sub args =
         int id =
             toInt <| Maybe.withDefault (Int 0) <| Array.get id args
     in
-    Just <| Int (int 0 - int 1)
+    Just <| Int (int 1 - int 0)
 
 
 lt : Executioner
@@ -449,7 +449,7 @@ lt args =
             toInt <| Maybe.withDefault (Int 0) <| Array.get id args
 
         result =
-            int 0 < int 1
+            int 1 < int 0
     in
     if result then
         Just (Int 1)
