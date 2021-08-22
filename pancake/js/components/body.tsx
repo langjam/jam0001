@@ -21,12 +21,14 @@ export function Body({ runtime, result, state }: BodyProps) {
                     state={state}
                 />
             </div>
-            <div style={{width: '25%', backgroundColor: 'black'}}>
+            <div style={{width: '12.5%'}}></div>
+            {/* <div style={{width: '25%', backgroundColor: 'black'}}>
                 <IOPanel runtime={runtime} />
-            </div>
+            </div> */}
             <div style={{width: '25%'}}>
                 <Stack state={state} />
             </div>
+            <div style={{width: '12.5%'}}></div>
         </div>
     )
 }
