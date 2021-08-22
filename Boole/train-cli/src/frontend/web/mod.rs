@@ -39,6 +39,9 @@ pub enum MessageToWebpage{
         message: String
     },
     CreateDataError,
+    DeleteTrain {
+        train: Train
+    }
 }
 
 #[derive(Deserialize)]

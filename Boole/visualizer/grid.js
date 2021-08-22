@@ -120,6 +120,10 @@ class Grid {
         this.trains.set(train.identifier, train)
     }
 
+    deleteTrain(train) {
+        this.trains.delete(train.identifier)
+    }
+
     addStation(station) {
         this.stations.set(station.name, station)
     }

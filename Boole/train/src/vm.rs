@@ -366,7 +366,9 @@ impl Data {
                 Operation::Delete => {
                     let st = &mut station.trains[0];
                     while !st.is_empty() {
-                        st.pop_front();
+                        let pop = st.pop_front().unwrap();
+                        let train = pop.lock().await;
+                        interface.delete_train(train.train.clone()).unwrap_or(());
                     }
                     did_work = true;
                 }

@@ -113,6 +113,9 @@ function startSocket() {
 
                     break;
                 }
+                case "DeleteTrain": {
+                    grid.deleteTrain(message.train)
+                }
             }
         }
     })
