@@ -14,11 +14,12 @@ use std::sync::atomic::{AtomicI64, Ordering};
 use crate::frontend::web::runner::{WebRunner, send, GenerateVisualizerDataError};
 use thiserror::Error;
 use train::interface::Communicator;
+use std::path::PathBuf;
 
 #[derive(Serialize)]
 #[serde(tag = "type")]
-pub enum MessageToWebpage{
-    AskForInput{
+pub enum MessageToWebpage {
+    AskForInput {
         identifier: i64,
     },
     Print {
@@ -30,28 +31,28 @@ pub enum MessageToWebpage{
         to_station: Station,
         train: Train,
         start_track: usize,
-        end_track: usize
+        end_track: usize,
     },
     VisualizerData {
         path: String,
     },
-    Error{
+    Error {
         message: String
     },
     CreateDataError,
     DeleteTrain {
         train: Train
-    }
+    },
 }
 
 #[derive(Deserialize)]
 #[serde(tag = "type")]
-pub enum MessageFromWebpage{
+pub enum MessageFromWebpage {
     AdvanceSimulation,
-    SendInputResponse{
+    SendInputResponse {
         identifier: i64,
-        input: Vec<i64>
-    }
+        input: Vec<i64>,
+    },
 }
 
 #[derive(Debug, Error)]
@@ -60,14 +61,14 @@ pub enum ReceiveMessageError {
     GenerateVisualizerDataError(#[from] GenerateVisualizerDataError)
 }
 
-async fn receive_message_wrapper(ws: WebSocket, program: Program, connection_id: i64) {
-    if let Err(e) = receive_message(ws, program, connection_id).await {
+async fn receive_message_wrapper(ws: WebSocket, program: Program, connection_id: String, reuse: bool) {
+    if let Err(e) = receive_message(ws, program, connection_id, reuse).await {
         log::error!("wrapper {}", e);
     }
 }
 
 
-async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) -> Result<(), ReceiveMessageError> {
+async fn receive_message(ws: WebSocket, program: Program, connection_id: String, reuse: bool) -> Result<(), ReceiveMessageError> {
     let (mut ws_tx, mut ws_rx) = ws.split();
 
     let (response_tx, response_rx) = unbounded_channel();
@@ -78,8 +79,21 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
         let runner = Arc::new(WebRunner::new(program.clone(), response_tx));
         let mut vm = Arc::new(Data::new(program).await);
 
+        let mut check_path = PathBuf::new();
+        check_path.push("visualizer");
+        check_path.push("visualizer_setup");
+        check_path.push(format!("{}.json.result.json", connection_id));
+        let visualizer_res =
+            if check_path.exists() && reuse {
+                let mut check_path = PathBuf::new();
+                check_path.push("visualizer_setup");
+                check_path.push(format!("{}.json.result.json", connection_id));
+                Ok(check_path)
+            } else {
+                runner.generate_visualizer_file(connection_id).await
+            };
 
-        let visualizer_res = runner.generate_visualizer_file(connection_id).await;
+
         let visualizer_path = match visualizer_res {
             Ok(i) => i,
             Err(e) => {
@@ -116,19 +130,19 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
                                         let res = step.await;
                                         match res {
                                             Err(e) => {
-                                                local_runner.send(MessageToWebpage::Error{message: format!("{:?}", e)}).expect("failed to send")
-                                            },
-                                            Ok(_) => {},
+                                                local_runner.send(MessageToWebpage::Error { message: format!("{:?}", e) }).expect("failed to send")
+                                            }
+                                            Ok(_) => {}
                                         }
                                     });
                                 }
-                                MessageFromWebpage::SendInputResponse{ identifier, input } => {
+                                MessageFromWebpage::SendInputResponse { identifier, input } => {
                                     runner.input_response(identifier, input).await;
                                 }
                             }
                             Err(e) => {
                                 log::error!("serde: {}", e);
-                                runner.send(MessageToWebpage::Error{message: format!("{:?} (vm crashed, please reload simulation)", e)}).expect("failed to send")
+                                runner.send(MessageToWebpage::Error { message: format!("{:?} (vm crashed, please reload simulation)", e) }).expect("failed to send")
                             }
                         }
                     }
@@ -143,7 +157,7 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
         let mut rx = response_rx;
 
         if let Some(visualizer_path) = visualizer_path_rx.recv().await {
-            send(&mut ws_tx, &MessageToWebpage::VisualizerData{path: format!("{:?}", visualizer_path)}).await;
+            send(&mut ws_tx, &MessageToWebpage::VisualizerData { path: format!("{:?}", visualizer_path) }).await;
         }
 
         loop {
@@ -154,7 +168,7 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
                 None => {
                     log::error!("receive error: (disconnected)");
                     break;
-                },
+                }
             }
         }
     });
@@ -162,19 +176,15 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
     Ok(())
 }
 
-pub async fn run(program: Program) {
-    let connection_id_counter = Arc::new(AtomicI64::new(0));
-
+pub async fn run(program: Program, reuse: bool, hash: String) {
     let ws = warp::path("ws")
         // The `ws()` filter will prepare the Websocket handshake.
         .and(warp::ws())
         .map(move |ws: warp::ws::Ws| {
             let local_program = program.clone();
-            let local_connection_id_counter = connection_id_counter.clone();
+            let hclone = hash.clone();
             ws.on_upgrade(move |websocket| {
-                let connection_id = local_connection_id_counter.fetch_add(1, Ordering::SeqCst);
-
-                receive_message_wrapper(websocket, local_program.clone(), connection_id)
+                receive_message_wrapper(websocket, local_program.clone(), hclone.clone(), reuse)
             })
         });
 
