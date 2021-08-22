@@ -1,16 +1,25 @@
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
+import { fromMarkdown } from 'mdast-util-from-markdown';
 import { toMarkdown } from 'mdast-util-to-markdown';
-import { gfmToMarkdown } from 'mdast-util-gfm';
+import { gfm } from 'micromark-extension-gfm';
+import { gfmFromMarkdown, gfmToMarkdown } from 'mdast-util-gfm';
+import { Function, Tag } from './Types';
 function mdToMdast(src) {
-    return unified()
-        .use(remarkParse)
-        .use(remarkGfm)
-        .parse(src);
+    return fromMarkdown(src, {
+        extensions: [gfm()],
+        mdastExtensions: [gfmFromMarkdown]
+    });
 }
 function mdastToMd(content) {
     return toMarkdown(content, { extensions: [gfmToMarkdown()] });
+}
+function wrappedElementToMd(content) {
+    if (content instanceof Function) {
+        return content.getRawMd();
+    }
+    if (content instanceof Tag) {
+        return content.getRawMd();
+    }
+    return mdastToMd(content.getMdastContent());
 }
 function mdastListItemToMd(listItem) {
     const listItemAsRoot = {
@@ -20,4 +29,4 @@ function mdastListItemToMd(listItem) {
     };
     return mdastToMd(listItemAsRoot).replace('\n', '');
 }
-export { mdastToMd, mdToMdast, mdastListItemToMd, };
+export { mdastToMd, mdToMdast, mdastListItemToMd, wrappedElementToMd, };

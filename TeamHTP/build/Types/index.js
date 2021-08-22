@@ -21,7 +21,7 @@ const TYPE_MAP = {
     'table': Table,
     'thematicBreak': ThematicBreak,
 };
-function wrap(runtime, mdastContent, tag) {
+function wrap(runtime, mdastContent, rawMd, tag) {
     if (mdastContent.type === 'definition' && (mdastContent.url === ':' || !mdastContent.url.includes(':'))) {
         // Infer type of link definition in context of bubblegum
         if (mdastContent.label === null || mdastContent.label === undefined) {
@@ -33,20 +33,20 @@ function wrap(runtime, mdastContent, tag) {
             if (runtime.isTagDefined(tagName)) {
                 throw new Error(`Tag with this name is already defined '${tagName}'`);
             }
-            const wrappedTag = new type(mdastContent, tag);
+            const wrappedTag = new type(mdastContent, rawMd, tag);
             runtime.defineTag(tagName, wrappedTag);
             return wrappedTag;
         }
         else {
             // Associate function definition with parent tag
             if (runtime.isTagDefined(tagName)) {
-                const tag = runtime.getTag(tagName);
-                const func = new type(mdastContent, tag);
-                if (tag.isMemberDefined(func.getName())) {
+                const wrappedTag = runtime.getTag(tagName);
+                const func = new type(mdastContent, wrappedTag, rawMd, tag);
+                if (wrappedTag.isMemberDefined(func.getName())) {
                     throw new Error(`Function with name '${func.getName()}' is already defined in tag '${tagName}'`);
                 }
                 else {
-                    tag.addMember(func.getName(), func);
+                    wrappedTag.addMember(func.getName(), func);
                     return func;
                 }
             }
@@ -62,7 +62,7 @@ function wrap(runtime, mdastContent, tag) {
             throw new Error(`mdast type not mapped '${mdastContent.type}'`);
         }
         const wrappedContent = new type(mdastContent, tag);
-        tag?.setChild(wrappedContent);
+        tag === null || tag === void 0 ? void 0 : tag.setChild(wrappedContent);
         return wrappedContent;
     }
 }

@@ -1,0 +1,48 @@
+?start: method
+
+method: message temps? exprs
+
+message: WORD | OP WORD | (KEYWORD WORD)+
+
+exprs: expr ("." expr)* "."?
+
+expr: answer | assign
+
+answer: "^" expr
+
+?assign: WORD ":=" assign | send
+
+?send: keyword
+?keyword: binary [keypair+ (";" keypair+)*]
+keypair: KEYWORD binary
+?binary: [binary OP] unary
+?unary: unary WORD | primary
+
+primary: array | block | map | scalar | NUMBER | STRING | WORD
+
+array: "@{" primary* "}"
+
+block: "[" params? temps? exprs "]"
+params:  PARAM "|"
+temps: "|" WORD+ "|"
+
+map: "%{" (KEYWORD primary)* "}"
+
+scalar: "${" expr "}"
+
+KEYWORD: WORD ":"
+
+PARAM: ":" WORD
+
+SYMBOL: "#" WORD
+
+OP: ("~"|"@"|"%"|"&"|"*"|"-"|"="|"+"|"\\"|"|"|","|"<"|">"|"/"|"/")+
+
+NUMBER: DIGIT+ ["." DIGIT+]
+
+%import common.DIGIT
+%import python.STRING
+%import common.WORD
+%import common.WS
+
+%ignore WS

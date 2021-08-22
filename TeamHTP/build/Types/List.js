@@ -1,5 +1,5 @@
 import Base from './Base';
-import { mdastListItemToMd } from "../Markdown";
+import { mdastListItemToMd } from '../Markdown';
 class List extends Base {
     getMdastContent() {
         return this.mdastContent;

@@ -1,10 +1,10 @@
 import Base from './Base';
 class Function extends Base {
-    parent;
-    constructor(mdastContent, parent, tag) {
+    constructor(mdastContent, parent, rawMd, tag) {
         super(mdastContent, tag);
         this.parent = parent;
-        console.log(`${this.getName()} (${this.getBody()})`);
+        this.rawMd = rawMd;
+        console.log(this.rawMd);
     }
     getMdastContent() {
         return this.mdastContent;
@@ -17,6 +17,9 @@ class Function extends Base {
     }
     getBody() {
         return this.getMdastContent().title;
+    }
+    getRawMd() {
+        return this.rawMd;
     }
 }
 export default Function;

@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "target": "ESNext",
+    "module": "ES2015",
+    "target": "ES2019",
     "rootDir": "./src",
     "outDir": "./build",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
-    "strict": true
+    "strict": true,
+    "allowJs": true
   }
 }

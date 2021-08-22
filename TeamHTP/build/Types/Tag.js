@@ -1,10 +1,9 @@
 import Base from './Base';
 class Tag extends Base {
-    members;
-    child;
-    constructor(mdastContent, tag) {
+    constructor(mdastContent, rawMd, tag) {
         super(mdastContent, tag);
         this.child = undefined;
+        this.rawMd = rawMd;
         this.members = {};
     }
     setChild(child) {
@@ -24,6 +23,9 @@ class Tag extends Base {
     }
     addMember(memberName, memberFunction) {
         this.members[memberName] = memberFunction;
+    }
+    getRawMd() {
+        return this.rawMd;
     }
 }
 export default Tag;
