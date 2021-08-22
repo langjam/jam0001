@@ -371,7 +371,6 @@ export class Model {
             this.addPost(topic);
         }
         }catch (error) {
-            console.log(error)
         }
     }
 }
