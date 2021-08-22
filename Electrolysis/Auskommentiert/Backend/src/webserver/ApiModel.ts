@@ -47,7 +47,7 @@ export class ApiModel {
     
     swapComment(req: express.Request, res: express.Response, direction : Direction) { 
         let obj = req.body;
-        this.mModel.swapComments(obj, direction);
+        this.mModel.swapFull(obj.idFirst, obj.idSecond);
         res.sendStatus(200);
     }
 

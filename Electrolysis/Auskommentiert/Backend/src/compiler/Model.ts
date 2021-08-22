@@ -36,14 +36,23 @@ class CommentBase {
     get content() {
         return this.mContent;
     }
+    set content(content) {
+        this.mContent = content;
+    }
     get upvotes() {
         return this.mUpvotes;
     }
     get children() {
         return this.mChildren;
     }
+    set children(children : ModelComment[]) {
+        this.mChildren = children;
+    }
     get date() {
         return this.mDate;
+    }
+    set date(date) {
+        this.mDate = date;
     }
     get childrenSorted() {
         return this.mChildren.sort(ModelCommentSorter);
@@ -179,9 +188,41 @@ export class Model {
         let component : CommentBase | undefined = this.mCommentsMap.get(id);
         component?.vote(value);
     }
-    swapComments(id: string, direction : Direction) {
+    swapFull(idFirst: string,  idSecond: string) {
+        let entryOne = this.mCommentsMap.get(idFirst);
+        let entryTwo = this.mCommentsMap.get(idSecond);
 
+        if(entryOne !== undefined && entryTwo !== undefined) {
+            let parentOne = this.mCommentsMap.get(entryOne.parentId);
+            let parentTwo = this.mCommentsMap.get(entryTwo.parentId);
+
+            if(parentOne !== undefined && parentTwo !== undefined) {
+                let tempDate = entryOne.date;
+                entryOne.date = entryTwo.date;
+                entryTwo.date = tempDate;
+                parentOne.children = parentOne.children.map(child => {
+                    if(child.id === entryOne?.id) {
+                        return entryTwo;
+                    } else {
+                        return child;
+                    }
+                }) as ModelComment[]
+
+            }
+        }
     }
+
+    swapContent(idFirst: string, idSecond: string) {
+        let entryOne = this.mCommentsMap.get(idFirst);
+        let entryTwo = this.mCommentsMap.get(idSecond);
+
+        if(entryOne !== undefined && entryTwo !== undefined) {
+            let tempContent = entryOne.content;
+            entryOne.content = entryTwo.content;
+            entryTwo.content = tempContent;
+        }
+    }
+
     private parseComment(parentId : string, jsonComment : any) : ModelComment {
         let parseResult = parse(jsonComment.content);
         if(parseResult.errs.length > 0 || parseResult.ast === null) {

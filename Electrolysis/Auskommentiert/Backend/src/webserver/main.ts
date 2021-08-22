@@ -30,9 +30,7 @@ app.post("/api/downvote", (req: express.Request, res: express.Response) => {
 app.post("/api/swap_down", (req: express.Request, res: express.Response) => {
     api.swapComment(req, res, Direction.DOWN);
 });
-app.post("/api/downvote", (req: express.Request, res: express.Response) => {
-    api.swapComment(req, res, Direction.UP);
-});
+
 app.get("/api/topic/:id", (req: express.Request, res: express.Response) => {
     api.queryTopic(req, res);
 });

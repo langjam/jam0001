@@ -34,4 +34,9 @@ type Downvote = {
     id: string,
 }
 
+type SwapRequest = {
+    idFirst: string,
+    idSecond: string,
+}
+
 export type { AppType, TopicType, CommentType, CommentCreate, Upvote, Downvote }
