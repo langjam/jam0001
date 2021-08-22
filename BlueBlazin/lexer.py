@@ -15,7 +15,7 @@ class TokenType(Enum):
 
 class Lexer:
     def __init__(self, source):
-        self.source = source.strip()
+        self.source = source.rstrip()
         self.idx = 0
         self.line = 0
         self.references = {}
@@ -58,7 +58,8 @@ class Lexer:
                         yield self.token(self.line, TokenType.PUNCTUATOR, self.advance())
                 case _:
                     yield self.scan_identifier()
-        return self.token(self.line, TokenType.EOF, None)
+
+        yield self.token(self.line, TokenType.EOF, None)
 
     def scan_comment(self):
         # consume '/*'

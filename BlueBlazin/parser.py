@@ -1,5 +1,5 @@
 from collections import deque
-from .lexer import Lexer, TokenType
+from lexer import Lexer, TokenType
 from enum import Enum, auto
 
 
@@ -30,7 +30,8 @@ class Parser:
     def __init__(self, source):
         self.lexer = iter(Lexer(source))
         self.line = 0
-        self.buffer = deque()
+        # self.buffer = deque()
+        self.buffered = None
         self.in_function = False
 
     def parse(self):
@@ -92,6 +93,7 @@ class Parser:
 
     def stmt(self):
         token = self.peek()
+
         match token:
             case {"type": TokenType.KEYWORD, "value": "if"}:
                 return self.if_stmt()
@@ -171,9 +173,9 @@ class Parser:
         return {"type": Ast.BLOCK, "body": body, "line": line}
 
     def expr_stmt(self):
-        line = self.advance()["line"]
         expression = self.expression()
-        return {"type": Ast.EXPR_STMT, "expression": expression, "line": line}
+        self.expect_semicolon()
+        return {"type": Ast.EXPR_STMT, "expression": expression, "line": expression["line"]}
 
     def expression(self):
         expr = self.logic_or()
@@ -221,6 +223,7 @@ class Parser:
 
     def equality(self):
         expr = self.comparison()
+
         token = self.peek()
         while True:
             match token:
@@ -239,6 +242,7 @@ class Parser:
 
     def comparison(self):
         expr = self.term()
+
         token = self.peek()
         while True:
             match token:
@@ -260,6 +264,7 @@ class Parser:
 
     def term(self):
         expr = self.factor()
+
         token = self.peek()
         while True:
             match token:
@@ -278,6 +283,7 @@ class Parser:
 
     def factor(self):
         expr = self.unary()
+
         token = self.peek()
         while True:
             match token:
@@ -334,6 +340,7 @@ class Parser:
 
     def primary(self):
         token = self.advance()
+
         match token:
             case {"type": TokenType.BOOLEAN}:
                 return {"type": Ast.BOOLEAN, "value": token["value"], "line": token["line"]}
@@ -388,8 +395,11 @@ class Parser:
         return {"type": Ast.DICTIONARY, "items": items, "line": line}
 
     def peek(self):
+        if self.buffered is not None:
+            return self.buffered
+
         token = next(self.lexer)
-        self.buffer.append(token)
+        self.buffered = token
         return token
 
     def expect_semicolon(self):
@@ -397,6 +407,7 @@ class Parser:
 
     def expect(self, token_type, value=None):
         token = self.advance()
+
         if token["type"] != token_type:
             raise Exception(f"Unexpected Token: {token['value']} "
                             f"on line {token['line']}. Expected type {token_type}")
@@ -406,10 +417,9 @@ class Parser:
         return token
 
     def advance(self):
-        if len(self.buffer) > 0:
-            token = self.buffer.popleft()
+        if self.buffered is not None:
+            token, self.buffered = self.buffered, None
         else:
             token = next(self.lexer)
 
-        self.line = token.line
         return token
