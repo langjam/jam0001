@@ -156,7 +156,7 @@ set($-1 $-3) // calc
 〈( \^.\^)ノ only needs while loops to fuction.
 Simmilarly to many other languages, while loops are declared by writing the while keyword followed, by an expression in parenthesis and a block of statements in curly brackets:
 
-```go
+```c
 while (TRUE) {
   "fib"()
   print($-1)
@@ -168,7 +168,7 @@ Sometimes however, you may want a loop to end.
 For these cases, you can use the ``break()`` instuction.
 
 Unlike other instructions, this one *allways* executes at the end of the loop, regardless of where you write it
-```go
+```c
 while (TRUE) {
     print("hello")
     break()
@@ -183,7 +183,7 @@ while (TRUE) {
 ```
 #### Conditional loops
 Using a these break instructions, you can implement if-statement-like conditional loops:
-```go
+```c
 while (m("1 > 2")) {
     print("2 is bigger than 1")
     break()
@@ -193,10 +193,14 @@ while (m("1 > 2")) {
 ### Constants
 As can be seen in the many examples above, we also happen to have two constants ``TRUE`` and ``FALSE``. 
 Not much to explain here, but you can use them in while statements:
-```go
+```c
 while (TRUE) {
 // To infinity and beyond
 }
 ```
 
 ### Arrays
+
+Arrays are just strings with one element on each row. This means they can't be nested.
+There are several functions to work with them. You can see the [array example](./examples/arrays.sml).
+
