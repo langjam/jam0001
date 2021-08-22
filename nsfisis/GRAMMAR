@@ -1,0 +1,88 @@
+The grammar is written in Extended Backus-Naur Form (EBNF).
+
+
+Notation:
+
+symbol-in-lower-hyphen-case
+    A non-terminal symbol.
+
+SYMBOL-IN-UPPER-HYPHEN-CASE
+    A terminal symbol.
+
+{item}
+    0 or more items
+
+[item]
+    0 or 1 item
+
+{item:d}
+    0 or more items separated by d (trailing d is allowed)
+
+
+Terminal symbols:
+
+EOF
+    End Of File
+
+NAME
+    An identifier
+
+NUMBER
+    A literal number
+
+STRING
+    A literal string
+
+COMMENT
+    A line starting with a number sign (#).
+
+
+
+Grammar:
+
+program ::= {statement-with-comments} EOF
+
+statement-with-comments ::= {COMMENT} statement
+
+statement ::=
+    ';' |
+    expression ';' |
+    'if' comparison-expression block {'elseif' block} ['else' block] |
+    'while' comparison-expression block |
+    variable-definition
+
+variable-definition ::=
+    'var' NAME ';' |
+    'var' NAME '=' comparison-expression ';'
+
+parameters ::= '(' {NAME:,} ')'
+
+block ::= '{' {statement-with-comments} '}'
+
+expression ::= assignment-expression
+
+assignment-expression ::=
+    comparison-expression |
+    NAME '=' comparison-expression ';'
+
+comparison-expression ::=
+    additive-expression [('==' | '!=' | '<' | '>' | '<=' | '>=') additive-expression]
+
+additive-expression ::=
+    multiplicative-expression {('+' | '-') multiplicative-expression}
+
+multiplicative-expression ::=
+    prefix-expression {('*' | '/' | '%') prefix-expression}
+
+prefix-expression ::=
+    postfix-expression |
+    ('commentof' | '!' | '+' | '-') prefix-expression
+
+postfix-expression ::=
+    primary-expression {'(' {expression:,} ')'}
+
+primary-expression ::=
+    NAME |
+    NUMBER |
+    STRING |
+    '(' comparison-expression ')'
