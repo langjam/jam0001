@@ -526,7 +526,7 @@ if __name__ == '__main__':
     stations = [Station(id, d["inputs"], d["to"], d["type"], d["name"]) for id, d in enumerate(data)]
     stations = StationGroup.build(stations)
     # stations.plot()
-    stations.scale(5)
+    stations.scale(4)
     # stations.plot()
     print("Stations placed")
 
