@@ -1,0 +1,13 @@
+fn area(a,b) {
+    let result = multiply(a,b)
+    result
+}
+
+fn volume(width, depth, height) {
+    multiply(width, depth, height)
+}
+
+
+let x = 5
+print(area(x, 10))
+print(volume(10,5,4))

@@ -1,0 +1,22 @@
+Name: BenJilks
+Date: Sunday the 22nd of August 2021
+Mood: good
+-------------------------------
+Sum a list
+-------------------------------
+
+There are no loops in TGPLITW, so recursion is the way to go!
+
+// please define none -> sum -> none
+// {
+        // [,in ,"arr"] -> tee -> len -> eval in + [,"arr_len"] -> tee -> match
+        // {
+                // =1: { [,arr ,0] -> remove -> sum -> eval arr[0] + in -> out }
+                // =None: { arr[0] -> out }
+        // } -> out
+// } thanks
+
+// [,1 ,2 ,3] -> sum -> print -> /dev/null
+
+-------------------------------
+

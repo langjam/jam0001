@@ -1,0 +1,590 @@
+% crochet
+
+open crochet.debug;
+
+local singleton module;
+
+relation current-ide: Ide root: Root;
+
+local type belle-program(title is text, text is text);
+
+local abstract page;
+local singleton page-start is page;
+local type page-edit(program is belle-program) is page;
+local type page-run(program is belle-program) is page;
+
+effect ide with
+  show-page(page);
+end
+
+local type ide(page is page, history is list<page>);
+
+command #ide make = new ide(page-start, []);
+
+command belle start-ide-with-root: Root do
+  let Ide = #ide make;
+  fact current-ide: Ide root: Root;
+  module show: Ide.page;
+end
+
+command module current-ide do
+  (search current-ide: Ide root: _).Ide first;
+end
+
+command module current-root do
+  (search current-ide: _ root: Root).Root first;
+end
+
+command module update-ide: Ide do
+  fact current-ide: Ide root: (module current-root);
+end
+
+command module show: (Page is page) do
+  let Root = module current-root;
+  foreign belle.clean(Root);
+  foreign belle.append(Root, (Page render).box);
+  let Ide = module current-ide change-page: Page;
+  module update-ide: Ide;
+end
+
+command ide change-page: (Page is page) do
+  condition
+    when Page =:= self.page => new ide(self.page, self.history);
+    always => new ide(Page, self.history prepend: self.page);
+  end
+end
+
+command page-start render do
+  h page: "start-page" | add: [
+    h column add: [
+      h top-menu,
+      h panel | class: "belle-main-panel" | add: [
+        h title: "Belle",
+        h paragraph | class: "start-description" | add: [
+          "Can programming be seen as literary art?
+
+           Belle is a small experiment in this space,
+           A tiny push towards programming's own Belles Lettres.
+           Fiddle with the aesthetics of prose and poetry,
+           And give it meaning through rewite rules."
+        ],
+
+        h box | class: "start-program-selection" | add: [
+          h column | class: "belle-program-column" | add: [
+            h program-button | on: "click" do: { _ in module new-program } | add: [
+              h icon: "fa-plus" | title: "Create a new program",
+            ],
+            "New program",
+          ],
+
+          sample-programs map: (self render-program-button: _),
+        ],
+      ],
+    ],
+  ];
+end
+
+command page-start render-program-button: (Program is belle-program) do
+  h column | class: "belle-program-column" | add: [
+    h program-button | on: "click" do: { _ in module load-program: Program } | add: [
+      h icon: "fa-play" | title: "Run [Program.title]",
+    ],
+    Program.title,
+  ]
+end
+
+command page-edit render do
+  let Editor = h code-editor | set-input-content: self.program.text;
+  let Title = h text-input class: "title-input" | set-input-content: self.program.title;
+
+  h page: "edit-page" | add: [
+    h column add: [
+      h top-menu,
+      h panel | class: "belle-edit-panel" | add: [
+        Title,
+        h box | class: "belle-editor-container" | add: [
+          Editor,
+          h box | class: "belle-editor-actions" | add: [
+            h button
+              | class: "belle-action"
+              | on: "click" do: { _ in module run-program-from-editor: Editor title: Title }
+              | add: [
+                  h icon: "fa-play" | title: "Run the program",
+                ]
+          ],
+        ],
+      ],
+    ],
+  ]
+end
+
+command page-run render do
+  let Output = h box | class: "belle-output";
+  let Stack = #cell with-value: [];
+  let Current = #cell with-value: Output;
+  handle
+    let Ast = belle parse: self.program.text;
+    let VM = belle make-vm: Ast;
+    VM run-to-completion;
+  with
+    on belle.display(Value) do
+      Current value add: Value to-output;
+      continue with nothing;
+    end
+
+    on belle.push-element(Tag) do
+      let New = h element: Tag;
+      Current value add: New;
+      Stack <- Stack value prepend: Current value;
+      Current <- New;
+      continue with nothing;
+    end
+
+    on belle.pop-element() do
+      let Xs = Stack value;
+      Stack <- Xs rest;
+      Current <- Xs first;
+      continue with nothing;
+    end
+
+    on belle.current-element() do
+      continue with new b-box(Current value);
+    end
+  end
+
+  h page: "run-page" | add: [
+    h column add: [
+      h top-menu: [
+        h menu-link: "Edit"
+          | on: "click" do: { _ in module edit-program: self.program }
+      ],
+      h panel | class: "belle-run-panel" | add: [
+        Output
+      ],
+    ],
+  ];
+end
+
+command h top-menu: Contents do
+  h box | class: "navigation" | add: [
+    h box | class: "navigation-left" | add: [
+      h menu-link: "Home"
+        | on: "click" do: { _ in module show-start-page },
+    ],
+    h box | class: "navigation-right" | add: [
+      Contents,
+    ],
+  ];
+end
+
+command h top-menu = h top-menu: [];
+
+command module show-start-page do
+  module show: page-start;
+end
+
+command module new-program do
+  let Program = new belle-program("Untitled", "");
+  module show: new page-edit(Program);
+end
+
+command module edit-program: Program do
+  module show: new page-edit(Program);
+end
+
+command module load-program: Program do
+  module show: new page-run(Program);
+end
+
+command module run-program-from-editor: Editor title: TitleField do
+  let Source = Editor input-content;
+  let Title = TitleField input-content;
+  module show: new page-run(new belle-program(Title, Source));
+end
+
+define sample-programs = [
+  new belle-program(
+"Hello, world",
+"
+:rule Why/0 = 
+  @set #program @cons ^self ^rest
+  @title @last %program
+  @display %program.
+
+Why! cried Alice,
+The white rabbit stopped, stared, startled,
+A rabbit carrying a clock, that I had never seen!
+The rabbit took his pocket watch,
+Looked at it for a moment,
+It is getting late, I must make haste,
+He sprung forth and entered a small hole in a tree,
+My! And it gets curiouser still!
+Left alone, Alice wondered,
+Would she get his attention by starting with a \"Hello?\"",
+  ),
+
+  new belle-program(
+    "Fibonacci Spiral",
+    ":rule Round/0 = @set #program @cons ^self ^rest.
+
+      :rule espiral/0 = @set #a #1
+                        @set #b #1
+                        @set #n #10
+                        @set #fib @cons %a @cons %b @nil
+                        @set #f \[@set #r @add %a %b
+                                  @set #a %b
+                                  @set #b %r
+                                  @set #fib @cons %r %fib
+                                  @set #n @sub %n #1
+                                  @if @eq %n #0 \[%fib\] \[@apply %f\]\]
+                        @apply %f.
+
+      :rule spiral/0 = @display %program
+                       @line-break
+                       @display @pretty-print @reverse %fib.
+
+      Round,
+      Well, not quite,
+      Not quite much as a circle, at least,
+      Or an ellipsis,
+      Not anything so ordinary,
+      An... espiral?
+      Yes,
+      A spiral.
+    ",
+  ),
+
+  new belle-program(
+"Quine",
+"
+:rule <any>/0 = @display ^self.
+
+Echo,
+Down the hall,
+I wonder,
+What shall befall...
+"
+  ),
+
+  new belle-program(
+"No-op",
+"
+What is a \"no-op\" in any case?
+Well, look at this.
+Yes, this piece of text.
+It does nothing.
+"
+  ),
+
+  new belle-program(
+"Documentation",
+"
+:rule <any>/0 = @display ^self.
+:rule @tt/1 =
+  @set #x @dip
+  @push #tt
+  @typeset #belle-typewriter
+  @display %x
+  @pop.
+
+@box
+  @typeset #documentation
+
+@subtitle \"Introduction\"
+
+@paragraph
+Belle is a term rewriting system that uses the
+entire program as input, and applies any defined
+rewrite rules to give this input some semantics.
+@pop
+
+@paragraph
+A rewrite rule is defined by specifying a matching
+pattern, an arity, and its replacements:
+@pop
+
+@code @display
+\":rule Hello = @display ^self @display ^self\"
+@pop
+
+@paragraph
+The rule 'Hello' above would match any 'Hello'
+word and duplicate it in the output.
+@pop
+
+@paragraph
+Programs are executed by taking in a program,
+finding a rewrite rule that can be applied,
+replacing the matched token with the rewrite rule's body,
+and then repeating the process until no input is left.
+A rewrite rule has as special inputs the remaining of the
+program, or @tt \"^rest\", and the matched input, or
+@tt \"^self\".
+@pop
+
+
+@subtitle \"Primitives\"
+
+@paragraph
+A Belle program is executed in an environment
+that contains pre-defined primitive rules.
+By convention, primitive operations start with
+a '@', although there's nothing that prevents
+user-defined rules from doing the same.
+@pop
+
+@paragraph
+The VM is made out of a few different components
+which these primitives manipulate:
+@pop
+
+@list
+  @item @bold The global store: @pop a global, mutable hashtable for variables @pop
+  @item @bold The global stack: @pop a value stack, similar to the usual in Forth-like languages @pop
+  @item @bold The program input: @pop the current remaining input to process (starts with the entire program) @pop
+  @item @bold The rewrite rules: @pop a list of rewrite rules manipulated by rule declarations @pop
+  @item @bold The display context stack: @pop @tt \"@display\" commands output whatever value at the current context. @pop
+@pop
+
+
+@subtitle \"A note on N-ary rules\"
+
+@paragraph
+Rewrite rules can be either immediate (having arity 0), or
+N-ary (with an N > 0). For rules that @bold do @pop take
+arguments, the rule is actually only applied once all
+arguments are gathered.
+@pop
+
+@paragraph
+For example, consider:
+@pop
+
+    @code @display 
+    \"@set #name\"
+    @pop
+
+@paragraph
+The @tt \"@set/2\" command has arity 2, therefore it needs
+two arguments provided before it can be applied. To support
+this prefix style of application in a very concatenative
+language, Belle just makes all functions curried, and pushes
+them on the stack if they can't be applied right away.
+@pop
+
+@paragraph
+This means that the above code in Belle would be similar 
+to Haskell's @tt \"(\\a b. doSomething) name\",
+and nothing would happen besides a partially applied function
+existing.
+@pop
+",
+  ),
+
+  new belle-program(
+"Rule reference",
+"
+:rule <any>/0 = @display ^self.
+:rule @tt/1 =
+  @set #x @dip
+  @push #tt
+  @typeset #belle-typewriter
+  @display %x
+  @pop.
+
+:rule @doc-command/1 =
+  @doc-command-multi @dc @dip.
+
+:rule @doc-command-multi/0 =
+  @box @typeset #documentation-reference.
+ 
+:rule @dc/1 =
+  @set #title @dip
+  @box @typeset #documentation-reference-title @tt %title @pop.
+
+@box @typeset #documentation
+
+@subtitle \"VM manipulation\"
+
+@doc-command \"@set/2 (name) (value)\"
+Sets the global (name) to the given (value).
+@pop
+
+@doc-command \"@put-back/1 (value)\"
+Prepends the given (value) to the current input.
+@pop
+
+@doc-command \"@drop/0\"
+Does away with the top of the value stack.
+@pop
+
+@doc-command \"@dip/0\"
+Takes the second value of the stack. This is usually what you want
+when using @tt \"@set\" because \"@set #name\" will push a partially
+applied function at the top!
+@pop
+
+@doc-command \"@swap/0\"
+Exchanges the two topmost items of the value stack, but does not
+apply any of them to curried functions that might be on the stack.
+@pop
+
+@doc-command \"@push/1 (tag)\"
+Pushes a new HTML element of the given (tag) on the @bold display context stack @pop.
+This means that @tt \"@display\" commands will render any content on this element
+from now on.
+@pop
+
+@doc-command \"@pop/0\"
+Replaces the current context with the top of the @bold display context stack @pop.
+This is pretty much an operational version of HTML's closing tags I guess.
+@pop
+
+@doc-command \"@set-attribute/2 (name) (value)\"
+Sets the HTML attribute (name) of the current display context to (value).
+@pop.
+
+@doc-command \"@display\"
+Renders some content in the current display context.
+@pop
+
+
+@subtitle \"Typesetting primitives\"
+
+@doc-command \"@box/0\"
+Pushes an HTML div in the display context.
+@pop
+
+@doc-command \"@typeset/1 (class-name)\"
+Sets the CSS class of the current display context to (class-name).
+@pop
+
+@doc-command \"@mono/0\"
+Pushes a monospaced container in the display context.
+@pop
+
+@doc-command \"@title/1 (content)\"
+Typesets and displays (content) as a title, but leaves the display context as before.
+@pop
+
+@doc-command \"@subtitle/1 (content)\"
+Typesets and displays (content) as a subtitle, but leaves the display context as before.
+@pop
+
+@doc-command \"@code/0\"
+Pushes a code-block container in the display context.
+@pop
+
+@doc-command \"@paragraph/0\"
+Pushes a paragraph container in the display context.
+@pop
+
+@doc-command \"@list/0\"
+Pushes an unordered list container in the display context.
+@pop
+
+@doc-command \"@item/0\"
+Pushes an item list container in the display context.
+@pop
+
+@doc-command \"@bold/0\"
+Pushes a bold container in the display context.
+@pop
+
+@doc-command \"@collapse-spaces\"
+Pushes a content container in the display context that behaves more like
+the regular HTML semantics; white-space needs to be handled explicitly
+in this container as it will not preserve the source code's white-space.
+@pop
+
+
+@subtitle \"Control Flow\"
+
+@doc-command \"@if/3 (test) (consequent) (alternate)\"
+Invokes the (consequent) block if (test) is true, invokes the (alternate)
+block otherwise.
+@pop
+
+@doc-command \"@apply/1 (block)\"
+Applies the block function by prepending its contents to the current program
+input.
+@pop
+
+
+@subtitle \"Debugging\"
+
+@doc-command \"@inspect/2 (tag) (value)\"
+Outputs the (value) to the Crochet's transcript log. You can look at
+it by hitting the arrow button in the bottom-right of the screen.
+@pop
+
+
+@subtitle \"List functions\"
+
+@doc-command \"@cons/2 (head) (tail)\"
+Conses (head) to (tail).
+@pop
+
+@doc-command \"@head/1 (list)\"
+Takes the head of the (list).
+@pop
+
+@doc-command \"@nil/0\"
+Pushes the empty list on the stack.
+@pop
+
+@doc-command \"@last/1 (list)\"
+Pushes the last item of the (list) on the stack.
+@pop
+
+@doc-command \"@reverse/1 (list)\"
+Pushes the reversed (list) on the stack.
+@pop
+
+
+@subtitle \"String functions\"
+
+@doc-command \"@uppercase/1 (text)\"
+Converts the text to uppercase.
+@pop
+
+@doc-command \"@lowercase/1 (text)\"
+Converts the text to lower case.
+@pop
+
+
+@subtitle \"Integer and logical operators\"
+
+@doc-command-multi
+  @dc \"@eq/2 (a) (b)\"
+  @dc \"@neq/2 (a) (b)\"
+Structural equality (and non-equality) of two values.
+@pop
+
+@doc-command-multi
+  @dc \"@and/2 (a) (b)\"
+  @dc \"@or/2 (a) (b)\"
+  @dc \"@not (a)\"
+Logical conjunction, disjunction, and negation.
+@pop
+
+@doc-command-multi
+  @dc \"@add/2 (a) (b)\"
+  @dc \"@sub/2 (a) (b)\"
+  @dc \"@div/2 (a) (b)\"
+  @dc \"@rem/2 (a) (b)\"
+  @dc \"@mul/2 (a) (b)\"
+  @dc \"@pow/2 (a) (b)\"
+Arithmetic operators on integers.
+@pop
+
+@doc-command-multi
+  @dc \"@lt/2 (a) (b)\"
+  @dc \"@lte/2 (a) (b)\"
+  @dc \"@gt/2 (a) (b)\"
+  @dc \"@gte/2 (a) (b)\"
+Relational operators on integers.
+@pop
+"
+  )
+];

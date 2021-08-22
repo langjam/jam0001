@@ -1,0 +1,9 @@
+[[TUTO:Objects]]
+[[Objects are very similar to arrays]]
+my_obj := obj>>call.
+print my_obj.
+
+[[But they dont have any fields nor functions]]
+[[We can add them!]]
+my_obj>>call := with f do f my_obj done.
+my_obj>>call print.

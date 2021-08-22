@@ -1,0 +1,26 @@
+cargo-features = ["edition2021"]
+[package]
+name = "zac"
+version = "0.1.0"
+edition = "2021"
+description = "Interactive scripting language where you can edit the comments"
+license = "Free"
+homepage = "https://github.com/sumeet/Zac"
+repository = "https://github.com/sumeet/Zac"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "zac"
+path = "src/lib.rs"
+
+[[bin]]
+name = "zac"
+path = "src/main.rs"
+
+[dependencies]
+peg = "*"
+anyhow = "*"
+itertools = "*"
+dyn-clone = "*"
+dyn_partial_eq = "*"

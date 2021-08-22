@@ -1,0 +1,10 @@
+fn area(a, b) {
+    multiply(a, b)
+}
+
+let b = 42
+print(area(b, 4))
+
+let res = area(5, b)
+print(res)
+print(b)

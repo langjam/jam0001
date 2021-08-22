@@ -1,0 +1,32 @@
+Name: BenJilks
+Date: Sunday the 22nd of August 2021
+Mood: good
+-------------------------------
+Shuffle elements in a list around a bit
+-------------------------------
+
+// please define none -> seq -> none
+// {
+        // [,in ,"count"] -> tee -> match
+        // {
+                // =0: { count - 1 -> seq -> eval in + [,count] -> out }
+                // =None: { [,count] -> out }
+        // } -> out
+// } thanks
+
+As arrays are index from the middle, moving all middle element to the front makes 
+for an interesting shuffle function.
+
+// please define none -> shuffle -> none
+// {
+        // [,in ,"arr"] -> tee -> len -> match
+        // {
+                // =1: { [,arr ,0] -> remove -> shuffle -> eval arr[0] + in -> out }
+                // =None: { [,arr[0]] -> out }
+        // } -> out
+// } thanks
+
+// a -> seq -> shuffle -> shuffle -> print -> /dev/null
+
+-------------------------------
+

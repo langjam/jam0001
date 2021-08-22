@@ -1,0 +1,9 @@
+// one_param is with a
+a. // still in one_param return is one_param
+
+// two_params is with a and b
+a.b // still in two_params return is two_params
+
+// zero is 0
+zero.zero // yeet is one_param
+zero. // yeet is two_params

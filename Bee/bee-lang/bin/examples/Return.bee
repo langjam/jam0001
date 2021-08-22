@@ -1,0 +1,8 @@
+#function hello
+/*
+    @call println with 1
+    #return with 1
+    @call println with 2
+*/
+
+@call println with @call hello

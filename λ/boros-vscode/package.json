@@ -1,0 +1,25 @@
+{
+    "name": "boros-vscode",
+    "displayName": "Boros Syntax Highlighting",
+    "description": "Boros Syntax Highlighting",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.50.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "brs",
+            "aliases": ["Boros", "brs"],
+            "extensions": [".brs"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "brs",
+            "scopeName": "source.brs",
+            "path": "./syntaxes/brs.tmLanguage.json"
+        }]
+    }
+}

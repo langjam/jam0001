@@ -1,0 +1,36 @@
+#type Math
+/*
+    #function add
+    /*
+        #return with 3
+    */
+*/
+
+#type Vector extend Math
+/*
+    #function init
+    /*
+        @call println with "Constructor"
+    */
+
+     #function add
+     /*
+        #return with 2
+     */
+
+    #function callCurrentAdd
+    /*
+        #return with @call this->add
+    */
+
+    #function callSuperAdd
+    /*
+        #return with @call super->add
+    */
+*/
+
+#let v be @call Vector
+@call println with (@call v->callCurrentAdd)
+@call println with (@call v->callSuperAdd)
+@set @call v.x be 1
+@call println with @call v.x
