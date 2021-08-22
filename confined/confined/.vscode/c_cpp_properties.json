@@ -1,0 +1,21 @@
+{
+    "configurations":
+    [
+        {
+            "name": "Linux",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++20",
+            "defines":
+            [
+                "USE_WCHAR"
+            ],
+            "includePath": 
+            [
+                "src"
+            ]
+        }
+    ],
+    "version": 4
+}
