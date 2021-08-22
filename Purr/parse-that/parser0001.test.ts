@@ -3,9 +3,11 @@ import { parse } from "./parser0001";
 const tests = [
     [`well at least there is this`, ["well","at","least","there","is","this"]],
     [`this  is [ so ] simple`, ["this","is","[","so","]","simple"]],
-    [`# this caviare is not organically sourced!
-    non-comment-word-here
-    # a first-class comment (get it)`, ["# this caviare is not organically sourced!", "non-comment-word-here", "# a first-class comment (get it)"]],
+    [`# OMG this caviare is not organically sourced!
+    regular-vanilla-word-here
+    # ^ an airline first-class comment (get it)`, ["# OMG this caviare is not organically sourced!", "regular-vanilla-word-here", "# ^ an airline first-class comment (get it)"]],
+    [`"hello quoted strings" `, ['"hello quoted strings"']],
+    [`"hello" word "there"`, ['"hello"', "word", '"there"']],
 ];
 
 // ugh not another cheap object comparison
