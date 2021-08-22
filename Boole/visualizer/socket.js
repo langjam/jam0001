@@ -100,6 +100,11 @@ function startSocket() {
                     const prim_color = message["train"]["config"]["primary_color"].toLowerCase();
                     const sec_color = message["train"]["config"]["secondary_color"].toLowerCase();
 
+                    const messages = []
+                    for (fcp of message["train"]["first_class_passengers"]) {
+                        messages.push(fcp.name + ": " + fcp.data);
+                    }
+
 
                     if (!grid.hasTrain(train_identifier)) {
                         grid.addTrain(new Train(
@@ -108,6 +113,7 @@ function startSocket() {
                             sec_color,
                             direction,
                             train_identifier,
+                            messages
                         ))
                     }
 
