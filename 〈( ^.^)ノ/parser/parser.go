@@ -119,6 +119,7 @@ func GenerateAst(toks []shared.Token) []shared.Node {
 		os.Exit(1)
 	}
 
+	shared.Node{IsExpression: true, Children: ast}.Print("")
 	parser.Parse(shared.Node{IsExpression: true, Children: ast})
 
 	return ast
