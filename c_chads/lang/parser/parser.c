@@ -267,7 +267,7 @@ pnode_t *pnode_alt(pnode_t *of) {
         fprintf(stderr, "Internal error: Invalid addressing mode for ternary expression, %d", of->addressing);
         exit(1);
     }
-    return vec_get(&of->children, 1);
+    return vec_get(&of->children, 2);
 }
 
 pnode_t *pnode_left(pnode_t *of) {
