@@ -31,9 +31,19 @@ type alias Code =
     Array Instruction
 
 
+{-| `toCode` will replace all labels with `next` instructions.
+-}
 toCode : AST -> Code
 toCode =
-    List.filter (Tuple.second >> AST.isLabel >> not) >> Array.fromList
+    let
+        replaceLabel atom =
+            if AST.isLabel atom then
+                AST.Actual "next"
+
+            else
+                atom
+    in
+    List.map (Tuple.mapSecond replaceLabel) >> Array.fromList
 
 
 toLabels : AST -> Dict String Int
@@ -171,7 +181,7 @@ type alias Command =
 commands : Dict String Command
 commands =
     Dict.fromList
-        [ ( "pass", next ) ]
+        [ ( "next", next ) ]
 
 
 next : Command

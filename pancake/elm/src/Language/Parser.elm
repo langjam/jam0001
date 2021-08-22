@@ -21,7 +21,7 @@ preprocess =
         >> List.map
             (\line ->
                 if String.trim line |> String.isEmpty then
-                    "pass"
+                    "next"
 
                 else
                     line
