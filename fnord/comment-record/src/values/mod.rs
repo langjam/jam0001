@@ -49,9 +49,11 @@ impl std::fmt::Display for Value {
             Value::Number(n) => write!(f, "{}", n),
             Value::Text(t) => write!(f, "{:?}", t),
             Value::Comment(c) => {
-                let trimmed = c.text.trim_end();
-                for line in trimmed.split('\n') {
-                    write!(f, "# {}\n", line)?;
+                if !c.text.is_empty() {
+                    let trimmed = c.text.trim_end();
+                    for line in trimmed.split('\n') {
+                        write!(f, "# {}\n", line)?;
+                    }
                 }
                 if let Value::Struct(s) = &c.record {
                     for (name, value) in &s.fields {
