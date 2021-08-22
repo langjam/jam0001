@@ -6,45 +6,62 @@ It also requires the rank of the some operators be specified,
 unlike J. For instance:
 
 ```
-> 3_4
-3_4
+> 3m4
+3m4
 
-> 5_4
-1_4
+> 5m4
+1m4
 
-> 1 + 3_4
-0_4
+> (+ 1 3m4)
+0m4
 
-> (+ 1 '(0 3_4 6_2))
-(1 0_4 1_2)
+> (+ 1 [0 3m4 6m2])
+[1 0m4 1m2]
 
-> ((" / 1) + '(1_2 0_2 1_2))
-0_2
+> (/ + 0 '(1m2 0m2 1m2)))
+0m2
 
-> (i. 4 4)
-(0_4 1_4 2_4 3_4)
+> (i. 4)
+[0 1 2 3]
 
-> (i. 4 2)
-(0_2 1_2 0_2 1_2)
+> (+ 0m4 (i. 8))
+[0m4 1m4 2m4 3m4 0m4 1m4 2m4 3m4 ]
 
-> (i. 4_2 2)
-Type error: First argument to i. should be [Number]
-
-> (:= y ($ '(2 2) (i. 4 4)))
-> y
-((0_4 1_4) 
- (2_4 3_4))
-
-> ((" / 0) + y)   NB. Sum across every element (doesn't do anything)
-((0_4 1_4) 
- (2_4 3_4))
-
-> ((" / 1) + y)   NB. Sum across the first list
-(1_4 1_4)
-
-> ((" / 2) + y)   NB. Sym across the first column
-(2_4 0_4)
 ```
 
+Lambdas are supported
 
-First-in-class comments are created with `NB.` until the end of line.
+```
+> ((λ (x) (+ x 3)) [4 5])
+[7 8]
+
+> (((λ (f g) (λ (x) (f (g x)))) (λ (x) (/ + 0 x)) |:) [[3 4] [5 6]])
+[7 11]
+```
+
+# Installation and Execution
+1. Install idris2, following the directions here: https://github.com/idris-lang/Idris2/blob/main/INSTALL.md
+2. Clone this repository
+3. Move to the `jmod` directory
+4. Run `idris2 Main.idr --package contrib` to start the repl.
+5. To run a program from a file, type
+```
+:exec main
+<filename>
+```
+
+For example,
+```
+alex@alex-virtual-machine ~/programming-languages/jam0001/other-thing/jmod2/alexdikelsky/jmod
+ % idris2 Main.idr --package contrib
+     ____    __     _         ___                                           
+    /  _/___/ /____(_)____   |__ \                                          
+    / // __  / ___/ / ___/   __/ /     Version 0.4.0-4a9f00078
+  _/ // /_/ / /  / (__  )   / __/      https://www.idris-lang.org           
+ /___/\__,_/_/  /_/____/   /____/      Type :? for help                     
+
+Welcome to Idris 2.  Enjoy yourself!
+Main> :exec main
+Enter the filename: fizzbuzz.jmod
+233168
+```
