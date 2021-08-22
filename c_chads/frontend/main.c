@@ -14,7 +14,6 @@ void print_type(struct Parser_Type *type) {
 }
 
 void print_ast(struct Parser_Node *node, usize depth) {
-    eh_error_pos(node->pos, parser_get_state()->lexer.src);
     if (node->kind == PN_DECL) {
         struct Vec *annots = &node->data.decl.annotations;
         for (usize i = 0; i < annots->size; i += 1) {
