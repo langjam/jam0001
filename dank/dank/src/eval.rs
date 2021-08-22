@@ -288,8 +288,9 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                         }
                     }};
                     (__internal $self:ident, $left:ident $op:tt $right:ident) => {{
+                        #[allow(clippy::float_cmp)]
                         match ($left, $right) {
-                            (Value::Num(l), Value::Num(r)) => Signal::Value(Value::Num(l $op r)),
+                            (Value::Num(l), Value::Num(r)) => Signal::Value(Value::from(l $op r)),
                             (l, r) => Signal::Error($self.bin_op_type_error(&l, &r, stringify!($op))),
                         }
                     }};
@@ -299,6 +300,12 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     BinOpKind::Sub => bin_op!(self, l - r),
                     BinOpKind::Div => bin_op!(self, l * r),
                     BinOpKind::Mul => bin_op!(self, l / r),
+                    BinOpKind::Eq => bin_op!(self, l == r),
+                    BinOpKind::Ne => bin_op!(self, l != r),
+                    BinOpKind::Lt => bin_op!(self, l < r),
+                    BinOpKind::Le => bin_op!(self, l <= r),
+                    BinOpKind::Gt => bin_op!(self, l > r),
+                    BinOpKind::Ge => bin_op!(self, l >= r),
                     BinOpKind::Or => {
                         let l = self.eval_expr(l)?;
                         if self.is_truthy(&l) {
@@ -425,7 +432,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     let value = self.eval_expr(a)?;
                     self.print(format!("{}", value));
                     if i != args.len() - 1 {
-                        self.print(", ");
+                        self.print(" ");
                     }
                 }
                 self.print("\n");

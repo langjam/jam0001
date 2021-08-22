@@ -77,6 +77,12 @@ pub enum BinOpKind {
     Mul,
     Or,
     And,
+    Eq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, AstToStr)]

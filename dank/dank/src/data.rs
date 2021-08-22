@@ -50,6 +50,17 @@ pub enum Value<'s> {
     NativeFn(Ptr<NativeFn<'s>>),
 }
 
+impl<'s> From<f64> for Value<'s> {
+    fn from(n: f64) -> Self {
+        Value::Num(n)
+    }
+}
+impl<'s> From<bool> for Value<'s> {
+    fn from(b: bool) -> Self {
+        Value::Bool(b)
+    }
+}
+
 impl<'s> std::fmt::Display for Value<'s> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

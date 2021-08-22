@@ -83,13 +83,13 @@ peg::parser!(pub grammar dank() for str {
          / w:while_loop() {w}
          / b:block() {b}
          / f:func() {f}
-         / start:position!() name:ident() ___ "=" ___ value:expr() ___ ";" end:position!() {
-            Stmt { span: start..end, kind: StmtKind::Assignment(name.into(), Box::new(value)) }
-         }
          / start:position!() "break" ___ ";" end:position!() { Stmt { span: start..end, kind: StmtKind::Break } }
          / start:position!() "continue" ___ ";" end:position!() { Stmt { span: start..end, kind: StmtKind::Continue } }
          / start:position!() "return" ___ value:expr()? ";" end:position!() {
             Stmt { span: start..end, kind: StmtKind::Return(value.map(Box::new)) }
+         }
+         / start:position!() name:ident() ___ "=" ___ value:expr() ___ ";" end:position!() {
+          Stmt { span: start..end, kind: StmtKind::Assignment(name.into(), Box::new(value)) }
          }
          / e:expr() ___ ";" end:position!() { Stmt {  span: e.span.start..end, kind: StmtKind::ExprStmt(Box::new(e)) } }
 
@@ -131,14 +131,22 @@ peg::parser!(pub grammar dank() for str {
 
     pub rule operators() -> Expr<'input>
     = precedence! {
-        x:(@) _ "&&" _ y:@ { op_node!(x, y, BinOpKind::And) }
-        x:(@) _ "||" _ y:@ { op_node!(x, y, BinOpKind::Or) }
+        x:(@) ___ "&&" ___ y:@ { op_node!(x, y, BinOpKind::And) }
+        x:(@) ___ "||" ___ y:@ { op_node!(x, y, BinOpKind::Or) }
         --
-        x:(@) _ "+" _ y:@ { op_node!(x,y, BinOpKind::Add) }
-        x:(@) _ "-" _ y:@ { op_node!(x,y, BinOpKind::Sub) }
+        x:(@) ___ "==" ___ y:@ { op_node!(x, y, BinOpKind::Eq) }
+        x:(@) ___ "!=" ___ y:@ { op_node!(x, y, BinOpKind::Ne) }
         --
-        x:(@) _ "*" _ y:@ { op_node!(x, y, BinOpKind::Mul) }
-        x:(@) _ "/" _ y:@ { op_node!(x, y, BinOpKind::Div) }
+        x:(@) ___ "<" ___ y:@ { op_node!(x, y, BinOpKind::Lt) }
+        x:(@) ___ "<=" ___ y:@ { op_node!(x, y, BinOpKind::Le) }
+        x:(@) ___ ">" ___ y:@ { op_node!(x, y, BinOpKind::Gt) }
+        x:(@) ___ ">=" ___ y:@ { op_node!(x, y, BinOpKind::Ge) }
+        --
+        x:(@) ___ "+" ___ y:@ { op_node!(x,y, BinOpKind::Add) }
+        x:(@) ___ "-" ___ y:@ { op_node!(x,y, BinOpKind::Sub) }
+        --
+        x:(@) ___ "*" ___ y:@ { op_node!(x, y, BinOpKind::Mul) }
+        x:(@) ___ "/" ___ y:@ { op_node!(x, y, BinOpKind::Div) }
         --
         "-" x:(@) { op_node!(x, UnOpKind::Neg) }
         "!" x:(@) { op_node!(x, UnOpKind::Not) }
@@ -157,11 +165,11 @@ peg::parser!(pub grammar dank() for str {
       / primary()
 
     pub rule primary() -> Expr<'input>
-        = start:position!() i:ident() end:position!() { Expr { kind: ExprKind::Variable(i.into()), span: start..end } }
+        = lambda()
         / start:position!() l:literal() end:position!() { Expr { kind: ExprKind::Literal(l), span: start..end }}
+        / start:position!() i:ident() end:position!() { Expr { kind: ExprKind::Variable(i.into()), span: start..end } }
         / "(" _ e:expr() _ ")" { e }
         / object()
-        / lambda()
 
     pub rule object() -> Expr<'input>
         = start:position!()
@@ -209,7 +217,7 @@ peg::parser!(pub grammar dank() for str {
 
     /// Parses an entire identifier, ensuring no reserved keywords are used
     rule ident() -> &'input str
-        = i:quiet!{ $(!reserved() ident_start() ident_chars()*) } { i }
+        = i:quiet!{ $(ident_start() ident_chars()*) } { i }
 
     rule line() -> LineComment<'input>
         = _ l:line_comment() __ { l }
@@ -301,7 +309,7 @@ Ast
         let f_with_args = fn(a, b) { print a, b; };
 
         fn returns_x(x) { return x; }
-        fn returns_nothing { return; }
+        fn returns_nothing() { return; }
       "#;
 
         test_eq!(
@@ -359,6 +367,28 @@ Ast
                       name: "a"
                     ExprKind::Variable
                       name: "b"
+    LineComment
+      body: CommentBody::Empty
+      stmt: Function
+        name: "returns_x"
+        args= 
+          "x"
+        body= 
+          LineComment
+            body: CommentBody::Empty
+            stmt: StmtKind::Return
+              value: ExprKind::Variable
+                name: "x"
+    LineComment
+      body: CommentBody::Empty
+      stmt: Function
+        name: "returns_nothing"
+        args= 
+        body= 
+          LineComment
+            body: CommentBody::Empty
+            stmt: StmtKind::Return
+              value: None
         "#
         );
     }
@@ -622,14 +652,10 @@ Ast
           statements= 
             LineComment
               body: CommentBody::Empty
-              stmt: StmtKind::ExprStmt
-                expr: ExprKind::Variable
-                  name: "break"
+              stmt: StmtKind::Break
             LineComment
               body: CommentBody::Empty
-              stmt: StmtKind::ExprStmt
-                expr: ExprKind::Variable
-                  name: "continue"
+              stmt: StmtKind::Continue
 "#
         );
     }
@@ -641,6 +667,7 @@ Ast
         let b = -false;
         let c = null;
         let d = a && b || (!c);
+        let e = d < 3 && c > 5 && b <= 2 && a >= 1 || a == 7 && b != 8;
         "#;
         test_eq!(
             test,
@@ -694,7 +721,57 @@ Ast
           right: ExprKind::Unary
             op: UnOpKind::Not
             operand: ExprKind::Variable
-              name: "c""#
+              name: "c"
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "e"
+        initializer: ExprKind::Binary
+          left: ExprKind::Binary
+            left: ExprKind::Binary
+              left: ExprKind::Binary
+                left: ExprKind::Binary
+                  left: ExprKind::Binary
+                    left: ExprKind::Variable
+                      name: "d"
+                    op: BinOpKind::Lt
+                    right: ExprKind::Literal
+                      field0: Num(3.0)
+                  op: BinOpKind::And
+                  right: ExprKind::Binary
+                    left: ExprKind::Variable
+                      name: "c"
+                    op: BinOpKind::Gt
+                    right: ExprKind::Literal
+                      field0: Num(5.0)
+                op: BinOpKind::And
+                right: ExprKind::Binary
+                  left: ExprKind::Variable
+                    name: "b"
+                  op: BinOpKind::Le
+                  right: ExprKind::Literal
+                    field0: Num(2.0)
+              op: BinOpKind::And
+              right: ExprKind::Binary
+                left: ExprKind::Variable
+                  name: "a"
+                op: BinOpKind::Ge
+                right: ExprKind::Literal
+                  field0: Num(1.0)
+            op: BinOpKind::Or
+            right: ExprKind::Binary
+              left: ExprKind::Variable
+                name: "a"
+              op: BinOpKind::Eq
+              right: ExprKind::Literal
+                field0: Num(7.0)
+          op: BinOpKind::And
+          right: ExprKind::Binary
+            left: ExprKind::Variable
+              name: "b"
+            op: BinOpKind::Ne
+            right: ExprKind::Literal
+              field0: Num(8.0)"#
         );
     }
 
