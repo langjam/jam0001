@@ -4,7 +4,7 @@
 
 ## Objects
 
-Stickynotes is a Smalltalk-like language where everything is done through method calls. Builtin functions like `print` can be thought of as calls to a global object `W`. So these two calls are equivalent.
+Stickynotes is a Smalltalk-like language where everything is done through method calls (but the syntax is closer to Python). Builtin functions like `print` can be thought of as calls to a global object `W`. So these two calls are equivalent.
 
     print("Hello world\n")
     W.print("Hello world\n")
@@ -65,11 +65,15 @@ Multiple comments are appended to each other.
 
 This will print `This object is red, and is passed to the printer`.
 
+### Comment usage
+
 Comments can be thought of as sticky notes added to see what happened to the handling of the object.
+
+This helps troubleshoot broken states, especially from mutations, that do not explicitly produce an error.
 
 ## Displaying comments
 
-Displaying comment can be turned on or off with
+Displaying comments can be turned on or off with
 
     show_comment = True
     show_comment = False
@@ -86,6 +90,8 @@ For example
     showTest()
 
 See [examples/show_comment.sn](examples/show_comment.sn).
+
+In the future, we'd like to add a custom callback function to make filtering and other operations possible.
 
 ## Blocks
 
