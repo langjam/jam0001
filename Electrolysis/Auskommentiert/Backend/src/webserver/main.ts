@@ -42,6 +42,10 @@ app.get("/api/topic/:id", (req: express.Request, res: express.Response) => {
     api.queryTopic(req, res);
 });
 
+app.get("/api/delete", (req: express.Request, res: express.Response) => {
+    api.delete(req, res);
+});
+
 wss.on('connection', (ws: WebSocket) => {
     api.registerCallback(ws);
     ws.on('close', () => {

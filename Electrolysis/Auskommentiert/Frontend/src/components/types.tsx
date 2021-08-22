@@ -39,4 +39,8 @@ type SwapRequest = {
     id: string,
 }
 
-export type { AppType, TopicType, CommentType, CommentCreate, Upvote, Downvote, SwapRequest }
+type DeleteRequest = {
+    id: string,
+}
+
+export type { AppType, TopicType, CommentType, CommentCreate, Upvote, Downvote, SwapRequest, DeleteRequest }

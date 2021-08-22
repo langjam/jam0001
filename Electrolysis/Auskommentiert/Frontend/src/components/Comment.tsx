@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
 import { Component } from 'react';
 import '../css/App.css';
-import { CommentType, Downvote, SwapRequest, Upvote } from './types'
+import { CommentType, DeleteRequest, Downvote, SwapRequest, Upvote } from './types'
 import '../css/Comment.css';
 import '../css/all.css';
 import { Link } from 'react-router-dom';
@@ -44,6 +44,7 @@ class Comment extends Component<CommentType, CommentType> {
                     </Link>
                     <button onClick={() => this.moveUp()}>Up</button>
                     <button onClick={() => this.moveDown()}>Down</button>
+                    <button onClick={() => this.delete()}>Delete</button>
                 </div>
 
                 <div className="indent">
@@ -110,6 +111,21 @@ class Comment extends Component<CommentType, CommentType> {
             id: this.state.id
         }
         fetch("http://" + window.location.hostname + ":6789/api/move_down", {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow',
+            body: JSON.stringify(body),
+        })
+    }
+    delete() {
+        let body: DeleteRequest = {
+            id: this.state.id
+        }
+        fetch("http://" + window.location.hostname + ":6789/api/delete", {
             method: 'POST',
             mode: 'cors',
             cache: 'no-cache',

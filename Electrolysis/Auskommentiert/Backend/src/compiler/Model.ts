@@ -1,6 +1,8 @@
 import { CommentProvider } from "./CommentProvider";
 import { WrappedComment, WrappedCommentSorter } from "./WrappedComment";
 import { inspect } from "util";
+import * as fs from 'fs'
+import { fstat } from "fs";
 
 export enum Direction {
     UP,
@@ -233,6 +235,7 @@ export class Model {
     private mCallback: Function = () => {}
     constructor(callback: Function = () => {}) {
         this.mCallback = callback;
+        this.load();
     }
     addPost(post : any): void {
         let comments : ModelComment[] = [];
@@ -240,9 +243,8 @@ export class Model {
             let comment = this.parseComment(post.id, topLevelComment);
             comments.push(comment);
         }
-        let newPost = new ModelPost(post.title, post.content, post.id, "", post.upvotes, post.date, comments);
-        this.mCommentsMap.set(post.id, newPost);
-        this.mCallback();
+        this.mCommentsMap.set(post.id, new ModelPost(post.title, post.content, post.id, "", post.upvotes, post.date, comments));
+        this.notifyChange();
     }
     getNexUniqueId() : string {
         return String(this.mCounter++);
@@ -252,7 +254,7 @@ export class Model {
         this.mCommentsMap.get(commentId)?.addChild(commentObj);
         this.mCommentsMap.set(commentObj.id, commentObj);
         commentObj.parentId = commentId;
-        this.mCallback();
+        this.notifyChange();
     }
     makeCommentProvider(postId : string) : CommentProvider {
         console.log(this.mCommentsMap.get(postId));
@@ -266,6 +268,7 @@ export class Model {
     }
     notifyChange() {
         this.mCallback();
+        this.save();
     }
     vote(id: string, value: number) {
         let component : CommentBase | undefined = this.mCommentsMap.get(id);
@@ -293,7 +296,7 @@ export class Model {
                 parentTwo.children.push(entryOne as ModelComment)
             }
         }
-        this.mCallback();
+        this.notifyChange();
     }
 
     swapContent(idFirst: string, idSecond: string) {
@@ -305,7 +308,18 @@ export class Model {
             entryOne.content = entryTwo.content;
             entryTwo.content = tempContent;
         }
-        this.mCallback();
+        this.notifyChange();
+    }
+
+    deleteComment(id: string) {
+        let comment = this.mCommentsMap.get(id);
+        if (comment !== undefined && comment instanceof ModelComment) {
+            let parent = this.mCommentsMap.get(comment.parentId);
+
+            this.mCommentsMap.delete(id);
+            parent?.children.slice(parent.children.indexOf(comment), 1);
+        }
+        this.notifyChange();
     }
 
     private parseComment(parentId : string, jsonComment : any) : ModelComment {
@@ -321,9 +335,36 @@ export class Model {
         return comm;
     }
     toObject() {
-        //console.log(this.posts)
         return {
             topics: this.posts.map(post => post.toObject())
+        }
+    }
+
+    save() {
+        let obj = {
+            counter: this.mCounter,
+            posts: this.toObject()
+        }
+        let objString = JSON.stringify(obj);
+        try {
+        fs.writeFileSync('state.json', objString)
+        } catch {
+
+        }
+    }
+
+    load() {
+        try {
+
+        let objString = fs.readFileSync('state.json').toString()
+        console.log(objString)
+        let obj = JSON.parse(objString);
+        this.mCounter = obj.counter;
+        for( let topic of obj.posts.topics ) {
+            this.addPost(topic);
+        }
+        }catch (error) {
+            console.log(error)
         }
     }
 }
