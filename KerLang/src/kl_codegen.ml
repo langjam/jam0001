@@ -10,7 +10,7 @@ open Kl_IR
 let emit_kl_ir (prog : spec list) : (string * ast) list =
   List.fold_left (fun ftable (Spec (_, fname, _) as s) ->
       Printf.printf "\n[Processing function \x1b[1;36m%s\x1b[0m]\n" fname;
-      let res = (fname, generate_function s |> compile_function ftable)::ftable in
+      let res = (fname, generate_function ftable s |> compile_function ftable)::ftable in
       Printf.printf "[\x1b[1;32mOk\x1b[0m]\n";
       res
     ) [] prog |> List.rev
@@ -59,7 +59,7 @@ module ML_Realizer = Realizer (struct
     let realize_decl oc name prog =
       Kl_2ml.emit_ast_as_function_decl oc name prog
 
-    let realize_entrypoint_call oc = 
+    let realize_entrypoint_call oc =
       Kl_2ml.emit_entrypoint_call oc
   end)
 
@@ -73,7 +73,7 @@ module PY_Realizer = Realizer (struct
     let realize_decl oc name prog =
       Kl_2py.emit_ast_as_function_decl oc name prog
 
-    let realize_entrypoint_call oc = 
+    let realize_entrypoint_call oc =
       Kl_2py.emit_entrypoint_call oc
   end)
 
@@ -87,7 +87,7 @@ module C_Realizer = Realizer (struct
     let realize_decl oc name prog =
       Kl_2c.emit_ast_as_function_decl oc name prog
 
-    let realize_entrypoint_call oc = 
+    let realize_entrypoint_call oc =
       Kl_2c.emit_entrypoint_call oc
   end)
 
