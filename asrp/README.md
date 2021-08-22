@@ -134,3 +134,15 @@ The initial built in globals are
 See the [examples](examples) directory for many examples.
 
     python snotes.py lib.sn examples/hello.sn
+
+## Project stats
+
+```
+  398 snotes.py
+   31 snotes.grammar
+   17 lib.sn
+  446 subtotal
+
+  816 pymetaterp
+ 1262 total
+```
