@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/grossamos/jam0001/shared"
 )
@@ -16,6 +17,25 @@ func (e *Evaluator) eval_children(parentNode []shared.Node) []shared.Node {
 	}
 
 	return out
+}
+
+func (e *Evaluator) unrefString(str string) string {
+	refString := ""
+
+	for _, char := range str {
+		if char == '$' {
+			refString += string(char)
+		} else if strings.Contains("-0123456789", string(char)) && len(refString) != 0 {
+			refString += string(char)
+		} else if refString != "" {
+			str = strings.Replace(str, refString, e.getRefValue(refString[1:]), 1)
+			refString = ""
+		}
+	}
+	if refString != "" {
+		str = strings.Replace(str, refString, e.getRefValue(refString[1:]), 1)
+	}
+	return str
 }
 
 func (e *Evaluator) getRefValue(ref string) string {

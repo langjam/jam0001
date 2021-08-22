@@ -30,10 +30,13 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 
 	case lexer.II_print:
 		args := e.eval_children(instruction_args)
-		fmt.Println(args[0].Val.Value)
+		printString := args[0].Val.Value
+		printString = e.unrefString(printString)
+		fmt.Println(printString)
 
 	case lexer.II_m:
 		mathInput := instruction_args[0].Val.Value
+		mathInput = e.unrefString(mathInput)
 		mResult, err := m.Do(mathInput, e.negative, e.positive)
 		if err != nil {
 			fmt.Println("MathError: expression invalid: ", mathInput)
@@ -41,8 +44,4 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 		return makeNumberNode(mResult)
 	}
 	return shared.Node{}
-}
-
-func isInstruction(possible_instruction shared.Node) bool {
-	return possible_instruction.Val.Type == shared.TTinstruction
 }
