@@ -1,5 +1,7 @@
 use std::io::{self, Write};
 
+use rand::Rng;
+
 use crate::value::Value;
 use crate::error::RuntimeErrorCause;
 
@@ -25,7 +27,8 @@ std_fns! {
     "print" => print,
     "type" => type_name,
     "measure" => measure,
-    "get" => get
+    "get" => get,
+    "random" => random
     // "map" => map
 }
 
@@ -90,4 +93,8 @@ pub fn get(args: &[Value]) -> Result<Value, RuntimeErrorCause> {
 
         v => return Err(RuntimeErrorCause::TypeError(format!("cannot get element from {}", v.type_name()))),
     }
+}
+
+pub fn random(_: &[Value]) -> Result<Value, RuntimeErrorCause> {
+    Ok(rand::thread_rng().gen::<i64>().into())
 }

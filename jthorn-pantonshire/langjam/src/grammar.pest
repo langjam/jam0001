@@ -35,14 +35,15 @@ opNeg = { "-" }
 litTrue  = { ^"true" }
 litFalse = { ^"false" }
 
-expr        = { list | equality }
-list        = { "list" ~ sep* ~ "[" ~ sep* ~ expr ~ (sep* ~ "," ~ sep* ~ expr)*  ~ sep* ~ "]"}
+
+expr        = { equality }
 equality    = { comparison ~ (sep* ~ (opNeq | opEq) ~ sep* ~ comparison )* }
 comparison  = { termOr ~ (sep* ~ (opGt | opGe | opLt | opLe) ~ sep* ~ termOr )* }
 termOr      = { factorAnd ~ (sep* ~ (opSub | opAdd | opOr) ~ sep* ~ factorAnd )* }
 factorAnd   = { unary ~ (sep* ~ (opDiv | opMul | opAnd) ~ sep* ~ unary)? }
 unary       = { (opNot | opNeg) ~ sep* ~ unary | primary }
-primary     = { number | litTrue | litFalse | ident | string | "(" ~ sep* ~ expr ~ sep* ~ ")" }
+primary     = { number | litTrue | litFalse | list | ident | string | "(" ~ sep* ~ expr ~ sep* ~ ")" }
+list        = { "list" ~ sep* ~ "[" ~ sep* ~ (expr ~ (sep* ~ "," ~ sep* ~ expr)*)?  ~ sep* ~ "]"}
 
 //statements
 varStmt = { ^"stores" ~ sep+ ~ expr ~ sep+ ~ ^"in" ~ sep+ ~ ident }
@@ -50,7 +51,7 @@ loopStmt = { ^"repeatedly" ~ sep+ ~ "(" ~ sep* ~ comment ~ sep* ~ ")" ~ sep+ ~ e
 callStmt = { ident ~ (sep+ ~ callArgs)? ~ (("," | sep) ~ sep* ~ callStore)? }
 callArgs = { expr ~ (sep* ~ "," ~ sep* ~ expr)* }
 callStore = { ^"storing" ~ sep+ ~ ^"the" ~ sep+ ~ (^"output" | ^"result") ~ sep+ ~ ^"in" ~ sep+ ~ ident }
-condStmt = { ^"if" ~ sep+ ~ expr ~ (sep | ",") ~ sep* ~ ^"does" ~ sep+ ~ comment ~ (sep | ",") ~ sep* ~ (^"else" | ^"otherwise") ~ sep+ ~ comment}
+condStmt = { ^"if" ~ sep+ ~ expr ~ (sep | ",") ~ sep* ~ (^"does" ~ sep+)? ~ comment ~ (sep | ",") ~ sep* ~ (^"else" | ^"otherwise") ~ sep+ ~ comment}
 consStmt = { ^"constant" ~ sep+ ~ ident ~ sep+ ~ ^"is" ~ sep+ ~ expr}
 returnStmt = { (^"outputs" | ^"returns") ~ sep+ ~ expr }
 stmt = { (varStmt | loopStmt | condStmt | consStmt | returnStmt | callStmt)}

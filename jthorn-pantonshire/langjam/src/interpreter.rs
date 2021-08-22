@@ -274,6 +274,16 @@ impl Interpreter {
 
             BinaryOp::Add => match (val1, val2) {
                 (Value::Int(a), Value::Int(b)) => Ok((a + b).into()),
+                (Value::List(a), Value::List(b)) => {
+                    let mut vec = Vec::new();
+                    for item in &a {
+                        vec.push(item.clone());
+                    };
+                    for item in &b {
+                        vec.push(item.clone());
+                    };
+                    Ok(vec.into())
+                },
                 (Value::String(a), Value::String(b)) => {
                     let mut buf = String::with_capacity(a.len() + b.len());
                     buf.push_str(&a);

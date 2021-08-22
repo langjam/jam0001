@@ -475,6 +475,8 @@ fn parse_expr(pair: Pair) -> Expr {
                 kind: ExprKind::Value(value::Value::String(pair.as_str().to_owned()))
             },
 
+            Rule::list => parse_list(pair),
+
             Rule::ident => Expr {
                 span,
                 kind: ExprKind::Variable(pair.as_str().to_owned())
@@ -488,11 +490,5 @@ fn parse_expr(pair: Pair) -> Expr {
         } 
     }
 
-    let first = pair.into_inner().next().unwrap();
-
-    match first.as_rule() {
-        Rule::list => parse_list(first),
-        Rule::equality => parse_equality(first),
-        _ => unreachable!(),
-    }
+    parse_equality(pair.into_inner().next().unwrap())
 }

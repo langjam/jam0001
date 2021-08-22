@@ -1,0 +1,11 @@
+// This function maps increment, list[1, 2, 3] then prints it
+function main()
+
+// This function returns x + 1
+function increment(x)
+
+// A function which stores list[] in res, then stores 0 in i, then measures l, storing the
+// result in count, then repeatedly (gets l, i, storing the result in current, then fs current,
+// storing the result in mapped, then stores list[mapped] in tail, then stores res + tail in res,
+// then stores i + 1 in i) count times, then returns res
+function map(f, l)

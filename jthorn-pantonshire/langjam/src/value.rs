@@ -108,3 +108,9 @@ impl From<String> for Value {
         Self::String(val)
     }
 }
+
+impl From<Vec<Value>> for Value {
+    fn from(val: Vec<Value>) -> Self {
+        Self::List(val)
+    }
+}
