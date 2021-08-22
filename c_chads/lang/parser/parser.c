@@ -53,6 +53,7 @@ static pnode_t mkinval() {
     return (pnode_t) { .kind = PN_INVAL };
 }
 static tok_t eof(tok_t tok);
+
 static tok_t pull() {
     tok_t tok = parser.current_token;
     parser.current_token = lex_determine(&parser.lexer);
@@ -150,7 +151,6 @@ static void skip_tt(enum Token_Type tt) {
     if (error_handling.panicking) return;
     tok_t tok = pull();
     if (tok.tt != tt) {
-        EH_MESSAGE("Expected %s. ", TT_NAMES[tt]);
         stray(&tok);
     }
 }
@@ -301,6 +301,7 @@ static pnode_t delimited(pnode_kind_t kind, const string open, const string shut
                 skip_tt(TT_SEMI);
                 setexpect(NULL);
             }
+        skipsemi();
     }
     setexpect(NULL);
     enddelim(delim);
@@ -386,7 +387,6 @@ static pnode_t body() {
 }
 
 static pnode_t statement() {
-    skipsemi();
     if (check("{")) {
         return body();
     }
@@ -400,14 +400,12 @@ static pnode_t statement() {
         setexpect(NULL);
         enddelim(delim);
         pnode_t node = pnode_binary(PN_WHILE, left, statement());
-        skipsemi();
         return node;
     }
     else if (check("return")) {
         skip_v("return");
         pnode_t node = pnode_unary(PN_RETURN, most_important_expression());
         skip_tt(TT_SEMI);
-        skipsemi();
         return node;
     }
     else if (check("if")) {
@@ -420,11 +418,9 @@ static pnode_t statement() {
         setexpect(NULL);
         enddelim(delim);
         pnode_t body = statement();
-        skipsemi();
         if (check("else")) {
             skip_v("else");
             pnode_t n = pnode_ternary(PN_IF, cond, body, statement());
-            skipsemi();
             return n;
         }
         else {
@@ -435,7 +431,6 @@ static pnode_t statement() {
     setexpect("Expected semicolon instead");
     skip_tt(TT_SEMI);
     setexpect(NULL);
-    skipsemi();
     return node;
 }
 
@@ -495,6 +490,10 @@ static pnode_t value() {
         case TT_LBRACE:
             value_node = body();
             return value_node;
+        case TT_RPAREN:
+        case TT_RBRACKET:
+        case TT_RBRACE:
+            stray(&token);
         case TT_OPERATOR:
             if (
                 spanstreqstr(token.span, parser.lexer.src, "!") ||
@@ -505,9 +504,6 @@ static pnode_t value() {
                 value_node.data.unary.op = strview_span(token.span, parser.lexer.src);
                 return value_node;
             }
-        case TT_RPAREN:
-        case TT_RBRACKET:
-        case TT_RBRACE:
         default: 
             return inval();
     }

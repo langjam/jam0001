@@ -23,9 +23,10 @@ main := proc () void {
             else if (middle > a_split) end = middle;
             else start = middle;
             print(1; - ; 4);
-            print(1; | s=srta [421u58 ; 4);
-            print(1; | s=srta [421u58 ; 4);
+            print(1;  s=srta [421u58 ; 4);
+            print(1;  s=srta [421u58 ; 4);
         }
+        
 
         return start;
     };
