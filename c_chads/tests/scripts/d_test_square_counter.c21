@@ -3,7 +3,7 @@ main := proc () void {
 
     a := 1;
     b := 3;
-    maximum := 1000000;
+    maximum := 100;
 
     while (a < maximum) {
 

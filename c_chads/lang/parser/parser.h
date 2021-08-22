@@ -25,7 +25,16 @@ enum Parser_Number_Kind {
     PNM_FLT
 };
 
+struct Parser_Type {
+    strview_t name;
+    struct Vec OF(usize) depths;
+};
+
 enum Parser_Node_Kind {
+    PN_NEW,      // LIST
+    PN_INIT,     // UNARY
+    PN_STRUCT,   // LIST
+    PN_LIST,     // LIST
     PN_INVAL,    // ENDPOINT, USED INTERNALLY BY PARSER DONT TOUCH
     PN_RETURN,   // UNARY
     PN_TYPELIST, // LISTING
@@ -48,17 +57,24 @@ enum Parser_Node_Kind {
 struct Parser_Node {
     enum Parser_Node_Addressing addressing;
     enum Parser_Node_Kind kind;
+    usize pos;
     // e.g. comments
     struct Vec OF(struct Parser_Node) children;
     union {
         struct {
             struct Vec OF(strview_t) annotations;
-            strview_t type;
+            struct Parser_Type type;
             strview_t name;
         } decl;
         struct {
-            strview_t return_type;
+            struct Parser_Type return_type;
         } proc;
+        struct {
+            struct Parser_Type type;
+        } newinst;
+        struct {
+            strview_t name;
+        } init;
         struct {
             strview_t val; 
         } string;
