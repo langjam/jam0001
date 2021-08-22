@@ -1,0 +1,75 @@
+foo = [ name |
+  W.print("Hello world ")
+  print(name)
+  print("\n")
+  ]
+
+foo("foobar")
+
+MyObj = Obj.copy("MyObj")
+
+MyObj.myfunc = [ self |
+  print("Ran myfunc\n")
+  ]
+
+MyObj.myfunc()
+MyObj2 = MyObj.copy("MyObj2")
+MyObj2.myfunc()
+
+print(MyObj.myfunc)
+print("\n")
+
+infinity = [ |
+  [ | True ].whileTrue([ |
+    print("uh oh ")
+    /* Comment out the next line to get an infinite loop */
+    return()
+    ])
+  ]
+
+infinity()
+
+baz = [ |
+  print(var1)
+  ]
+
+bar = [ |
+  var1 = "hello2" /* just a test string */
+  True.ifTrue([ |
+    var2 = "world2"
+    print(var1)
+    print(" ")
+    print(var2)
+    print(" ")
+    print(var1.comment)
+    print("\n")
+    ])
+  ]
+
+bar()
+
+block_wrangler = [ block |
+  print("before ")
+  True.ifTrue(block)
+  print("after\n")
+  ]
+
+test2 = [ |
+  var3 = "hi from var3"
+  my_block = [ |
+    print("test2 ")
+    print(var3)
+    print(" ")
+    /*return()*/
+    ]
+  block_wrangler(my_block)
+  ]
+
+test2()
+
+comment_test = [ |
+  foo = /* comment object */
+  print(foo)
+  ]
+
+comment_test()

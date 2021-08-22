@@ -1,0 +1,30 @@
+#let size be 5
+
+--Array & LinkedList Example.
+/*
+     #let array be @call createArray
+
+     #let counter be 0
+     #loop counter < size
+     /*
+         @call collectionAdd with array, ("Hello " + counter)
+         @change counter be counter + 1
+     */
+
+     @call println with array
+     @call println with (@call collectionGet with array, 2)
+*/
+
+--Stack Example
+/*
+     #let stack be @call createStack
+     #let counter be 0
+     #loop counter < size
+     /*
+         @call collectionPush with stack, ("Hello " + counter)
+         @change counter be counter + 1
+     */
+
+     @call println with stack
+     @call println with (@call collectionGet with stack, 2)
+*/

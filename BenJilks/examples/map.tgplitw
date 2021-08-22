@@ -1,0 +1,46 @@
+Name: BenJilks
+Date: Sunday the 22nd of August 2021
+Mood: good
+-------------------------------
+Map a function to a list
+-------------------------------
+
+// please define none -> square -> none
+// {
+        // in * in -> out
+// } thanks
+
+// please define none -> seq -> none
+// {
+        // [,in ,"count"] -> tee -> match
+        // {
+                // =0: { count - 1 -> seq -> eval in + [,count] -> out }
+                // =None: { [,count] -> out }
+        // } -> out
+// } thanks
+
+Functions can be used as normal objects, so a map function like this is possible.
+
+// please define none -> map -> none
+// {
+        // in[-1] -> func
+        // in[0] -> arr
+
+        // arr -> len -> eval 0 - in / 2 -> index
+        // arr[index] -> func -> value
+
+        // arr -> len -> match
+        // {
+                // =1:
+                // { 
+                        // [,arr ,index] -> remove -> rest
+                        // [,func ,rest] -> map -> eval [,value] + in -> out
+                // }
+                // =None: { [,value] -> out }
+        // } -> out
+// } thanks
+
+// a -> seq -> eval [,square ,in] -> map -> print -> /dev/null
+
+-------------------------------
+

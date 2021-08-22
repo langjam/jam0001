@@ -1,0 +1,12 @@
+% crochet
+
+command belle try-parse: (Source is text) do
+  (force grammar) parse: Source rule: "program"
+    | map: { Tree in (force to-ast) transform: Tree };
+end
+
+command belle parse: (Source is text) do
+  belle try-parse: Source
+    | recover: { Error in panic: Error tag: "syntax-error" }
+    | value;
+end

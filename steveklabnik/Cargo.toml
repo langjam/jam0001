@@ -1,0 +1,12 @@
+[package]
+name = "tomlisp"
+version = "0.1.0"
+authors = ["Steve Klabnik <steve@steveklabnik.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+# for https://github.com/alexcrichton/toml-rs/pull/358
+[dependencies.toml]
+git = "https://github.com/alexcrichton/toml-rs"

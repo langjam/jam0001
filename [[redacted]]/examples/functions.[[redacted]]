@@ -1,0 +1,5 @@
+[[TUTO:Functions]]
+[[In REDACTED function definitions are just assigning lambdas to names]]
+id := with v do v done.
+[[Once a function is defined it can be called like `print`]]
+print (id print)

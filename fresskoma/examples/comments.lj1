@@ -1,0 +1,10 @@
+fn i_like(
+    <indicates which thing you like> the_thing,
+) {
+    let x = "I like "
+    print(the_thing.$comment)
+    print(length(the_thing.$comment))
+    concat(x, the_thing)
+}
+
+print(i_like("turtles"))

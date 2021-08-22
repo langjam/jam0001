@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- Disable zooming: -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<head>
+    <title>smt hompy</title>
+    <style>
+        html {
+            /* Remove touch delay: */
+            touch-action: manipulation;
+        }
+
+        body {
+            or where the egui canvas is translucent. */
+            background: #404040;
+        }
+
+        html,
+        body {
+            overflow: hidden;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        canvas {
+            margin-right: auto;
+            margin-left: auto;
+            display: block;
+            position: absolute;
+            top: 0%;
+	    left: 0%;
+            /*left: 50%;
+            transform: translate(-50%, 0%);*/
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="the_canvas_id"></canvas>
+
+    <script>
+        // The `--no-modules`-generated JS from `wasm-bindgen` attempts to use
+        // `WebAssembly.instantiateStreaming` to instantiate the wasm module,
+        // but this doesn't work with `file://` urls. This example is frequently
+        // viewed by simply opening `index.html` in a browser (with a `file://`
+        // url), so it would fail if we were to call this function!
+        //
+        // Work around this for now by deleting the function to ensure that the
+        // `no_modules.js` script doesn't have access to it. You won't need this
+        // hack when deploying over HTTP.
+        delete WebAssembly.instantiateStreaming;
+    </script>
+
+    <script src="hompy.js"></script>
+
+    <script>
+        // We'll defer our execution until the wasm is ready to go.
+        // Here we tell bindgen the path to the wasm file so it can start
+        // initialization and return to us a promise when it's done.
+        wasm_bindgen("./hompy_bg.wasm")
+            .then(on_wasm_loaded)["catch"](console.error);
+
+        function on_wasm_loaded() {
+            // This call installs a bunch of callbacks and then returns.
+            wasm_bindgen.start("the_canvas_id");
+        }
+    </script>
+</body>
+
+</html>
+
+<!-- Powered by egui: https://github.com/emilk/egui/ -->

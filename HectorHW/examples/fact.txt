@@ -1,0 +1,13 @@
+fact = function(n) (
+    //assert $isnum(n)$
+    1;//when $n<=1$
+    n*self(n-1);//otherwise
+);
+print "enter some number, and I will compute it's factorial";
+//input
+a = readnum();
+//conditionally
+print "please enter a valid number (ideally not very big)"; //when $a=="err"$
+goto input; //and
+
+print fact(a); //otherwise

@@ -1,0 +1,37 @@
+Name: BenJilks
+Date: Sunday the 22nd of August 2021
+Mood: good
+-------------------------------
+Hello world program
+-------------------------------
+
+As arrays start from the middle, we can use this to make a binary search with
+
+// please define none -> search -> none
+// {
+        // in[-1] -> arr
+        // in[0] -> key
+
+        // arr[0][-1] -> match
+        // {
+                // >=key: { [,arr ,0] -> right -> eval [,in ,key] -> search -> out }
+                // <=key: { [,arr ,0] -> left -> eval [,in ,key] -> search -> out }
+                // =None: { arr[0][0] -> out }
+        // } -> out
+// } thanks
+
+Define some test data
+// [
+        // ,[,4 ,"a"]
+        // ,[,6 ,"b"]
+        // ,[,7 ,"c"]
+        // ,[,a ,"d"]
+        // ,[,G ,"e"]
+// ] -> x
+
+Run a search
+// [,x ,6] -> search -> print -> /dev/null
+// [,x ,G] -> search -> print -> /dev/null
+
+-------------------------------
+

@@ -1,0 +1,63 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Boros",
+	"patterns": [
+		{ "include": "#keywords" },
+		{ "include": "#numbers" },
+		{ "include": "#bools" },
+		{ "include": "#intrinsics" },
+		{ "include": "#comments" },
+		{ "include": "#strings" }
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.brs",
+				"match": "\\b(let|and|in|if|then|else)\\b"
+			}]
+    },
+    "numbers": {
+      "patterns": [{
+        "name": "constant.numeric.brs",
+        "match": "\\b-?[0-9]+\\b"
+      }]
+    },
+    "bools": {
+      "patterns": [{
+        "name": "constant.language.brs",
+        "match": "\\b(true|false)\\b"
+      }]
+    },
+    "intrinsics": {
+      "patterns": [{
+        "name": "support.function.brs",
+        "match": "\\b(comments|args|halt|throw|fix|print|putStr|putStrLn|getLine|getChar|putChar|readFile|not|truthy|type|compare|show|read|length|explode|pop|reverse|contains)\\b"
+      }]
+    },
+    "comments": {
+      "patterns": [{
+        "name": "comment.number-sign.brs",
+        "match": "^#.*$"
+      }, {
+        "name": "comment.block.brs",
+        "begin": "{-",
+        "beginCaptures": { "0": { "name": "punctuation.definition.comment.brs" }},
+        "end": "-}",
+        "endCaptues": { "0": { "name": "punctuation.definition.comment.brs" }},
+        "patterns": [{ "include": "#comments" }]
+      }]
+    },
+		"strings": {
+			"name": "string.quoted.double.brs",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.brs",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.brs"
+}

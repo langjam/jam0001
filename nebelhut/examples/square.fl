@@ -1,0 +1,8 @@
+{* square multiplies its argument by itself. *}
+defun square x [ * x x ]
+
+println &square
+println assoclist 'square
+
+testtable 'i 0 10 (0 1 4 9 16 25 36 49 64 81 100)
+square i
