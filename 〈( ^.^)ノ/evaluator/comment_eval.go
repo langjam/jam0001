@@ -31,6 +31,9 @@ func (e *Evaluator) eval_string_call(expr shared.Node) (shared.Node, error) {
 	for i, child := range expr.Children[1].Children {
 		var evaled_expr shared.Node
 		evaled_expr, err = e.eval_expr(child)
+		if err != nil {
+			return shared.Node{}, err
+		}
 		args[i] = evaled_expr.Val.Value
 	}
 
@@ -56,6 +59,9 @@ func (e *Evaluator) eval_string_call(expr shared.Node) (shared.Node, error) {
 		ev.maxRef = 0
 
 		val, err = ev.eval_expr(ev.comments[comment])
+		if err != nil {
+			return shared.Node{}, err
+		}
 	}
 
 	e.zero = ev.zero

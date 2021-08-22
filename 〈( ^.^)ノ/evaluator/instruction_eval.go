@@ -21,6 +21,9 @@ func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
 		set_ref := instruction_args[0]
 		var set_values []shared.Node
 		set_values, err = e.eval_children(instruction_args[1:])
+		if err != nil {
+			return shared.Node{}, err
+		}
 
 		if set_ref.Val.Type != shared.TTref {
 			err = &EvalError{message: "set can only be used on tape", pos: expr.Val.Pos}
@@ -35,6 +38,9 @@ func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
 	case lexer.II_print:
 		var args []shared.Node
 		args, err = e.eval_children(instruction_args)
+		if err != nil {
+			return shared.Node{}, err
+		}
 		printString := args[0].Val.Value
 		printString = e.unrefString(printString)
 		fmt.Println(printString)
@@ -51,6 +57,9 @@ func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
 	case lexer.II_not:
 		var args []shared.Node
 		args, err = e.eval_children(instruction_args)
+		if err != nil {
+			return shared.Node{}, err
+		}
 		input := args[0].Val.Value
 
 		out := ""
@@ -77,6 +86,9 @@ func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
 	case lexer.II_inz:
 		var args []shared.Node
 		args, err = e.eval_children(instruction_args)
+		if err != nil {
+			return shared.Node{}, err
+		}
 		if !stringIsTrue(args[0].Val.Value) {
 			break
 		}
@@ -102,6 +114,9 @@ func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
 	case lexer.II_dnz:
 		var args []shared.Node
 		args, err = e.eval_children(instruction_args)
+		if err != nil {
+			return shared.Node{}, err
+		}
 		if !stringIsTrue(args[0].Val.Value) {
 			break
 		}

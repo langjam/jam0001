@@ -15,6 +15,9 @@ func (e *Evaluator) eval_children(parentNode []shared.Node) ([]shared.Node, erro
 
 	for index, subnode := range parentNode {
 		out[index], err = e.eval_expr(subnode)
+		if err != nil {
+			return []shared.Node{}, err
+		}
 	}
 
 	return out, err
