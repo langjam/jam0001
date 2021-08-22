@@ -54,6 +54,16 @@ internals = {
     "list_set": setlist,
     "intrange": intrange,
     "intrange_inclusive": intrange_inclusive,
+    "string_startswith": lambda args: args[0].startswith(args[1]),
+    "string_endswith": lambda args: args[0].endswith(args[1]),
+    "string_islower": lambda args: args[0].islower(),
+    "string_isupper": lambda args: args[0].isupper(),
+    "string_lower": lambda args: args[0].lower(),
+    "string_upper": lambda args: args[0].upper(),
+    "string_removeprefix": lambda args: args[0].removeprefix(args[1]),
+    "string_removesuffix": lambda args: args[0].removesuffix(args[1]),
+    "string_replace": lambda args: args[0].replace(args[1], args[2]),
+    "string_split": lambda args: args[0].split(args[1])
 }
 
 env = {
@@ -75,4 +85,14 @@ env = {
     "list_set": StatementNode.FunctionDefinitionNode("internal"),
     "intrange": StatementNode.FunctionDefinitionNode("internal"),
     "intrange_inclusive": StatementNode.FunctionDefinitionNode("internal"),
+    "string_startswith": StatementNode.FunctionDefinitionNode("internal"),
+    "string_endswith": StatementNode.FunctionDefinitionNode("internal"),
+    "string_islower": StatementNode.FunctionDefinitionNode("internal"),
+    "string_isupper": StatementNode.FunctionDefinitionNode("internal"),
+    "string_lower": StatementNode.FunctionDefinitionNode("internal"),
+    "string_uppper": StatementNode.FunctionDefinitionNode("internal"),
+    "string_removeprefix": StatementNode.FunctionDefinitionNode("internal"),
+    "string_removesuffix": StatementNode.FunctionDefinitionNode("internal"),
+    "string_replace": StatementNode.FunctionDefinitionNode("internal"),
+    "string_split": StatementNode.FunctionDefinitionNode("internal"),
 }

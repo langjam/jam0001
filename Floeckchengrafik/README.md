@@ -139,9 +139,76 @@ Note: operation can be one of the following characters: +, -, *, /, %
   1. The minimum (inclusive)
   2. The maximum (exclusive)
 
-### intrange_inclusive()
+#### intrange_inclusive()
 
 - returns a list of integers
 - args:
   1. The minmum (inclusive)
   2. The maximum (inclusive)
+
+#### string_startswith()
+
+- Checks if the string starts with a given prefix
+- args:
+  1. The string to check
+  2. The prefix
+
+####string_endswith()
+
+- Checks if the string ends in a given suffix
+- args:
+  1. The string to check
+  2. The suffix
+
+####string_islower()
+
+- Checks if the string is lowercase
+- args:
+  1. The string to check
+
+####string_isupper()
+
+- Checks if the string is uppercase
+- args:
+  1. The string to check
+
+####string_lower()
+
+- Sets a string to lowercase
+- args:
+  1. The string to change
+
+####string_upper()
+
+- Sets a string to uppercase
+- args:
+  1. The string to change
+
+####string_removeprefix()
+
+- Removes a given prefix of a string
+- args:
+  1. The string to change
+  2. the prefix to remove
+
+####string_removesuffix()
+
+- Removes a given suffix of a string
+- args:
+  1. The string to change
+  2. The suffix to remove
+
+####string_replace()
+
+- Replaces something in a string with something else
+- args:
+  1. The String to change
+  2. The old string
+  3. The replacement string
+
+####string_split()
+
+- Splits a string by the given characters
+- args:
+ 1. The string to split
+ 2. The separator
