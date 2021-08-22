@@ -212,19 +212,14 @@ class Parser:
         if token == Token.IDENTIFIER_WORD:
             arg_name = self.parse_identifier()
         else:
-            raise UnexpectedTokenError(
-                Token.IDENTIFIER_WORD, token
-            )
-        
+            raise UnexpectedTokenError(Token.IDENTIFIER_WORD, token)
+
         token, value = self.peek_lexeme()
         if token != Token.AS:
-            raise UnexpectedTokenError(
-                Token.AS, token
-            )
+            raise UnexpectedTokenError(Token.AS, token)
         self.advance()
         arg_value = self.parse_expr()
         return (arg_name, arg_value)
-
 
     def parse_reverse_assignment(self):
         self.advance()
