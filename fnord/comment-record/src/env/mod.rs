@@ -76,10 +76,28 @@ impl Env {
             });
         }
 
+        let comment = if ty.comment.lines.len() == 1 && ty.comment.lines[0].chars().next() == Some('!') {
+            let mut comment_source = ty.comment.lines[0].split_at(1).1.trim_start().to_owned();
+            comment_source.push_str("!!");
+            let comment_query = crate::parse::parse_value(&comment_source)
+                .map_err(|e| format!("Error in comment reference: {:?}", e))?.1;
+            println!();
+            println!("Evaluating comment source: {:?}", comment_source);
+            println!("Query: {:?}", comment_query);
+            match self.evaluate(&comment_query)? {
+                Value::Comment(c) => c,
+                other => return Err(format!("Invalid type from comment reference: {:?}", other)),
+            }
+        }
+        else {
+            CommentValue::from_lines(&ty.comment.lines)
+        };
+
+
         let resolved = ResolvedType::Struct(StructType::from(StructTypeData {
             name: Some(type_name),
             fields: resolved_fields,
-            comment: CommentValue::from_lines(&ty.comment.lines),
+            comment,
         }));
 
         println!("");
@@ -120,10 +138,27 @@ impl Env {
                 else {
                     (vec![], CommentValueData::empty())
                 };
-                println!("prior comment: {:?}", comment);
-                comment.extend_with_lines(&s.comment.lines);
+
+                if s.comment.lines.len() == 1 && s.comment.lines[0].chars().next() == Some('!') {
+                    let mut comment_source = s.comment.lines[0].split_at(1).1.trim_start().to_owned();
+                    comment_source.push_str("!!");
+                    let comment_query = crate::parse::parse_value(&comment_source)
+                        .map_err(|e| format!("Error in comment reference: {:?}", e))?.1;
+                    println!();
+                    println!("Evaluating comment source: {:?}", comment_source);
+                    println!("Query: {:?}", comment_query);
+                    match self.evaluate(&comment_query)? {
+                        Value::Comment(c) => comment = c.inner().clone(),
+                        other => return Err(format!("Invalid type from comment reference: {:?}", other)),
+                    }
+                }
+                else {
+                    println!("prior comment: {:?}", comment);
+                    comment.extend_with_lines(&s.comment.lines);
+                    println!("new comment: {:?}", comment);
+                }
+
                 let comment = comment.into();
-                println!("new comment: {:?}", comment);
 
                 let field_comments = fields.into_iter()
                     .map(|f| (f.name.clone(), f.comment.inner().clone()))

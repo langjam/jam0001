@@ -39,6 +39,14 @@ swapped = Rational {
     #! pi.denominator
     denominator: pi.numerator,
 };
+
+#!pi
+notpi = {};
+
+#!pi
+struct NotPi {};
+
+notpi2 = NotPi{};
 ",
     ).unwrap();
     /*
