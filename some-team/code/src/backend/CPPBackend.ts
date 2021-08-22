@@ -36,7 +36,7 @@ emit.atoms2str_after('}')
 emit.atoms2str_after('#define HAS_ATOMS')
 emit.atoms2str_after('#include <libsl.hpp>')
 emit.main('int main() {')
-emit.aftermain('    while (1) sched_yield();')
+emit.aftermain('    slapi::main_thread_go_bye();')
 emit.aftermain('}')
 const atoms = new Set<string>(['__dummy'])
 function atom(s: string): string {
@@ -177,5 +177,5 @@ export function cppemit() {
     }
     writeFileSync('.tmp.cpp', o.join('\n'))
     execSync('clang++ .tmp.cpp -Isrc -std=c++2a -o ' + process.argv[3])
-    unlinkSync('.tmp.cpp')
+    // unlinkSync('.tmp.cpp')
 }

@@ -5,7 +5,7 @@ import { IBackend, Ref } from './backend/IBackend'
 import { CPPBackend, cppemit } from './backend/CPPBackend'
 
 if (process.argv.length != 4) {
-    console.log('Usage: ts-node src/compiler.ts <input> <output>')
+    console.log('Usage: sucrase-node src/compiler.ts <input> <output>')
     process.exit(1)
 }
 

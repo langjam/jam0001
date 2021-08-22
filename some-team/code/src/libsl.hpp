@@ -1,19 +1,19 @@
 #pragma once
 
-#include <_types/_uint64_t.h>
+#include <stdint.h>
 #include <csetjmp>
 #include <cstdint>
 #include <deque>
 #include <iostream>
 #include <functional>
 #include <mutex>
+#include <ostream>
 #include <pthread.h>
 #include <cstdlib>
 #include <sched.h>
 #include <assert.h>
 #include <string>
 #include <sstream>
-#include <sys/_types/_int64_t.h>
 #include <tuple>
 #include <unordered_map>
 #include <variant>
@@ -45,18 +45,38 @@ struct Thread {
     std::unordered_map</* wdeque name */ atom::atom, /* progress */ std::uint64_t> progressmap;
 };
 
-std::unordered_map<atom::atom, std::vector<std::tuple<ref, std::deque<ref>>>>
-    messages; // NOLINT(misc-definitions-in-headers)
-
+static std::unordered_map<atom::atom, std::vector<std::tuple<ref, std::deque<ref>>>>
+    messages;
+static std::int64_t threads_online = 1;
+static std::mutex thmutex;
 static thread_local Thread current;
 
 static void* init_thread(void* tgd) {
     std::function<ref()>* tgdtrue = reinterpret_cast<std::function<ref()>*>(tgd);
     (*tgdtrue)();
+    thmutex.lock();
+    threads_online--;
+    if (threads_online == 0) {
+        exit(0);
+    }
+    thmutex.unlock();
     pthread_exit(NULL);
 }
 
+void main_thread_go_bye() {
+    thmutex.lock();
+    threads_online--;
+    thmutex.unlock();
+    if (threads_online == 0) {
+        exit(0);
+    }
+    pthread_exit(nullptr);
+}
+
 static void new_thread_from_fn(std::function<ref()> tgd) {
+    thmutex.lock();
+    threads_online++;
+    thmutex.unlock();
     pthread_t thr;
     pthread_create(
         (pthread_t*)malloc(sizeof(pthread_t)), nullptr, init_thread, (void*)new std::function<ref()>(tgd));
