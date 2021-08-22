@@ -1,0 +1,5 @@
+\ Printing strings.
+
+." HELLO, WORLD!" SPACE ." IT'S SURELY A 5 DAY!" CR
+
+10 0 DO ." INDEX:" i . CR LOOP
