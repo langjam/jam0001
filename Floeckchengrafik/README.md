@@ -17,7 +17,7 @@
 11. [Internal Functions](#Internal-Functions-)
 12. [Booleans](#Booleans)
 13. [Classes](#classes)
-14. [DocStrings](#DocStrings)
+14. [Comments and Function Signatures](#Comments-and-Function-Signatures)
 
 ## Compiling the Interpreter
 
@@ -247,10 +247,10 @@ None is the keyword for a non-existing Value, equal to null in other languages
 
 ### Booleans
 
-#### True
-#### False
+#### true
+#### false
 
-A boolean is a value that could be either True or False
+A boolean is a value that could be either true or false
 
 ### Classes
 
@@ -266,7 +266,10 @@ You define a constructor using `comment = function ({ /* Constructor body here *
 You name the constructor comment, because the theme of [this jam](https://github.com/langjam/jam0001) is "first-class-comments", and the constructor is the `first` thing that gets executed in a `class`.
 
 
-## DocStrings
+## Comments and Function Signatures
 
-DocStrings are nedded when you want to pass a variable to a class or method.
-You can start a DocString with `/*` and end it with `*/`. To pass an argument to a class / function, you write `- param <name>` in a new line
+For a single-line-comment, write `\\`
+To start a multi-line-comment, write `/*`. To end it, write `*/`
+
+Function Signatures are nedded when you want to pass a variable to a class or method.
+You can start a Function Signature with `/*` and end it with `*/`. To pass an argument to a class / function, you write `- param <name>` in a new line
