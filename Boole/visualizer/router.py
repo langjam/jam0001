@@ -52,7 +52,9 @@ class StationGroup:
 
     @staticmethod
     def build(stations):
-        for itt in range(40000):
+        # for itt in range(40000):
+        for itt in range(10000):
+
             err = 0
             for movable in stations:
                 movable.force_x += random() * 10000 / (itt + 50)
@@ -459,8 +461,22 @@ class World:
 
         for x in range(min_x,max_x+1):
             for y in range(min_y,max_y+1):
-                if snoise2(x/10,y/10,octaves=3)>0.1 and Tile(x, y, "X") not in tiles:
-                    tiles.add(Tile(x, y, choice(["Decoration1"])))
+                if Tile(x, y, "X") not in tiles:
+                    noise_a = snoise2(x / 35, y / 35, octaves=3)
+                    if noise_a > 0.45:
+                        tiles.add(Tile(x, y, choice(["water1", "water_2","water1", "water_2", "water_lily"])))
+                    elif noise_a>0.4:
+                        tiles.add(Tile(x, y, "water_sand"))
+
+                    noise_a = snoise2(x/10,y/10,octaves=3)
+                    if noise_a > 0.4:
+                        tiles.add(Tile(x, y, choice(["Decoration1","Decoration2","Decoration3"])))
+                    elif noise_a>0.3:
+                        tiles.add(Tile(x, y, choice(["Decoration4", "Decoration4", "Decoration5"])))
+
+                    noise_a = snoise2(x / 20, y / 20, octaves=3,base=999)
+                    if noise_a > 0.5:
+                        tiles.add(Tile(x, y, "Decoration5"))
 
 
 
@@ -510,7 +526,7 @@ if __name__ == '__main__':
     stations = [Station(id, d["inputs"], d["to"], d["type"], d["name"]) for id, d in enumerate(data)]
     stations = StationGroup.build(stations)
     # stations.plot()
-    stations.scale(3)
+    stations.scale(5)
     # stations.plot()
     print("Stations placed")
 
