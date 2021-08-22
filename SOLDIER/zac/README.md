@@ -37,7 +37,7 @@ target/release/zac examples/hello.zac
 
 ![hello](.README_assets/hello.gif)
 
-### More examples
+### More Examples
 - [GoL.zac](examples/GoL.zac)
 - [fib.zac](examples/fib.zac)
 - [help.zac](examples/help.zac)
@@ -53,6 +53,39 @@ In Vim, you can use the following command to save your file:
 ```vim
 :map \t :w\|:!zac %<CR>:e<CR>
 ```
+
+### Zac Language Overview
+
+You'll have a better time getting a feel of how the language works from looking at and running examples than from reading detailed documentation. Other than comment modification, Zac is a familiar-looking scripting language.
+
+Comments come in two flavors, anonymous and named.
+
+```js
+// This is an anonymous comment because it doesn't have a #identifier as
+// the first line.
+//  
+// This cannot be referenced or modified from within the code.
+
+let #changeme = // some string
+
+// #changeme
+// This is a comment with the name #changeme.
+// 
+// In this program, it is modified twice, once above and once below
+// using the `let` expression.
+//
+// After running this program, this comment will instead contain:
+// // some string another string
+
+let another_string = // another string
+let #changeme = cat(#changeme, chr(32), another_string)
+
+// Named comments can be changed before and/or after they appear in the source code. Zac will throw
+// an error if there are two comments in a program with the same name.
+```
+
+As of now, there is no specific syntax for string literals, if you need a string literal, you can make a comment.
+
 ### Status
 This is a proof-of-concept I made in the first [Lang Jam](langjam/langjam), a 2-day competition to design a programming language around the theme `first-class comments`.
 
