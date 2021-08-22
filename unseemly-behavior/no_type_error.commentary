@@ -1,0 +1,12 @@
+
+fn bar(a: Int, b: Int) -> Int {
+    /* bigger than `plus(a, b)` */
+    plus(a, plus(8, b))
+}
+
+fn foo(x: Int, y: Int) -> Int {
+    plus(bar(y,x), times(x, bar(x, y)))
+}
+
+
+foo(2, 3)

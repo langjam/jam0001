@@ -1,0 +1,18 @@
+def main() = {
+  let x = fib(11)
+  print(x)
+
+  print(if (1) myfunc(2, 10) else fib(10))
+
+  countDown(10)
+
+  square(fib(10))<#1> - 1000
+}
+
+def square(x) = x * x
+
+def myfunc(foo, bar) = ((22 + 3<three>)<#a good addition> * square(10)<#square it!> + foo<this is foo> * bar)<#myfunc> - fib(10)
+
+def fib(i) = if (i) (if (i - 1) fib(i - 1) + fib(i - 2) else 1) else 0
+
+def countDown(i) = if (i<#i in countDown>) countDown(i - 1) else 0

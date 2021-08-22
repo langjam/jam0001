@@ -1,0 +1,19 @@
+[[TUTO:Loops]]
+[[In REDACTED instead of complex looping construct we only have `while`]]
+i := 0.
+while < i 0 holds print 'i = ' i.
+
+[[If multiple statements are required we have two options]]
+while < i 5 holds
+do
+    print '    i = ' i.
+    print '   2i = ' (+ i i).
+    i := + i 1
+done.
+
+[[and]]
+while < i 10 holds (
+    print '    i = ' i.
+    print 'i + i = ' (+ i i).
+    i := + i 1
+).

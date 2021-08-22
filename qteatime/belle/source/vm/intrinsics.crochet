@@ -1,0 +1,79 @@
+% crochet
+
+command (A is b-integer) + (B is b-integer) = new b-integer(A.value + B.value);
+command (A is b-integer) - (B is b-integer) = new b-integer(A.value - B.value);
+command (A is b-integer) / (B is b-integer) = new b-integer(A.value divided-by: B.value);
+command (A is b-integer) % (B is b-integer) = new b-integer(A.value % B.value);
+command (A is b-integer) * (B is b-integer) = new b-integer(A.value * B.value);
+command (A is b-integer) ** (B is b-integer) = new b-integer(A.value ** B.value);
+
+implement equality for value;
+command (A is value) === (B is value) = A =:= B;
+command (A is b-integer) === (B is b-integer) = A.value === B.value;
+command (A is b-string) === (B is b-string) = A.value === B.value;
+command (A is b-atom) === (B is b-atom) = A.name === B.name;
+
+implement total-ordering for b-integer;
+command (A is b-integer) < (B is b-integer) = A.value < B.value;
+command (A is b-integer) > (B is b-integer) = A.value > B.value;
+
+command (A is b-atom) and (B is b-atom) = ((A as boolean) and (B as boolean)) as b-atom;
+command (A is b-atom) or (B is b-atom) = ((A as boolean) or (B as boolean)) as b-atom;
+command not (A is b-atom) = (not (A as boolean)) as b-atom;
+
+command b-stream head = self.value first;
+command b-stream tail = self.value rest;
+command b-stream prepend: Value = new b-stream(self.value prepend: Value);
+command b-stream append: Value = new b-stream(self.value append: Value);
+command b-stream ++ (That is b-stream) = new b-stream(self.value ++ That.value);
+command b-stream last = (self as list) last;
+command b-stream reverse = new b-stream((self as list) reverse as stream);
+command b-stream as list = self.value as list;
+
+command true as b-atom = new b-atom("true");
+command false as b-atom = new b-atom("false");
+
+command form as value = new b-form(self);
+command native-value-form as value = self.value;
+
+command b-integer to-output = self.value to-text;
+command b-string to-output = self.value;
+command b-stream to-output =
+  self.value
+    |> _ as list
+    |> _ map: (_ to-output)
+    |> _ as interpolation;
+command b-atom to-output = "#[self.name]";
+command b-form to-output = self.form to-output;
+command b-procedure to-output = "<procedure>";
+command b-block to-output = "\[[self.forms map: (_ to-output) |> _ as interpolation]\]";
+command b-box to-output = "<box>";
+
+command form--rule to-output = "<rule>";
+command form--variable to-output = "%[self.name]";
+command form--number to-output = self.digits;
+command form--atom to-output = "#[self.contents]";
+command form--string to-output = "\"[self.contents]\"";
+command form--block to-output = "\[[self.expressions map: (_ to-output) | flatten-into-plain-text]\]";
+command form--text to-output = self.contents;
+command native-value-form to-output = self.value to-output;
+
+command value to-pretty-output = self to-output;
+command b-stream to-pretty-output =
+  self.value
+  |> _ as list
+  |> _ map: (_ to-output)
+  |> _ intersperse: ", "
+  |> _ prepend: "\["
+  |> _ append: "\]"
+  |> _ as interpolation;
+
+command b-integer as text = self.value to-text;
+command b-string as text = self.value;
+command b-atom as text = self.name;
+
+command b-atom as boolean =
+  condition
+    when self.name === "true" => true;
+    when self.name === "false" => false;
+  end;

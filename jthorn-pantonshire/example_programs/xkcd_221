@@ -1,0 +1,9 @@
+// A function which randoms then returns it
+function getRandomNumber() {
+    return 4;
+}
+
+// A function which getRandomNumbers then prints it
+function main() {
+    console.log(getRandomNumber());
+}

@@ -1,0 +1,7 @@
+/*
+ * @name "While Loops"
+ */
+
+while true {
+    println("Infinite loop baby!")
+}

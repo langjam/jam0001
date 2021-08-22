@@ -1,0 +1,28 @@
+{
+  "name": "belle",
+  "target": "browser",
+  "native_sources": ["native/native.js"],
+  "sources": [
+    "source/extensions.crochet",
+    "source/grammar/belle.lingua",
+    "source/0-types.crochet",
+    "source/vm/parser.crochet",
+    "source/vm/pretty-print.crochet",
+    "source/vm/evaluator.crochet",
+    "source/vm/intrinsics.crochet",
+    "source/vm/primitives.crochet",
+    "source/vm/bootstrap.crochet",
+    "source/ide/html.crochet",
+    "source/ide/ide.crochet",
+    "source/main.crochet"
+  ],
+  "dependencies": [
+    "crochet.core",
+    "crochet.text.parsing.lingua",
+    "crochet.debug"
+  ],
+  "capabilities": {
+    "requires": [],
+    "provides": []
+  }
+}

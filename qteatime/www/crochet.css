@@ -1,0 +1,265 @@
+@keyframes show {
+  from {
+    opacity: 0;
+    left: -100;
+  }
+
+  to {
+    opacity: 1;
+    left: 0;
+  }
+}
+
+@keyframes hide-not-selected {
+  from {
+    max-height: 3em;
+    opacity: 1;
+  }
+
+  to {
+    max-height: 0em;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #fafafa;
+}
+
+#crochet-container {
+  --primary: #c44569;
+}
+
+#crochet-container h1,
+#crochet-container h2,
+#crochet-container p,
+#crochet-container header,
+#crochet-container strong,
+#crochet-container em {
+  font-size: 100%;
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+  font-style: normal;
+}
+
+em.novella-element,
+strong.novella-element {
+  display: inline-block;
+}
+
+#crochet-container {
+  background: #fafafa;
+  color: #424242;
+  margin: 0;
+  font-family: Lora, "serif";
+  font-size: 20px;
+  padding: 3em 2em;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+@media screen and (max-width: 400px) {
+  #crochet-container {
+    font-size: 16px;
+  }
+}
+
+#crochet {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1em 1.5em;
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+#crochet > .novella-element {
+  scroll-snap-align: start;
+}
+
+.novella-element {
+  display: block;
+}
+
+.novella-text {
+  display: inline;
+}
+
+.novella-stack {
+  position: relative;
+}
+
+.novella-stack > .novella-element {
+  position: absolute;
+}
+
+.novella-paragraph {
+  margin-bottom: 1.5em;
+}
+
+.novella-divider {
+  display: block;
+  width: 50%;
+  height: 2px;
+  margin: 2em auto 2em auto;
+  background: #ddd;
+  border: none;
+}
+
+.novella-mono {
+  white-space: pre-wrap;
+  font-family: monospace;
+  padding: 0 2em;
+  margin-bottom: 1.5em;
+}
+
+.novella-header {
+  margin-bottom: 2em;
+}
+.novella-header .novella-title {
+  margin: 0;
+}
+.novella-header .novella-subtitle {
+  margin: 0;
+}
+
+.novella-title {
+  font-family: "PT Sans Caption", sans-serif;
+  font-weight: bold;
+  font-size: 1.8em;
+}
+
+.novella-subtitle {
+  font-family: "PT Sans Caption", sans-serif;
+  font-weight: normal;
+  font-size: 1.3em;
+  color: #777;
+  margin-bottom: 1.5em;
+}
+
+.crochet-error {
+  white-space: pre-wrap;
+  font-family: monospace;
+  color: #d35;
+  background: rgba(250, 250, 250, 0.9);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  padding: 3em;
+  align-items: center;
+}
+
+.crochet-error::after {
+  content: " ";
+  display: block;
+  height: 3em;
+}
+
+.novella-menu {
+  display: flex;
+  margin: 2em 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-top: 3px solid #ececea;
+  padding-top: 0.5em;
+}
+
+.novella-button {
+  cursor: pointer;
+  padding: 0.3em 1em;
+  margin-bottom: 0.5em;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  transition: all 250ms ease-out;
+
+  font: inherit;
+  text-align: inherit;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.novella-button::before {
+  content: "\f105";
+  margin-right: 0.5em;
+  font-family: "Font Awesome 5 Free";
+  opacity: 0.5;
+}
+
+.novella-button:hover::before,
+.novella-button[data-selected="true"]::before {
+  opacity: 1;
+}
+
+.novella-button:hover:not([data-selected]),
+.novella-button[data-selected="true"] {
+  padding-left: 2em;
+  font-weight: bold;
+  background: #f3f3f3;
+  color: var(--primary);
+}
+
+.novella-button[data-selected] {
+  cursor: default;
+}
+
+.novella-menu > .novella-button[data-selected="false"] {
+  overflow: hidden;
+  animation: hide-not-selected 250ms ease-in forwards;
+}
+
+.novella-image {
+  width: 100%;
+  height: auto;
+  padding: 1em 2em;
+  margin-bottom: 1.5em;
+  border: 1px solid #ececea;
+  border-width: 1px 0 1px 0;
+  box-sizing: border-box;
+}
+
+.novella-animation {
+  position: relative;
+  transition: all ease-out 200ms;
+  margin-bottom: 1.5em;
+}
+
+.novella-animation > * {
+  opacity: 0;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+.novella-strong {
+  font-weight: bold;
+}
+
+.novella-emphasis {
+  font-style: oblique;
+}
+
+.novella-appear {
+  animation: show 250ms ease-out forwards;
+  position: relative;
+}
+
+#crochet.crochet-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

@@ -1,0 +1,70 @@
+program
+    stmt*
+
+stmt
+    function_declaration
+
+function_declaration
+    comment_specialization* return_type function_name LEFT_PARANTHESIS [argument] -> (COMMA argument) RIGHT_PARANTHESIS LEFT_BRACKET function_block RIGHT_BRACKET
+
+/ Dependent on the comment type different logic is applied.
+comment_specialization
+    SINGLE_LINE_NAME_COMMENT
+    SINGLE_LINE_TYPE_COMMENT
+
+function_block
+    function_stmt
+
+return_type
+    type
+
+function_name
+    VARNAME
+
+value
+    VARNAME
+    NUMBER
+    TEXT
+    DECIMAL
+    SINGLE_LINE_COMMENT
+    MULTI_LINE_COMMENT
+    function_call
+
+function_stmt
+    variable_initialization
+    expression SEMICOLON
+    return_stmt
+    branch
+
+return_stmt
+    RETURN value SEMICOLON
+
+expression
+    expression ADD expression
+    expression MIN expression
+    expression DIVIDE expression
+    expression MULTI expression
+    expression AND expression
+    expression OR expression
+    LEFT_PARANTHESIS expression RIGHT_PARANTHESIS
+    value
+
+variable_initialization
+    [comment_specialization]* type VARNAME EQ value SEMICOLON
+
+type
+    VARNAME
+
+function_call
+    VARNAME LEFT_PARANTHESIS [value] -> (COMMA value) RIGHT_PARANTHESIS
+
+branch
+    conditional
+/    loop
+
+conditional
+    IF LEFT_PARANTHESIS expression RIGHT_PARANTHESIS LEFT_BRACKET function_stmt RIGHT_BRACKET
+    ELIF LEFT_PARANTHESIS expression RIGHT_PARANTHESIS LEFT_BRACKET function_stmt RIGHT_BRACKET
+    ELSE LEFT_BRACKET function_stmt RIGHT_BRACKET
+
+/  

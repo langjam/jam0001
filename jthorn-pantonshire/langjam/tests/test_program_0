@@ -1,0 +1,19 @@
+//Store expressions as constants
+//constant b is 6+6
+
+//Comments are statements only
+//stores 1 in x
+
+//Native functions used in comments
+//prints "Hello World!"
+
+//First class comments
+//prints "{} World!"
+world
+
+// "Hello"
+hello
+
+hello(world)
+
+

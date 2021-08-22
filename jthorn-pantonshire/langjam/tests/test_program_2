@@ -1,0 +1,10 @@
+//This function adds 3, 4, 5 storing the result in sum, then increments sum, then prints it
+function main() {
+    hack_the_mainframe();
+}
+
+//A function which outputs a + b + c
+function add(a, b, c)
+
+//This function returns a + 1
+function increment(a)

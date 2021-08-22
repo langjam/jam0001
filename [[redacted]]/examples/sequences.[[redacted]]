@@ -1,0 +1,7 @@
+[[TUTO:Sequences]]
+[[In REDACTED `.` is the andThen operator (like `,` in C)]]
+1. 2. 3.
+[[The interesting part is that sequences of operations are also expressions]].
+(1. 2. (1. 2)). 3.
+[[And you can use them as parameters]]
+print (1. 2. 3)

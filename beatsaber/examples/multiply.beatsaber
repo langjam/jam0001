@@ -1,0 +1,17 @@
+// dec is not here
+// add is not here this is big
+// greater is not here this is big
+
+// multiply is with a and b
+// still in multiply zero is 0
+// still in multiply total is 0
+// still in multiply loopStart is 9
+b. // still in multiply b is dec
+total.a // still in multiply total is add
+b.zero // still in multiply cond is greater
+loopStart // still in multiply if cond goto is
+total // still in multiply return is
+
+// four is 4
+// five is 5
+four.five // return is multiply

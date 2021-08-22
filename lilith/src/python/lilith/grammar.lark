@@ -1,0 +1,45 @@
+%import common.WORD
+%import common.INT
+%import common.FLOAT
+%import common.ESCAPED_STRING
+%import common.WS
+%ignore WS
+
+STRING: /""".*?"""/ | /".*?"/
+
+int: INT
+float: FLOAT
+number: int | float
+
+word: WORD ("." WORD)* -> word
+
+string: STRING
+
+list: "[" (expr ("," expr)*)? "]"
+
+pair: expr ":" expr
+dict: "{" (pair ("," pair)*)? "}"
+
+atom: number
+    | word
+    | string
+    | list
+    | dict
+    | "nil" -> nil
+    | "true" -> true
+    | "false" -> false
+
+application: word "[" arguments? "]"
+
+expr: application | atom
+
+args: expr ("," args)?
+
+kwargs: pair ("," kwargs)*
+
+a_args_kwargs: args ";" kwargs
+a_args: args
+a_kwargs: kwargs
+arguments: a_args_kwargs | a_args | a_kwargs
+
+header: "!" application
