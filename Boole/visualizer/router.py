@@ -394,6 +394,7 @@ class World:
             for i in range(1, len(path) - 1):
                 for j in range(id):
                     if path[i] in self.roads[j][3]:
+                        tiles.remove(Tile(path[i][0], path[i][1], "CROSSING"))
                         tiles.add(Tile(path[i][0], path[i][1], "CROSSING"))
                         break
                 else:
