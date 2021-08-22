@@ -4,7 +4,7 @@
 Getting started
 --------
 
-To build the interpreter you can call `build.sh` or just compile `flamingo.cpp` with your favorite C++ compiler. (You need to that in this directory as `flamingo.cpp` includes some files.) You can call `flamingo` with a filename to execute the entire file; or without arguments to launch the REPL.
+To build the interpreter you can call `build.sh` or just compile `flamingo.cpp` with your favorite C++ compiler. (You need to do that in this directory as `flamingo.cpp` includes some files.) You can call `flamingo` with a filename to execute the entire file; or without arguments to launch the REPL.
 
 To print something to `stdout` you can use the builtin function `println`:
 
