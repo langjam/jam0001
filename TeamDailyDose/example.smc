@@ -1,0 +1,117 @@
+"Welcome to this SmallComment example!
+
+In SmallComment, a comment is the only datatype. It can contain anything you feel like it
+containing, and the primitives will try to make sense of your comments. What follows is
+a very minimal standard library, some basic tests to make sure it runs.
+
+The language uses a very similar syntax to Smalltalk and Self. It was from there that I
+borrowed the syntax of double quotes for comments. It doesn't matter what delimiters we use,
+as long as it's a comment, right? :^)
+
+Hope you don't mind the usage of British style punctuation after comments. :^)
+".
+
+"Functions are defined by typing in the syntax you'd use to call them, minus the target object".
+add: b (
+    me _Add: b.
+).
+
+sub: b (
+    me add: b negate.
+).
+
+negate (
+    me _Negate.
+).
+
+"Blocks are lists of statements that can be passed around. They're kind of a second data type,
+but not really since you can't do anything other than call them and pass them around. :^)".
+ifTrue: tb False: fb (
+    me _DispatchIfTruthy: tb Falsy: fb.
+).
+
+ifTrue: tb (
+    me ifTrue: tb False: [].
+).
+
+eq: other (
+    me _Eq: other.
+).
+
+print (
+    me _Print.
+).
+
+printLine (
+    me _Print.
+    "
+" _Print.
+).
+
+succ (
+    me add: "1".
+).
+
+prec (
+    me sub: "1".
+).
+
+lessThan: other (
+    me _Lt: other.
+).
+
+greaterThan: other (
+    other lessThan: me.
+).
+
+callWith: arg0 (me _CallWith: arg0.).
+callWith: arg0 With: arg1 (me _CallWith: arg0 With: arg1.).
+callWith: arg0 With: arg1 With: arg2 (me _CallWith: arg0 With: arg1 With: arg2.).
+callWith: arg0 With: arg1 With: arg2 With: arg3 (me _CallWith: arg0 With: arg1 With: arg2 With: arg3.).
+callWith: arg0 With: arg1 With: arg2 With: arg3 With: arg4 (me _CallWith: arg0 With: arg1 With: arg2 With: arg3 With: arg4.).
+
+to: target Do: block (
+    (me lessThan: target) ifTrue: [
+        block callWith: me.
+        (me succ) to: target Do: block.
+    ].
+).
+
+fib (
+    (me lessThan: "1") ifTrue: [
+        "1".
+    ] False: [
+        (me prec) fib add: me prec prec fib.
+    ].
+).
+
+"And here is the main code that uses the above code".
+
+main (
+    "Basic printing, of course".
+    "Hello world" printLine.
+    ("1" add: "2") printLine.
+    ("3" sub: "2") printLine.
+
+    "Control flow via the usage of blocks".
+    (("1" add: "1") eq: "2") ifTrue: [
+        "Hooray, math works!" printLine.
+    ] False: [
+        "Uh oh, math doesn't work!" printLine.
+    ].
+
+    "Iteration on a range".
+    "0" to: "5" Do: [| i |
+        i printLine.
+    ].
+
+    "And the classic fibonacci example".
+    "1" to: "10" Do: [| i |
+        "Fibonacci(" print.
+        i print.
+        ") is: " print.
+        i fib printLine.
+    ].
+).
+
+"Let's kick it off!" main.
