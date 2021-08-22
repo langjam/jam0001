@@ -159,7 +159,6 @@ fn step<'a>(ctx: &mut VM, instr: &mut Peekable<std::slice::Iter<'a, Box<Term>>>)
                 }
                 Keyword::Returns => {
                     if let Some(f) = instr.peek() {
-                        let dbg = eval(ctx, &*f);
                         return (eval(ctx, &*f), true);
                     }
                 }
@@ -278,19 +277,19 @@ impl std::ops::Add for Value {
         match &self {
             Self::Num(n) => match rhs {
                 Self::Num(r) => {
-                    return Self::Num(n + r);
+                    Self::Num(n + r)
                 }
                 Self::String(r) => {
-                    return Self::String(format!("{}{}", n, r));
+                    Self::String(format!("{}{}", n, r))
                 }
                 _ => panic!("Can't add types {:?} and {:?}", self, rhs),
             },
             Self::String(s) => match rhs {
                 Self::Num(r) => {
-                    return Self::String(format!("{}{}", s, r));
+                    Self::String(format!("{}{}", s, r))
                 }
                 Self::String(r) => {
-                    return Self::String(format!("{}{}", s, r));
+                    Self::String(format!("{}{}", s, r))
                 }
                 _ => panic!("Can't add types {:?} and {:?}", self, rhs),
             },
@@ -307,7 +306,7 @@ impl std::ops::Sub for Value {
         match &self {
             Self::Num(n) => match rhs {
                 Self::Num(r) => {
-                    return Self::Num(n - r);
+                    Self::Num(n - r)
                 }
                 _ => panic!("Can't subtract types {:?} and {:?}", self, rhs),
             },
@@ -323,7 +322,7 @@ impl std::ops::Mul for Value {
         match &self {
             Self::Num(n) => match rhs {
                 Self::Num(r) => {
-                    return Self::Num(n * r);
+                    Self::Num(n * r)
                 }
                 _ => panic!("Can't add types {:?} and {:?}", self, rhs),
             },
@@ -339,7 +338,7 @@ impl std::ops::Div for Value {
         match &self {
             Self::Num(n) => match rhs {
                 Self::Num(r) => {
-                    return Self::Num(n + r);
+                    Self::Num(n / r)
                 }
                 _ => panic!("Can't add types {:?} and {:?}", self, rhs),
             },
