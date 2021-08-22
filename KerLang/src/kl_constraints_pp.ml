@@ -1,83 +1,51 @@
-
 open Kl_constraints
 
 let pp_value oc (value: value) = 
   match value with
-  | Arg(id) -> Printf.fprintf oc "x%d" id
-  | Cst(value) -> Printf.fprintf oc "%d" value
-  | Var(name) -> Printf.fprintf oc "%s" name
-  | Hole -> Printf.fprintf oc "%s" "something"
+  | Arg id -> Printf.fprintf oc "x%d" id
+  | Cst value -> Printf.fprintf oc "%d" value
+  | Var name -> Printf.fprintf oc "%s" name
+  | Hole -> Printf.fprintf oc "{??}"
 
-let pp_operation oc (operation: operation) = 
+let pp_operation oc (operation : operation) = 
   match operation with
-  | If(cond, ifcase, elsecase) -> begin
-      Printf.fprintf oc "%s" "(if ";
-      pp_value oc cond;
-      Printf.fprintf oc "%s" " then ";
-      pp_value oc ifcase;
-      Printf.fprintf oc "%s" " else ";
-      pp_value oc elsecase;
-      Printf.fprintf oc "%s" ")"
-    end
-  | Sum(a, b) -> begin
-      Printf.fprintf oc "%s" "(";
-      pp_value oc a;
-      Printf.fprintf oc "%s" " + ";
-      pp_value oc b;
-      Printf.fprintf oc "%s" ")"
-    end
-  | Diff(a, b) -> begin
-      Printf.fprintf oc "%s" "(";
-      pp_value oc a;
-      Printf.fprintf oc "%s" " - ";
-      pp_value oc b;
-      Printf.fprintf oc "%s" ")"
-    end
-  | Prod(a, b) -> begin
-      Printf.fprintf oc "%s" "(";
-      pp_value oc a;
-      Printf.fprintf oc "%s" " * ";
-      pp_value oc b;
-      Printf.fprintf oc "%s" ")"
-    end
-  | Div(a, b) -> begin
-      Printf.fprintf oc "%s" "(";
-      pp_value oc a;
-      Printf.fprintf oc "%s" " / ";
-      pp_value oc b;
-      Printf.fprintf oc "%s" ")"
-    end
-  | App(func_name, value_list) -> begin
-      Printf.fprintf oc "(%s" func_name;
-      List.iter (fun value -> Printf.fprintf oc "%s" " "; pp_value oc value) value_list;
-      Printf.fprintf oc "%s" ")"
-    end
-  | Rec(value_list) -> begin
-      Printf.fprintf oc "%s" "(recursive_call";
-      List.iter (fun value -> Printf.fprintf oc "%s" " "; pp_value oc value) value_list;
-      Printf.fprintf oc "%s" ")"
-    end
+  | If (cond, ifcase, elsecase) ->
+    Printf.fprintf oc "(if %a then %a else %a)"
+      pp_value cond
+      pp_value ifcase
+      pp_value elsecase
+  | Sum (a, b) ->
+    Printf.fprintf oc "(%a + %a)" pp_value a pp_value b
+  | Diff (a, b) ->
+    Printf.fprintf oc "(%a - %a)" pp_value a pp_value b
+  | Prod (a, b) ->
+    Printf.fprintf oc "(%a * %a)" pp_value a pp_value b
+  | Div (a, b) ->
+    Printf.fprintf oc "(%a / %a)" pp_value a pp_value b
+  | App (func_name, value_list) ->
+    Printf.fprintf oc "(%s " func_name;
+    List.iter (fun value -> Printf.fprintf oc "%a " pp_value value) value_list;
+    Printf.fprintf oc ")"
+  | Rec value_list ->
+    Printf.fprintf oc "(rec ";
+    List.iter (fun value -> Printf.fprintf oc "%a " pp_value value) value_list;
+    Printf.fprintf oc ")"
 
 let pp_expr oc (expr: expr) = 
   match expr with
-  | Leaf(value) -> pp_value oc value
-  | Node(operation) -> pp_operation oc operation
+  | Leaf value -> pp_value oc value
+  | Node operation -> pp_operation oc operation
 
 let pp_cconstraint oc (cc: cconstraint) =
   match cc with
-  | Takes(how_many_args) -> 
+  | Takes how_many_args ->
     Printf.fprintf oc "- Takes %d arguments\n" how_many_args
-  | Let(var_name, expr) -> begin
-      Printf.fprintf oc "- Let %s be " var_name;
-      pp_expr oc expr
-    end
-  | Returns(expr) -> begin
-      Printf.fprintf oc "%s" "- Returns ";
-      pp_expr oc expr
-    end
-  | Uses(expr_list) -> begin
-      Printf.fprintf oc "%s" "- Uses";
-      List.iter (fun expr -> Printf.fprintf oc "%s" "\n  * "; pp_expr oc expr) expr_list;
-    end
-  | Nothing -> 
+  | Let (var_name, expr) ->
+    Printf.fprintf oc "- Let %s be %a" var_name pp_expr expr
+  | Returns expr ->
+    Printf.fprintf oc "- Returns %a" pp_expr expr
+  | Uses expr_list ->
+    Printf.fprintf oc "- Uses";
+    List.iter (fun expr -> Printf.fprintf oc "%s" "\n  * "; pp_expr oc expr) expr_list
+  | Nothing ->
     Printf.fprintf oc "- Has comments for humans\n"
