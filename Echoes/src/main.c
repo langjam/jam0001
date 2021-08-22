@@ -85,11 +85,12 @@ static void print_value(struct Value *value) {
             print_indent(); printf(":%s\n", value->as.routine.parameters[i]);
         }
         --indent;
-        print_indent(); printf("node\n");
+        print_indent(); printf("nodes\n");
+        ++indent;
         for (size_t i = 0; value->as.routine.block[i]; ++i) {
             print_node(value->as.routine.block[i]);
         }
-        --indent;
+        indent -= 2;
         break;
     default:
         assert(0);
