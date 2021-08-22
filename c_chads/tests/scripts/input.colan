@@ -1,18 +1,9 @@
-domath := proc(x : int; y : int) int {
-    i := 2 * y;
-    z := 12 * i;
-    print("Math works!"; ((x - (y >= 5)*8) - z) );
-    return 42;
-};
+main := proc () void {
+    if (a == b) {
 
-dounary := proc(x : int) int {
-    print(!-(x * x + 12));
-    return "Bob";
-};
+    }
+    else if (x) {
 
-main := proc () int {
-    if (1)
-        print(domath(12; .2))
-    else if (2)
-        print(dounary(032 << 3 >> 2));
+    }
+    else {}
 };
