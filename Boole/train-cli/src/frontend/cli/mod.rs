@@ -20,6 +20,11 @@ impl CliRunner {
             if !vm.do_current_step(arc_self.clone()).await.expect("failed") {
                 break
             }
+
+            let mut input_text = String::new();
+            io::stdin()
+                .read_line(&mut input_text)
+                .expect("failed to read from stdin");
         }
     }
 }
@@ -58,7 +63,7 @@ impl Communicator for CliRunner {
     }
 
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), train::interface::CommunicatorError> {
-        log::debug!("simulation says: train {} moved from ({} track {}) to ({} track {})", train.identifier, from_station.name, start_track, to_station.name, end_track);
+        log::debug!("simulation says: train {} {:?} moved from ({} track {}) to ({} track {})", train.identifier, train.second_class_passengers, from_station.name, start_track, to_station.name, end_track);
         Ok(())
     }
 
