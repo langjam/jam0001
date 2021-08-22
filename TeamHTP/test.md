@@ -7,6 +7,8 @@
 # Things I'm all out of
 *  bubble gum
 
-[TodoList]: KickAss (
-  [self CheckItem:"**kick ass**"]
+[TodoList]:: (
+    at: k at: i at: j
+        | x y |
+        ^42
 )

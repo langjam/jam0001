@@ -2,11 +2,12 @@
 
 method: message temps? exprs
 
-message: WORD | OP WORD | (KEYWORD WORD)+
+message: WORD -> unary_message | OP WORD -> binary_message | message_pair+ -> keyword_message
+message_pair: KEYWORD WORD
 
-exprs: expr ("." expr)* "."?
+?exprs: expr ("." expr)* "."?
 
-expr: answer | assign
+?expr: answer | assign
 
 answer: "^" expr
 
@@ -18,7 +19,7 @@ keypair: KEYWORD binary
 ?binary: [binary OP] unary
 ?unary: unary WORD | primary
 
-primary: array | block | map | scalar | NUMBER | STRING | WORD
+?primary: array | block | map | scalar | NUMBER -> number | STRING -> string | WORD -> word
 
 array: "@{" primary* "}"
 
@@ -36,7 +37,7 @@ PARAM: ":" WORD
 
 SYMBOL: "#" WORD
 
-OP: ("~"|"@"|"%"|"&"|"*"|"-"|"="|"+"|"\\"|"|"|","|"<"|">"|"/"|"/")+
+OP: ("~"|"@"|"%"|"&"|"*"|"-"|"="|"+"|"\\"|"|"|","|"<"|">"|"/"|"?")+
 
 NUMBER: DIGIT+ ["." DIGIT+]
 

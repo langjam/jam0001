@@ -6,10 +6,6 @@ import Runtime from './Runtime'
 import {mdastToMd} from './Markdown'
 import {commitToDisk} from "./Runtime/File";
 
-import {get_parser} from './mouthful'
-
-console.log(get_parser)
-
 const srcPath = process.argv[2];
 
 console.log(srcPath)
