@@ -74,6 +74,17 @@ function main()
 function average(a, b)
 ```
 
+A function definition may optionally have a "code" block at the end. This code does nothing ;)
+
+The function below returns 5, not 10:
+
+```
+//This function returns 5
+function foo() {
+    return 10;
+}
+```
+
 ### Main Function
 The entry point to a program is a function called `main` which takes no arguments.
 
@@ -82,7 +93,7 @@ Variables can be set using `stores <expression> in <variable name>`.
 
 ```
 //stores 1 in x
-function x()
+function storeExample()
 ```
 
 ### Chaining statements
