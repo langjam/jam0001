@@ -106,7 +106,7 @@ impl Operation {
             Operation::Nothing => 1,
             Operation::PrintString => 1,
             Operation::PrintNumber => 1,
-            Operation::Input => 0,
+            Operation::Input => 1,
             Operation::SwitchEqZero => 1,
             Operation::SwitchGteZero => 1,
             Operation::SwitchEmpty => 1,

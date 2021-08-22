@@ -2,7 +2,7 @@ use std::collections::{HashMap, VecDeque};
 use std::ops::Deref;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use crate::ast::{Program, Station, Train};
+use crate::ast::{Program, Station, Train, SecondClassPassenger};
 use crate::interface::Communicator;
 use crate::operations::Operation;
 
@@ -149,8 +149,9 @@ impl Data {
                     if let Some(x) = station.trains[0].front() {
                         let mut t = x.lock()?;
                         if let Ok(other) = interface.ask_for_input() {
-                            for (x, y) in t.train.second_class_passengers.iter_mut().zip(other) {
-                                x.data = y;
+                            for num in other {
+                                t.train.second_class_passengers.push(SecondClassPassenger{ name: String::from("input"), data: num });
+                                t.train.second_class_passengers.rotate_right(1);
                             }
                             did_work = true;
                         } else {

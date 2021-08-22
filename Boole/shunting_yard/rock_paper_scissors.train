@@ -1,0 +1,243 @@
+[LOCOMOTIVE]
+start at input1d1 track 1
+[FIRST CLASS]
+[SECOND CLASS]
+
+{input1d1}
+operation: nothing
+track 1: go to input1 track 1
+
+{input1}
+operation: input
+track 1: go to plusinput2 track 1
+
+[LOCOMOTIVE]
+start at plusinput2 track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 0
+
+{plusinput2}
+operation: add
+track 1: go to finalcmp track 1
+track 2: go to plusoutput2 track 2
+
+{plusoutput2}
+operation: add
+track 1: go to printstr2 track 1
+track 2: go to input2d1 track 1
+
+{input2d1}
+operation: nothing
+track 1: go to input2 track 1
+
+{input2}
+operation: input
+track 1: go to finalcmp track 2
+
+[LOCOMOTIVE]
+start at plusoutput2 track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 80
+x: 108
+x: 97
+x: 121
+x: 101
+x: 114
+x: 32
+x: 50
+x: 44
+x: 32
+x: 112
+x: 108
+x: 97
+x: 121
+x: 33
+
+[LOCOMOTIVE]
+start at printstr2 track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 49
+x: 58
+x: 32
+x: 82
+x: 111
+x: 99
+x: 107
+x: 44
+x: 32
+x: 50
+x: 58
+x: 32
+x: 80
+x: 97
+x: 112
+x: 101
+x: 114
+x: 44
+x: 32
+x: 51
+x: 58
+x: 32
+x: 83
+x: 99
+x: 105
+x: 115
+x: 115
+x: 111
+x: 114
+x: 115
+
+[LOCOMOTIVE]
+start at printstr track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 80
+x: 108
+x: 97
+x: 121
+x: 101
+x: 114
+x: 32
+x: 49
+x: 44
+x: 32
+x: 112
+x: 108
+x: 97
+x: 121
+x: 33
+
+{printstr}
+operation: print string
+track 1: go to yeet track 1
+
+{printstr2}
+operation: print string
+track 1: go to yeet track 1
+
+{printnum}
+operation: print number
+track 1: go to yeet track 1
+
+{yeet}
+operation: delete
+
+
+
+{finalcmp}
+operation: sub
+track 1: go to finalcorr track 1
+track 2: go to yeet track 1
+
+{finalcorr}
+operation: switch gte
+track 1: go to cmpzero track 1
+track 2: go to finaladd track 1
+
+[LOCOMOTIVE]
+start at finaladd track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 3
+
+{finaladd}
+operation: add
+track 1: go to cmpzero track 1
+track 2: go to finaladd track 2
+
+
+{cmpzero}
+operation: switch eq
+track 1: go to drawlock track 2
+track 2: go to subone track 1
+
+[LOCOMOTIVE]
+start at subone track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 1
+
+{subone}
+operation: sub
+track 1: go to cmpone track 1
+track 2: go to subone track 2
+
+{cmpone}
+operation: switch eq
+track 1: go to p1lock track 2
+track 2: go to p2lock track 2
+
+{drawlock}
+operation: add
+track 1: go to printstr track 1
+track 2: go to yeet track 1
+
+[LOCOMOTIVE]
+start at drawlock track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 68
+x: 114
+x: 97
+x: 119
+x: 33
+
+{p1lock}
+operation: add
+track 1: go to printstr track 1
+track 2: go to yeet track 1
+
+[LOCOMOTIVE]
+start at p1lock track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 70
+x: 105
+x: 114
+x: 115
+x: 116
+x: 32
+x: 112
+x: 108
+x: 97
+x: 121
+x: 101
+x: 114
+x: 32
+x: 119
+x: 105
+x: 110
+x: 115
+x: 33
+
+{p2lock}
+operation: add
+track 1: go to printstr track 1
+track 2: go to yeet track 1
+
+[LOCOMOTIVE]
+start at p2lock track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 82
+x: 101
+x: 99
+x: 111
+x: 110
+x: 100
+x: 32
+x: 112
+x: 108
+x: 97
+x: 121
+x: 101
+x: 114
+x: 32
+x: 119
+x: 105
+x: 110
+x: 115
+x: 33
