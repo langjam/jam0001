@@ -43,6 +43,7 @@ library dyniec-lib
                     , parsec
     exposed-modules: Syntax
                    , Parser
+                   , Eval
 Test-Suite dyniec-test
     main-is:        test.hs
     hs-source-dirs: test

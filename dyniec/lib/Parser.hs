@@ -15,7 +15,7 @@ type Parser a = ParsecT T.Text () Identity a
 keywords :: [T.Text]
 keywords = ["in", "let"]
 primops :: [T.Text]
-primops = ["add"]
+primops = ["succ","add"]
 integer :: Parser Integer
 integer = do
     sign <- optionMaybe $ char '-'
