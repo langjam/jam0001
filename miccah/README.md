@@ -5,12 +5,16 @@ If the name of this programming language doesn't make it clear, this is an
 translates vine quotes into commands that run in a VM.
 
 ## Building and Running
+Currently only *nix platforms are supported.
+
 ```
 cd no-one-understands-my-vine-references-so-i-made-this-programming-language
 cargo build
 
 ./target/debug/no-one-understands-my-vine-references-so-i-made-this-programming-language $PATH_TO_SOURCE_FILE
 ```
+
+There is an example program in `no-one-understands-my-vine-references-so-i-made-this-programming-language/example.vine`.
 
 ## VM
 The Virtual Machine for this language is extremely simple: two 64-bit
@@ -23,7 +27,10 @@ function (however this feature is currently only partially implemented).
 ### Opcodes
 The opcodes are listed below, and are quite simple. Each opcode does
 exactly one thing; there are no parameters. Additionally, some of the
-opcodes are not yet implemented.
+opcodes are not yet implemented. The opcodes are case and punctuation
+sensitive.
+
+Additional input between or surrounding the opcodes are ignored.
 
 | Opcode | Description | Implemented? |
 |:------ |:----------- | ------------ |
@@ -62,3 +69,7 @@ opcodes are not yet implemented.
 | Wow | swap `primary` and `secondary` | yes |
 | I'm in me mum's car | begin function definition | partial |
 | Get out me car | end function definition | partial |
+
+## LangJam Metadata
+This language was created for LangJam0001. The prompt was "first class
+comments" and so I interpreted that as "funny quotes."

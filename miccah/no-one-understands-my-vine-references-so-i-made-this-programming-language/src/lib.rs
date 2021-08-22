@@ -117,7 +117,7 @@ impl<'i> Lexer<'i> {
                     .map(|idx| (kind, idx, idx + comment.len()))
             })
             .min_by_key(|&(_, start, _)| start)
-            .map(|(kind, _, stop)| dbg!((*kind, stop)))
+            .map(|(kind, _, stop)| ((*kind, stop)))
             .unwrap_or((TokenKind::Eof, 0));
         self.position += len;
         kind
