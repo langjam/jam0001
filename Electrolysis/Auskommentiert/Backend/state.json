@@ -1,5 +1,1 @@
-<<<<<<< HEAD
 {"counter":10,"posts":{"topics":[{"id":"1","title":"simpleLoop","content":"","children":[{"id":"2","content":"0","children":[],"upvotes":0,"date":1629653465941},{"id":"3","content":"while ${get comment 1 up} < 10:","children":[{"id":"4","content":"log(${get comment 1 left 1 up})","children":[],"upvotes":0,"date":1629653479929},{"id":"5","content":"set {get comment 1 left 1 up} to ${get comment 1 left 1 up} + 1","children":[],"upvotes":0,"date":1629653486578}],"upvotes":0,"date":1629653471261}],"upvotes":0,"date":1629653448917},{"id":"6","title":"swapExample","content":"","children":[{"id":"7","content":"log('Hey')","children":[],"upvotes":0,"date":1629653521445},{"id":"8","content":"log('Ho')","children":[],"upvotes":0,"date":1629653528782},{"id":"9","content":"swap {get 2 comments above 1 up}","children":[],"upvotes":0,"date":1629653540054}],"upvotes":0,"date":1629653509055}]}}
-=======
-{"counter":8,"posts":{"topics":[{"id":3,"title":"test","content":"","children":[{"id":"7","content":"test2","children":[],"upvotes":7,"date":1629652371378}],"upvotes":3,"date":1629650836633}]}}
->>>>>>> 04169075336ea9b9f015b0fa567073b80049ed66

@@ -10,10 +10,13 @@ comments.
 
 ## Execution
 
+First, you have to install `npm`.
+
 In order do execute the language interpreter, you have to do the following:
 
 1. Go to Auskommentiert/Backend and run `npm install && npm run start_webserver`
-2. Go to Auskommntiert/Frontend and `npm install && npm start`
+2. Open another Terminal
+3. Go to Auskommentiert/Frontend and `npm install && npm start`
 
 After you have installed all dependencies and started the server, you can pick
 one topic in the frontend. You may find some example Topics. If you want to
