@@ -23,10 +23,10 @@ myclass = class({
          * This is the hworld-function of the myclass-Class
          */
 
-         out(hw)?
+         out("hw")?
     })?
 })?
 
 inst = myclass("Hello")?
-\\ hworld()?
+inst.hworld()?
 
