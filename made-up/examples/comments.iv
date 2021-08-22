@@ -1,0 +1,10 @@
+// this is about x
+def x = 1 + /* this is about x */ 2 // this is about 2
+; // this is also about x
+
+/* yaaa */
+def y = 3; // oyyy
+
+
+RT.println $ RT.E x;
+y;
