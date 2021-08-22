@@ -7,3 +7,4 @@ You'll need ruby installed to run Uncom, you'll also need [ruby-sdl2](https://ru
 
 ## Usage
 Run ```ruby uncom.rb file.uncom``` to run a program, or just run ```ruby uncom.rb``` for the repl
+I'd recommend reading ```tutorial.uncom``` and following along in the repl to get an idea of how it works

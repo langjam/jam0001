@@ -519,8 +519,23 @@ end
 begin
 	require "sdl2"
 
+	$has_sdl2 = true
+
 	[ # sdl2 words
 	["has-sdl2?", [], lambda { true }],
+	["make-window", [], lambda {
+		SDL2.init(SDL2::INIT_EVERYTHING)
+		$window = SDL2::Window.create("Uncom",
+			SDL2::Window::POS_UNDEFINED,
+			SDL2::Window::POS_UNDEFINED,
+			480, 480, SDL2::Window::Flags::RESIZABLE)
+		$renderer = $window.create_renderer(-1, SDL2::Renderer::Flags::TARGETTEXTURE)
+		$framebuffer = $renderer.create_texture(
+			SDL2::PixelFormat::RGBA8888, SDL2::Texture::ACCESS_TARGET, 480, 480)
+
+		# TODO: event loop go here
+		:no
+	}]
 
 	].each {|word|
 		$uncom_words[word[0]] = UnFunc.new(*word)
