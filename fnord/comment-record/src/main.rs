@@ -148,6 +148,14 @@ notpi2 = NotPi{};
 
     if let Some(value) = result {
         debug!(" => {:?}", value);
-        println!(" => {}", value);
+        print!(" => ");
+        let value_str = value.to_string();
+        if value_str.find('\n').is_some() {
+            println!();
+            print!("{}", value_str);
+        }
+        else {
+            println!("{}", value_str);
+        }
     }
 }
