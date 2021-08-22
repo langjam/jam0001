@@ -245,7 +245,7 @@ let rec compile_yolo decl = function
     try let res, _ = complete_holes decl q e in res
     with Failure _ -> compile_yolo decl q
 
-let rec compile_function ftable { result; declarations; _ } =
+let rec compile_function (ftable : Kl_IR.ftable) { result; declarations; _ } =
   match result with
   | Function e -> compile_expr ftable declarations e
   | Yolo l -> compile_expr ftable declarations (compile_yolo declarations l)
@@ -258,7 +258,7 @@ and compile_value ftable env = function
   | Arg x -> Kl_IR.Var (x - 1)
   | Cst n -> Kl_IR.Cst n
   | Var x -> List.assoc x env |> compile_expr ftable env
-  | Hole -> print_compile_error "remaning hole in expression, can't compile it down to Kl_IR"
+  | Hole -> print_compile_error "remaining hole in expression, can't compile it down to Kl_IR"
 
 and compile_operation ftable env =
   let compile_ex = compile_expr ftable env in
@@ -274,5 +274,5 @@ and compile_operation ftable env =
   | Div (e1, e2) ->
     Kl_IR.div (compile_ex e1) (compile_ex e2)
   | App (fname, vals) ->
-    Kl_IR.(app (func ~name:(Some fname) (List.assoc fname ftable)) (List.map compile_ex vals))
-  | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map compile_ex vs)
+    Kl_IR.app (FUN fname) (List.map compile_val vals)
+  | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map compile_val vs)
