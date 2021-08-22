@@ -12,6 +12,8 @@ from abstract_syntax_trees import (
     Stmt,
     Stmts,
     Variable,
+    reset_functions,
+    reset_env
 )
 from tokenise import Token, Tokeniser
 
@@ -30,6 +32,8 @@ class Parser:
         self.get_token = get_token
         self.current_lexeme = None
         self.next_lexeme = self.get_token()
+        reset_functions()
+        reset_env()
 
     def peek_lexeme(self):
         return self.next_lexeme
@@ -467,61 +471,61 @@ if __name__ == "__main__":
 
         return generator().__next__
 
-    # parser = Parser(program())
-    # parser.parse()
+    parser = Parser(program())
+    parser.parse()
 
-    # parser = Parser(program(set_var_to_constant))
-    # parser.parse()
+    parser = Parser(program(set_var_to_constant))
+    parser.parse()
 
-    # parser = Parser(program(set_var_to_var))
-    # parser.parse()
+    parser = Parser(program(set_var_to_var))
+    parser.parse()
 
-    # parser = Parser(program(set_var_to_var_binop))
-    # parser.parse()
+    parser = Parser(program(set_var_to_var_binop))
+    parser.parse()
 
-    # parser = Parser(program(if_stmt_compare_constants))
-    # parser.parse()
+    parser = Parser(program(if_stmt_compare_constants))
+    parser.parse()
 
-    # parser = Parser(program(if_stmt_compare_variable_and_constant))
-    # parser.parse()
+    parser = Parser(program(if_stmt_compare_variable_and_constant))
+    parser.parse()
 
-    # parser = Parser(program(if_stmt_compare_variable_and_variable))
-    # parser.parse()
+    parser = Parser(program(if_stmt_compare_variable_and_variable))
+    parser.parse()
 
-    # parser = Parser(program(if_stmt_compare_constants_and_leave))
-    # parser.parse()
+    parser = Parser(program(if_stmt_compare_constants_and_leave))
+    parser.parse()
 
-    # parser = Parser(
-    #     program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
-    # )
-    # parser.parse()
+    parser = Parser(
+        program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
+    )
+    parser.parse()
 
-    # parser = Parser(program(function_no_params_no_return))
-    # parser.parse()
+    parser = Parser(program(function_no_params_no_return))
+    parser.parse()
 
-    # parser = Parser(program(function_params_no_return))
-    # parser.parse()
+    parser = Parser(program(function_params_no_return))
+    parser.parse()
 
-    # parser = Parser(program(function_params_and_return))
-    # parser.parse()
+    parser = Parser(program(function_params_and_return))
+    parser.parse()
 
-    # parser = Parser(program(code, set_var_to_constant))
-    # parser.parse()
+    parser = Parser(program(code, set_var_to_constant))
+    parser.parse()
 
-    # parser = Parser(program(function_call_no_params_no_result))
-    # parser.parse()
+    parser = Parser(program(function_call_no_params_no_result))
+    parser.parse()
 
-    # parser = Parser(program(function_call_no_params_with_result))
-    # parser.parse()
+    parser = Parser(program(function_call_no_params_with_result))
+    parser.parse()
 
-    # parser = Parser(program(function_call_with_params_and_result))
-    # parser.parse()
+    parser = Parser(program(function_call_with_params_and_result))
+    parser.parse()
 
-    input_file = "samples/fib.comment"
-    with open(input_file, "r") as f:
-        text = f.read()
+    # input_file = "samples/fib.comment"
+    # with open(input_file, "r") as f:
+    #     text = f.read()
 
-    tokeniser = Tokeniser(text)
-    parser = Parser(tokeniser.tokenise().__next__)
-    program = parser.parse()
-    program.execute()
+    # tokeniser = Tokeniser(text)
+    # parser = Parser(tokeniser.tokenise().__next__)
+    # program = parser.parse()
+    # program.execute()

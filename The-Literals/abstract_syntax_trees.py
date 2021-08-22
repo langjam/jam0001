@@ -29,6 +29,10 @@ class DuplicateFunctionError(Exception):
 functions = {}
 
 
+def reset_functions():
+    functions.clear()
+
+
 def add_function(func_name: str, function):
     if func_name in functions:
         raise DuplicateFunctionError(func_name)
@@ -315,14 +319,14 @@ if __name__ == "__main__":
             assert True
 
     def it_adds_functions():
-        functions.clear()
+        reset_functions()
         body = Stmts([])
         function = Function("Says hello", [], body)
         result = find_function("Says hello")
         assert function == result
 
     def it_complains_about_duplicate_functions():
-        functions.clear()
+        reset_functions()
         body = Stmts([])
         Function("Says hello", [], body)
         try:
