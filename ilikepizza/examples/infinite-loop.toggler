@@ -1,0 +1,5 @@
+# just an infinite loop
+
+#reverse
+uncomment-range -1 -1
+reverse

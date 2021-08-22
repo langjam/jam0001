@@ -1,0 +1,47 @@
+# just the basic stuff
+
+## === comments
+
+comment-range 1 2
+this will be commented
+this will also be commented
+#this won't be commented
+
+uncomment-range 1 1
+##this will only be uncommented once => not executed
+
+## === stack management
+
+push 1
+push 2
+add
+
+# ^ is equivalent to
+
+push 1
+add 2
+
+# ^ is equivalent to
+
+add 1 2
+
+# you can also just pop stuff out
+
+pop
+pop
+
+## === i/o
+
+#String to print
+print-format 0
+
+#String with the number %
+print-format 42
+# ^ will print "String with the number 42"
+
+#This is the prompt
+input
+# ^ the entered value is put on the stack
+#The entered value is %
+print-format
+
