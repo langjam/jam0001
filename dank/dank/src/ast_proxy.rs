@@ -4,6 +4,7 @@ use crate::{
     ast::{Expr, ExprKind, Stmt, StmtKind, StmtKindName},
     data::{NativeObj, Value},
     eval::{EvalError, Signal},
+    stringify::Stringify,
 };
 
 #[derive(Debug, Clone, AstToStr)]
@@ -11,6 +12,16 @@ pub enum Node<'s> {
     Expr(#[forward] Expr<'s>),
     Stmt(#[forward] Stmt<'s>),
     Empty,
+}
+
+impl Stringify for Node<'_> {
+    fn stringify_impl(&self, indent_level: usize) -> String {
+        match self {
+            Node::Expr(e) => e.stringify_impl(indent_level),
+            Node::Stmt(s) => s.stringify_impl(indent_level),
+            Node::Empty => String::new(),
+        }
+    }
 }
 
 impl<'s> From<Expr<'s>> for Node<'s> {
@@ -34,21 +45,25 @@ where
 
 #[derive(Debug)]
 pub struct AstProxy<'s> {
+    arena: &'s bumpalo::Bump,
     node: Node<'s>,
 }
 
-fn alloc<'s, N: Into<Node<'s>>>(n: N) -> Value<'s> {
-    AstProxy::new(n.into()).move_to_heap().into()
-}
-
 impl<'s> AstProxy<'s> {
-    pub fn new<N: Into<Node<'s>>>(node: N) -> Self {
-        Self { node: node.into() }
+    pub fn new<N: Into<Node<'s>>>(arena: &'s bumpalo::Bump, node: N) -> Self {
+        Self {
+            arena,
+            node: node.into(),
+        }
+    }
+
+    fn alloc<N: Into<Node<'s>>>(&self, n: N) -> Value<'s> {
+        AstProxy::new(self.arena, n.into()).move_to_heap().into()
     }
 
     fn try_extract_prop(&self, name: std::borrow::Cow<'s, str>) -> Option<Value<'s>> {
         match &self.node {
-            Node::Expr(_) => todo!(),
+            Node::Expr(expr) => self.extract_expr_prop(expr, name),
             Node::Stmt(stmt) => self.extract_stmt_prop(stmt, name),
             Node::Empty => todo!(),
         }
@@ -76,7 +91,14 @@ impl<'s> AstProxy<'s> {
                 *binding_name = value.to_string().into();
             }
             StmtKind::LetDecl(_, initializer) if name == "initializer" => {
-                todo!()
+                let new_value = self.arena.alloc(value.to_string());
+                let new_expr = match crate::parser::dank::expr(new_value) {
+                    Ok(expr) => expr,
+                    Err(e) => {
+                        return Self::syntax_error("expression", new_value, e);
+                    }
+                };
+                *initializer = Some(Box::new(new_expr));
             }
             StmtKind::FuncDecl(_) => todo!(),
             StmtKind::ExprStmt(_) => todo!(),
@@ -116,7 +138,7 @@ impl<'s> AstProxy<'s> {
             }
             StmtKind::LetDecl(_, initializer) if name == "initializer" => {
                 match initializer.as_ref().cloned() {
-                    Some(node) => Some(alloc(*node)),
+                    Some(node) => Some(self.alloc(*node)),
                     None => Some(Value::Null),
                 }
             }
@@ -140,20 +162,30 @@ impl<'s> AstProxy<'s> {
         expr: &Expr<'s>,
         name: std::borrow::Cow<'s, str>,
     ) -> Option<Value<'s>> {
-        todo!();
-        let kind_ref = expr.kind.clone();
         match &*expr.kind.borrow() {
-            ExprKind::ObjectLiteral(fields) => {}
+            ExprKind::Variable(v) if name == "name" => Some(Value::Str(v.clone())),
+            ExprKind::Literal(v) if name == "value" => Some(v.clone()),
+            ExprKind::Property(name, _) if name == "name" => Some(Value::Str(name.clone())),
+            ExprKind::Property(_, value) if name == "value" => Some(self.alloc(*value.clone())),
+            ExprKind::ObjectLiteral(_) => todo!(),
             ExprKind::LambdaLiteral(_) => todo!(),
-            ExprKind::Literal(_) => todo!(),
-            ExprKind::Variable(_) => todo!(),
-            ExprKind::Property(_, _) => todo!(),
             ExprKind::Call(_, _) => todo!(),
             ExprKind::Binary(_, _, _) => todo!(),
             ExprKind::Unary(_, _) => todo!(),
+            _ => None,
         }
+    }
 
-        None
+    fn syntax_error(
+        what: &str,
+        source: &str,
+        e: peg::error::ParseError<peg::str::LineCol>,
+    ) -> Signal<'s> {
+        EvalError::SyntaxError(format!(
+            "Failed to parse the provided code as {}:\n```\n{}\n```\n{}",
+            what, source, e
+        ))
+        .into()
     }
 }
 
@@ -165,6 +197,7 @@ impl<'s> NativeObj<'s> for AstProxy<'s> {
     fn get_prop(&self, name: std::borrow::Cow<'s, str>) -> crate::eval::Signal<'s> {
         match &*name {
             "tree" => Value::Str(self.node.ast_to_str().into()).into(),
+            "code" => Value::Str(self.node.stringify().into()).into(),
             _ => self
                 .try_extract_prop(name.clone())
                 .map(Into::into)
@@ -178,5 +211,20 @@ impl<'s> NativeObj<'s> for AstProxy<'s> {
         value: crate::data::Value<'s>,
     ) -> crate::eval::Signal<'s> {
         self.try_update_prop(name, value)
+    }
+}
+
+pub fn fmt_impl<'s, 'b: 's>(arena: &'b bumpalo::Bump, args: Vec<Value<'s>>) -> Signal<'s> {
+    use dynfmt::{Format, SimpleCurlyFormat};
+
+    if args.is_empty() {
+        return Value::Str("".into()).into();
+    }
+
+    let fmt = arena.alloc(args[0].to_string());
+    let args = args[1..].iter().map(|a| a.to_string()).collect::<Vec<_>>();
+    match SimpleCurlyFormat.format(&*fmt, args) {
+        Ok(s) => Value::Str(s).into(),
+        Err(_) => todo!(),
     }
 }

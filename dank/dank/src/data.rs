@@ -19,9 +19,9 @@ impl<'s> Object<'s> {
 
 pub struct NativeFn<'s> {
     pub name: Cow<'s, str>,
-    pub arity: u8, // todo: variadics
+    pub arity: i8, // todo: variadics
     // TODO: This needs a trait
-    pub func: Box<dyn Fn(Vec<Value<'s>>) -> Signal<'s>>,
+    pub func: Box<dyn Fn(Vec<Value<'s>>) -> Signal<'s> + 's>,
 }
 
 pub trait NativeObj<'s>: std::fmt::Debug {
@@ -61,8 +61,9 @@ impl<'s> std::cmp::PartialOrd for dyn NativeObj<'s> + 's {
 impl<'s> NativeFn<'s> {
     pub fn create<S: Into<Cow<'s, str>>>(
         name: S,
-        arity: u8,
-        func: impl Fn(Vec<Value<'s>>) -> Signal<'s> + 'static,
+        // This should be an enum
+        arity: i8,
+        func: impl Fn(Vec<Value<'s>>) -> Signal<'s> + 's,
     ) -> Ptr<Self> {
         Ptr::new(Self {
             name: name.into(),

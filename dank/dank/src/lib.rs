@@ -7,6 +7,7 @@ pub mod data;
 pub mod env;
 pub mod eval;
 pub mod parser;
+pub mod stringify;
 
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 pub mod wasm {

@@ -9,6 +9,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct Evaluator<'a, 'b: 'a> {
+    source: &'a str,
     buf_stack: Vec<String>,
     env: Env<Cow<'a, str>, Value<'a>>,
     arena: &'b bumpalo::Bump,
@@ -23,6 +24,7 @@ pub enum EvalError<'a> {
     NotCallable(String),
     TypeError(String),
     RuntimeError(String),
+    SyntaxError(String),
     UndefinedProperty(Cow<'a, str>),
     DuplicatedLiteralField(Cow<'a, str>),
     UndefinedVariable(Cow<'a, str>),
@@ -108,8 +110,13 @@ impl<'a> Signal<'a> {
 
 // TODO: return/break/continue signals
 impl<'a, 'b> Evaluator<'a, 'b> {
-    pub fn with_env(env: Env<Cow<'a, str>, Value<'a>>, arena: &'b bumpalo::Bump) -> Self {
+    pub fn with_env(
+        env: Env<Cow<'a, str>, Value<'a>>,
+        source: &'a str,
+        arena: &'b bumpalo::Bump,
+    ) -> Self {
         Self {
+            source,
             env,
             buf_stack: Vec::new(),
             comment_depth: 0,
@@ -144,7 +151,9 @@ impl<'a, 'b> Evaluator<'a, 'b> {
 
                 self.env.add(
                     "AST".into(),
-                    AstProxy::new(line.stmt.clone()).move_to_heap().into(),
+                    AstProxy::new(self.arena, line.stmt.clone())
+                        .move_to_heap()
+                        .into(),
                 );
 
                 let is_success = match self.eval_stmt(stmt) {
@@ -397,7 +406,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 result.map_return()
             }
             Value::NativeFn(func) => {
-                if func.arity as usize != args.len() {
+                if func.arity >= 0 && func.arity as usize != args.len() {
                     return EvalError::ArityMismatch(format!(
                         "{} expected {} arguments but was given {}",
                         callee,

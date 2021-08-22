@@ -1,7 +1,15 @@
 // dbg(AST.name);
 let x = 5;
 
+// AST.initializer = fmt("{} + 7", AST.initializer.code);
 // AST.name = "z";
+// dbg(AST.code);
 let y = 5;
 print z;
+
+
+// dbg(AST.code);
+fn test(a, b, c) {
+    return a + b + c;
+}
 

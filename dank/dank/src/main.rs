@@ -62,8 +62,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .into(),
             );
+
+            let arena = &arena;
+            env.add(
+                "fmt".into(),
+                dank::data::NativeFn::create("fmt", -1, move |args| {
+                    dank::ast_proxy::fmt_impl(arena, args)
+                })
+                .into(),
+            );
             env
         },
+        &source,
         &arena,
     );
     match eval.eval(&mut ast) {
