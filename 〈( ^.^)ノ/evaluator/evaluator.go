@@ -49,8 +49,24 @@ func (e *Evaluator) eval_expr(expr shared.Node) (shared.Node, error) {
 		case shared.TTstring:
 			return e.eval_string_call(expr)
 
-		case shared.TTnumber, shared.TTconst, shared.TTref:
+		case shared.TTnumber, shared.TTconst:
 			return expr.Children[i], err
+
+		case shared.TTref:
+			val, err := e.eval_expr(expr.Children[i])
+			if err != nil {
+				return val, err
+			}
+
+			if val.Val.Type == shared.TTstring && i < len(expr.Children) - 1 {
+				return e.eval_string_call(
+					shared.Node{
+						IsExpression: true,
+						Children: []shared.Node{val, expr.Children[i+1]}})
+			
+			}
+
+			return val, nil
 
 		case shared.TTwhile:
 			return e.eval_while(expr)

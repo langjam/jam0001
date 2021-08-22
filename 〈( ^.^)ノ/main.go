@@ -22,6 +22,7 @@ func main() {
 	// do initial checks
 	if len(os.Args) == 1 {
 		fmt.Println("Please provide a file to run")
+		return
 	}
 	if len(os.Args) > 2 && contains(os.Args, "--debug") {
 		debugMode = true
