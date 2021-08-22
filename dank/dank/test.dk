@@ -1,3 +1,8 @@
+// fn comment_time_only_function(x) {
+//     print "print 'This function can be accessed only at comment time execution';";
+//     print "print '" + x + "';";
+// }
+
 // this is a test comment
 // abc
 // dddddddddddd
@@ -5,6 +10,8 @@
 // // Nested comment
 // print "fn i_was_generated(x) { print x; }";
 // print "print 5;";
+
+// comment_time_only_function("this string was passed in from a comment");
 
 print { name: "value", nested: { object: "here" } };
 
@@ -80,4 +87,5 @@ while true {
         break;
     }
 }
+
 

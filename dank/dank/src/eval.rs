@@ -8,9 +8,10 @@ use crate::{data::Value, env::Env};
 pub struct Evaluator<'a, 'b: 'a> {
     buf_stack: Vec<String>,
     env: Env<Cow<'a, str>, Value<'a>>,
-    is_processing_comments: bool,
-    is_in_loop: bool,
     arena: &'b bumpalo::Bump,
+    // How deep are we inside commented code. Used to introduce global comment-time scoping.
+    comment_depth: usize,
+    is_in_loop: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -108,7 +109,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
         Self {
             env,
             buf_stack: Vec::new(),
-            is_processing_comments: false,
+            comment_depth: 0,
             is_in_loop: false,
             arena,
         }
@@ -121,14 +122,13 @@ impl<'a, 'b> Evaluator<'a, 'b> {
     }
 
     fn eval_comments(&mut self, ast: &mut Ast<'a>) -> Result<(), EvalError<'a>> {
-        self.is_processing_comments = true;
         self.eval_comments_in_block(&mut ast.statements);
-        self.is_processing_comments = false;
         Ok(())
     }
 
     fn eval_comments_in_block(&mut self, block: &mut [LineComment<'a>]) {
         self.env.push();
+        self.comment_depth += 1;
 
         for line in block {
             // TODO: allow comments to actually modify the next statement
@@ -171,6 +171,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             }
         }
 
+        self.comment_depth -= 1;
         self.env.pop();
     }
 
@@ -240,9 +241,14 @@ impl<'a, 'b> Evaluator<'a, 'b> {
     }
 
     fn eval_block(&mut self, block: &[LineComment<'a>]) -> Signal<'a> {
-        self.env.push();
+        // comment_depth == 1 implies global comment scope
+        if self.comment_depth != 1 {
+            self.env.push();
+        }
         let result = self.eval_unscoped_block(block);
-        self.env.pop();
+        if self.comment_depth != 1 {
+            self.env.pop();
+        }
         result
     }
 
@@ -497,11 +503,16 @@ impl<'a, 'b> Evaluator<'a, 'b> {
 
     fn print<S: Into<String>>(&mut self, s: S) {
         let s = s.into();
-        if self.is_processing_comments {
+        if self.is_processing_comments() {
             self.buf_stack.last_mut().unwrap().push_str(&s);
         } else {
             print!("{}", s)
         }
+    }
+
+    #[inline]
+    fn is_processing_comments(&self) -> bool {
+        self.comment_depth > 0
     }
 
     fn is_truthy(&self, value: &Value<'a>) -> bool {
