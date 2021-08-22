@@ -1,0 +1,31 @@
+comment = ('#' {(~'\n' {anything})*})=comment
+space = '\n' | '\r' | ' ' | '\t'
+spaces = space*
+spacesp = space+
+hspaces = (' ' | '\t')* {}
+hspacesp = (' ' | '\t')+ {}
+
+NAME! = hspaces {(letter | '_') (~space ~'(' ~'=' ~')' ~'[' ~']' ~'.' ~'<' ~':' ~'\'' anything)*}
+names! = NAME*
+STRING! = hspaces {('"' {(~'"' anything)*} '"' | '\'' {(~'\'' anything)*} '\'')}
+NUMBER! = hspaces {'-'? digit+}
+COMMENT! = hspaces '/' '*' hspaces {(~"*/" anything)*} "*/"
+
+bin_op = "."
+variable! = NAME
+func_call = {NAME} '(' {exprs=parameters} ")"
+block = "[" {{names} "|" {suite=body}} "]"
+non_infix = block | func_call | STRING | NUMBER | NAME
+infix = non_infix (bin_op=op non_infix)+
+expr = (infix | non_infix) COMMENT* | void=void_obj COMMENT+
+exprs  = expr ( spacesp {expr})* | void
+exprsp = expr (hspacesp {expr})*
+path = NAME ("." {NAME})*
+assign = ({path} "=" space) expr
+statement = assign | expr
+suite = hspaces ((NEWLINE)+ hspaces statement)+
+      | statement
+      | hspaces {void}
+NEWLINE = hspaces ('\n' | '\r') {}
+grammar = (NEWLINE* hspaces statement (NEWLINE+ | ~anything))+=suite
+          | statement=suite
