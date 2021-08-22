@@ -6,6 +6,14 @@ import {saveToDisk} from './Runtime/File'
 import {makeTransformer} from "./transformer";
 import {get_parser, UnexpectedToken} from "./mouthful_repl";
 
+Array.prototype['at'] = function (index) {
+    return this[index]
+}
+
+Number.prototype['to'] = function (upTo) {
+    return Array.from({length: upTo - this}, (x, i) => i + this)
+}
+
 const srcPath = process.argv[2];
 
 //console.log(srcPath)

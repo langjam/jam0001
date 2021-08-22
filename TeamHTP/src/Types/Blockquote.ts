@@ -14,7 +14,7 @@ class Blockquote extends Base {
     }
 
     text(text?: string): string {
-        if (text) {
+        if (text !== undefined) {
             const serializedChildren = (<MdastBlockquote>mdToMdast(text).children[0]).children
             this.getMdastContent().children = serializedChildren
         }

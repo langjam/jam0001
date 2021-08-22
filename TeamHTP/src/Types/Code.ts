@@ -1,6 +1,5 @@
 import Base from './Base'
 import {Code as MdastCode} from 'mdast'
-import {mdastToMd, mdToMdast} from "../Markdown";
 
 class Code extends Base {
     getMdastContent(): MdastCode {
@@ -8,20 +7,20 @@ class Code extends Base {
     }
 
     append(item: string): void {
-        let md = mdastToMd(this.getMdastContent(), true)
-        md += item
-        this.text(md)
+        let text = this.text()
+        text += item
+        this.text(text)
     }
 
     text(text?: string): string {
-        if (text) {
+        if (text !== undefined) {
             this.getMdastContent().value = text
         }
         return this.getMdastContent().value
     }
 
     language(language?: string) {
-        if (language) {
+        if (language !== undefined) {
             this.getMdastContent().lang = language
         }
         return this.getMdastContent().lang

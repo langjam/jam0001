@@ -14,7 +14,7 @@ class Html extends Base {
     }
 
     text(text?: string): string {
-        if (text) {
+        if (text !== undefined) {
             const value = (<MdastHtml>mdToMdast(text).children[0]).value
             this.getMdastContent().value = value
         }
