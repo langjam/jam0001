@@ -5,6 +5,7 @@ const Function = @import("ast.zig").Function;
 const Infix = @import("ast.zig").Infix;
 const Node = @import("ast.zig").Node;
 const Parser = @import("Parser.zig");
+const Prefix = @import("ast.zig").Prefix;
 
 allocator: *std.mem.Allocator,
 global: Env,
@@ -45,12 +46,11 @@ pub const Env = struct {
         try self.vars.put(name, value);
     }
 
-    pub fn updateVar(self: *Env, name: []const u8, value: Value) bool {
+    pub fn updateVar(self: *Env, name: []const u8, value: Value) void {
         if (self.vars.getPtr(name)) |p| {
             p.* = value;
-            return true;
         } else {
-            return false;
+            @panic("Undefined variable!");
         }
     }
 
@@ -75,6 +75,7 @@ pub const Env = struct {
 };
 
 pub const Value = union(enum) {
+    boolean: bool,
     comment: []const u8,
     function,
     integer: isize,
@@ -84,6 +85,7 @@ pub const Value = union(enum) {
         _ = options;
 
         switch (value) {
+            .boolean => |b| _ = try writer.print("{}", .{b}),
             .comment => |c| _ = try writer.print("{s}", .{c}),
             .function => {},
             .integer => |i| _ = try writer.print("{}", .{i}),
@@ -109,6 +111,7 @@ pub fn evalAll(self: *Self) !Value {
 
 pub fn eval(self: *Self, node: Node, env: *Env) anyerror!Value {
     return switch (node) {
+        .boolean => |b| .{ .boolean = std.mem.eql(u8, b.token.src.?, "true") },
         .call => |c| try self.evalFnCall(c, env),
         .ident => |tn| env.getVar(tn.token.src.?) orelse @panic("Undeclared identifier!"),
         .function => |f| result: {
@@ -118,6 +121,7 @@ pub fn eval(self: *Self, node: Node, env: *Env) anyerror!Value {
         .comment => |c| .{ .comment = c.token.src.? },
         .infix => |i| self.evalInfix(i, env),
         .integer => |tn| .{ .integer = try std.fmt.parseInt(isize, tn.token.src.?, 10) },
+        .prefix => |p| self.evalPrefix(p, env),
         .program => |p| try self.evalProgram(p, env),
         else => @panic("Unknown node type!"),
     };
@@ -161,6 +165,29 @@ fn evalInfix(self: *Self, i: Infix, env: *Env) !Value {
             try env.insertVar(i.lhs.ident.token.src.?, value);
             break :result value;
         },
+        .op_equals => result: {
+            const lhs_v = try self.eval(i.lhs.*, env);
+            const rhs_v = try self.eval(i.rhs.*, env);
+            if (lhs_v == .integer) {
+                break :result Value{ .boolean = lhs_v.integer == rhs_v.integer };
+            } else {
+                break :result Value{ .boolean = std.mem.eql(u8, lhs_v.comment, rhs_v.comment) };
+            }
+        },
+        .op_neq => result: {
+            const lhs_v = try self.eval(i.lhs.*, env);
+            const rhs_v = try self.eval(i.rhs.*, env);
+            if (lhs_v == .integer) {
+                break :result Value{ .boolean = lhs_v.integer != rhs_v.integer };
+            } else {
+                break :result Value{ .boolean = !std.mem.eql(u8, lhs_v.comment, rhs_v.comment) };
+            }
+        },
+        .punct_equal => result: {
+            const value = try self.eval(i.rhs.*, env);
+            env.updateVar(i.lhs.ident.token.src.?, value);
+            break :result value;
+        },
         .punct_plus => result: {
             const lhs_v = try self.eval(i.lhs.*, env);
             const rhs_v = try self.eval(i.rhs.*, env);
@@ -182,6 +209,18 @@ fn evalInfix(self: *Self, i: Infix, env: *Env) !Value {
             break :result Value{ .integer = lhs_v.integer * rhs_v.integer };
         },
         else => @panic("Unknown infix operator!"),
+    };
+}
+
+fn evalPrefix(self: *Self, p: Prefix, env: *Env) !Value {
+    // Going out on a limb here assuming the types. Cowboy programming, big time!
+    return switch (p.op.ty) {
+        .punct_bang => result: {
+            const rhs_v = try self.eval(p.rhs.*, env);
+            break :result Value{ .boolean = !rhs_v.boolean };
+        },
+        .punct_lparen => try self.eval(p.rhs.*, env),
+        else => @panic("Unknown prefix operator!"),
     };
 }
 

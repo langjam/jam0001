@@ -35,7 +35,10 @@ pub fn parseAll(self: *Self) !Node {
 }
 
 pub fn next(self: *Self) ?Node {
-    if (self.advance()) |token| {
+    if (self.advance()) |t| {
+        var token = t;
+        if (token.is(.punct_newline)) token = self.advance() orelse return null;
+
         return switch (token.ty) {
             else => self.parseExpression(token, .lowest) catch @panic("Unable to parse expression."),
         };
@@ -53,10 +56,13 @@ const Precedence = enum {
     sum,
     product,
     call,
+    prefix,
 
     fn get(token: Token) Precedence {
         return switch (token.ty) {
             .op_define => .define,
+            .punct_equal => .assign,
+            .op_equals, .op_neq => .equals,
             .punct_plus, .punct_dash, .op_concat => .sum,
             .punct_slash, .punct_star => .product,
             .punct_lparen => .call,
@@ -78,16 +84,16 @@ fn parseExpression(self: *Self, token: Token, precedence: Precedence) !Node {
     if (prefixFnFor(token)) |pfn| {
         lhs = pfn(self, token);
     } else {
-        //debug.print("\n{}\n", .{token});
         @panic("No prefix parse function for token!");
     }
 
     while (self.peek()) |pt| {
-        if (pt.is(.comment) and !token.is(.op_define) and !token.is(.op_concat)) {
+        if (pt.is(.comment) and !token.is(.punct_equal) and !token.is(.op_define) and !token.is(.op_concat)) {
             // Ignore comments in most contexts.
             _ = self.advance(); // comment
             continue;
         }
+
         if (!precedence.less(Precedence.get(pt))) break;
         const op_token = self.advance().?;
         const ifn = infixFnFor(op_token);
@@ -104,15 +110,28 @@ fn prefixFnFor(token: Token) ?PrefixFn {
     return switch (token.ty) {
         .comment,
         .ident,
+        .kw_false,
+        .kw_true,
         .lit_int,
         => Self.parseTokenNode,
         .kw_fn => Self.parseFnDef,
+        .punct_bang => Self.parsePrefix,
+        .punct_lparen => Self.parseGroup,
         else => null,
     };
 }
 
+fn parseGroup(self: *Self, token: Token) Node {
+    var node = self.allocator.create(Node) catch @panic("Unable to allocate grouped expression node!");
+    node.* = self.parseExpression(self.expectNext(), .lowest) catch @panic("Unable to parse grouped expression!");
+    _ = self.expectNextIs(.punct_rparen);
+
+    return .{ .prefix = .{ .op = token, .rhs = node } };
+}
+
 fn parseTokenNode(_: *Self, token: Token) Node {
     return switch (token.ty) {
+        .kw_false, .kw_true => .{ .boolean = .{ .token = token } },
         .comment => .{ .comment = .{ .token = token } },
         .ident => .{ .ident = .{ .token = token } },
         .lit_int => .{ .integer = .{ .token = token } },
@@ -138,6 +157,7 @@ fn parseFnDef(self: *Self, _: Token) Node {
 
     _ = self.expectNextIs(.punct_rparen);
     _ = self.expectNextIs(.punct_lbrace);
+    self.run(isNewline); // Possible newlines after opening brace.
     var body = std.ArrayList(Node).init(self.allocator);
     defer body.deinit();
 
@@ -145,6 +165,7 @@ fn parseFnDef(self: *Self, _: Token) Node {
         if (pt.is(.punct_rbrace)) break;
         const node = self.parseExpression(self.advance().?, .lowest) catch @panic("Unable to parse body node!");
         body.append(node) catch @panic("Unable to append to body!");
+        self.run(isNewline); // Possible newlines between expressions.
     }
 
     _ = self.expectNextIs(.punct_rbrace);
@@ -156,6 +177,16 @@ fn parseFnDef(self: *Self, _: Token) Node {
     } };
 }
 
+fn parsePrefix(self: *Self, token: Token) Node {
+    var rhs = self.allocator.create(Node) catch @panic("Unable to allocate prefix right hand side!");
+    rhs.* = self.parseExpression(self.expectNext(), .prefix) catch @panic("Unable to parse boolean not expression!");
+
+    return .{ .prefix = .{
+        .op = token,
+        .rhs = rhs,
+    } };
+}
+
 // Infix
 const InfixFn = fn (*Self, Token, Node) anyerror!Node;
 
@@ -163,8 +194,11 @@ fn infixFnFor(token: Token) InfixFn {
     return switch (token.ty) {
         .op_concat,
         .op_define,
-        .punct_plus,
+        .op_equals,
+        .op_neq,
+        .punct_equal,
         .punct_dash,
+        .punct_plus,
         .punct_slash,
         .punct_star,
         => Self.parseInfix,
@@ -251,7 +285,11 @@ fn skip(self: *Self, ty: Token.Type) bool {
     return false;
 }
 
-const TokenPredicate = fn (u8) bool;
+const TokenPredicate = fn (Token) bool;
+
+fn isNewline(token: Token) bool {
+    return token.ty == .punct_newline;
+}
 
 fn run(self: *Self, predicate: TokenPredicate) void {
     while (self.peek()) |t| {

@@ -30,6 +30,7 @@ pub fn next(self: *Self) ?Token {
         'a'...'z', 'A'...'Z', '_' => self.lexIdent(),
         '#' => self.lexOcto(),
         '+' => self.lexPlus(),
+        '!' => self.lexBang(),
         ',' => Token{ .ty = .punct_comma, .offset = self.i.? },
         '-' => Token{ .ty = .punct_dash, .offset = self.i.? },
         '{' => Token{ .ty = .punct_lbrace, .offset = self.i.? },
@@ -38,6 +39,10 @@ pub fn next(self: *Self) ?Token {
         ')' => Token{ .ty = .punct_rparen, .offset = self.i.? },
         '/' => Token{ .ty = .punct_slash, .offset = self.i.? },
         '*' => Token{ .ty = .punct_star, .offset = self.i.? },
+        '\n' => result: {
+            self.run(isNewline);
+            break :result Token{ .ty = .punct_newline, .offset = self.i.? };
+        },
         else => result: {
             //debug.print("\n{u}\n", .{b});
             break :result Token{ .ty = .unknown, .offset = self.i.? };
@@ -46,6 +51,15 @@ pub fn next(self: *Self) ?Token {
 }
 
 // Lex funcs.
+fn lexBang(self: *Self) Token {
+    const ty: Token.Type = if (self.skip('=')) .op_neq else .punct_bang;
+
+    return .{
+        .ty = ty,
+        .offset = self.i.?,
+    };
+}
+
 fn lexColon(self: *Self) Token {
     const ty: Token.Type = if (self.skip('=')) .op_define else .punct_colon;
 
@@ -73,7 +87,12 @@ fn lexIdent(self: *Self) Token {
     self.run(isIdent);
     const src = self.bytes[start .. self.i.? + 1];
 
-    const ty: Token.Type = if (std.mem.eql(u8, src, "fn")) .kw_fn else .ident;
+    const ty: Token.Type = ty_detect: {
+        if (std.mem.eql(u8, src, "fn")) break :ty_detect .kw_fn;
+        if (std.mem.eql(u8, src, "false")) break :ty_detect .kw_false;
+        if (std.mem.eql(u8, src, "true")) break :ty_detect .kw_true;
+        break :ty_detect .ident;
+    };
 
     return .{
         .ty = ty,
@@ -170,6 +189,10 @@ fn skip(self: *Self, b: u8) bool {
 
 const BytePredicate = fn (u8) bool;
 
+fn isNewline(b: u8) bool {
+    return '\n' == b;
+}
+
 fn run(self: *Self, predicate: BytePredicate) void {
     while (self.peek()) |b| {
         if (!predicate(b)) break;
@@ -178,7 +201,7 @@ fn run(self: *Self, predicate: BytePredicate) void {
 }
 
 fn isWhiteSpace(b: u8) bool {
-    return ' ' == b or '\t' == b or '\r' == b or '\n' == b;
+    return ' ' == b or '\t' == b or '\r' == b;
 }
 
 fn skipWhiteSpace(self: *Self) void {
