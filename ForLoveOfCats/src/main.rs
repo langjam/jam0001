@@ -122,6 +122,19 @@ enum TreeNode {
 		expr: Box<TreeNode>,
 	},
 
+	Push {
+		name: String,
+		expr: Box<TreeNode>,
+	},
+
+	Pop {
+		name: String,
+	},
+
+	TypeOf {
+		expr: Box<TreeNode>,
+	},
+
 	Read {
 		name: String,
 	},
@@ -267,6 +280,45 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> Result<TreeNode> {
 			}
 		}
 
+		"push" => {
+			let name = if let Some(Token::Ident(name)) = tokens.next() {
+				name
+			} else {
+				return parse_error!("Needed name to push to");
+			};
+
+			let expr = Box::new(parse_expression(tokens)?);
+
+			expect_token!(tokens, Token::CloseParen)?;
+
+			TreeNode::Push {
+				name: name.to_string(),
+				expr,
+			}
+		}
+
+		"pop" => {
+			let name = if let Some(Token::Ident(name)) = tokens.next() {
+				name
+			} else {
+				return parse_error!("Needed name to pop from");
+			};
+
+			expect_token!(tokens, Token::CloseParen)?;
+
+			TreeNode::Pop {
+				name: name.to_string(),
+			}
+		}
+
+		"type-of" => {
+			let expr = Box::new(parse_expression(tokens)?);
+
+			expect_token!(tokens, Token::CloseParen)?;
+
+			TreeNode::TypeOf { expr }
+		}
+
 		"block" => {
 			let mut block = Vec::new();
 
@@ -392,6 +444,19 @@ enum Value {
 	Lambda(Lambda),
 }
 
+impl Value {
+	fn type_int(&self) -> i64 {
+		match self {
+			Value::None => 0,
+			Value::Bool(_) => 1,
+			Value::I64(_) => 2,
+			Value::List(_) => 3,
+			Value::String(_) => 4,
+			Value::Lambda(_) => 5,
+		}
+	}
+}
+
 impl std::fmt::Display for Value {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
@@ -402,7 +467,7 @@ impl std::fmt::Display for Value {
 			Value::I64(num) => write!(f, "{}", num),
 
 			Value::List(list) => {
-				write!(f, "(")?;
+				write!(f, "[")?;
 
 				let count = list.len();
 				for (index, entry) in list.iter().enumerate() {
@@ -413,7 +478,7 @@ impl std::fmt::Display for Value {
 					}
 				}
 
-				write!(f, ")")
+				write!(f, "]")
 			}
 
 			Value::String(string) => write!(f, "{}", string),
@@ -438,6 +503,14 @@ impl Scope {
 	}
 }
 
+macro_rules! map {
+	[ $($name:literal = $value:expr ,)* ] => {{
+		let mut map = HashMap::new();
+		$(map.insert($name.to_string(), $value);)*
+		map
+	}}
+}
+
 #[derive(Debug)]
 struct ScopeState {
 	scopes: Vec<Scope>,
@@ -447,7 +520,17 @@ struct ScopeState {
 impl ScopeState {
 	fn new() -> ScopeState {
 		ScopeState {
-			scopes: vec![Scope::new()],
+			scopes: vec![Scope {
+				symbols: map![
+					"type-none" = Value::I64(0),
+					"type-bool" = Value::I64(1),
+					"type-i64" = Value::I64(2),
+					"type-list" = Value::I64(3),
+					"type-string" = Value::I64(4),
+					"type-lambda" = Value::I64(5),
+				],
+				comments: Vec::new(),
+			}],
 			in_repl: false,
 		}
 	}
@@ -533,7 +616,13 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 
 			let mut target = state.read(name);
 			match &mut target {
-				Value::List(list) => list[index] = value.clone(),
+				Value::List(list) => {
+					if index >= list.len() {
+						runtime_error!(state, "Index {} out of bounds to assign", index);
+					} else {
+						list[index] = value.clone();
+					}
+				}
 				_ => {
 					runtime_error!(state, "Cannot assign to value of non-list type");
 				}
@@ -541,6 +630,40 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 			state.set(name, target);
 
 			value
+		}
+
+		TreeNode::Push { name, expr } => {
+			let value = evaluate(state, expr);
+
+			let mut target = state.read(name);
+			match &mut target {
+				Value::List(list) => list.push(value.clone()),
+				_ => {
+					runtime_error!(state, "Cannot push to value of non-list type");
+				}
+			};
+			state.set(name, target);
+
+			value
+		}
+
+		TreeNode::Pop { name } => {
+			let mut target = state.read(name);
+			let value = match &mut target {
+				Value::List(list) => match list.pop() {
+					Some(value) => value,
+					None => runtime_error!(state, "Cannot pop from empty list"),
+				},
+				_ => runtime_error!(state, "Cannot push to value of non-list type"),
+			};
+			state.set(name, target);
+
+			value
+		}
+
+		TreeNode::TypeOf { expr } => {
+			let value = evaluate(state, expr);
+			Value::I64(value.type_int())
 		}
 
 		TreeNode::Read { name } => state.read(name),
@@ -836,7 +959,13 @@ fn lookup(state: &mut ScopeState, values: &[Value]) -> Value {
 	let index = unwrap_usize(state, index);
 
 	match value {
-		Value::List(list) => list[index].clone(),
+		Value::List(list) => {
+			if index >= list.len() {
+				runtime_error!(state, "Index {} out of bounds to lookup", index)
+			} else {
+				list[index].clone()
+			}
+		}
 		_ => runtime_error!(state, "Cannot lookup on value which is not list"),
 	}
 }
@@ -854,9 +983,31 @@ fn slice_impl(state: &mut ScopeState, values: &[Value]) -> Value {
 	let end = unwrap_integer(state, &values[2]);
 	let end = unwrap_usize(state, end);
 
+	if start >= end {
+		return runtime_error!(state, "Start {} is past end {} when slicing", start, end);
+	}
+
 	match value {
-		Value::List(list) => Value::List(list[start..end].to_vec()),
-		Value::String(string) => Value::String(string[start..end].to_string()),
+		Value::List(list) => {
+			if start >= list.len() {
+				runtime_error!(state, "Start out of bounds to slice")
+			} else if end > list.len() {
+				runtime_error!(state, "End out of bounds to slice")
+			} else {
+				Value::List(list[start..end].to_vec())
+			}
+		}
+
+		Value::String(string) => {
+			if start >= string.len() {
+				runtime_error!(state, "Start out of bounds to slice")
+			} else if end > string.len() {
+				runtime_error!(state, "End out of bounds to slice")
+			} else {
+				Value::String(string[start..end].to_string())
+			}
+		}
+
 		_ => runtime_error!(state, "Cannot slice value which is not list or string"),
 	}
 }

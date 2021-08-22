@@ -1,18 +1,78 @@
 (block
-	(define values (list "Hello!" 25 (+ 5 9) "Haha" 96))
-	(print "Original values:" values)
+	(define perform-op
+		(lambda (left right op)
+			(block
+				(# "Performing operation" op)
 
-	(print "")
-	(print "Manual iteration w/modification:")
-	(define index 0)
-	(while (< index (len values))
-		(block
-			(print " " (lookup values index))
-			(assign values index index)
-			(set index (+ index 1))
+				(if (== op "+")
+					(+ left right)
+					(if (== op "-")
+						(- left right)
+						(if (== op "*")
+							(* left right)
+							(if (== op "/")
+								(/ left right)
+								(panic "Unsupported op" op)
+							)
+						)
+					)
+				)
+			)
 		)
 	)
 
-	(print "")
-	(print "New values:" values)
+	(define rpn
+		(lambda (rpn)
+			(block
+				(# "RPN argument:" rpn)
+
+				(define stack (list))
+
+				(define index 0)
+				(while (< index (len rpn))
+					(block
+						(# "Index is" index)
+
+						(define element (lookup rpn index))
+						(# "Handling RPN element" element)
+
+						(if (== (type-of element) type-i64)
+							(block
+								(# "Element is integer")
+								(push stack element)
+							)
+							(block
+								(# "Element is not integer")
+								(if (== (type-of element) type-string)
+									(block
+										(# "Element is string")
+
+										(define right (pop stack))
+										(# "Right value is" right)
+										(define left (pop stack))
+										(# "Left value is" left)
+
+										(push stack (perform-op left right element))
+									)
+									(panic "Cannot handle this type of element")
+								)
+							)
+						)
+
+						(set index (+ index 1))
+					)
+				)
+
+				(if (!= (len stack) 1)
+					(panic "Invalid number of RPN elements," (len stack) "values remain in stack")
+					()
+				)
+
+				(define value (lookup stack 0))
+				(print "Result:" value)
+			)
+		)
+	)
+
+	(rpn (list 10 2 "*" 5 "+"))
 )
