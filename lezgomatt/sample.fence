@@ -1,0 +1,13 @@
+func main() { -- main is required
+    -- this is a minus comment, it has no effect at runtime
+    print(factorial(5))
+}
+
+func factorial(n) {
+    ++ factorial
+    if n <= 0 {
+        return 1
+    }
+
+    return [+ n * factorial(n - 1) +]
+}
