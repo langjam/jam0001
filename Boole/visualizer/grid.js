@@ -1,7 +1,7 @@
 
 const TILE_SIZE = 50;
 const OP_SIZE = TILE_SIZE * 3/4
-const TRAIN_SPEED = .3;
+let TRAIN_SPEED = .3;
 
 const DIRECTION = {
     North: "north",
@@ -74,6 +74,29 @@ let stationTypeImages = {}
 let lineLookup = new Map();
 
 
+function updateFinishedValue() {
+    document.getElementById("finishedValue").innerText = `${stopcount}/${grid.trains.size}`
+}
+
+let stopcount = 0;
+function updateStatus() {
+
+    stopcount = 0;
+    for (const i of grid.trains) {
+        if (i[1].path === null) {
+            stopcount += 1;
+        }
+    }
+
+    updateFinishedValue();
+
+    if (stopcount === grid.trains.size) {
+        if (continueSimulation) {
+            socket.nextTimeStep()
+        }
+    }
+}
+
 
 function preloadTrain() {
     locomotiveBackground = loadImage("tiles/locomotive_background.png");
@@ -122,6 +145,7 @@ class Grid {
 
     deleteTrain(train) {
         this.trains.delete(train.identifier)
+        updateFinishedValue();
     }
 
     addStation(station) {
@@ -259,6 +283,11 @@ class Train {
             return;
         }
 
+        updateFinishedValue();
+
+        const elem = document.getElementById("speed");
+        TRAIN_SPEED = map(elem.value, 0, 100, .01, 1)
+
         if (this.animation_count > 1) {
             this.animation_count = 0
             this.path_index += 1;
@@ -292,6 +321,8 @@ class Train {
     }
 
     draw() {
+        updateStatus();
+
         if (this.path !== null) {
             this.update()
         }

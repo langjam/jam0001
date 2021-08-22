@@ -83,12 +83,15 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
         let visualizer_path = match visualizer_res {
             Ok(i) => i,
             Err(e) => {
-                // send(&mut ws_tx, &MessageToWebpage::CreateDataError).await;
-                // return Err(e.into());
-                todo!()
+                let local_runner = runner.clone();
+                tokio::task::spawn(async move {
+                    if let Err(e) = local_runner.send(MessageToWebpage::CreateDataError) {
+                        log::error!("{}", e)
+                    }
+                });
+                return;
             }
         };
-
 
         tokio::task::spawn(async move {
             if let Err(e) = visualizer_path_tx.send(visualizer_path).await {

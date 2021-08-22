@@ -19,6 +19,10 @@
             font-family: Cantarell,serif;
         }
 
+        #finished {
+            font-size: 30px;
+        }
+
         #controls {
             height: 40px;
 
@@ -77,9 +81,14 @@
 
     <div id="controls">
         <h1 id="title">Trains</h1>
+        <div id="finished">
+            #at station <span id="finishedValue"></span>
+        </div>
+
         <div id="spacer"></div>
-        <input type="range" min="1" max="100" value="50" id="speed">
-        <button id="continue">continue</button>
+
+        <input type="range" min="1" max="100" value="20" id="speed">
+        <button id="continue" onclick="toggleContinue()">continue</button>
         <button onclick="socket.nextTimeStep()">step simulation</button>
         <button onclick="centerZero()">center</button>
         <button id="pause" onclick="togglePause()">pause</button>

@@ -18,6 +18,20 @@ function togglePause() {
     }
 }
 
+let continueSimulation = false;
+function toggleContinue() {
+    continueSimulation = !continueSimulation;
+    if (continueSimulation) {
+        document.getElementById("continue").style.background = "green";
+
+        if (stopcount === grid.trains.size) {
+            socket.nextTimeStep()
+        }
+    } else {
+        document.getElementById("continue").style.background = "unset";
+    }
+}
+
 let socket;
 window.addEventListener("load", () => {
     socket = startSocket()
@@ -97,6 +111,7 @@ function loadData(path) {
             }
 
             document.getElementById("loading").style.display = "none";
+            updateFinishedValue();
         })
     })
 
@@ -143,7 +158,7 @@ function setup() {
 }
 
 function draw() {
-    background(51);
+    background(0x56, 0x7d, 0x46);
 
     push()
 
