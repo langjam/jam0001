@@ -157,6 +157,7 @@ function setup() {
     centerZero();
 }
 
+prints = []
 function draw() {
     background(0x56, 0x7d, 0x46);
 
@@ -167,6 +168,21 @@ function draw() {
 
     grid.draw()
 
+    pop()
+
+
+    push()
+    translate(10, 10);
+    for (const m of prints) {
+        translate(0, 25);
+        push();
+        fill(255);
+        stroke(255);
+        textAlign(LEFT, CENTER);
+        textSize(23);
+        text(m, 0, 0);
+        pop();
+    }
     pop()
 }
 
