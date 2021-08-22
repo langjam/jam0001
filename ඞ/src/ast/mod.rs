@@ -89,7 +89,7 @@ impl AST {
                 "text" => Value::String(text)
             },
             AST::Comment { text } => ast_obj! { "ASTComment";
-                "text" => Value::Comment{content: text}
+                "text" => Value::String(text)
             },
             AST::Ident { name } => ast_obj! { "ASTIdent";
                 "name" => Value::String(name)

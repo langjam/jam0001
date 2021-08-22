@@ -151,7 +151,7 @@ pub enum TokenKind {
     String,
     #[regex(r#"'(\w| |\\[trnb\\']|"|[[:punct:]&&[^'\\]])'"#)]
     Char,
-    #[regex(r#"//[^\n]*\n"#)]
+    #[regex(r#"//[^\n;]*"#)]
     LineComment,
     #[token("/*", block_comment)]
     BlockComment,

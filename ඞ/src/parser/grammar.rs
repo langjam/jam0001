@@ -35,10 +35,6 @@ where
                     let class = self.parse_class()?;
                     items.push(class);
                 }
-                T![line comment] | T![block comment] => {
-                    let comment = self.parse_comment()?;
-                    items.push(comment);
-                }
                 T![eof] => break,
                 found => match self.parse_stmt() {
                     Ok(stmt) => items.push(stmt),
@@ -202,6 +198,7 @@ where
                     _ => return Err(ParseError::InvalidExpressionStatement { position }),
                 }
             }
+            T![line comment] | T![block comment] => self.parse_comment()?,
             found => {
                 return Err(ParseError::UnexpectedToken {
                     found,
