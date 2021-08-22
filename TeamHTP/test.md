@@ -1,17 +1,26 @@
 # Things I'm here to do
-[TodoList]::
-- [ ] **kick ass**
-- [ ] chew bubble gum
 
+[TodoList]::
+*   [x] **kick ass**
+*   [ ] chew bubble gum
 
 [Paragraph]::
 this is a paragraph
 
 [Heading]::
 # Things I'm all out of
-*  bubble gum
+
+*   bubble gum
 
 [TodoList]:: (
     print
         console log: 'hello'
+)
+[TodoList]:: (
+    kickAss
+        this checkItem: '**kick ass**'.
+)
+[TodoList]:: (
+    unkick
+        this uncheckItem: '**kick ass**'.
 )

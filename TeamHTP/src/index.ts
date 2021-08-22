@@ -21,16 +21,14 @@ if (updatedListItem !== undefined) {
     console.log(mdastToMd(updatedListItem))
 }
 
-console.log('testing save')
-saveToDisk(runtime)
-
-startRepl((input) => {
+startRepl(async (input) => {
     const evalScope = runtime.generateEvalScope()
     const transformer = makeTransformer(evalScope)
     const parser = get_parser({transformer})
     const js = parser.parse(input)
     console.log(js)
-    return function (js: string) {
+    const out = function (js: string) {
         return eval(js)
     }.call(evalScope, js)
+    await saveToDisk(srcPath, runtime)
 }).catch(console.log)

@@ -1,5 +1,6 @@
 import Runtime from './index'
 import {wrappedElementToMd} from '../Markdown'
+import fs from 'fs'
 
 function serializeRuntime(runtime: Runtime) {
     let serialized = ''
@@ -10,9 +11,10 @@ function serializeRuntime(runtime: Runtime) {
     return serialized
 }
 
-async function saveToDisk(runtime: Runtime) {
-    console.log(serializeRuntime(runtime))
-    // TODO: save serialized to disk
+async function saveToDisk(path: string, runtime: Runtime) {
+    const serialized = serializeRuntime(runtime)
+    console.log(serialized)
+    fs.writeFileSync(path, serialized)
 }
 
 export {
