@@ -14,8 +14,8 @@ const II_false = "FALSE"
 const instruction_size_min = 3
 const instruction_size_max = 5
 
-func (l *Lexer) make_identifier_token() (shared.Token, error) {
-	if l.current_char == 'm' {
+func (l *Lexer) makeIdentifierToken() (shared.Token, error) {
+	if l.currentChar == 'm' {
 		l.advance()
 		return shared.Token{Type: shared.TTinstruction, Value: II_m}, nil
 	}
@@ -23,7 +23,7 @@ func (l *Lexer) make_identifier_token() (shared.Token, error) {
 	inst := make([]rune, instruction_size_min)
 
 	for i := 0; i < instruction_size_min; i++ {
-		inst[i] = l.current_char
+		inst[i] = l.currentChar
 		l.advance()
 	}
 
@@ -36,7 +36,7 @@ func (l *Lexer) make_identifier_token() (shared.Token, error) {
 	}
 
 	for i := instruction_size_min; i < instruction_size_max; i++ {
-		inst = append(inst, l.current_char)
+		inst = append(inst, l.currentChar)
 		l.advance()
 	}
 

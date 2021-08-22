@@ -6,16 +6,16 @@ import (
 	"github.com/grossamos/jam0001/shared"
 )
 
-func (l *Lexer) make_ref() (shared.Token, error) {
-	ref_num_str := ""
+func (l *Lexer) makeRef() (shared.Token, error) {
+	refNumString := ""
 	l.advance()
-	if l.current_char == '-' {
-		ref_num_str += "-"
+	if l.currentChar == '-' {
+		refNumString += "-"
 		l.advance()
 	}
-	for strings.ContainsRune(digitChars, l.current_char) {
-		ref_num_str += string(l.current_char)
+	for strings.ContainsRune(digitChars, l.currentChar) {
+		refNumString += string(l.currentChar)
 		l.advance()
 	}
-	return shared.Token{Type: shared.TTref, Value: ref_num_str, Pos: l.pos}, nil
+	return shared.Token{Type: shared.TTref, Value: refNumString, Pos: l.pos}, nil
 }

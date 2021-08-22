@@ -360,7 +360,7 @@ func (e *Evaluator) Evaluate(input []Token, negativeCells, positiveCells []strin
 	e.values = []int{}
 
 	// Establish a sentinal operation with the lowest precedence (will never be executed)
-	e.operations = []Operation{Operation{Sentinal, PrecedenceMap[Sentinal]}}
+	e.operations = []Operation{{Sentinal, PrecedenceMap[Sentinal]}}
 
 	for _, token := range input {
 		switch token.kind {

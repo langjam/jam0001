@@ -8,10 +8,10 @@ import (
 )
 
 type Lexer struct {
-	text         string
-	index        int
-	pos          shared.Position
-	current_char rune
+	text        string
+	index       int
+	pos         shared.Position
+	currentChar rune
 }
 
 func NewLexer(text string) (lex Lexer) {
@@ -24,56 +24,56 @@ func (l *Lexer) advance() {
 	l.index += 1
 
 	if len(l.text) > l.index {
-		l.current_char = ([]rune(l.text))[l.index]
+		l.currentChar = ([]rune(l.text))[l.index]
 	} else {
-		l.current_char = '\x00'
+		l.currentChar = '\x00'
 	}
 
-	if l.current_char == '\n' {
+	if l.currentChar == '\n' {
 		l.pos.Advance()
 	}
 }
 
-func (l *Lexer) make_tokens() ([]shared.Token, error) {
+func (l *Lexer) makeTokens() ([]shared.Token, error) {
 	var tokens []shared.Token
-	for l.current_char != '\x00' {
+	for l.currentChar != '\x00' {
 		var err error
 		// handle identifiers
-		if l.current_char == 's' || l.current_char == 'm' || l.current_char == 'a' || l.current_char == 'n' || l.current_char == 'w' || l.current_char == 'T' || l.current_char == 'F' || l.current_char == 'p' {
-			var inst_token shared.Token
-			inst_token, err = l.make_identifier_token()
-			tokens = append(tokens, inst_token)
-		} else if l.current_char == '(' || l.current_char == ')' || l.current_char == '{' || l.current_char == '}' {
-			var char_token shared.Token
-			char_token, err = l.make_paren_token()
-			tokens = append(tokens, char_token)
+		if l.currentChar == 's' || l.currentChar == 'm' || l.currentChar == 'a' || l.currentChar == 'n' || l.currentChar == 'w' || l.currentChar == 'T' || l.currentChar == 'F' || l.currentChar == 'p' {
+			var instToken shared.Token
+			instToken, err = l.makeIdentifierToken()
+			tokens = append(tokens, instToken)
+		} else if l.currentChar == '(' || l.currentChar == ')' || l.currentChar == '{' || l.currentChar == '}' {
+			var charToken shared.Token
+			charToken, err = l.makeParenToken()
+			tokens = append(tokens, charToken)
 			l.advance()
-		} else if l.current_char == ' ' || l.current_char == '\n' || l.current_char == '\t' {
+		} else if l.currentChar == ' ' || l.currentChar == '\n' || l.currentChar == '\t' {
 			l.advance()
-		} else if l.current_char == '.' || strings.ContainsRune(digitChars, l.current_char) {
-			var num_token shared.Token
-			num_token, err = l.make_number()
-			tokens = append(tokens, num_token)
-		} else if l.current_char == '$' {
-			var ref_token shared.Token
-			ref_token, err = l.make_ref()
-			tokens = append(tokens, ref_token)
-		} else if l.current_char == '"' {
+		} else if l.currentChar == '.' || strings.ContainsRune(digitChars, l.currentChar) {
+			var numToken shared.Token
+			numToken, err = l.makeNumber()
+			tokens = append(tokens, numToken)
+		} else if l.currentChar == '$' {
+			var refToken shared.Token
+			refToken, err = l.makeRef()
+			tokens = append(tokens, refToken)
+		} else if l.currentChar == '"' {
 			tokens = append(tokens, shared.Token{Type: shared.TTstring, Value: l.make_text()})
-			if l.current_char != '"' {
-				return []shared.Token{}, &IllegalSyntaxError{message: "Error finding closed bracket" + string(l.current_char), pos: l.pos}
+			if l.currentChar != '"' {
+				return []shared.Token{}, &IllegalSyntaxError{message: "Error finding closed bracket" + string(l.currentChar), pos: l.pos}
 			}
 			l.advance()
-		} else if l.current_char == '/' {
+		} else if l.currentChar == '/' {
 			l.advance()
-			if l.current_char != '/' {
-				return []shared.Token{}, &IllegalSyntaxError{message: "Invalid comment" + string(l.current_char), pos: l.pos}
+			if l.currentChar != '/' {
+				return []shared.Token{}, &IllegalSyntaxError{message: "Invalid comment" + string(l.currentChar), pos: l.pos}
 			}
 			l.advance()
 			tokens = append(tokens, shared.Token{Type: shared.TTwcomment, Value: l.make_text()})
 			l.advance()
 		} else {
-			return []shared.Token{}, &IllegalSyntaxError{message: "invalid identifier (" + string(int(l.current_char)) + ")", pos: l.pos}
+			return []shared.Token{}, &IllegalSyntaxError{message: "invalid identifier (" + string(int(l.currentChar)) + ")", pos: l.pos}
 		}
 
 		if err != nil {
@@ -89,7 +89,7 @@ func (l *Lexer) make_tokens() ([]shared.Token, error) {
 
 func RunLexer(text string) []shared.Token {
 	lex := NewLexer(text)
-	tokens, err := lex.make_tokens()
+	tokens, err := lex.makeTokens()
 	if err != nil {
 		fmt.Println(err.Error())
 	}

@@ -8,23 +8,23 @@ import (
 
 const digitChars string = "0123456789"
 
-func (l *Lexer) make_number() (shared.Token, error) {
-	number_str := ""
-	dot_count := 0
-	for l.current_char != '\x00' && (l.current_char == '.' || strings.ContainsRune(digitChars, l.current_char)) {
-		if l.current_char == '.' {
-			if len(number_str) == 0 {
+func (l *Lexer) makeNumber() (shared.Token, error) {
+	numberString := ""
+	dotCount := 0
+	for l.currentChar != '\x00' && (l.currentChar == '.' || strings.ContainsRune(digitChars, l.currentChar)) {
+		if l.currentChar == '.' {
+			if len(numberString) == 0 {
 				return shared.Token{}, &IllegalNumberFormatError{message: ".", pos: l.pos}
 			}
-			if dot_count >= 1 {
+			if dotCount >= 1 {
 				break
 			}
-			dot_count += 1
-			number_str += string(l.current_char)
+			dotCount += 1
+			numberString += string(l.currentChar)
 		} else {
-			number_str += string(l.current_char)
+			numberString += string(l.currentChar)
 		}
 		l.advance()
 	}
-	return shared.Token{Type: shared.TTnumber, Value: number_str, Pos: l.pos}, nil
+	return shared.Token{Type: shared.TTnumber, Value: numberString, Pos: l.pos}, nil
 }
