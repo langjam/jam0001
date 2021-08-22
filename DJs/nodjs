@@ -1,0 +1,6 @@
+#!/bin/bash
+
+BASEDIR=$(dirname "$0")
+DEST_FILE=djs_output.js
+
+node $BASEDIR/src/index.js $1 $2
