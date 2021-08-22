@@ -477,6 +477,7 @@ function add_primitive(name, value) {
 	primitive_ids.set(name, primitive_list.length)
 	primitive_list.push(redactify(value))
 }
+add_primitive('none', RedactedNone)
 add_primitive('array', (...args) => new RedactedArray(args))
 add_primitive('obj', () => new RedactedObject())
 add_primitive('print', (...args) => { console.log(...args.map(v => v.to_str())) })
