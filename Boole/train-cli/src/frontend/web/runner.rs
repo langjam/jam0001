@@ -93,7 +93,7 @@ impl WebRunner {
 
         log::info!("calling python script to generate station layout");
 
-        let python_executor = std::env::var("PYTHON_EXECUTABLE").unwrap_or("python".to_string());
+            let python_executor = std::env::var("PYTHON_EXECUTABLE").unwrap_or("python".to_string());
         let mut command = Command::new(python_executor);
         command.arg("visualizer/router.py")
             .arg(format!("{:?}", &path));

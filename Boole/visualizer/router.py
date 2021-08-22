@@ -145,6 +145,8 @@ class World:
 
         for station in self.stations:
             for port, goal in enumerate(station.to):
+                if station.id == goal[0]:
+                    continue
                 self.roads.append((station.id, port, goal[0], self.a_star(station, goal)))
 
     def a_star(self, station, goal):
@@ -461,6 +463,8 @@ if __name__ == '__main__':
         file = argv[1].strip().strip("\"")
     else:
         file = "test_places.json"
+        file = "visualizer_setup/32.json"
+
 
     print(os.getcwd())
 
