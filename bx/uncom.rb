@@ -16,7 +16,7 @@ class UnFunc
 		return false if stack.length < @arity
 		stack[-@arity, @arity].each_with_index do |item, idx|
 			check = @checks[idx]
-			return false if check == :num and not item.is_a? Integer
+			return false if check == :num and not item.is_a? Float
 			return false if check == :bool and not (item.is_a?(FalseClass) or item.is_a?(TrueClass))
 			return false if check == :str and not item.is_a? String
 			return false if check == :quote and not item.is_a? UnQuote
@@ -39,8 +39,7 @@ end
 
 $uncom_words = {}
 [
-["uncom-v", [], lambda { "uncom ver 2108.2021" }],
-["shrek!", [], lambda { puts "shrek!" ; nil }],
+["uncom-v", [], lambda { "uncom ver 2208.2021" }],
 
 ["false", [], lambda { false }],
 ["true", [], lambda { true }],
@@ -62,7 +61,7 @@ $uncom_words = {}
 ["not", [:bool], lambda {|a| not a }],
 
 ["any?", [:any], lambda {|a| true }],
-["num?", [:any], lambda {|a| a.is_a?(Integer) }],
+["num?", [:any], lambda {|a| a.is_a?(Float) }],
 ["bool?", [:any], lambda {|a| a.is_a?(FalseClass) or a.is_a?(TrueClass) }],
 ["str?", [:any], lambda {|a| a.is_a?(String) }],
 ["quote?", [:any], lambda {|a| a.is_a?(UnQuote) }],
@@ -94,6 +93,12 @@ $uncom_words["def"] = Class.new(UnFunc) do
 	end
 end.new("def", [:quote, :quote, :quote], lambda {|a, b, c|})
 
+$uncom_words["if"] = Class.new(UnFunc) do
+	def call(uncom)
+		
+	end
+end.new("def", [:bool, :quote], lambda {|a, b|})
+
 class UnComment
 	# NOTE: MAKE SURE THAT THE LENGTH OF THE SOURCE STRING NEVER GETS CHANGED
 
@@ -118,7 +123,7 @@ class UnComment
 	end
 
 	def is_commented?
-		# TODO: check source to see if we're commnted
+		return @source[@start] ==  "#"
 	end
 
 	def comment!
@@ -164,11 +169,8 @@ class Uncom
 		@dict = [$uncom_words.merge({}), {}]
 		# storage for locals, mirrors dict, should get pushed / popped when dict does
 		@vars = [{}, {}]
-
-		# ip should be place at the start of NEXT word to be executed when step() is called
+		# ip is start of word to be executed when run() is called
 		@instruction_ptr = 0
-
-		# TODO: call and return functions
 		@return_stack = []
 	end
 
@@ -259,7 +261,7 @@ class Uncom
 		end
 
 		begin
-			num = Integer(word)
+			num = Float(word)
 			word = num
 		rescue ArgumentError
 			# not number
@@ -282,7 +284,7 @@ class Uncom
 	def do_word(word)
 		# number -> push
 		# quote-> push
-		if word.is_a?(Integer) or word.is_a?(UnQuote) then
+		if word.is_a?(Float) or word.is_a?(UnQuote) then
 			data.push word
 			return try_apply_stacks()
 		end
@@ -293,7 +295,6 @@ class Uncom
 			data.push(word)
 			return do_word(word.name + "=")
 		end
-
 
 		# found local -> do word
 		if @dict.last.member? word then
