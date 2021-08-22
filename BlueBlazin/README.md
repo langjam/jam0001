@@ -51,9 +51,7 @@ function :: IDENTIFIER "(" parameters? ")" block
 parameters :: IDENTIFIER ( "," IDENTIFIER )*
 arguments :: expressionOrComment ( "," expressionOrComment )*
 
-comment :: activeComment | passiveComment
-activeComment :: "/*" whitespace_ "[" NUMBER+ "]" text* "*/"
-passiveComment :: "//" text* (NEWLINE | EOF)
+comment :: "/*" whitespace_ "[" NUMBER+ "]" text* "*/"
 
 reference :: "/*" "[[" "{" expressionOrComment "}" "]]" "*/"
 

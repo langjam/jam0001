@@ -12,7 +12,7 @@ class Env:
             if key in env.table:
                 return env.table[key]
             env = env.parent
-        return None
+        return (None,)
 
     def set_value(self, key, value):
         self.table[key] = value
@@ -88,8 +88,13 @@ class Interpreter:
             self.evaluate(expr["alternative"])
 
     def while_stmt(self, expr):
+        self.env = Env(self.env)
+
         while self.expression(expr["test"]):
-            self.evaluate(expr["body"])
+            for stmt_or_dclr in expr["body"]:
+                self.evaluate(stmt_or_dclr)
+
+        self.env = self.env.parent
 
     def expression(self, expr):
         match expr["type"]:
@@ -100,11 +105,13 @@ class Interpreter:
             case Ast.NUMBER | Ast.BOOLEAN | Ast.NULL | Ast.STRING:
                 return expr["value"]
             case Ast.DICTIONARY:
-                return dict(expr["items"])
+                items = map(lambda x: map(self.expression, x), expr["items"])
+                return dict(items)
             case Ast.IDENTIFIER:
                 name = expr["value"]
+
                 value = self.env.get(name)
-                if value is None:
+                if value == (None,):
                     raise Exception(f"Runtime Error: identifier {name} "
                                     f"not found on line: {expr['line']}")
                 return value
@@ -129,8 +136,8 @@ class Interpreter:
                 if not isinstance(dictionary, dict):
                     raise Exception(
                         f"Runtime Error: object is not a dictionary")
-
-                key = self.expression(expr["key"])
+                # key = self.expression(expr["key"])
+                key = expr["key"]
                 return dictionary.get(key, None)
             case _:
                 raise Exception(f"Internal Error {expr}")

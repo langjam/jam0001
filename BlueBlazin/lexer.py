@@ -134,13 +134,13 @@ class Lexer:
         ident = ""
         line = self.line
 
-        if self.is_alpha() or self.peek() == "$":
+        if self.is_alpha() or self.peek() == "$" or self.peek() == "_":
             ident += self.advance()
         else:
             raise Exception(f"Syntax Error: Invalid identifier"
                             f" start {self.peek()} on line: {self.line}")
 
-        while self.is_alphanumeric() or self.peek() == "$":
+        while self.is_alphanumeric() or self.peek() == "$" or self.peek() == "_":
             ident += self.advance()
 
         if self.is_keyword(ident):

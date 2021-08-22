@@ -145,7 +145,7 @@ class Parser:
         self.expect(TokenType.PUNCTUATOR, "(")
         test = self.expression()
         self.expect(TokenType.PUNCTUATOR, ")")
-        body = self.stmt()
+        body = self.block()["body"]
 
         return {"type": Ast.WHILE_STMT, "test": test, "body": body, "line": line}
 
@@ -351,6 +351,7 @@ class Parser:
                             raise Exception(f"Illegal key. Expected "
                                             f"Number or String on line: {token['line']}")
                     self.expect(TokenType.PUNCTUATOR, "]")
+                    token = self.peek()
                 case _:
                     return expr
 
@@ -415,6 +416,7 @@ class Parser:
                 case {"type": TokenType.PUNCTUATOR, "value": "}"}:
                     break
                 case {"type": TokenType.NUMBER, "value": value}:
+                    self.advance()
                     key = {"type": Ast.NUMBER,
                            "value": value, "line": token['line']}
                     self.expect(TokenType.PUNCTUATOR, ":")
@@ -423,6 +425,22 @@ class Parser:
                     token = self.peek()
                     if token["type"] != TokenType.PUNCTUATOR or token["value"] != "}":
                         self.expect(TokenType.PUNCTUATOR, ",")
+                        token = self.peek()
+                case {"type": TokenType.STRING, "value": value}:
+                    self.advance()
+                    key = {"type": Ast.STRING,
+                           "value": value, "line": token['line']}
+                    self.expect(TokenType.PUNCTUATOR, ":")
+                    value = self.expression()
+                    items.append((key, value))
+                    token = self.peek()
+
+                    if token["type"] != TokenType.PUNCTUATOR or token["value"] != "}":
+                        self.expect(TokenType.PUNCTUATOR, ",")
+                        token = self.peek()
+                case _:
+                    raise Exception(f"Invalid Token: only numbers or "
+                                    f"strings allowed as dictionary keys got {token['value']}")
 
         self.expect(TokenType.PUNCTUATOR, "}")
 
