@@ -94,6 +94,7 @@ class ComstructLexer(Lexer):
         # t.value = t.value.replace("*", "")
         token = t.value.removeprefix("/*").removesuffix("*/").replace("*", "").split("\n")
         t.value = FuncDescProcessor().tokenize(token)
+        self.lineno += len(token) - 1 if (len(token) - 1) > 0 else 0
         return t
 
     def error(self, t):
