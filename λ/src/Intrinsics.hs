@@ -125,6 +125,10 @@ plus Str{} v = pure $ Left $ "Expected RHS of (+) to be of type Str, but found "
 plus List{} v = pure $ Left $ "Expected RHS of (+) to be of type List, but found " ++ valType v
 plus _ _ = pure $ Left "Invalid values in (+)"
 
+quot' :: Integer -> Integer -> Either EvalError Integer
+quot' _ 0 = Left "Division by zero"
+quot' a b = Right $ a `quot` b
+
 read' :: String -> Either EvalError Val
 read' s =
   case readMaybe s of
@@ -176,7 +180,7 @@ intrinsics =
   , ("+", toVal plus)
   , ("-", toVal $ (-) @Integer)
   , ("*", toVal $ (*) @Integer)
-  , ("/", toVal $ quot @Integer)
+  , ("/", toVal quot')
   , ("%", toVal $ rem @Integer)
   , ("^", toVal $ (^) @Integer @Integer)
 
