@@ -66,3 +66,38 @@ $ npm install --dev
 $ npm run dev # run without building
 $ npm run build # build to js
 ```
+
+## Builtins
+
+Many JavaScript features are already accessible, you should be able to 1-to-1 translate our Smalltalk-like Mouthful language to JavaScript.
+
+e.g. `console log: 'Hello, World!'`
+
+
+Here are some additions to overcome some things that can't be 1-to-1 translated:
+
+To access an index on an Array, use:
+
+`Array at: index`,
+
+e.g. `@{ 10 11 12 } at: 2` ==> `12`
+
+To get a range of numbers (not inclusive), use: `Number to: end`,
+
+e.g. `0 to: 10` ==> `@{ 0 1 2 3 4 5 6 7 8 9 }
+
+The not operator for boolean values is: `Boolean not`,
+
+e.g. `true not` ==> `false`
+
+An if is written as: `Boolean ifTrue: then`,
+
+e.g. `1 < 10 ifTrue: [ console log: 'True!' ]` ==> True!
+
+You can also use: `Boolean ifFalse: then`,
+
+e.g. `10 < 1 ifFalse: [ console log: 'False!' ]` ==> False!
+
+The two can be combined like: `Boolean ifTrue: trueBranch ifFalse: falseBranch`,
+
+e.g. `1 < 10 ifTrue: [ console log: 'True!' ] ifFalse: [ console log: 'False!' ]` ==> True!
