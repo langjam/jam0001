@@ -24,7 +24,7 @@ markdown snippet tags a checklist with the name "TodoList":
 # Things I have come here to do
 [TodoList]::
 *   [ ] Chew bubblegum
-*   [ ] Kick ass
+*   [ ] Kick butt
 ```
 
 Any root-level element can be tagged (even other tags!). Tags must have unique names.
@@ -38,8 +38,8 @@ which we are calling "mouthful".
 Building off of the last snippet:
 ```markdown
 [TodoList]:: (
-    kickAss
-        this CheckItem: 'Kick ass'
+    completeKickButt
+        this CheckItem: 'Kick butt'
 )
 ```
 
