@@ -171,8 +171,6 @@ class Parser:
             return self.parse_set_stmt()
         elif token == Token.IDENTIFIER_WORD:
             return self.parse_func_call()
-        else:
-            print(f"Token = {token}")
 
     def parse_set_stmt(self):
         target = self.parse_identifier()
@@ -202,7 +200,6 @@ class Parser:
             contains_done = True
         self.expect(Token.DOT)
         if_stmt = IfStmt(condition, stmt, contains_done)
-        print(f"*******'{if_stmt}'")
         return Stmt(if_stmt)
 
     def parse_func_call(self):
