@@ -1,9 +1,9 @@
 use toml::Value;
 
-use std::env;
-use std::fs;
-use std::fmt;
 use std::collections::HashMap;
+use std::env;
+use std::fmt;
+use std::fs;
 
 struct Env {
     env: HashMap<String, Exp>,
@@ -11,19 +11,25 @@ struct Env {
 
 impl Default for Env {
     fn default() -> Self {
-        let mut default = Self { env: Default::default() };
+        let mut default = Self {
+            env: Default::default(),
+        };
 
-        default.env.insert(String::from("+"), Exp::Fn(|args| {
-            let answer: f64 = args.iter().map(|v| {
-                match v {
-                    Value::Float(f) => *f,
-                    Value::Integer(i) => *i as f64,
-                    _ => panic!("you can only add numbers, silly"),
-                }
-            }).sum();
+        default.env.insert(
+            String::from("+"),
+            Exp::Fn(|args| {
+                let answer: f64 = args
+                    .iter()
+                    .map(|v| match v {
+                        Value::Float(f) => *f,
+                        Value::Integer(i) => *i as f64,
+                        _ => panic!("you can only add numbers, silly"),
+                    })
+                    .sum();
 
-            Value::Float(answer)
-        }));
+                Value::Float(answer)
+            }),
+        );
 
         default
     }
@@ -80,7 +86,6 @@ impl From<toml::Value> for Exp {
 }
 
 fn main() {
-
     let mut args = env::args();
 
     // throw away program name
@@ -93,7 +98,12 @@ fn main() {
     let toml = fs::read_to_string(path).expect("Could not read the file");
     let value = toml.parse::<Value>().unwrap();
 
-    let program = Exp::from(value.get("main").expect("you have to have a table with the 'main' key").clone());
+    let program = Exp::from(
+        value
+            .get("main")
+            .expect("you have to have a table with the 'main' key")
+            .clone(),
+    );
 
     let mut env = Env::default();
 
@@ -117,7 +127,6 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
             }
 
             panic!("can't find a function '{}'", values[0]);
-
         }
         Exp::Integer(_) => exp.clone(),
         Exp::Float(_) => exp.clone(),
