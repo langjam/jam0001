@@ -50,13 +50,13 @@ impl Communicator for CliRunner {
     }
 
     fn print_char(&self, data: Vec<i64>) -> Result<(), CommunicatorError> {
-        let char_data = data.iter().map(|x| (x&0xFF) as u8).collect::<Vec<_>>();
-        log::info!("simulation says: {}", String::from_utf8(char_data).map_err(|_| CommunicatorError)?);
+        let char_data = data.iter().map(|x| (x&0xFF) as u8).collect();
+        log::info!("simulation says: {}", String::from_utf8(char_data)?);
         Ok(())
     }
 
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), train::interface::CommunicatorError> {
-        log::info!("simulation says: train {} moved from ({} track {}) to ({} track {})", train.identifier, from_station.name, start_track, to_station.name, end_track);
+        log::debug!("simulation says: train {} moved from ({} track {}) to ({} track {})", train.identifier, from_station.name, start_track, to_station.name, end_track);
         Ok(())
     }
 }

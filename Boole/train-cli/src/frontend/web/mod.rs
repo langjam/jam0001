@@ -3,7 +3,7 @@ pub mod runner;
 use warp::Filter;
 use std::time::Duration;
 use futures_util::stream::{StreamExt, SplitSink};
-use futures_util::SinkExt;
+use futures_util::{SinkExt, FutureExt};
 use futures_util::join;
 use std::sync::mpsc::{channel, Sender};
 use serde::{Serialize, Deserialize};
@@ -17,7 +17,10 @@ use train::vm::Data;
 use train::ast::{Station, Train, Program};
 use crate::frontend::cli::CliRunner;
 use std::sync::atomic::{AtomicI64, Ordering};
-use crate::frontend::web::runner::{WebRunner, send};
+use crate::frontend::web::runner::{WebRunner, send, GenerateVisualizerDataError};
+use thiserror::Error;
+use std::future::Future;
+use std::path::PathBuf;
 
 #[derive(Serialize)]
 #[serde(tag = "type")]
@@ -42,6 +45,7 @@ pub enum MessageToWebpage{
     Error{
         message: String
     },
+    CreateDataError,
 }
 
 #[derive(Deserialize)]
@@ -54,7 +58,19 @@ pub enum MessageFromWebpage{
     }
 }
 
-async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
+#[derive(Debug, Error)]
+pub enum ReceiveMessageError {
+    #[error("generate visualizer data: {0}")]
+    GenerateVisualizerDataError(#[from] GenerateVisualizerDataError)
+}
+
+async fn receive_message_wrapper(ws: WebSocket, program: Program, connection_id: i64) {
+    if let Err(e) = receive_message(ws, program, connection_id).await {
+        log::error!("wrapper {}", e);
+    }
+}
+
+async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) -> Result<(), ReceiveMessageError> {
     let (mut ws_tx, mut ws_rx) = ws.split();
 
     let (mut response_tx, response_rx) = channel();
@@ -63,7 +79,13 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
     let mut vm = Data::new(program);
 
 
-    let visualizer_path = runner.generate_visualizer_file(connection_id);
+    let visualizer_path = match runner.generate_visualizer_file(connection_id) {
+        Ok(i) => i,
+        Err(e) => {
+            send(&mut ws_tx, &MessageToWebpage::CreateDataError);
+            Err(e.into())
+        }
+    };
 
     tokio::task::spawn(async move {
         while let Some(r) = ws_rx.next().await {
@@ -75,20 +97,22 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
                             Ok(message) => match message {
                                 MessageFromWebpage::AdvanceSimulation => {
                                     match vm.do_current_step(&runner) {
-                                        Err(e) => runner.send(MessageToWebpage::Error{message: format!("{:?}", e)}).expect("failed to send"),
-                                        Ok(i) => {},
+                                        Err(e) => {
+                                            runner.send(MessageToWebpage::Error{message: format!("{:?}", e)}).expect("failed to send")
+                                        },
+                                        Ok(_) => {},
                                     }
                                 }
                                 MessageFromWebpage::SendInputResponse{ identifier, input } => {
                                     // runner.input_response(id, response);
                                 }
                             }
-                            Err(e) => log::error!("{}", e)
+                            Err(e) => log::error!("serde: {}", e)
                         }
                     }
                     Err(_) => log::error!("couldn't convert message to string (binary?)")
                 }
-                Err(e) => log::error!("{}", e),
+                Err(e) => log::error!("to string: {}", e),
             }
         }
     });
@@ -101,11 +125,17 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) {
         loop {
             let res = rx.recv();
 
-            if let Ok(i) = res {
-                send(&mut ws_tx, &i).await;
+            match res {
+                Ok(i) => send(&mut ws_tx, &i).await,
+                Err(e) => {
+                    log::error!("receive after send: {}", e);
+                    break;
+                },
             }
         }
     });
+
+    Ok(())
 }
 
 pub async fn run(program: Program) {
@@ -120,7 +150,7 @@ pub async fn run(program: Program) {
             ws.on_upgrade(move |websocket| {
                 let connection_id = local_connection_id_counter.fetch_add(1, Ordering::SeqCst);
 
-                receive_message(websocket, local_program.clone(), connection_id)
+                receive_message_wrapper(websocket, local_program.clone(), connection_id)
             })
         });
 

@@ -15,9 +15,9 @@ function startSocket() {
     let s = new WebSocket(WS_URL);
 
     s.addEventListener("message", (m) => {
+
         let message = JSON.parse(m.data)
-
-
+        console.log(message);
         if (typeof message["type"] !== "undefined") {
             switch (message["type"]) {
                 case "VisualizerData": {

@@ -12,6 +12,7 @@ use std::process::{Command, ExitStatus};
 use crate::frontend::web::MessageToWebpage;
 use futures_util::SinkExt;
 use std::sync::mpsc::Sender;
+use thiserror::Error;
 
 #[derive(Serialize)]
 struct VisualizerStation {
@@ -25,6 +26,17 @@ pub struct WebRunner {
     response_tx: Sender<MessageToWebpage>,
 }
 
+#[derive(Debug, Error)]
+pub enum GenerateVisualizerDataError {
+    #[error("failed to serialize: {0}")]
+    Serialize(#[from] serde_json::Error),
+
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("generating visualizer data (in python) failed")]
+    GenerateVisualizerData,
+}
 
 impl WebRunner {
     pub fn new(program: Program, response_tx: Sender<MessageToWebpage>) -> Self {
@@ -35,11 +47,11 @@ impl WebRunner {
     }
 
     pub fn send(&self, m: MessageToWebpage) -> Result<(), CommunicatorError> {
-        self.response_tx.send(m).map_err(|_| CommunicatorError)?;
+        self.response_tx.send(m)?;
         Ok(())
     }
 
-    pub fn generate_visualizer_file(&self, connection_id: i64) -> PathBuf {
+    pub fn generate_visualizer_file(&self, connection_id: i64) -> Result<PathBuf, GenerateVisualizerDataError> {
         let mut res = Vec::new();
 
         let mut indices = HashMap::new();
@@ -62,7 +74,7 @@ impl WebRunner {
             })
         }
 
-        let serialized = serde_json::to_string_pretty(&res).expect("failed to serialize program");
+        let serialized = serde_json::to_string_pretty(&res)?;
 
         let mut path = PathBuf::new();
         path.push("visualizer");
@@ -71,11 +83,11 @@ impl WebRunner {
 
 
         if path.exists() {
-            std::fs::remove_file(&path).expect("coluld not remove file");
+            std::fs::remove_file(&path)?;
         }
 
-        let mut file = File::create(&path).expect("could not create file");
-        file.write_all(serialized.as_bytes()).expect("failed to write");
+        let mut file = File::create(&path)?;
+        file.write_all(serialized.as_bytes())?;
 
         log::info!("calling python script to generate station layout");
 
@@ -85,10 +97,10 @@ impl WebRunner {
             .arg(format!("{:?}", &path));
         command.current_dir(".");
 
-        let mut child = command.spawn().expect("spawn python program");
-        let status = child.wait().expect("wasn't running");
+        let mut child = command.spawn()?;
+        let status = child.wait()?;
         if !status.success() {
-            panic!("failed to generate station layout");
+            return Err(GenerateVisualizerDataError::GenerateVisualizerData);
         }
         log::info!("finished generating station layout");
 
@@ -97,7 +109,7 @@ impl WebRunner {
         path.push("visualizer_setup");
         path.push(format!("{}.json.result.json", connection_id));
 
-        path
+        Ok(path)
     }
 }
 

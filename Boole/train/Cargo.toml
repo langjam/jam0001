@@ -13,6 +13,7 @@ lazy_static = "1.4.0"
 strum = "0.21"
 strum_macros = "0.21"
 rand = "0.8.4"
+thiserror = "1.0.26"
 
 [dependencies.serde]
 version = "1.0"

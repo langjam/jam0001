@@ -1,6 +1,6 @@
 
 const zoomSpeed = .2;
-const minimumZoom = .3;
+const minimumZoom = .1;
 const default_scale = 10;
 const controlsHeight = 40;
 
@@ -53,7 +53,7 @@ function loadData(path) {
 
             for(const station of stations) {
                 grid.addStation(new Station(
-                    createVector(station["x"], station["y"]), station["stoppers"]
+                    createVector(station["x"], station["y"]), station["type"], station["stoppers"],
                 ))
             }
 

@@ -445,12 +445,12 @@ if __name__ == '__main__':
     stations = StationGroup.build(stations)
     # stations.plot()
     stations.scale(5)
-    # stations.plot()
+    stations.plot()
 
     world = World(stations.stations)
     world.build()
     print(world.roads)
-    # world.plot()
+    world.plot()
     outp = world.to_json()
 
     with open(f"{file}.result.json","w") as f:

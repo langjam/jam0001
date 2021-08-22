@@ -1,5 +1,6 @@
 
 const TILE_SIZE = 50;
+const OP_SIZE = TILE_SIZE * 3/4
 
 const TILE_TYPE = {
     Horizontal: {name: "track_straight_EW.png", img: null},
@@ -11,7 +12,7 @@ const TILE_TYPE = {
     WN: {name: "track_corner_WN.png", img: null},
 
     T_LEFT: {name: "T_crossing_left.png", img: null},
-    T_RIGHT: {name: "T_crossing_right.png", img: null},
+    CROSSING: {name: "crossing.png", img: null}
 }
 
 const COLOR = {
@@ -28,23 +29,26 @@ const COLOR = {
 }
 
 const STATION_TYPE = {
-    Delete: "op_delete.png",
-    Duplicate: "op_duplicate.png",
-    Nothing: "op_nothing.png",
-    Rotate: "op_rotate.png",
-    Transfer: "op_transfer.png",
+    "delete": "op_delete.png",
+    "duplicate": "op_duplicate.png",
+    "nothing": "op_nothing.png",
+    "rotate": "op_rotate.png",
+    "transfer": "op_transfer.png",
+    "delete_top": "op_delete_top.png",
 
-    Input: "op_input.png",
-    Print: "op_print.png",
+    "input": "op_input.png",
+    "print_number": "op_print_number.png",
+    "print_string": "op_print_string.png",
 
-    Add: "op_add.png",
-    Sub: "op_sub.png",
-    Mul: "op_mul.png",
-    Mod: "op_mod.png",
-    Div: "op_div.png",
+    "add": "op_add.png",
+    "sub": "op_sub.png",
+    "mul": "op_mul.png",
+    "mod": "op_mod.png",
+    "div": "op_div.png",
 
-    SwitchEQ: "op_switch%20eq.png",
-    SwitchGTE: "op_switch%20gte.png",
+    "switch_eqz": "op_switch%20eq.png",
+    "switch_gtez": "op_switch%20gte.png",
+    "switch_empty": "op_switch%20empty.png",
 }
 
 const DIRECTION = {
@@ -61,6 +65,7 @@ let locomotiveAccent1 = {}
 let stationForeground;
 let stationBackground;
 let stopper;
+let stationTypeImages = {}
 
 function preloadTrain() {
     locomotiveBackground = loadImage("tiles/locomotive_background.png");
@@ -75,6 +80,11 @@ function preloadTrain() {
     stationBackground = loadImage("tiles/station_bottom.png")
     stationForeground = loadImage("tiles/station_top.png")
     stopper = loadImage("tiles/stopper.png")
+
+    for (const i in STATION_TYPE) {
+        const station = STATION_TYPE[i];
+        stationTypeImages[i] = loadImage(`tiles/${station}`)
+    }
 }
 
 function drawTile(x, y, w, h, tile_type) {
@@ -182,10 +192,12 @@ class Train {
 class Station {
     location
     stopped
+    station_type
 
-    constructor(location, stopped = []) {
+    constructor(location, station_type, stopped = []) {
         this.location = location;
         this.stopped = stopped;
+        this.station_type = station_type;
     }
 
     drawBackground() {
@@ -204,18 +216,11 @@ class Station {
             if (i < this.stopped.length && !this.stopped[i]) {
                 push()
                 switch (i) {
-                    case 0:
+                    case 5:
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break;
-                    case 1:
+                    case 4:
                         translate(TILE_SIZE, 0);
-                        image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
-                        break;
-                    case 2:
-                        translate(TILE_SIZE, 0);
-                        translate(TILE_SIZE / 2, TILE_SIZE / 2);
-                        rotate(radians(90));
-                        translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break;
                     case 3:
@@ -223,17 +228,24 @@ class Station {
                         translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(90));
                         translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
+                        image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
+                        break;
+                    case 2:
+                        translate(TILE_SIZE, 0);
+                        translate(TILE_SIZE / 2, TILE_SIZE / 2);
+                        rotate(radians(90));
+                        translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
                         translate(TILE_SIZE, 0);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break;
-                    case 4:
+                    case 1:
                         translate(TILE_SIZE, TILE_SIZE);
                         translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(180));
                         translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break;
-                    case 5:
+                    case 0:
                         translate(TILE_SIZE, TILE_SIZE);
                         translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(180));
@@ -241,14 +253,14 @@ class Station {
                         translate(TILE_SIZE, 0);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break
-                    case 6:
+                    case 7:
                         translate(0, TILE_SIZE);
                         translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(-90));
                         translate(-TILE_SIZE / 2, -TILE_SIZE / 2);
                         image(stopper, 0, 0, TILE_SIZE, TILE_SIZE);
                         break
-                    case 7:
+                    case 6:
                         translate(0, TILE_SIZE);
                         translate(TILE_SIZE / 2, TILE_SIZE / 2);
                         rotate(radians(-90));
@@ -260,6 +272,9 @@ class Station {
                 pop()
             }
         }
+
+        translate(TILE_SIZE * 5/8, TILE_SIZE * 5/8);
+        image(stationTypeImages[this.station_type], 0, 0, OP_SIZE, OP_SIZE)
 
         pop()
     }
