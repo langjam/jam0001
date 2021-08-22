@@ -1,13 +1,10 @@
-?start: temps? exprs
+?start: repl
 
-message: word -> unary_message | op word -> binary_message | message_pair+ -> keyword_message
-message_pair: kw word
+repl: temps? exprs
 
 ?exprs: expr ("." expr)* "."?
 
-?expr: answer | assign
-
-answer: "^" expr
+?expr: assign
 
 ?assign: word ":=" assign | send
 

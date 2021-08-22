@@ -5,8 +5,12 @@ import {List} from './Types'
 import Runtime from './Runtime'
 import {mdastToMd} from './Markdown'
 import {saveToDisk} from './Runtime/File'
+import transformer from "./transformer";
+import {get_parser} from "./mouthful_repl";
 
 const srcPath = process.argv[2];
+
+const parser = get_parser({transformer})
 
 console.log(srcPath)
 const src = fs.readFileSync(srcPath).toString()
@@ -23,5 +27,5 @@ console.log('testing save')
 saveToDisk(runtime)
 
 startRepl((input) => {
-    console.log(input)
+    console.log(parser.parse(input))
 }).catch(console.log)
