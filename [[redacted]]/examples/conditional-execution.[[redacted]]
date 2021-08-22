@@ -1,0 +1,24 @@
+[[TUTO:Conditional execution]]
+[[In REDACTED we have the venerable if, with the structure if <cond> then <expr> else <expr>]]
+print '1 is' (if 1 then 'truthy' else 'falsy').
+print '0 is' (if 0 then 'truthy' else 'falsy').
+
+[[The else is optional]]
+if 1 then print 'This will be printed'.
+if 0 then print 'This will not be printed'.
+
+[[If we want multiple statements we can choose]]
+if 0 then
+do
+    'My statement'.
+    'My statement'.
+    '...'
+done.
+
+[[or...]]
+if 0 then
+(
+    'My statement'.
+    'My statement'.
+    '...'
+).
