@@ -11,10 +11,8 @@ Currently only *nix platforms are supported.
 cd no-one-understands-my-vine-references-so-i-made-this-programming-language
 cargo build
 
-./target/debug/no-one-understands-my-vine-references-so-i-made-this-programming-language $PATH_TO_SOURCE_FILE
+./target/debug/no-one-understands-my-vine-references-so-i-made-this-programming-language example.vine
 ```
-
-There is an example program in `no-one-understands-my-vine-references-so-i-made-this-programming-language/example.vine`.
 
 ## VM
 The Virtual Machine for this language is extremely simple: two 64-bit
