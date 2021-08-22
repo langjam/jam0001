@@ -54,4 +54,5 @@ typedef enum Token_Type (*Lexer_Function)(struct Lexer_State*);
 struct Lexer_State lex_new(const string input);
 void lex_drop(struct Lexer_State *self);
 struct Token lex_determine(struct Lexer_State *self);
-struct Span lex_get_comment(struct Lexer_State *self);
+struct Span lex_get_comment(struct Lexer_State *self, usize pos);
+

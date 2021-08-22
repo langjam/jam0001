@@ -119,5 +119,5 @@ struct Parser_Node pnode_listing(usize pos, enum Parser_Node_Kind kind);
 struct Parser_Node pnode_unary(usize pos, enum Parser_Node_Kind kind, struct Parser_Node left);
 struct Parser_Node pnode_binary(usize pos, enum Parser_Node_Kind kind, struct Parser_Node left, struct Parser_Node right);
 struct Parser_Node pnode_ternary(usize pos, enum Parser_Node_Kind kind, struct Parser_Node cond, struct Parser_Node left, struct Parser_Node right);
-
+struct Parser_Node pnode_endpoint(usize pos, enum Parser_Node_Kind kind);
 void parser_deinit();

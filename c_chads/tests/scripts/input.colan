@@ -1,9 +1,7 @@
 main := proc () void {
-    if (a == b) {
-
-    }
-    else if (x) {
-
-    }
-    else {}
+    #test
+    # ^sus
+    # ^f
+    x := 3;
+    print([x | isset sus], [x | isset flag]);
 };
