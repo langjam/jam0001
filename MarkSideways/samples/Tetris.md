@@ -104,28 +104,63 @@ This is a list of various color themes for various levels. It's an array of arra
 this.colorThemes = this.generateColorThemes();
 ```
 
-### Update Phase
+### Apply Events
+- `events` - list of key presses and releases since the last frame.
 
-- `events` - list of key presses and releases since the last frame
+We loop through the events and take various actions based on the key that's pressed.
+
+MarkSideways doesn't currently support foreach loops, and so we must loop from 0 till the length and dereference the events from the event list individually.
 
 ```
-if this.clearingCounter != null {
-    this.performClearingLineUpdate();
-} else {
-
     for i = 0 till events.length {
         event = events[i];
+```
+
+When pressing left or right, we should attempt to adjust the overlay's x coordinate by -1 or 1. These methods check if there is no active overlay, so these calls are safe as-is.
+
+```
         if event == 'left:press' {
             this.tryMoveOverlay(-1, 0);
         } else if event == 'right:press' {
             this.tryMoveOverlay(1, 0);
-        } else if event == 'up:press' {
+        }
+```
+
+Next we check if up was pressed or spacebar. These rotate the current piece clockwise and counter-clockwise. These methods will only work if the move is valid, so these are also safe as-is.
+
+```
+        else if event == 'up:press' {
             this.overlayRotate(true);
         } else if event == 'space:press' {
             this.overlayRotate(false);
         }
     }
+```
 
+> Note that pressing `down` is missing from this list. Because that's a continuous action rather than a one-time-when-the-key-is-first-touched event, there's a separate built-in method called `game_is_key_pressed` that will be used later.
+
+### Update Phase
+
+- `events` - list of key presses and releases since the last frame.
+
+We first check to see if there's an active value in the `clearingCounter` field. This is an indication that lines are being cleared and an animation is running which should block all other upates and inpute.
+
+```
+if this.clearingCounter != null {
+    this.performClearingLineUpdate();
+}
+```
+
+In the next phase (the interactive phase) we first take all the keyboard events and apply them to the state....
+
+```
+else {
+    this.applyEvents(events);
+```
+
+The remaining portion of the interactive phase update is for dropping the current overlay. If there isn't an overlay, create one!
+
+```
     fallCounterStart = 30.0;
 
     if this.overlay == null {
@@ -133,6 +168,11 @@ if this.clearingCounter != null {
         this.createNewOverlay();
     }
 
+```
+
+If the fall counter reaches 0, this means it's time to apply gravity. We use the same `tryMoveOverlay` method that moves the pieces from side-to-side to try to move the piece down. If it encounters a collision (indicated by the returned boolean), we know it's time to flatten the overlay onto the game grid and start anew. We also check to see if this causes any lines to become filled.
+
+```
     if this.fallCounter <= 0 {
         this.fallCounter = fallCounterStart;
         if !this.tryMoveOverlay(0, 1) {
@@ -140,11 +180,13 @@ if this.clearingCounter != null {
             this.overlay = null;
             this.checkForClearLines();
         }
-    } else {
+    }
+```
+If the fall counter hasn't reached 0, then we should help it get there. We call a method called `getDropRate()` that determines how much the fallCounter should decrement by. This uses a few factors including the current level and whether the down arrow is currently pressed.
+
+```
+    else {
         this.fallCounter -= this.getDropRate();
-        if game_is_key_pressed('down') {
-            this.fallCounter -= 10;
-        }
     }
 }
 
@@ -201,15 +243,34 @@ return true;
 
 ### Get Drop Rate
 
-TODO: make this increase in terms of the lines cleared/level
+This returns the a number that will be subtracted from a gravity counter. When the gravity counter reaches 0, then the piece drops by one cell. If this function returns a bigger number, it will appear to fall more quickly.
+
+We start the rate at 2.0 because if it started at 0, then the pieces would not fall at all on level 0.
+```
+rate = 2.0;
+```
+
+We then add a value that grows with each level.
 ```
 level = this.linesCleared / 10;
-return 2.0 + level * 0.5;
+rate = 2.0 + level * 0.5;
+```
+
+Finally we check to see if the down arrow is pressed. If so, we make it fall really fast by adding 10.
+```
+rate += game_is_key_pressed('down') ? 10 : 0;
+```
+
+Once we have the final drop rate, we return it.
+
+```
+return rate;
 ```
 
 ### Flatten Overlay
 
-TODO: this
+This takes the current overlay values and flattens all the non-zero cells into the main game grid.
+
 ```
 for y = 0 till 4 {
     for x = 0 till 4 {
@@ -223,25 +284,45 @@ for y = 0 till 4 {
 
 ### Create New Overlay
 
+This picks a new Tetris piece and creates a new overlay grid.
+
+We start by choosing a random number from 0 through 6.
+
 ```
 pieceId = floor(random_float() * 7);
+```
+We call a helper function that returns a list of 16 values that we can copy into the grid. This is why it's called `flat`.
+```
 flatOverlay = this.getPiece(pieceId);
 this.overlay = makeGrid(4, 4);
-this.overlayX = 3;
-this.overlayY = 0;
-this.overlayUsesTranspose = pieceId < 2;
 for y = 0 till 4 {
     for x = 0 till 4 {
         this.overlay[x][y] = flatOverlay[y * 4 + x];
     }
 }
 ```
+We move the overlay coordinates to the top-center of the screen.
+```
+this.overlayX = 3;
+this.overlayY = 0;
+```
+
+I-Beams and Squares do not rotate. They transpose in place. The piece ID for these is conveniently listed first as items 0 and 1.
+
+```
+this.overlayUsesTranspose = pieceId < 2;
+```
 
 ### Get Piece
 
+Given an ID# from 0 through 6, return a tetris piece in an array.
+
 - `id` - The ID# of the piece, a number between 0 and 6 inclusive
+
+The numbers in the array correspond to the color that should be used within the current level's theme. 1 is always white, and 2 and 3 are accent colors. 
+
+** 0: The I Beam **
 ```
-overlay = makeGrid(4, 4);
 if id == 0 {
     return [
         0, 1, 0, 0,
@@ -250,7 +331,11 @@ if id == 0 {
         0, 1, 0, 0,
     ];
 }
-if id == 1 {
+```
+
+** 1: The Square **
+```
+else if id == 1 {
     return [
         0, 0, 0, 0,
         0, 1, 1, 0,
@@ -258,7 +343,11 @@ if id == 1 {
         0, 0, 0, 0,
     ];
 }
-if id == 2 {
+```
+
+** 2: The T Piece **
+```
+else if id == 2 {
     return [
         0, 1, 0, 0,
         1, 1, 1, 0,
@@ -266,7 +355,11 @@ if id == 2 {
         0, 0, 0, 0,
     ];
 }
-if id == 3 {
+```
+
+** 3: The S Piece **
+```
+else if id == 3 {
     return [
         0, 2, 0, 0,
         0, 2, 2, 0,
@@ -274,7 +367,11 @@ if id == 3 {
         0, 0, 0, 0,
     ];
 }
-if id == 4 {
+```
+
+** 4: The L Piece **
+```
+else if id == 4 {
     return [
         0, 2, 0, 0,
         0, 2, 0, 0,
@@ -282,7 +379,11 @@ if id == 4 {
         0, 0, 0, 0,
     ];
 }
-if id == 5 {
+```
+
+** 5: The Z Piece **
+```
+else if id == 5 {
     return [
         0, 3, 0, 0,
         3, 3, 0, 0,
@@ -290,7 +391,11 @@ if id == 5 {
         0, 0, 0, 0,
     ];
 }
-if id == 6 {
+```
+
+** 6: The Backwards L **
+```
+else if id == 6 {
     return [
         0, 3, 0, 0,
         0, 3, 0, 0,
@@ -298,8 +403,9 @@ if id == 6 {
         0, 0, 0, 0,
     ];
 }
-return overlay;
 ```
+
+> NOTE: These are returned in a flat array to keep the raw data fairly easy to read and oriented in the code itself to match the way it looks when rendered on the screen.
 
 ### Overlay Rotate
 
