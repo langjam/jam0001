@@ -111,7 +111,12 @@ peg::parser!(pub grammar dank() for str {
                    span: start..end,
                    kind: StmtKind::PropAssignment(obj.clone(), prop.clone(), Box::new(value)).alloc()
                })
-           } else {
+            } else if let ExprKind::DynProperty(key, obj) = &*obj.kind.borrow() {
+               Ok(Stmt {
+                 span: start..end,
+                 kind: StmtKind::DynPropAssignment(obj.clone(), key.clone(), Box::new(value)).alloc()
+               })
+            } else {
                Err("Invalid assignment target: expected a property, but got a different node.")
            }
          }
@@ -203,6 +208,9 @@ peg::parser!(pub grammar dank() for str {
       }
       / start:position!() callee:access() "(" args:expr() ** ("," ___) ")" end:position!() {
         Expr { span: start..end, kind: ExprKind::Call(Box::new(callee), args).alloc() }
+      }
+      / start:position!() obj:access() _ "[" ___ key:expr() ___ "]" end:position!() {
+        Expr { span: start..end, kind: ExprKind::DynProperty(Box::new(key), Box::new(obj)).alloc() }
       }
       / primary()
 
@@ -437,7 +445,7 @@ pub mod tests {
             tuple
               field0: ExprKind::Literal
                 field0: Bool(true)
-              field1: StmtKind::Block
+              field1: Block
                 statements= 
                   LineComment
                     body: CommentBody::Empty
@@ -453,14 +461,14 @@ pub mod tests {
             tuple
               field0: ExprKind::Literal
                 field0: Bool(false)
-              field1: StmtKind::Block
+              field1: Block
                 statements= 
                   LineComment
                     body: CommentBody::Empty
                     stmt: StmtKind::ExprStmt
                       expr: ExprKind::Literal
                         field0: Str("then")
-          otherwise: StmtKind::Block
+          otherwise: Block
             statements= 
               LineComment
                 body: CommentBody::Empty
@@ -479,7 +487,7 @@ pub mod tests {
                 op: BinOpKind::Lt
                 right: ExprKind::Literal
                   field0: Num(5.0)
-              field1: StmtKind::Block
+              field1: Block
                 statements= 
                   LineComment
                     body: CommentBody::Empty
@@ -494,7 +502,7 @@ pub mod tests {
                 op: BinOpKind::Lt
                 right: ExprKind::Literal
                   field0: Num(10.0)
-              field1: StmtKind::Block
+              field1: Block
                 statements= 
                   LineComment
                     body: CommentBody::Empty
@@ -506,7 +514,7 @@ pub mod tests {
                           op: BinOpKind::Sub
                           right: ExprKind::Variable
                             name: "x"
-          otherwise: StmtKind::Block
+          otherwise: Block
             statements= 
               LineComment
                 body: CommentBody::Empty
@@ -583,14 +591,15 @@ Ast
         test_eq!(
             test,
             r#"
-Ast
+            Ast
   statements= 
     LineComment
       body: CommentBody::Empty
       stmt: Function
         name: "test"
         args= 
-        body= 
+        body: Block
+          statements= 
     LineComment
       body: CommentBody::Empty
       stmt: Function
@@ -598,15 +607,16 @@ Ast
         args= 
           "a"
           "b"
-        body= 
-          LineComment
-            body: CommentBody::Empty
-            stmt: StmtKind::Print
-              args= 
-                ExprKind::Variable
-                  name: "a"
-                ExprKind::Variable
-                  name: "b"
+        body: Block
+          statements= 
+            LineComment
+              body: CommentBody::Empty
+              stmt: StmtKind::Print
+                args= 
+                  ExprKind::Variable
+                    name: "a"
+                  ExprKind::Variable
+                    name: "b"
     LineComment
       body: CommentBody::Empty
       stmt: StmtKind::LetDecl
@@ -615,7 +625,8 @@ Ast
           field0: Function
             name: "lambda@83:90"
             args= 
-            body= 
+            body: Block
+              statements= 
     LineComment
       body: CommentBody::Empty
       stmt: StmtKind::LetDecl
@@ -626,43 +637,47 @@ Ast
             args= 
               "a"
               "b"
-            body= 
-              LineComment
-                body: CommentBody::Empty
-                stmt: StmtKind::Print
-                  args= 
-                    ExprKind::Variable
-                      name: "a"
-                    ExprKind::Variable
-                      name: "b"
+            body: Block
+              statements= 
+                LineComment
+                  body: CommentBody::Empty
+                  stmt: StmtKind::Print
+                    args= 
+                      ExprKind::Variable
+                        name: "a"
+                      ExprKind::Variable
+                        name: "b"
     LineComment
       body: CommentBody::Empty
       stmt: Function
         name: "returns_x"
         args= 
           "x"
-        body= 
-          LineComment
-            body: CommentBody::Empty
-            stmt: StmtKind::Return
-              value: ExprKind::Variable
-                name: "x"
+        body: Block
+          statements= 
+            LineComment
+              body: CommentBody::Empty
+              stmt: StmtKind::Return
+                value: ExprKind::Variable
+                  name: "x"
     LineComment
       body: CommentBody::Empty
       stmt: Function
         name: "returns_nothing"
         args= 
-        body= 
-          LineComment
-            body: CommentBody::Empty
-            stmt: StmtKind::Return
-              value: None
+        body: Block
+          statements= 
+            LineComment
+              body: CommentBody::Empty
+              stmt: StmtKind::Return
+                value: None
     LineComment
       body: CommentBody::Empty
       stmt: Function
         name: "spaced name"
         args= 
-        body= 
+        body: Block
+          statements= 
     LineComment
       body: CommentBody::Empty
       stmt: StmtKind::ExprStmt
@@ -697,6 +712,8 @@ Ast
         let c = y.a.b.c.d();
         let d = c()()(1, 2, 3)();
 
+        let e = x[0][1][2];
+        let f = c()["x" + "y"].value[7]();
         "#;
 
         test_eq!(
@@ -783,6 +800,43 @@ Ast
                 field0: Num(2.0)
               ExprKind::Literal
                 field0: Num(3.0)
+          args= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "e"
+        initializer: ExprKind::DynProperty
+          key: ExprKind::Literal
+            field0: Num(2.0)
+          obj: ExprKind::DynProperty
+            key: ExprKind::Literal
+              field0: Num(1.0)
+            obj: ExprKind::DynProperty
+              key: ExprKind::Literal
+                field0: Num(0.0)
+              obj: ExprKind::Variable
+                name: "x"
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "f"
+        initializer: ExprKind::Call
+          callee: ExprKind::DynProperty
+            key: ExprKind::Literal
+              field0: Num(7.0)
+            obj: ExprKind::Property
+              name: "value"
+              obj: ExprKind::DynProperty
+                key: ExprKind::Binary
+                  left: ExprKind::Literal
+                    field0: Str("x")
+                  op: BinOpKind::Add
+                  right: ExprKind::Literal
+                    field0: Str("y")
+                obj: ExprKind::Call
+                  callee: ExprKind::Variable
+                    name: "c"
+                  args= 
           args=
         "#
         );
@@ -884,11 +938,11 @@ Ast
   statements= 
     LineComment
       body: CommentBody::Empty
-      stmt: StmtKind::Block
+      stmt: Block
         statements= 
     LineComment
       body: CommentBody::Empty
-      stmt: StmtKind::Block
+      stmt: Block
         statements= 
           LineComment
             body: CommentBody::Empty
@@ -922,7 +976,7 @@ Ast
       stmt: StmtKind::While
         condition: ExprKind::Literal
           field0: Bool(true)
-        body: StmtKind::Block
+        body: Block
           statements= 
             LineComment
               body: CommentBody::Empty
@@ -939,7 +993,7 @@ Ast
       stmt: StmtKind::While
         condition: ExprKind::Literal
           field0: Bool(true)
-        body: StmtKind::Block
+        body: Block
           statements= 
             LineComment
               body: CommentBody::Empty

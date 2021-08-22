@@ -54,7 +54,6 @@ pub struct If<'a> {
 
 #[derive(Debug, Clone, PartialEq, AstToStr)]
 pub struct Block<'a> {
-    #[forward]
     pub statements: Vec<LineComment<'a>>,
 }
 
@@ -68,7 +67,7 @@ pub enum StmtKind<'a> {
     FuncDecl(#[forward] Ptr<Function<'a>>),
     ExprStmt(#[rename = "expr"] ExprPtr<'a>),
     Print(#[rename = "args"] Vec<Expr<'a>>),
-    Block(#[rename = "statements"] Block<'a>),
+    Block(#[forward] Block<'a>),
     UnscopedBlock(#[rename = "statements"] Vec<LineComment<'a>>),
     If(Ptr<If<'a>>),
     While(
@@ -83,6 +82,11 @@ pub enum StmtKind<'a> {
     PropAssignment(
         #[rename = "obj"] ExprPtr<'a>,
         #[rename = "prop"] Cow<'a, str>,
+        #[rename = "value"] ExprPtr<'a>,
+    ),
+    DynPropAssignment(
+        #[rename = "obj"] ExprPtr<'a>,
+        #[rename = "key"] ExprPtr<'a>,
         #[rename = "value"] ExprPtr<'a>,
     ),
     Break,
@@ -150,6 +154,7 @@ pub enum ExprKind<'a> {
         #[rename = "name"] Cow<'a, str>,
         #[rename = "obj"] ExprPtr<'a>,
     ),
+    DynProperty(#[rename = "key"] ExprPtr<'a>, #[rename = "obj"] ExprPtr<'a>),
     Call(
         #[rename = "callee"] ExprPtr<'a>,
         #[rename = "args"] Vec<Expr<'a>>,

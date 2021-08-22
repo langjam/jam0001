@@ -110,7 +110,7 @@ impl<'s> std::cmp::PartialEq for Value<'s> {
             (Self::Fn(l0), Self::Fn(r0)) => std::ptr::eq(l0 as *const _, r0 as *const _),
             (Self::NativeFn(l0), Self::NativeFn(r0)) => l0 == r0,
             (Self::NativeObj(l0), Self::NativeObj(r0)) => l0 == r0,
-            _ => false,
+            _ => std::mem::discriminant(self) == std::mem::discriminant(other),
         }
     }
 }

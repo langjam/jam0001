@@ -70,6 +70,14 @@ impl<'s> Stringify for Stmt<'s> {
                     value.stringify_impl(indent_level)
                 )
             }
+            StmtKind::DynPropAssignment(obj, key, value) => {
+                format!(
+                    "({})[{}] = {};",
+                    obj.stringify_impl(indent_level),
+                    key.stringify_impl(indent_level),
+                    value.stringify_impl(indent_level)
+                )
+            }
             StmtKind::Break => "break;".into(),
             StmtKind::Continue => "continue;".into(),
         }
@@ -93,6 +101,13 @@ impl<'s> Stringify for Expr<'s> {
             ExprKind::Variable(v) => v.to_string(),
             ExprKind::Property(name, obj) => {
                 format!("({}).{}", obj.stringify_impl(indent_level), name)
+            }
+            ExprKind::DynProperty(key, obj) => {
+                format!(
+                    "({})[{}]",
+                    obj.stringify_impl(indent_level),
+                    key.stringify_impl(indent_level)
+                )
             }
             ExprKind::Call(callee, args) => format!(
                 "({})({})",

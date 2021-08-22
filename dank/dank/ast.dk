@@ -40,4 +40,14 @@ let tree = {
         right: { val: 2, left: null, right: null }
     }
 };
+
 traverse(tree);
+
+// // The following removes the statement from the ast.
+// AST.__stmt__ = null;
+{
+    print 1;
+    print 2;
+    print 3;
+}
+

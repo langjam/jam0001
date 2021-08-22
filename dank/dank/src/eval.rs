@@ -234,6 +234,11 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 self.eval_comments_in_expr(obj);
                 self.eval_comments_in_expr(value);
             }
+            StmtKind::DynPropAssignment(obj, key, value) => {
+                self.eval_comments_in_expr(obj);
+                self.eval_comments_in_expr(key);
+                self.eval_comments_in_expr(value);
+            }
         }
     }
 
@@ -258,7 +263,13 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             }
             ExprKind::Literal(_) => (),
             ExprKind::Variable(_) => (),
-            ExprKind::Property(_, _) => (),
+            ExprKind::Property(_, obj) => {
+                self.eval_comments_in_expr(obj);
+            }
+            ExprKind::DynProperty(key, obj) => {
+                self.eval_comments_in_expr(obj);
+                self.eval_comments_in_expr(key);
+            }
         }
     }
 
@@ -369,6 +380,11 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             ExprKind::Property(name, obj) => {
                 let obj = self.eval_expr(obj)?;
                 self.get_prop(&obj, name.clone())
+            }
+            ExprKind::DynProperty(name, obj) => {
+                let obj = self.eval_expr(obj)?;
+                let name = self.eval_expr(name)?.to_string();
+                self.get_prop(&obj, name.into())
             }
             ExprKind::Call(callee, args) => {
                 let callee = self.eval_expr(callee)?;
@@ -499,6 +515,12 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 let obj = self.eval_expr(obj)?;
                 let value = self.eval_expr(value)?;
                 self.set_prop(&obj, prop.clone(), value)?;
+            }
+            StmtKind::DynPropAssignment(obj, key, value) => {
+                let obj = self.eval_expr(obj)?;
+                let key = self.eval_expr(key)?.to_string();
+                let value = self.eval_expr(value)?;
+                self.set_prop(&obj, key.into(), value);
             }
             StmtKind::Block(b) => return self.eval_block(&b.statements),
             StmtKind::UnscopedBlock(b) => return self.eval_unscoped_block(b),
