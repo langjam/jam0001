@@ -1,6 +1,6 @@
 # KerLang
 
-KerLang is an innovative programming language built with love <3 for the [Langjam0001](https://github.com/langjam/jam0001). It features a state of the art compiler named "The Glorious KerLang Compiler" (also known as *the Glorious Ker-Lann Compiler* but who cares ?) and a first-class support for comment-oriented programming
+KerLang is an innovative programming language built with love <3 for the [Langjam0001](https://github.com/langjam/jam0001). It features a state of the art compiler named "The Glorious KerLang Compiler" (also known as *the Glorious Ker-Lann Compiler* but who cares ?) and a first-class support for comment-oriented programming.
 
 ## What on Earth is *comment-oriented programming* ?
 
