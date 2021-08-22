@@ -23,6 +23,6 @@ inputs = Inputs {
 };
 
 result = Outputs {
-    # n.b. in a future version this could be calculated
+    # n.b. in a future version unit for this could be calculated
     speed: inputs.time + inputs.distance,
 };
