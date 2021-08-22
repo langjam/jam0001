@@ -1,7 +1,7 @@
 require 'set'
 require 'pp'
 
-DEBUG = false
+DEBUG = true
 
 def debug(*args)
   if DEBUG
@@ -73,7 +73,6 @@ def run(code)
       end
       input[found_match.begin(0)...found_match.end(0)] = rewrite
     end
-    gets
   end
   input
 end
@@ -127,7 +126,7 @@ end
 def parse(rules)
   rules.split("\n").map do |line|
     if line.start_with?("  ")
-      [:rewrite, parse_pattern(line.chars.drop(2).join)]
+      [:rewrite, line.chars.drop(2).join]
     elsif line.start_with?(/\S/)
       [:header, line]
     elsif line.empty?
@@ -145,11 +144,18 @@ def parse(rules)
         rewrite: nil
       }
     when :rewrite
-      rules.last[:rewrite] = token.last
+      if rules.last[:rewrite]
+        rules.last[:rewrite] += "\n#{token.last}"
+      else
+        rules.last[:rewrite] = token.last
+      end
     else
       raise "Invalid token: #{token.inspect}"
     end
     rules
+  end.map do |rule|
+    rule[:rewrite] = parse_pattern(rule[:rewrite])
+    rule
   end
 end
 
@@ -407,6 +413,17 @@ TESTS = [
     result: "bar"
   },
   {
+    name: 'Multiline substitution',
+    code: <<~BO,
+    Hello world
+    -----------
+    Hello world
+      Hello
+      world
+    BO
+    result: "Hello\nworld"
+  },
+  {
     name: 'Fizzbuzz, Part one: fizz',
     code: <<~BO,
     fizz-check fizz [||||||] [|||].
@@ -519,32 +536,33 @@ TESTS = [
     BO
     result: '[|||] [|||||||||||||||||||||]'
   },
-
-  #Current pattern	      111	110	101	100	011	010	001	000
-  #New state for center cell	0	1	1	0	1	1	1	0
   {
     name: 'Rule 110',
     focus: true,
     code: <<~BO,
-    ^|0000000000000010000000000000000000$
+    ^.|........................................................#.....$
     ---
 
-    0|00
-      00|0
-    0|01
-      01|1
-    0|10
-      01|0
-    0|11
-      01|1
-    1|00
-      10|0
-    1|01
-      11|1
-    1|10
-      11|0
-    1|11
-      10|1
+    ^.<X>|.$
+      -.<X>.-
+      ^.|<X>.$
+
+    .|..
+      ..|.
+    .|.#
+      .#|#
+    .|#.
+      .#|.
+    .|##
+      ..|#
+    #|..
+      #.|.
+    #|.#
+      ##|#
+    #|#.
+      ##|.
+    #|##
+      #.|#
     BO
     result: '?'
   }
