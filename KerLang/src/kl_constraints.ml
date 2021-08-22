@@ -40,48 +40,48 @@ let rec pp_expr oc (expr : expr) =
 
 and pp_value oc (value: value) =
   match value with
-  | Arg id -> Printf.fprintf oc "x%d" id
-  | Cst value -> Printf.fprintf oc "%d" value
-  | Var name -> Printf.fprintf oc "%s" name
-  | Hole -> Printf.fprintf oc "{??}"
+  | Arg id -> Format.fprintf oc "x%d" id
+  | Cst value -> Format.fprintf oc "%d" value
+  | Var name -> Format.fprintf oc "%s" name
+  | Hole -> Format.fprintf oc "{??}"
 
 and pp_operation oc (operation : operation) =
   match operation with
   | If (cond, ifcase, elsecase) ->
-    Printf.fprintf oc "(if %a then %a else %a)"
+    Format.fprintf oc "(if %a then %a else %a)"
       pp_expr cond
       pp_expr ifcase
       pp_expr elsecase
   | Sum (a, b) ->
-    Printf.fprintf oc "(%a + %a)" pp_expr a pp_expr b
+    Format.fprintf oc "(%a + %a)" pp_expr a pp_expr b
   | Diff (a, b) ->
-    Printf.fprintf oc "(%a - %a)" pp_expr a pp_expr b
+    Format.fprintf oc "(%a - %a)" pp_expr a pp_expr b
   | Prod (a, b) ->
-    Printf.fprintf oc "(%a * %a)" pp_expr a pp_expr b
+    Format.fprintf oc "(%a * %a)" pp_expr a pp_expr b
   | Div (a, b) ->
-    Printf.fprintf oc "(%a / %a)" pp_expr a pp_expr b
+    Format.fprintf oc "(%a / %a)" pp_expr a pp_expr b
   | App (func_name, value_list) ->
-    Printf.fprintf oc "(%s " func_name;
-    List.iter (fun value -> Printf.fprintf oc "%a " pp_expr value) value_list;
-    Printf.fprintf oc ")"
+    Format.fprintf oc "(%s " func_name;
+    List.iter (fun value -> Format.fprintf oc "%a " pp_expr value) value_list;
+    Format.fprintf oc ")"
   | Rec value_list ->
-    Printf.fprintf oc "(rec ";
-    List.iter (fun value -> Printf.fprintf oc "%a " pp_expr value) value_list;
-    Printf.fprintf oc ")"
+    Format.fprintf oc "(rec ";
+    List.iter (fun value -> Format.fprintf oc "%a " pp_expr value) value_list;
+    Format.fprintf oc ")"
 
 let pp_cconstraint oc (cc: cconstraint) =
   match cc with
   | Takes how_many_args ->
-    Printf.fprintf oc "- Takes %d arguments\n" how_many_args
+    Format.fprintf oc "- Takes %d arguments\n" how_many_args
   | Let (var_name, expr) ->
-    Printf.fprintf oc "- Let %s be %a" var_name pp_expr expr
+    Format.fprintf oc "- Let %s be %a" var_name pp_expr expr
   | Returns expr ->
-    Printf.fprintf oc "- Returns %a" pp_expr expr
+    Format.fprintf oc "- Returns %a" pp_expr expr
   | Uses expr_list ->
-    Printf.fprintf oc "- Uses";
-    List.iter (fun expr -> Printf.fprintf oc "%s" "\n  * "; pp_expr oc expr) expr_list
+    Format.fprintf oc "- Uses";
+    List.iter (fun expr -> Format.fprintf oc "%s" "\n  * "; pp_expr oc expr) expr_list
   | Nothing ->
-    Printf.fprintf oc "- Has comments for humans\n"
+    Format.fprintf oc "- Has comments for humans\n"
 
 type comment_function = {
   name : string;
@@ -107,19 +107,19 @@ let rec has_holes = function
 
 let print_comment_function {name; n_args; declarations; result; _} =
   Printf.printf "- info :\n  args: %d\n  declarations: [%s]\n"
-    n_args (List.map fst declarations |> String.concat ", ");
+    n_args (List.map (fun (n, e) -> Format.asprintf "%s -> %a" n pp_expr e) declarations |> String.concat ", ");
   match result with
   | Yolo ctx ->
     Printf.printf "- constraints for %s are'nt sufficient to build a function\n" name;
     Printf.printf "- known context to synthesize a function:\n";
     List.iteri (fun i expr ->
-        Printf.printf "  %d : %a\n" i pp_expr expr) ctx
+        Format.printf "  %d : %a\n" i pp_expr expr) ctx
   | Function e ->
     Printf.printf "- known context:\n";
     List.iter (fun (name, expr) ->
-        Printf.printf "  \"%s\" : %a\n" name pp_expr expr) declarations;
+        Format.printf "  \"%s\" : %a\n" name pp_expr expr) declarations;
     Printf.printf "- generated function is:\n";
-    Printf.printf "  %a\n" pp_expr e;
+    Format.printf "  %a\n" pp_expr e;
     if has_holes e then begin
       Printf.printf "- there are remaining holes in the function !\n";
       Printf.printf "  let's try to complete holes from context !\n"
