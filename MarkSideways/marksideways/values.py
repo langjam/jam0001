@@ -104,6 +104,91 @@ class ArrayValue(Value):
     sb.append(']')
     return ''.join(sb)
 
+class DictionaryValue(Value):
+  def __init__(self):
+    super().__init__('DICTIONARY')
+    self.keys = []
+    self.values = []
+    self.lookup = {}
+    self.size = 0
+    self.fields = {}
+  def set_item(self, throw_token, key, value):
+    nkey = self.get_native_key(key)
+    if nkey == None: return self.gen_error_key(key)
+    existing_index = self.lookup.get(nkey)
+    if existing_index != None:
+      self.values[existing_index] = value
+      return True
+    self.lookup[nkey] = len(self.keys)
+    self.keys.append(key)
+    self.values.append(value)
+    self.size += 1
+    return False
+  def get_item(self, throw_token, key):
+    nkey = self.get_native_key(key)
+    if nkey == None: return self.gen_error_key(key)
+    index = self.lookup.get(nkey)
+    if index == None: return None
+    return self.values[index]
+  def gen_error_key(self, key):
+    return new_error_value(throw_token, "This is not a valid type that can be used as a key: " + key.type)
+  def remove_item(self, throw_token, key):
+    nkey = self.get_native_key(key)
+    if nkey == None: return self.gen_error_key(key)
+    index = self.lookup.get(nkey)
+    if index == None: return new_error_value(throw_token, "The key " + key.to_string() + " does not exist in this dictionary.")
+    last_index = self.size - 1
+    self.lookup.pop(nkey)
+    if index == last_index:
+      self.keys.pop()
+      self.values.pop()
+    else:
+      swap_key = self.keys.pop()
+      swap_value = self.values.pop()
+      self.lookup[self.get_native_key(swap_key)] = index
+      self.keys[index] = swap_key
+      self.values[index] = swap_value
+    self.size -= 1
+    return NULL_VALUE
+    
+  def get_native_key(self, value):
+    if value.type == 'INT': return 'i:' + str(value.value)
+    if value.type == 'STRING': return 's:' + value.value
+    if value.type == 'INSTANCE': return 'o:' + str(value.id)
+    if value.type == 'BOOL': return 'b:' + ('1' if value.value else '0')
+    if value.type in ('ARRAY', 'DICTIONARY', 'NULL', 'FLOAT'): return None
+    return '*:' + value.to_string()
+  def _builtin_get(self, throw_token, args):
+    if len(args) == 1:
+      default_value = NULL_VALUE
+    elif len(args) == 2:
+      default_value = args[1]
+    else:
+      return new_error_value(throw_token, "Incorrect number of args to dictionary.get(). Requires 1 or 2.")
+    key = args[0]
+    output = self.get_item(throw_token, key)
+    if output == None:
+      return default_value
+    return output
+  def _builtin_keys(self, throw_token, args):
+    if len(args) != 0: return new_error_value(throw_token, "Dictionary.keys() does not take in any arguments.")
+    return ArrayValue(self.keys[:])
+  def _builtin_values(self, throw_token, args):
+    if len(args) != 0: return new_error_value(throw_token, "Dictionary.values() does not take in any arguments.")
+    return ArrayValue(self.values[:])
+  def get_field(self, name):
+    output = self.fields.get(name)
+    if output == None:
+      if name == 'get':
+        output = BuiltInFunction('dictionary.get', self._builtin_add)
+      if name == 'keys':
+        output = BuiltInFunction('dictionary.keys', self._builtin_keys)
+      if name == 'values':
+        output = BuiltInFunction('dictionary.values', self._builtin_values)
+      self.fields[name] = output
+    return output
+
+
 class BuiltInFunction(Value):
   def __init__(self, id, handler):
     super().__init__('BUILTIN_FUNCTION')

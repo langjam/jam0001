@@ -220,6 +220,26 @@ class ArrayDefinition(Expression):
       items.append(value)
     return ArrayValue(items)
 
+class DictionaryDefinition(Expression):
+  def __init__(self, first_token, keys, values):
+    super().__init__(first_token)
+    self.keys = keys
+    self.values = values
+  def run(self, scope):
+    keys = []
+    values = []
+    d = DictionaryValue()
+    for i in range(len(self.keys)):
+      key_token = self.keys[i].first_token
+      key = self.keys[i].run(scope)
+      if key.is_error: return key
+      value = self.values[i].run(scope)
+      if value.is_error: return value
+      is_collision = d.set_item(key_token, key, value)
+      if is_collision:
+        return new_error_value(key_token, "This dictionary definition contains a key collision.")
+    return d
+
 class DotField(Expression):
   def __init__(self, expression, dot, field_name):
     super().__init__(expression.first_token)
@@ -252,6 +272,13 @@ class DotField(Expression):
         field = value.get_field(field_name)
         if field != None: return field
         return new_error_value(self.dot, "Arrays do not have a field called '" + field_name + "'.")
+    elif value.type == 'DICTIONARY':
+      if field_name == 'length':
+        return get_integer_value(len(value.keys))
+      else:
+        field = value.get_field(field_name)
+        if field != None: return field
+        return new_error_value(self.dot, "Dictionaries do not have a field called '" + field_name + "'.")
     elif value.type == 'CLASS':
       if field_name == 'init':
         return ConstructorValue(value.class_def)
@@ -269,17 +296,20 @@ class BracketIndex(Expression):
     root_value = self.root.run(scope)
     if root_value.is_error: return root_value
     if is_null(root_value): return to_null_error_value(self.bracket_token)
+    index_value = self.index.run(scope)
+    if index_value.is_error: return index_value
+    if is_null(index_value): return to_null_error_value(self.index.first_token)
     if root_value.type == 'ARRAY':
-      index_value = self.index.run(scope)
-      if index_value.is_error: return index_value
-      if is_null(index_value): return to_null_error_value(self.index.first_token)
       if index_value.type != 'INT': return new_error_value("Can only index into an array using an integer.")
       index = index_value.value
       if index < 0 or index >= len(root_value.value):
         return new_error_value(self.bracket_token, "Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(root_value.value)) + ".")
       return root_value.value[index]
     elif root_value.type == 'DICTIONARY':
-      raise Exception("TODO: bracket on dictionary")
+      output = root_value.get_item(self.bracket_token, index_value)
+      if output == None:
+        return new_error_value("The index '" + index_value.to_string() + "' does not exist in this dictionary.")
+      return output
     else:
       return new_error_value(self.bracket_token, "Using square brackets to index into a " + root_value.type + " type is not allowed.")
 class InlineIncrement(Expression):
@@ -306,13 +336,14 @@ class InlineIncrement(Expression):
         if bracket_index.type != 'INT': return new_error_value("Can only index into an array using an integer.")
         index = bracket_index.value
         if index < 0 or index >= len(bracket_root.value):
-          return new_error_value(self.bracket_token, "Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(bracket_root.value)) + ".")
+          return new_error_value(self.root.bracket_token, "Array index out of bounds! Index was " + str(index) + " but the length of the array is " + str(len(bracket_root.value)) + ".")
+        starting_value = bracket_root.value[index]
       elif bracket_root.type == 'DICTIONARY':
         root_type = 'DICTIONAR_KEY'
-        raise Exception("TODO: dictionaries")
+        key = bracket_index.value
+        starting_value = bracket_root.get_item(self.root.bracket_token, bracket_index)
       else:
         root_type = None
-      starting_value = bracket_root.value[index]
     elif isinstance(self.root, DotField):
       root_type = 'FIELD'
       obj_root = self.root.root.run(scope)
@@ -340,7 +371,7 @@ class InlineIncrement(Expression):
     elif root_type == 'ARRAY_INDEX':
       bracket_root.value[index] = value_after
     elif root_type == 'DICTIONAR_KEY':
-      raise Exception("TODO: dictionaries")
+      bracket_root.set_item(self.root.bracket_token, bracket_index, value_after)
     elif root_type == 'FIELD':
       obj_root.fields[self.root.canonical_field_name] = value_after
 
@@ -398,7 +429,23 @@ class AssignStatement(Executable):
         arr = root.value
         i = index.value
         if i < 0 or i >= len(arr): return new_error_status(self.target.bracket_token, "Array index out of bounds. Index was " + str(i) + " but array length is " + str(len(arr)) + ".")
-        arr[i] = value
+        if is_direct_assign:
+          arr[i] = value
+        else:
+          original_value = root.value[i]
+          new_value = perform_op(self.assign_op, original_value, self.incremental_effective_op, value)
+          if new_value.is_error: return error_status_from_value(new_value)
+          arr[i] = new_value
+        return None
+      elif root.type == 'DICTIONARY':
+        if is_direct_assign:
+          root.set_item(self.target.bracket_token, index, value)
+        else:
+          original_value = root.get_item(self.target.bracket_token, index)
+          if original_value == None: return new_error_status(self.assign_op, "That key could not be found.")
+          new_value = perform_op(self.assign_op, original_value, self.incremental_effective_op, value)
+          if new_value.is_error: return error_status_from_value(new_value)
+          root.set_item(self.target.bracket_token, index, new_value)
         return None
       else:
         return new_error_status(self.target.bracket_token, "Cannot assign an index on a " + root.type + " type.")

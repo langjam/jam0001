@@ -246,6 +246,20 @@ def parse_entity(tokens):
       next_item_allowed = tokens.pop_if_present(',')
     return ArrayDefinition(next_token, array_items)
 
+  if next_value == '{':
+    tokens.pop()
+    dictionary_keys = []
+    dictionary_values = []
+    next_item_allowed = True
+    while not tokens.pop_if_present('}'):
+      if not next_item_allowed:
+        tokens.pop_expected('}') # intentionally throw
+      dictionary_keys.append(parse_expression(tokens))
+      tokens.pop_expected(':')
+      dictionary_values.append(parse_expression(tokens))
+      next_item_allowed = tokens.pop_if_present(',')
+    return DictionaryDefinition(next_token, dictionary_keys, dictionary_values)
+
   raise Exception(tokens.pop(), "Unexpected token: '" + next_value + "'.")
 
 # Note that the order here is a little weird for the first few. parse_unaries is after exponents and before multiplication
