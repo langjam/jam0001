@@ -274,5 +274,5 @@ and compile_operation ftable env =
   | Div (e1, e2) ->
     Kl_IR.div (compile_ex e1) (compile_ex e2)
   | App (fname, vals) ->
-    Kl_IR.app (FUN fname) (List.map compile_val vals)
-  | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map compile_val vs)
+    Kl_IR.app (FUN fname) (List.map compile_ex vals)
+  | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map compile_ex vs)
