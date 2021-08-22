@@ -73,7 +73,7 @@ func (l *Lexer) makeTokens() ([]shared.Token, error) {
 			tokens = append(tokens, shared.Token{Type: shared.TTwcomment, Value: l.make_text()})
 			l.advance()
 		} else {
-			return []shared.Token{}, &IllegalSyntaxError{message: "invalid identifier (" + string(int(l.currentChar)) + ")", pos: l.pos}
+			return []shared.Token{}, &IllegalSyntaxError{message: "invalid identifier \"" + string(l.currentChar) + "\"", pos: l.pos}
 		}
 
 		if err != nil {
