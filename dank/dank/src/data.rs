@@ -24,6 +24,20 @@ pub struct NativeFn<'s> {
     pub func: Box<dyn Fn(Vec<Value<'s>>) -> Signal<'s>>,
 }
 
+impl<'s> NativeFn<'s> {
+    pub fn create<S: Into<Cow<'s, str>>>(
+        name: S,
+        arity: u8,
+        func: impl Fn(Vec<Value<'s>>) -> Signal<'s> + 'static,
+    ) -> Ptr<Self> {
+        Ptr::new(Self {
+            name: name.into(),
+            arity,
+            func: Box::new(func),
+        })
+    }
+}
+
 impl<'s> std::fmt::Debug for NativeFn<'s> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("NativeFn")
@@ -39,7 +53,7 @@ impl<'s> std::cmp::PartialEq for NativeFn<'s> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value<'s> {
     Num(f64),
     Bool(bool),
@@ -50,16 +64,18 @@ pub enum Value<'s> {
     NativeFn(Ptr<NativeFn<'s>>),
 }
 
-impl<'s> From<f64> for Value<'s> {
-    fn from(n: f64) -> Self {
-        Value::Num(n)
-    }
+macro_rules! nop_partial_ord {
+    ($name:ident) => {
+        impl<'s> PartialOrd for $name<'s> {
+            fn partial_cmp(&self, _: &Self) -> Option<std::cmp::Ordering> {
+                None
+            }
+        }
+    };
 }
-impl<'s> From<bool> for Value<'s> {
-    fn from(b: bool) -> Self {
-        Value::Bool(b)
-    }
-}
+nop_partial_ord!(Object);
+nop_partial_ord!(Function);
+nop_partial_ord!(NativeFn);
 
 impl<'s> std::fmt::Display for Value<'s> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -90,5 +106,63 @@ impl<'s> std::fmt::Display for Value<'s> {
                 write!(f, " }}")
             }
         }
+    }
+}
+
+macro_rules! impl_arithm_op {
+    ($trait:ident, $method:ident, $op:tt) => {
+        impl<'s> std::ops::$trait<Value<'s>> for Value<'s> {
+            type Output = Signal<'s>;
+
+            fn $method(self, rhs: Value<'s>) -> Self::Output {
+                match (self, rhs) {
+                    (Value::Num(l), Value::Num(r)) => Value::from(l $op r).into(),
+                    (l, r) => crate::eval::Evaluator::bin_op_type_error(&l, &r, "+").into(),
+                }
+            }
+        }
+    }
+}
+
+impl<'s> std::ops::Add<Value<'s>> for Value<'s> {
+    type Output = Signal<'s>;
+
+    fn add(self, rhs: Value<'s>) -> Self::Output {
+        match (self, rhs) {
+            (Value::Num(l), Value::Num(r)) => Value::from(l + r).into(),
+            (Value::Str(l), Value::Str(r)) => Value::Str(format!("{}{}", l, r).into()).into(),
+            (l, r) => crate::eval::Evaluator::bin_op_type_error(&l, &r, "+").into(),
+        }
+    }
+}
+impl<'s> std::ops::Div<Value<'s>> for Value<'s> {
+    type Output = Signal<'s>;
+
+    fn div(self, rhs: Value<'s>) -> Self::Output {
+        match (self, rhs) {
+            (Value::Num(l), Value::Num(r)) if r != 0.0 => Signal::Value(Value::Num(l / r)),
+            (Value::Num(_), Value::Num(r)) if r == 0.0 => {
+                crate::eval::EvalError::RuntimeError("Attempted to divide by zero".into()).into()
+            }
+            (l, r) => crate::eval::Evaluator::bin_op_type_error(&l, &r, "+").into(),
+        }
+    }
+}
+impl_arithm_op!(Sub, sub, -);
+impl_arithm_op!(Mul, mul, *);
+
+impl<'s> From<f64> for Value<'s> {
+    fn from(n: f64) -> Self {
+        Value::Num(n)
+    }
+}
+impl<'s> From<bool> for Value<'s> {
+    fn from(b: bool) -> Self {
+        Value::Bool(b)
+    }
+}
+impl<'s> From<Ptr<NativeFn<'s>>> for Value<'s> {
+    fn from(b: Ptr<NativeFn<'s>>) -> Self {
+        Value::NativeFn(b)
     }
 }

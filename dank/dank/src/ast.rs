@@ -46,6 +46,12 @@ pub struct Ast<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq, AstToStr)]
+pub struct If<'a> {
+    pub branches: Vec<(Expr<'a>, Stmt<'a>)>,
+    pub otherwise: Option<Stmt<'a>>,
+}
+
+#[derive(Debug, Clone, PartialEq, AstToStr)]
 pub enum StmtKind<'a> {
     LetDecl(
         #[rename = "name"] Cow<'a, str>,
@@ -56,6 +62,7 @@ pub enum StmtKind<'a> {
     Print(#[rename = "args"] Vec<Expr<'a>>),
     Block(#[rename = "statements"] Vec<LineComment<'a>>),
     UnscopedBlock(#[rename = "statements"] Vec<LineComment<'a>>),
+    If(Ptr<If<'a>>),
     While(
         #[rename = "condition"] ExprPtr<'a>,
         #[rename = "body"] StmtPtr<'a>,

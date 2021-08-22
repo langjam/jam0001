@@ -187,6 +187,15 @@ impl<'a, 'b> Evaluator<'a, 'b> {
             StmtKind::Print(args) => args.iter_mut().for_each(|e| self.eval_comments_in_expr(e)),
             StmtKind::Block(b) => self.eval_comments_in_block(b),
             StmtKind::While(_, stmt) => self.eval_comments_in_stmt(stmt),
+            StmtKind::If(r#if) => {
+                r#if.branches.iter_mut().for_each(|(c, b)| {
+                    self.eval_comments_in_expr(c);
+                    self.eval_comments_in_stmt(b);
+                });
+                if let Some(b) = r#if.otherwise.as_mut() {
+                    self.eval_comments_in_stmt(b)
+                }
+            }
             StmtKind::UnscopedBlock(_) => unreachable!("Cannot appear while processing comments"),
             StmtKind::Return(v) => v
                 .as_mut()
@@ -271,28 +280,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     ($self:ident, $left:ident $op:tt $right:ident) => {{
                         let left = $self.eval_expr($left)?;
                         let right = $self.eval_expr($right)?;
-                        bin_op!(__internal $self, left $op right)
-                    }};
-                    (__internal $self:ident, $left:ident + $right:ident) => {{
-                        match ($left, $right) {
-                            (Value::Num(l), Value::Num(r)) => Signal::Value(Value::Num(l + r)),
-                            (Value::Str(l), Value::Str(r)) => Signal::Value(Value::Str(format!("{}{}", l, r).into())),
-                            (l, r) => Signal::Error($self.bin_op_type_error(&l, &r, "+")),
-                        }
-                    }};
-                    (__internal $self:ident, $left:ident / $right:ident) => {{
-                        match ($left, $right) {
-                            (Value::Num(l), Value::Num(r)) if r != 0.0 => Signal::Value(Value::Num(l / r)),
-                            (Value::Num(_), Value::Num(r)) if r == 0.0 => Signal::Error(EvalError::RuntimeError("Attempted to divide by zero".into())),
-                            (l, r) => Signal::Error($self.bin_op_type_error(&l, &r, "/")),
-                        }
-                    }};
-                    (__internal $self:ident, $left:ident $op:tt $right:ident) => {{
-                        #[allow(clippy::float_cmp)]
-                        match ($left, $right) {
-                            (Value::Num(l), Value::Num(r)) => Signal::Value(Value::from(l $op r)),
-                            (l, r) => Signal::Error($self.bin_op_type_error(&l, &r, stringify!($op))),
-                        }
+                        left $op right
                     }};
                 }
                 match op {
@@ -300,12 +288,12 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     BinOpKind::Sub => bin_op!(self, l - r),
                     BinOpKind::Div => bin_op!(self, l * r),
                     BinOpKind::Mul => bin_op!(self, l / r),
-                    BinOpKind::Eq => bin_op!(self, l == r),
-                    BinOpKind::Ne => bin_op!(self, l != r),
-                    BinOpKind::Lt => bin_op!(self, l < r),
-                    BinOpKind::Le => bin_op!(self, l <= r),
-                    BinOpKind::Gt => bin_op!(self, l > r),
-                    BinOpKind::Ge => bin_op!(self, l >= r),
+                    BinOpKind::Eq => Value::from(bin_op!(self, l == r)).into(),
+                    BinOpKind::Ne => Value::from(bin_op!(self, l != r)).into(),
+                    BinOpKind::Lt => Value::from(bin_op!(self, l < r)).into(),
+                    BinOpKind::Le => Value::from(bin_op!(self, l <= r)).into(),
+                    BinOpKind::Gt => Value::from(bin_op!(self, l > r)).into(),
+                    BinOpKind::Ge => Value::from(bin_op!(self, l >= r)).into(),
                     BinOpKind::Or => {
                         let l = self.eval_expr(l)?;
                         if self.is_truthy(&l) {
@@ -337,7 +325,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                         Value::Num(-value).into()
                     }
                     UnOpKind::Neg => EvalError::TypeError(format!(
-                        "Cannot apply the operator `-` to {}",
+                        "Cannot apply the operator `-` to `{}`",
                         operand
                     ))
                     .into(),
@@ -421,6 +409,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     .ok_or(EvalError::UndefinedProperty(name))
                     .into()
             }
+            Value::Str(s) if name == "length" => Value::Num(s.len() as _).into(),
             _ => EvalError::UndefinedProperty(name).into(),
         }
     }
@@ -482,6 +471,17 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 self.is_in_loop = previous_state;
                 return signal;
             }
+            StmtKind::If(r#if) => {
+                for (condition, body) in &r#if.branches {
+                    let condition = self.eval_expr(condition)?;
+                    if self.is_truthy(&condition) {
+                        return self.eval_stmt(body);
+                    }
+                }
+                if let Some(r#else) = r#if.otherwise.as_ref() {
+                    return self.eval_stmt(r#else);
+                }
+            }
             StmtKind::Break => return self.generate_loop_signal(Signal::Break),
             StmtKind::Continue => return self.generate_loop_signal(Signal::Continue),
             StmtKind::Return(v) => {
@@ -516,9 +516,9 @@ impl<'a, 'b> Evaluator<'a, 'b> {
         }
     }
 
-    fn bin_op_type_error(&self, l: &Value<'a>, r: &Value<'a>, op: &str) -> EvalError<'a> {
+    pub fn bin_op_type_error(l: &Value<'a>, r: &Value<'a>, op: &str) -> EvalError<'a> {
         EvalError::TypeError(format!(
-            "Cannot apply the operator `{}` to {} and {}",
+            "Cannot apply the operator `{}` to `{}` and `{}`",
             op, l, r,
         ))
     }

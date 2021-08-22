@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use ast2str::AstToStr;
 use dank::parser::dank as parser;
 
@@ -27,19 +29,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut env = dank::env::Env::new();
             env.add(
                 "clock".into(),
-                dank::data::Value::NativeFn(dank::data::Ptr::new(dank::data::NativeFn {
-                    name: "clock".into(),
-                    arity: 0,
-                    func: Box::new(|_args| {
-                        dank::data::Value::Num(
-                            std::time::SystemTime::now()
-                                .duration_since(std::time::SystemTime::UNIX_EPOCH)
-                                .unwrap()
-                                .as_secs() as f64,
-                        )
-                        .into()
-                    }),
-                })),
+                dank::data::NativeFn::create("clock", 0, |_args| {
+                    dank::data::Value::Num(
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs() as f64,
+                    )
+                    .into()
+                })
+                .into(),
+            );
+            env.add(
+                "input".into(),
+                dank::data::NativeFn::create("input", 1, |mut args| {
+                    let prompt = args.pop().unwrap().to_string();
+                    print!("{}", prompt);
+                    std::io::stdout().flush().unwrap();
+                    let mut buf = String::new();
+                    std::io::stdin()
+                        .read_line(&mut buf)
+                        .expect("Couldn't read from STDIN");
+                    dank::data::Value::Str(buf.trim().to_owned().into()).into()
+                })
+                .into(),
             );
             env
         },

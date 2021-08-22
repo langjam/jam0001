@@ -81,6 +81,7 @@ peg::parser!(pub grammar dank() for str {
          = p:print() ___ ";" {p}
          / b:binding() ___ ";" {b}
          / w:while_loop() {w}
+         / i:if_stmt() {i}
          / b:block() {b}
          / f:func() {f}
          / start:position!() "break" ___ ";" end:position!() { Stmt { span: start..end, kind: StmtKind::Break } }
@@ -123,9 +124,26 @@ peg::parser!(pub grammar dank() for str {
     }
 
     pub rule while_loop() -> Stmt<'input>
-    = start:position!() "while" _ c:expr() _ b:block() {
+    = start:position!() "while" _ c:expr() ___ b:block() {
         Stmt { span: start..b.span.end, kind: StmtKind::While(Box::new(c), Box::new(b)) }
     }
+
+    pub rule if_stmt() -> Stmt<'input>
+    = start:position!() "if" _ c:expr() ___ then:block() ___ branches:if_branch()* ___ otherwise:if_else()? end:position!() {
+      Stmt {
+          span: start..end,
+          kind: StmtKind::If(Box::new(If {
+              branches: std::iter::once((c, then)).chain(branches).collect(),
+              otherwise
+          }))
+      }
+    }
+
+    pub rule if_branch() -> (Expr<'input>, Stmt<'input>)
+    = ___ "else" _ "if" ___ c:expr() _ then:block() { (c, then) }
+
+    pub rule if_else() -> Stmt<'input>
+    = "else" ___ b:block() { b }
 
     pub rule expr() -> Expr<'input> = operators()
 
@@ -251,6 +269,113 @@ pub mod tests {
                 $expected.trim().as_display()
             )
         };
+    }
+
+    #[test]
+    fn if_statements() {
+        let test = r#"
+        if true { "action"; }
+        if false { "then"; } else { "otherwise"; }
+
+        if x < 5 {
+          print x;
+        } else if x < 10 { 
+          print 10 - x;
+        } else { 
+          print "too big";
+        }
+      "#;
+
+        test_eq!(
+            test,
+            r#"Ast
+  statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::If
+        field0: If
+          branches= 
+            tuple
+              field0: ExprKind::Literal
+                field0: Bool(true)
+              field1: StmtKind::Block
+                statements= 
+                  LineComment
+                    body: CommentBody::Empty
+                    stmt: StmtKind::ExprStmt
+                      expr: ExprKind::Literal
+                        field0: Str("action")
+          otherwise: None
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::If
+        field0: If
+          branches= 
+            tuple
+              field0: ExprKind::Literal
+                field0: Bool(false)
+              field1: StmtKind::Block
+                statements= 
+                  LineComment
+                    body: CommentBody::Empty
+                    stmt: StmtKind::ExprStmt
+                      expr: ExprKind::Literal
+                        field0: Str("then")
+          otherwise: StmtKind::Block
+            statements= 
+              LineComment
+                body: CommentBody::Empty
+                stmt: StmtKind::ExprStmt
+                  expr: ExprKind::Literal
+                    field0: Str("otherwise")
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::If
+        field0: If
+          branches= 
+            tuple
+              field0: ExprKind::Binary
+                left: ExprKind::Variable
+                  name: "x"
+                op: BinOpKind::Lt
+                right: ExprKind::Literal
+                  field0: Num(5.0)
+              field1: StmtKind::Block
+                statements= 
+                  LineComment
+                    body: CommentBody::Empty
+                    stmt: StmtKind::Print
+                      args= 
+                        ExprKind::Variable
+                          name: "x"
+            tuple
+              field0: ExprKind::Binary
+                left: ExprKind::Variable
+                  name: "x"
+                op: BinOpKind::Lt
+                right: ExprKind::Literal
+                  field0: Num(10.0)
+              field1: StmtKind::Block
+                statements= 
+                  LineComment
+                    body: CommentBody::Empty
+                    stmt: StmtKind::Print
+                      args= 
+                        ExprKind::Binary
+                          left: ExprKind::Literal
+                            field0: Num(10.0)
+                          op: BinOpKind::Sub
+                          right: ExprKind::Variable
+                            name: "x"
+          otherwise: StmtKind::Block
+            statements= 
+              LineComment
+                body: CommentBody::Empty
+                stmt: StmtKind::Print
+                  args= 
+                    ExprKind::Literal
+                      field0: Str("too big")"#
+        );
     }
 
     #[test]

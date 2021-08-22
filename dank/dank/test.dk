@@ -66,4 +66,18 @@ while x < 3 {
     print "x is now", x;
 }
 
+while true {
+    let value = input("Enter a string: ");
+    if value == "secret" {
+        print "You've entered the secret string, gaining access to my password: hunter2!";
+        break;
+    } else if value == "borgar" {
+        print "Mmm borgar...";
+        break;
+    } else if value.length != 0 {
+        print "Try again.";
+    } else {
+        break;
+    }
+}
 
