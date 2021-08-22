@@ -65,6 +65,13 @@ func (l *Lexer) makeTokens() ([]shared.Token, error) {
 			}
 			l.advance()
 		} else if l.currentChar == '/' {
+			// ignore comments
+			if l.index == 0 || l.text[l.index-1] == '\n' {
+				for l.currentChar != '\n' {
+					l.advance()
+				}
+				continue
+			}
 			l.advance()
 			if l.currentChar != '/' {
 				return []shared.Token{}, &IllegalSyntaxError{message: "Invalid comment" + string(l.currentChar), pos: l.pos}
