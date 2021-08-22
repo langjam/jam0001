@@ -91,9 +91,7 @@ const sendApiRequset = async (payload) => {
         method: 'POST',
         body: JSON.stringify(payload),
     });
-
     let result = rawResult.json();
-    console.log(result);
     if (result.error) {
         window.alert(result.error);
         return null;
@@ -117,7 +115,7 @@ const populateFeed = messages => {
     });
 };
 
-function main() {
+const main = () => {
     document.getElementById('post').addEventListener('click', async () => {
         let textField = document.getElementById('message');
         let text = textField.value;
@@ -126,17 +124,18 @@ function main() {
             action: 'ADD',
             text,
         });
-
         if (result) {
             populateFeed(result.messages);
         }
     });
 
-    setInterval(async () => {
+    let doPoll = async () => {
         let result = await sendApiRequset({ action: 'LIST' });
         if (result) populateFeed(result.messages);
-    }, 5000);
-}
+    };
+    doPoll();
+    setInterval(doPoll, 5000);
+};
 ";
 ```
 
