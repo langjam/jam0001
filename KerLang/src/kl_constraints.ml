@@ -163,13 +163,27 @@ let generate_function (Spec (_, name, comment)) =
       | Nothing -> build_function f q
       | Takes n -> build_function {f with n_args = n} q
       | Let (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
-      | Returns e -> build_function {f with result = Function e} q
+      | Returns e ->
+        let r = match f.result with
+        | Yolo [] -> Function e
+        | Yolo _ ->
+          begin
+            print_warning (tok_pos (List.hd c)) (name ^ " was in yolo mode, using return value");
+            Function e
+          end
+        | Function _ ->
+          begin
+            print_warning (tok_pos (List.hd c)) (name ^ " already has a return value, using old return value");
+            f.result
+          end
+        in build_function {f with result = r} q
       | Uses l ->
         let r = match f.result with
+        | Yolo [] -> Yolo l
         | Yolo l' -> Yolo (l' @ l)
         | Function e ->
           begin
-            print_warning (tok_pos (List.hd c)) (name ^ " already has a return value, ignoring yolo");
+            print_warning (tok_pos (List.hd c)) (name ^ " already has a return value, ignoring yolo mode");
             Function e
           end
         in build_function {f with result = r} q
