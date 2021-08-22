@@ -912,7 +912,7 @@ function run(compilation_result, pc=0, func, args) {
 				} else {
 					let scope = active_scope
 					while (depth > 0) {
-						scope = active_scope.parent
+						scope = scope.parent
 						depth--
 					}
 					stack.push(scope.locals[offset])
