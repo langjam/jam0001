@@ -1,13 +1,20 @@
 import Runtime from './index'
 import {wrappedElementToMd} from '../Markdown'
 
-async function commitToDisk(runtime: Runtime) {
+function serializeRuntime(runtime: Runtime) {
+    let serialized = ''
     const wrappedElements = runtime.getWrappedElements()
     for (const element of wrappedElements) {
-        console.log(wrappedElementToMd(element))
+        serialized += wrappedElementToMd(element)
     }
+    return serialized
+}
+
+async function saveToDisk(runtime: Runtime) {
+    console.log(serializeRuntime(runtime))
+    // TODO: save serialized to disk
 }
 
 export {
-    commitToDisk
+    saveToDisk
 }
