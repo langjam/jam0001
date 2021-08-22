@@ -44,6 +44,15 @@ static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Val
             case IT_STRING:
                 printf("%.*s", (int)arg->data.string.str.size, arg->data.string.str.view);
             break;
+            case IT_ARRAY:
+                for (usize i = 0; i < arg->data.array.values.size; i++) {
+                    struct Vec tv = vec_new(sizeof(struct Interpreter_Value));
+                    vec_push(&tv, vec_get(&arg->data.array.values, i));
+                    cfunc_print(&tv);
+                    vec_drop(&tv);
+                    printf(", ");
+                }
+            break;
             case IT_VOID:
                 printf("(void)");
             break;
@@ -55,11 +64,28 @@ static struct Interpreter_Value cfunc_print(struct Vec OF(struct Interpreter_Val
             break;
         }
 
-        printf("\t");
+        printf(" ");
     }
-    printf("\n");
 
     return void_val();
+}
+
+static struct Interpreter_Value cfunc_read(struct Vec OF(struct Interpreter_Value) *args) {
+    (void)args;
+
+    char* buf = malloc(256);
+    fgets(buf, 256, stdin);
+
+    return (struct Interpreter_Value){.type = IT_STRING, .data.string.str = { buf, strlen(buf)-1 }};
+}
+
+static struct Interpreter_Value cfunc_readf(struct Vec OF(struct Interpreter_Value) *args) {
+    (void)args;
+
+    float val;
+    scanf("%f", &val);
+
+    return (struct Interpreter_Value){.type = IT_FLOAT, .data.flt.val = val};
 }
 
 static struct Interpreter_Value cfunc_int(struct Vec OF(struct Interpreter_Value) *args) {
@@ -81,6 +107,8 @@ void intrp_init() {
     intrp.vars = &intrp.global;
 
     map_add(intrp.vars, strview_from("print"), &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_print });
+    map_add(intrp.vars, strview_from("read"),  &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_read  });
+    map_add(intrp.vars, strview_from("readf"), &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_readf});
     map_add(intrp.vars, strview_from("int"),   &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_int   });
     map_add(intrp.vars, strview_from("float"), &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_float });
 }
@@ -117,6 +145,21 @@ static struct Interpreter_Value execute(struct Parser_Node* body, bool* should_r
     }
 
     return retval;
+}
+
+static void val_drop(struct Interpreter_Value* val) {
+    switch (val->type) {
+    case IT_STRING:
+        free(val->data.string.str.view);
+    break;
+    case IT_ARRAY:
+        for (usize i = 0; i < val->data.array.values.size; i++)
+            val_drop(vec_get(&val->data.array.values, i));
+        vec_drop(&val->data.array.values);
+    break;
+    default:
+    break;
+    }
 }
 
 static struct Interpreter_Value call(struct Parser_Node* node) {
@@ -156,17 +199,10 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
         break;
     }
 
-    for (usize i = 0; i < intrp.vars->values.size; i++) {
-        struct Interpreter_Value* var = vec_get(&intrp.vars->values, i);
-        switch (var->type) {
-        case IT_STRING:
-            free(var->data.string.str.view);
-        break;
-        default:
-        break;
-        }
-    }
+    for (usize i = 0; i < intrp.vars->values.size; i++)
+        val_drop(vec_get(&intrp.vars->values, i));
     map_drop(intrp.vars);
+
     intrp.vars = oldframe;
     return ret;
 }
@@ -260,6 +296,14 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
                 .view = strndup(node->data.string.val.view+1, node->data.string.val.size-2),
                 .size = node->data.string.val.size-2
             };
+        break;
+        case PN_LIST:
+            ret.type = IT_ARRAY;
+            ret.data.array.values = vec_new(sizeof(struct Interpreter_Value));
+            for (usize i = 0; i < node->children.size; i++) {
+                struct Interpreter_Value val = intrp_run(vec_get(&node->children, i), should_return);
+                vec_push(&ret.data.array.values, &val);
+            }
         break;
         case PN_NUMBER:
 
