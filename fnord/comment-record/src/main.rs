@@ -18,6 +18,19 @@ mod types;
 mod values;
 
 fn main() {
+    let args = std::env::args().collect::<Vec<_>>();
+    if args.len() != 2 {
+        let cmd = if args.len() > 0 { &args[0] } else { "comment-record" };
+        eprintln!("Usage: {} source-file", cmd);
+        return;
+    }
+    let name = &args[1];
+
+    let source = std::fs::read_to_string(name).expect("reading source file");
+
+    let script = parse::parse(name, &source).expect("parsing source file");
+
+/*
     let script = parse::parse(
         "test_script",
         "
@@ -62,6 +75,7 @@ struct NotPi {};
 notpi2 = NotPi{};
 ",
     ).unwrap();
+    */
     /*
     let script = ast::Script {
         name: "test script".into(),
