@@ -1,0 +1,97 @@
+[[TUTO:comments]]
+
+[[In REDACTED the comments are part of the program and can be activated on demand]]
+comments>>category 'naked' print.
+
+[[Now these comments]]
+[[are logged]]
+comments>>category 'naked' with v do none done.
+
+[[And now we are silent again]]
+
+[[This is a pretty cool feature, for example, if we have to do multiple tasks...]]
+main := with do
+    [[TASK_START(do first thing): This is a very important thing that we need to do]]
+    subtask>>call.
+    subtask>>call.
+    subtask>>call.
+    subtask>>call.
+    [[TASK_END: Now those things should be completed]]
+    [[TASK_START(dump results): print something to the console]]
+    print 'Doing something'.
+    [[TASK_END: Now everything is ok]]
+done.
+subtask := with do
+    [[TASK_START(subtask): A small subtask]]
+    print 'Doing subtask'
+    [[TASK_END: Aaaand it's done!]]
+done.
+
+task_tracking := obj>>call.
+
+clean_task_tracking := with do
+    main_task := obj>>call.
+    main_task>>name := 'MAIN TASK'.
+    main_task>>desc := 'This program'.
+    main_task>>parent := none.
+    main_task>>childs := array>>call.
+    task_tracking>>current_task := main_task.
+done.
+
+enable_task_tracking := with do
+    clean_task_tracking>>call.
+    comments>>category 'TASK_START' with task_name task_description
+    do
+        child_task := obj>>call.
+        child_task>>name := task_name.
+        child_task>>desc := task_description.
+        child_task>>parent := task_tracking>>current_task.
+        child_task>>childs := array>>call.
+        task_tracking>>current_task>>childs>>push child_task.
+        task_tracking>>current_task := child_task.
+        print 'START' task_tracking>>current_task>>name.
+    done.
+    comments>>category 'TASK_END' with description
+    do
+        print 'END' task_tracking>>current_task>>name.
+        task_tracking>>current_task := (task_tracking>>current_task>>parent)
+    done
+done.
+
+disable_task_tracking := with do
+    clean_task_tracking>>call.
+    comments>>category 'TASK_START' none.
+    comments>>category 'TASK_END' none.
+done.
+
+dump_collected_tasks := with do
+    dump_task := with task ident do
+        print (str_concat ident '[' task>>name ']: ' task>>desc).
+        i := 0.
+        while < i task>>childs>>length holds
+        do
+            dump_task (task>>childs>>at i) (str_concat ident '  ').
+            i := + i 1
+        done
+    done.
+    task := task_tracking>>current_task.
+    while if = task>>parent none then 0 else 1 holds
+        task := task>>parent.
+    dump_task task ''.
+done.
+
+[[Now lets see what happens if we don't enable anything]]
+clean_task_tracking>>call. [[Clean everything]]
+print 'TASK TRACKING = DISABLED'.
+main>>call.
+dump_collected_tasks>>call.
+
+enable_task_tracking>>call.
+print 'TASK TRACKING = ENABLED'.
+main>>call.
+dump_collected_tasks>>call.
+
+disable_task_tracking>>call.
+print 'TASK TRACKING = DISABLED (again)'.
+main>>call.
+dump_collected_tasks>>call.

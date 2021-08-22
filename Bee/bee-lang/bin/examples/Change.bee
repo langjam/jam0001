@@ -1,0 +1,22 @@
+#load "Functional.bee"
+#load "Service.bee"
+
+#let x be 0
+
+#loop x < 100
+/*
+    @change x be x + 1
+    @call println with x
+*/
+
+#function hello
+/*
+    #assert true
+    #return with 1
+*/
+
+#let fu be @run hello
+#let mar be @wait fu
+
+#let result be @call system with "git --version"
+@call println with result

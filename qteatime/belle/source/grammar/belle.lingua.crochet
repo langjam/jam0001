@@ -1,0 +1,99 @@
+% crochet
+// This file is generated from Lingua
+
+open crochet.text.parsing.lingua;
+
+// Type definitions
+abstract node;
+type program(info is interval, forms is list) is node;
+
+abstract pattern is node;
+type pattern--word(info is interval, word is text) is pattern;
+type pattern--anything(info is interval) is pattern;
+
+abstract form is node;
+type form--rule(info is interval, arity is text, pattern is pattern, replacement is list) is form;
+type form--variable(info is interval, name is text) is form;
+type form--number(info is interval, digits is text) is form;
+type form--atom(info is interval, contents is text) is form;
+type form--string(info is interval, contents is text) is form;
+type form--block(info is interval, expressions is list) is form;
+type form--matched(info is interval) is form;
+type form--remaining(info is interval) is form;
+type form--text(info is interval, contents is text) is form;
+
+type pair(first is any, second is any) is node;
+
+// Grammar definition
+define grammar = lazy (#lingua grammar: "\r\n  Belle {\r\n    program  = form* end  -- alt1\n\n\nform  = special_form  -- alt1\n | expr  -- alt2\n | text_piece  -- alt3\n | any  -- alt4\n\n\ntext_piece  = basic_text_piece  -- alt1\n | horizontal_spaces  -- alt2\n | newline  -- alt3\n\n\nbasic_text_piece  = \"\\\\\" any  -- alt1\n | word  -- alt2\n | punctuation  -- alt3\n\n\nspecial_form  = id<\":rule\"> ws<rule_pattern> ws<\"=\"> ws<expr_block> space* \".\" s newline  -- alt1\n\n\nrule_pattern  = pattern space* \"/\" space* number  -- alt1\n\n\npattern  = id<\"<any>\">  -- alt1\n | word  -- alt2\n\n\nexpr  = \"%\" word  -- alt1\n | \"#\" number  -- alt2\n | \"#\" word  -- alt3\n | string  -- alt4\n | id<\"^rest\">  -- alt5\n | id<\"^self\">  -- alt6\n | ~\".\" basic_text_piece  -- alt7\n | \"[\" space* expr_block space* \"]\"  -- alt8\n\n\nexpr_block  = listOf<expr, space+>  -- alt1\n\n\nword  = \"@\"? (letter | digit | \"-\" | \"_\")+  -- alt1\n\n\nnumber  = digit+  -- alt1\n\n\nstring  = \"\\\"\" string_chars \"\\\"\"  -- alt1\n\n\nstring_chars  = \"\\\\\" any  -- alt1\n | (~\"\\\"\" any)*  -- alt2\n\n\nnewline  = \"\\r\\n\"  -- alt1\n | \"\\r\"  -- alt2\n | \"\\n\"  -- alt3\n\n\nhorizontal_space  = \" \"  -- alt1\n | \"\\t\"  -- alt2\n\n\ns  = horizontal_space*  -- alt1\n\n\nhorizontal_spaces  = horizontal_space+  -- alt1\n\n\npunctuation  = \".\"  -- alt1\n | \",\"  -- alt2\n | \"!\"  -- alt3\n | \"?\"  -- alt4\n | \",\"  -- alt5\n | \";\"  -- alt6\n | \"(\"  -- alt7\n | \")\"  -- alt8\n | \"-\"  -- alt9\n\n\nid<word>  = word ~(letter | digit | \"-\" | \"_\")  -- alt1\n\n\nws<pattern>  = space+ pattern  -- alt1\n\r\n  }\r\n  ");
+
+define to-ast = lazy ((force grammar) semantics: [
+  "program" -> #lingua visitor-identity,
+  "program_alt1" -> #lingua visitor-lambda: { Node, Xs, _ in (new program((#lingua interval: Node), Xs))  },
+  "form" -> #lingua visitor-identity,
+  "form_alt1" -> #lingua visitor-lambda: { Node, X in X },
+  "form_alt2" -> #lingua visitor-lambda: { Node, E in E },
+  "form_alt3" -> #lingua visitor-lambda: { Node, T in T },
+  "form_alt4" -> #lingua visitor-lambda: { Node, X in (new form--text((#lingua interval: Node), X))  },
+  "text_piece" -> #lingua visitor-identity,
+  "text_piece_alt1" -> #lingua visitor-singleton,
+  "text_piece_alt2" -> #lingua visitor-lambda: { Node, S in (new form--text((#lingua interval: Node), S))  },
+  "text_piece_alt3" -> #lingua visitor-lambda: { Node, N in (new form--text((#lingua interval: Node), N))  },
+  "basic_text_piece" -> #lingua visitor-identity,
+  "basic_text_piece_alt1" -> #lingua visitor-lambda: { Node, _, X in (new form--text((#lingua interval: Node), X))  },
+  "basic_text_piece_alt2" -> #lingua visitor-lambda: { Node, W in (new form--text((#lingua interval: Node), W))  },
+  "basic_text_piece_alt3" -> #lingua visitor-lambda: { Node, P in (new form--text((#lingua interval: Node), P))  },
+  "special_form" -> #lingua visitor-identity,
+  "special_form_alt1" -> #lingua visitor-lambda: { Node, _, P, _, E, _, _, _, _ in (new form--rule((#lingua interval: Node), ((P).second), ((P).first), E))  },
+  "rule_pattern" -> #lingua visitor-identity,
+  "rule_pattern_alt1" -> #lingua visitor-lambda: { Node, P, _, _, _, A in (new pair(P, A))  },
+  "pattern" -> #lingua visitor-identity,
+  "pattern_alt1" -> #lingua visitor-lambda: { Node, _ in (new pattern--anything((#lingua interval: Node)))  },
+  "pattern_alt2" -> #lingua visitor-lambda: { Node, W in (new pattern--word((#lingua interval: Node), W))  },
+  "expr" -> #lingua visitor-identity,
+  "expr_alt1" -> #lingua visitor-lambda: { Node, _, W in (new form--variable((#lingua interval: Node), W))  },
+  "expr_alt2" -> #lingua visitor-lambda: { Node, _, N in (new form--number((#lingua interval: Node), N))  },
+  "expr_alt3" -> #lingua visitor-lambda: { Node, _, W in (new form--atom((#lingua interval: Node), W))  },
+  "expr_alt4" -> #lingua visitor-lambda: { Node, S in (new form--string((#lingua interval: Node), S))  },
+  "expr_alt5" -> #lingua visitor-lambda: { Node, _ in (new form--remaining((#lingua interval: Node)))  },
+  "expr_alt6" -> #lingua visitor-lambda: { Node, _ in (new form--matched((#lingua interval: Node)))  },
+  "expr_alt7" -> #lingua visitor-lambda: { Node, T in T },
+  "expr_alt8" -> #lingua visitor-lambda: { Node, _, _, E, _, _ in (new form--block((#lingua interval: Node), E))  },
+  "expr_block" -> #lingua visitor-identity,
+  "expr_block_alt1" -> #lingua visitor-singleton,
+  "word" -> #lingua visitor-identity,
+  "word_alt1" -> #lingua visitor-source,
+  "number" -> #lingua visitor-identity,
+  "number_alt1" -> #lingua visitor-source,
+  "string" -> #lingua visitor-identity,
+  "string_alt1" -> #lingua visitor-lambda: { Node, _, X, _ in X },
+  "string_chars" -> #lingua visitor-identity,
+  "string_chars_alt1" -> #lingua visitor-source,
+  "string_chars_alt2" -> #lingua visitor-source,
+  "newline" -> #lingua visitor-identity,
+  "newline_alt1" -> #lingua visitor-source,
+  "newline_alt2" -> #lingua visitor-source,
+  "newline_alt3" -> #lingua visitor-source,
+  "horizontal_space" -> #lingua visitor-identity,
+  "horizontal_space_alt1" -> #lingua visitor-source,
+  "horizontal_space_alt2" -> #lingua visitor-source,
+  "s" -> #lingua visitor-identity,
+  "s_alt1" -> #lingua visitor-source,
+  "horizontal_spaces" -> #lingua visitor-identity,
+  "horizontal_spaces_alt1" -> #lingua visitor-source,
+  "punctuation" -> #lingua visitor-identity,
+  "punctuation_alt1" -> #lingua visitor-source,
+  "punctuation_alt2" -> #lingua visitor-source,
+  "punctuation_alt3" -> #lingua visitor-source,
+  "punctuation_alt4" -> #lingua visitor-source,
+  "punctuation_alt5" -> #lingua visitor-source,
+  "punctuation_alt6" -> #lingua visitor-source,
+  "punctuation_alt7" -> #lingua visitor-source,
+  "punctuation_alt8" -> #lingua visitor-source,
+  "punctuation_alt9" -> #lingua visitor-source,
+  "id" -> #lingua visitor-identity,
+  "id_alt1" -> #lingua visitor-lambda: { Node, X in X },
+  "ws" -> #lingua visitor-identity,
+  "ws_alt1" -> #lingua visitor-lambda: { Node, _, X in X },
+]);
+  

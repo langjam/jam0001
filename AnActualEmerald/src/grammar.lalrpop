@@ -1,0 +1,117 @@
+use std::str::FromStr;
+use crate::model::{Term, Keyword, Op};
+
+grammar;
+
+
+pub Program: Vec<Box<Term>> = {
+    <v: Term*> => v
+}
+
+
+Term: Box<Term> = {
+    <k:Key> => Box::new(Term::Key(<>)),
+    Takes,
+    With,
+    Operation,
+
+}
+
+Expr: Box<Term> = {
+    <n:Num> => Box::new(Term::Number(<>)),
+    <n:Name> => Box::new(Term::Ident(<>)),
+    <s:Str> => Box::new(Term::String(<>)),
+    <b:"true"> => Box::new(Term::Bool(true)),
+    <b:"false"> => Box::new(Term::Bool(false)),
+}
+
+Operation: Box<Term> = {
+    <e:Operation> "+" <f:Factor> => Box::new(Term::Operation(Op::Add(<>))),
+    <e:Operation> "-" <f:Factor> => Box::new(Term::Operation(Op::Subtract(<>))),
+    Factor
+
+}
+
+Factor: Box<Term> = {
+    <e:Factor> "*" <f:Expr> => Box::new(Term::Operation(Op::Multiply(<>))),
+    <e:Factor> "/" <f:Expr> => Box::new(Term::Operation(Op::Divide(<>))),
+    Expr
+}
+
+Takes: Box<Term> = {
+    "takes" <l:NameList> => Box::new(Term::Key(Keyword::Takes(l))),
+    "takes" <n:Name> => Box::new(Term::Key(Keyword::Takes(vec![n]))),
+    "takes" "nothing" => Box::new(Term::Key(Keyword::Takes(vec![]))),
+}
+With: Box<Term> = {
+    "with" <v: List> => Box::new(Term::Key(Keyword::With(v))),
+    "with" <e: Expr> => Box::new(Term::Key(Keyword::With(e))),
+    "with" "nothing" => Box::new(Term::Key(Keyword::With(Box::new(Term::Key(Keyword::Nothing))))),
+    "with" "\\n" => Box::new(Term::Key(Keyword::With(Box::new(Term::Newline)))),
+    "with" "newline" => Box::new(Term::Key(Keyword::With(Box::new(Term::Newline)))),
+
+}
+
+Key: Keyword = {
+    "function" => Keyword::Function,
+    "call" => Keyword::Call,
+    "calls" => Keyword::Call,
+    "returns" => Keyword::Returns,
+    "return" => Keyword::Returns,
+    <i: Name> "equals" => Keyword::Equals(i),
+    "prints" => Keyword::Prints,
+    "print" => Keyword::Prints,
+    "is" => Keyword::Is,
+    "and" => Keyword::And,
+    "or" => Keyword::Or,
+    "in" => Keyword::In,
+    "if" => Keyword::If,
+    "for" => Keyword::For,
+    "while" => Keyword::While,
+    "end" => Keyword::End,
+    "nothing" => Keyword::Nothing,
+    "the" => Keyword::Waste,
+    "then" => Keyword::Waste,
+}
+
+// Primitive types
+Name: String = <s:r"[A-Za-z_~][A-Za-z0-9_\-]*"> => s.into();
+Str: String = <s:r#""[^"]*""#> => s.strip_prefix('"').unwrap().strip_suffix('"').unwrap().to_string();
+Num: f32 = <n:r"[0-9]+.?[0-9]*"> => f32::from_str(n).unwrap();
+
+NameList: Vec<String> = <mut v:(<Name> ",")+> <e: Name> => {
+    v.push(e);
+    v
+};
+
+List: Box<Term> = <mut v:(<Expr> ",")+> <e: Expr> => {
+    v.push(e);
+    Box::new(Term::List(v))
+};
+
+match{
+    "takes",
+    "function",
+    "call",
+    "returns",
+    "nothing",
+    "equals",
+    "is",
+    "and",
+    "or",
+    "in",
+    "if",
+    "for",
+    "while",
+    "prints",
+    "end",
+    "with",
+    "true",
+    "false",
+    "newline",
+    "the",
+    "then",
+    r"\s*" => {},
+}else {
+    _
+}

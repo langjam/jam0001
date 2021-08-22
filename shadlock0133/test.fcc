@@ -1,0 +1,42 @@
+(define ; comment ; a 2)
+(println "Docs for a: " (get-doc `a))
+
+(define +1 (lambda a (+ 1 a)))
+(define mul (lambda (a b) (* a b)))
+
+; assert: 7 ;
+(+1 (mul a 3))
+
+(println nil)
+(println #t)
+(println #f)
+(println "abba")
+(print "Def: ")
+(println (get-doc `def))
+
+(set-doc `lambda ; Creates a function value ;)
+
+(println)
+(println "Built-ins: ")
+(for x (built-ins)
+    (println "  - " x " "
+        (if (nil? (get-doc x))
+            "- Missing"
+            (get-doc x))
+    ))
+(println)
+(define all-docs #t)
+(for x (built-ins) (if (nil? (get-doc x)) (set! all-docs #f)))
+(println "Docs status: "
+    (if all-docs
+        "All documented, hurray!"
+        "Still some left to document ;_;"))
+(println)
+
+(println (if #t "true" "false"))
+(println (if #f "true" "false"))
+(for x `(1 2 3) (println x))
+
+; Remove - for assertion fail ;
+; -assert: 5 ;
+(+ 2 2)

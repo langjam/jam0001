@@ -1,0 +1,27 @@
+= random fn ()
+  /*
+  Chosen by fair dice roll.
+  Guaranteed to be random.
+  */
+  return 4
+end
+
+= make_adder fn (a)
+  /* Function that adds $a to a number. */
+  return fn (x)
+    /* Result of adding $a and $x. */
+    return + a x
+  end
+end
+
+= adder1 make_adder (1)
+= adder4 make_adder (4)
+
+random ()
+
+adder1
+adder4
+
+adder1 (10)
+adder4 (20)
+make_adder (100) (200)

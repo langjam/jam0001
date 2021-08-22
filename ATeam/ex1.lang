@@ -1,0 +1,2 @@
+REM simple classic hello world
+print("Hello, World!") ⍝ Print to stdout

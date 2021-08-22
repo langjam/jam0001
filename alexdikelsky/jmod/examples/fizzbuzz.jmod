@@ -1,0 +1,9 @@
+((λ (n) (/ + 0 (/ + 0 
+ (let
+   ((fizz (transpose (is-zero (zip (+ 0m3 (i. n)) (+ 0m5 (i. n)) (+ 0m15 (i. n)))))))
+  (zip 
+    (* (car (lift fizz)) (i. n)) 
+    (* 
+       (* (car (cdr (lift fizz))) (i. n)) 
+       (lift (not (car (cdr (cdr fizz)))))))))))  
+ 1000)
