@@ -14,9 +14,7 @@ should be able to run `zig version` from the command line now.
 
 Now in the `zash` sub-directory, you can run `zig build` to obtain a debug binary
 in `zash/zig-out`. For a release build, you can run `zig build -Drelease-fast`.
-Binaries all always placed in `zash/zig-out` when using `zig build`. For convenience,
-binaries for Linux, macOS, and Windows (all x86_64) are provided in the `binaries`
-sub-directory.
+Binaries all always placed in `zash/zig-out` when using `zig build`. 
 
 ## Running the Sample
 A sample zash source code file is provided as `example.zash`. It demonstrates how the
@@ -28,11 +26,11 @@ langugae treats comments as first-class citizens. Namely it shows:
 3. Comments can be passed as arguments to functions, so functions can have comments as parameters.
 4. Comments can be returned from functions.
 
-To run the sample, use a provided binary from the `binaries` sub-directory or one that you built using
-`zig build` as explained above, and provide hte zash source code file as a parameter. For example:
+To run the sample, build your binary executable via `zig build` as explained above, and provide 
+hte zash source code file as a parameter. For example:
 
 ```
-$ ./binaries/zash-macos-x86_64 example.zash
+$ ./zig-out/zash ../example.zash
 ```
 
 ## Langugae Features
