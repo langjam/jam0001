@@ -1,13 +1,9 @@
 require 'set'
-require 'pp'
+require 'optparse'
 
-DEBUG = true
+$debug = false
+$play = false
 
-def debug(*args)
-  if DEBUG
-    puts *args
-  end
-end
 
 class String
   def matches(re)
@@ -42,8 +38,10 @@ def run(code)
   input, rules = code.split(/\n-{3,}/m)
   rules = parse(rules || '')
   last_input = nil
-  debug input
-  debug
+  if $debug || $play
+    puts input
+    puts
+  end
   while input != last_input do
     last_input = input.clone
     found = rules.map do |rule|
@@ -59,8 +57,8 @@ def run(code)
     if found
       found_rule, found_match = found
       rewrite = run_rule(found_match, found_rule[:rewrite])
-      if DEBUG
-        debug "via #{join_pattern(found_rule[:header])} #{found_match.named_captures.inspect} (length #{found_match.match_length})"
+      if $debug
+        puts "via #{join_pattern(found_rule[:header])} #{found_match.named_captures.inspect} (length #{found_match.match_length})"
         before_input = input.clone
         after_input = input.clone
         current = before_input[found_match.begin(0)...found_match.end(0)]
@@ -72,6 +70,12 @@ def run(code)
         puts
       end
       input[found_match.begin(0)...found_match.end(0)] = rewrite
+      if $play && !$debug
+        print "\e[H"
+        puts input
+        print "\e[0J"
+        sleep 0.001
+      end
     end
   end
   input
@@ -94,7 +98,7 @@ def run_rule(variables, match_pattern)
   end.join
 end
 
-def to_regex(pattern, all: false)
+def to_regex(pattern)
   # [[:plain, ""], [:var, "X"]]
   past_captures = Set.new
   regex_string = pattern.map do |item|
@@ -115,11 +119,7 @@ def to_regex(pattern, all: false)
       end
     end
   end.join
-  if all
-    Regexp.new("^#{regex_string}$")
-  else
-    Regexp.new(regex_string)
-  end
+  Regexp.new(regex_string, Regexp::MULTILINE)
 end
 
 # :: String -> [Rule]
@@ -138,12 +138,16 @@ def parse(rules)
     case token.first
     when :header
       pattern = parse_pattern(token.last)
-      rules << {
-        header: pattern,
-        header_regex: to_regex(pattern),
-        rewrite: nil
-      }
+      if rules.last && rules.last[:rewrite].nil?
+        rules.last[:header] += pattern.prepend([:plain, "\n"])
+      else
+        rules << {
+          header: pattern,
+          rewrite: nil
+        }
+      end
     when :rewrite
+      rules.last[:header_regex] = to_regex(rules.last[:header])
       if rules.last[:rewrite]
         rules.last[:rewrite] += "\n#{token.last}"
       else
@@ -537,34 +541,18 @@ TESTS = [
     result: '[|||] [|||||||||||||||||||||]'
   },
   {
-    name: 'Rule 110',
-    focus: true,
+    name: 'Multiline patterns',
     code: <<~BO,
-    ^.|........................................................#.....$
-    ---
+    hello
+    world
+    --------------
 
-    ^.<X>|.$
-      -.<X>.-
-      ^.|<X>.$
+    <A>
+    <B>
+      <A> <B>
 
-    .|..
-      ..|.
-    .|.#
-      .#|#
-    .|#.
-      .#|.
-    .|##
-      ..|#
-    #|..
-      #.|.
-    #|.#
-      ##|#
-    #|#.
-      ##|.
-    #|##
-      #.|#
     BO
-    result: '?'
+    result: 'hello world'
   }
 ]
 def test
@@ -621,5 +609,45 @@ def run_test(test)
   end
 end
 
-test
+options = {}
+
+opt_parser = OptionParser.new do |opts|
+  opts.banner = 'Usage: leafr.rb [options]'
+
+  opts.on('-r FILE', '--run FILE', 'The path of a file to run') do |v|
+    options[:file] = v
+  end
+
+  opts.on('-d', '--debug', 'Enable debug printing') do |v|
+    options[:debug] = v
+  end
+
+  opts.on('-p', '--play', 'Play a terminal animation of the code running') do |v|
+    options[:play] = v
+  end
+
+  opts.on('-t', '--test', 'Run internal unit tests') do |v|
+    options[:test] = v
+  end
+
+  opts.on('-h', '--help', 'Display this help') do |v|
+    puts opts
+    exit 0
+  end
+end
+
+opt_parser.parse!(options)
+unless options[:test] || options[:file]
+end
+
+$debug = options[:debug]
+$play = options[:play]
+
+if options[:test]
+  test
+elsif options[:file]
+  puts run(File.read(options[:file]))
+else
+  opt_parser.parse!(["--help"])
+end
 
