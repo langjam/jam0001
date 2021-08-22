@@ -69,8 +69,10 @@ class Lexer:
         value = ""
 
         c = self.peek()
+
         while c != "\"":
             value += self.advance()
+            c = self.peek()
 
         self.expect("\"")
         return self.token(line, TokenType.STRING, value)
@@ -148,7 +150,7 @@ class Lexer:
 
     def is_keyword(self, ident):
         match ident:
-            case "if" | "while" | "return" | "let" | "function" | "else":
+            case "if" | "while" | "return" | "let" | "function" | "else" | "print":
                 return True
             case _:
                 return False

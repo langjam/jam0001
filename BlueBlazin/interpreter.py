@@ -10,7 +10,7 @@ class Env:
         env = self
         while env is not None:
             if key in env.table:
-                return env[key]
+                return env.table[key]
             env = env.parent
         return None
 
@@ -52,7 +52,7 @@ class Interpreter:
                 value = self.expression(stmt_or_dclr["value"])
                 print(value)
             case Ast.LET_DCLR:
-                key = self.expression(stmt_or_dclr["name"])
+                key = stmt_or_dclr["name"]
                 value = self.expression(stmt_or_dclr["value"])
                 self.env.set_value(key, value)
             case Ast.BLOCK_STMT:
@@ -65,13 +65,14 @@ class Interpreter:
                 self.while_stmt(stmt_or_dclr)
             case Ast.FUNCTION_DCLR:
                 self.function(stmt_or_dclr)
+            case Ast.RETURN_STMT:
+                return self.expression(stmt_or_dclr["value"])
             case _:
                 raise Exception(f"Internal Error {stmt_or_dclr}")
 
     def function(self, expr):
-        name = self.expression(expr["name"])
-        params = [self.expression(param) for param in expr["params"]]
-        function = Fun(name, params, expr["body"])
+        name = expr["name"]
+        function = Fun(name, expr["params"], expr["body"])
         self.env.set_value(name, function)
 
     def if_stmt(self, expr):
@@ -116,7 +117,7 @@ class Interpreter:
                 key = self.expression(expr["key"])
                 return dictionary.get(key, None)
             case _:
-                raise Exception("Internal Error")
+                raise Exception(f"Internal Error {expr}")
 
     def call(self, expr):
         function = self.expression(expr["callee"])
@@ -136,9 +137,10 @@ class Interpreter:
             self.env.set_value(param, arg)
 
         for stmt_or_dclr in function.body:
-            self.evaluate(stmt_or_dclr)
+            return_value = self.evaluate(stmt_or_dclr)
 
         self.env = self.env.parent
+        return return_value
 
     def unary(self, expr):
         value = self.expression(expr["argument"])

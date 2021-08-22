@@ -43,6 +43,7 @@ class Parser:
 
     def dclr(self):
         token = self.peek()
+
         match token:
             case {"type": TokenType.KEYWORD, "value": "function"}:
                 return self.function_dclr()
@@ -55,7 +56,7 @@ class Parser:
         line = self.advance()["line"]
         old_in_function = self.in_function
         self.in_function = True
-        name = self.identifier()
+        name = self.identifier()["value"]
         params = self.params()
         body = self.block()["body"]
         self.in_function = old_in_function
@@ -71,7 +72,7 @@ class Parser:
                 case {"type": TokenType.PUNCTUATOR, "value": ")"} | {"type": TokenType.EOF}:
                     break
                 case _:
-                    params.append(self.identifier())
+                    params.append(self.identifier()["value"])
                     token = self.peek()
                     if token["type"] != TokenType.PUNCTUATOR or token["value"] != ")":
                         self.expect(TokenType.PUNCTUATOR, ",")
@@ -82,14 +83,16 @@ class Parser:
 
     def let_dclr(self):
         line = self.advance()["line"]
-        name = self.expect(TokenType.IDENTIFIER)["value"]
+        name = self.identifier()["value"]
 
         value = None
         next_token = self.peek()
 
-        if next_token.type == TokenType.PUNCTUATOR and next_token.value == "=":
+        if next_token["type"] == TokenType.PUNCTUATOR and next_token["value"] == "=":
             self.advance()
-            value = self.expr()
+            value = self.expression()
+
+        self.expect_semicolon()
 
         return {"type": Ast.LET_DCLR, "name": name, "value": value, "line": line}
 
@@ -154,9 +157,10 @@ class Parser:
         value = None
         match self.peek():
             case {"type": TokenType.PUNCTUATOR, "value": ";"}:
-                value = self.expr()
-
-        self.expect_semicolon()
+                self.expect_semicolon()
+            case _:
+                value = self.expression()
+                self.expect_semicolon()
 
         return {"type": Ast.RETURN_STMT, "value": value, "line": line}
 
@@ -170,6 +174,7 @@ class Parser:
                     break
                 case _:
                     body.append(self.dclr())
+                    token = self.peek()
 
         self.expect(TokenType.PUNCTUATOR, "}")
         return {"type": Ast.BLOCK_STMT, "body": body, "line": line}
@@ -187,7 +192,7 @@ class Parser:
                 and (token["type"] == TokenType.PUNCTUATOR and token["value"] == "="):
             self.advance()
             value = self.expression()
-            return {"type": Ast.ASSIGNMENT, "id": expr, "value": value, "line": expr["line"]}
+            return {"type": Ast.ASSIGNMENT, "name": expr, "value": value, "line": expr["line"]}
 
         return expr
 
@@ -340,6 +345,24 @@ class Parser:
                 case _:
                     return expr
 
+    def arguments(self):
+        self.expect(TokenType.PUNCTUATOR, "(")
+        args = []
+
+        token = self.peek()
+        while True:
+            match token:
+                case {"type": TokenType.PUNCTUATOR, "value": ")"} | {"type": TokenType.EOF}:
+                    break
+                case _:
+                    args.append(self.expression())
+                    token = self.peek()
+                    if token["type"] != TokenType.PUNCTUATOR or token["value"] != ")":
+                        self.expect(TokenType.PUNCTUATOR, ",")
+
+        self.expect(TokenType.PUNCTUATOR, ")")
+        return args
+
     def primary(self):
         token = self.advance()
 
@@ -361,7 +384,7 @@ class Parser:
             case {"type": TokenType.IDENTIFIER, "value": value}:
                 return {"type": Ast.IDENTIFIER, "value": value, "line": token["line"]}
             case _:
-                raise Exception(f"Unidentified token: "
+                raise Exception(f"Unexpected token: "
                                 f"{token['value']} on line: {token['line']}")
 
     def identifier(self):
@@ -370,7 +393,7 @@ class Parser:
             case {"type": TokenType.IDENTIFIER, "value": value}:
                 return {"type": Ast.IDENTIFIER, "value": value, "line": token["line"]}
             case _:
-                raise Exception(f"Unidentified token: "
+                raise Exception(f"Unexpected token: "
                                 f"{token['value']} on line: {token['line']}")
 
     def dictionary(self):
@@ -412,7 +435,7 @@ class Parser:
 
         if token["type"] != token_type:
             raise Exception(f"Unexpected Token: {token['value']} "
-                            f"on line {token['line']}. Expected type {token_type}")
+                            f"on line {token['line']}. Expected {value or token_type}")
         if value is not None and token["value"] != value:
             raise Exception(f"Unexpected Token: {token['value']} "
                             f"on line {token['line']}. Expected {value}")
