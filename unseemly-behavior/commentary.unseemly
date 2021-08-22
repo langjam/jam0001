@@ -1,28 +1,23 @@
 import /[build_a_language.unseemly]/
-# `build_a_language.unseemly`
+# `build_a_language.unseemly` is a library that adds some things we need to Unseemly,
+# like `let` and `for`
 extend_syntax
     #### Get rid of comments! We need them to be a part of expressions for what we're doing.
     DefaultSeparator ::= /((?s:\s)*)/ ;
 
     DefaultAtom ::= common ( ,{DefaultWord}, reserving 'fn' 'Int' 'String' 'capture_language' 'fix');
 
-    # A variable name starts with a letter, and has letters, numbers, '_', and '?'.
-    # Whitespace may come before it.
-    #DefaultWord ::= common ( pick word in
-    #    [,{DefaultSeparator},
-    #     word := (/(\p{Letter}(?:\p{Letter}|\p{Number}|[_?])*)/) ]) ;
-
     DefaultToken ::= /\s*([\]\[|:;,(){}=]|->|capture_language)/ ;
 
     Expr ::= alt[
         #### lambda ####
-        # forall O . '{[
-            # lit ,{DefaultToken}, = '|'
-            # lit ,{DefaultToken}, = '|'
-            # fn_body := ( ,{Expr<O>}, )
-        # ]}' lambda0 -> .{
-            # '[Expr| .[ . ,[fn_body], ]. ]'
-        # }.
+         forall O . '{[
+            lit ,{DefaultToken}, = '|'
+            lit ,{DefaultToken}, = '|'
+            fn_body := ( ,{Expr<O>}, )
+        ]}' lambda0 -> .{
+            '[Expr| .[ . ,[fn_body], ]. ]'
+        }.
         forall I0 O . '{[
             lit ,{DefaultToken}, = '|'
             arg_name0 := ( ,{Pat<I0>}, )  lit ,{DefaultToken}, = ':'  arg_type0 := ( ,{Type<I0>}, )
@@ -166,8 +161,6 @@ extend_syntax
                                     (join s[
                                         "/*"
                                         ,[(prefab (ident_to_string pre_text))],
-                                        (join s[ ...[,comment_expr, >>
-                                            (anything_to_string ,[comment_expr],)]... ]s "")
                                         ,[(prefab (ident_to_string post_text))],
                                         "*/
 "

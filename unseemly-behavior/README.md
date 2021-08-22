@@ -7,9 +7,11 @@ Commentary's syntax is stolen from Rust, thought it's quite limited.
 If you run a program with the environment variable `COMMENTARY_SEARCH` set to "foo",
  it will print all comments containing "foo".
 
-`sudo apt install cargo  # Or your distro's equivalent`
-`cargo install unseemly  # Install Unseemly, the language Commentary is written in.`
-`COMMENTARY_SEARCH='adding'   unseemly commentary.unseemly demo.commentary`
+```
+sudo apt install cargo  # Or your distro's equivalent
+cargo install unseemly  # Install Unseemly, the language Commentary is written in.
+COMMENTARY_SEARCH='adding'   unseemly commentary.unseemly demo.commentary
+```
 
 Inside comments, backticks indicate code that will be executed
  and interpolated into the printed comment.
@@ -43,14 +45,14 @@ We didn't have much time to implement Commentary, so it only has:
    (They must be positioned before an expression, so we know when to "evaluate" them.)
  * A `fix` form for creating recursive functions.
 
-Due to a limitation in Unseemly, only 1- and 2- argument functions are supported.
+Due to a limitation in Unseemly, only 0-, 1- and 2- argument functions are supported.
 Also, "normal" recursive functions sadly don't work,
  so you need to use the `fix` form to define them.
 
 
-The implementation is in `commentary.unseemly`.
+The implementation is in `commentary.unseemly`. It's pretty short!
 
-`build_a_language.unseemly` is a library mostly pre-existing code
+`build_a_language.unseemly` is a library of mostly pre-existing code
  that adds some very basic features to Unseemly, which is *extremely* barebones.
 In fact, there's a lot of overlap between the two files, when the same feature is being added to both languages.
 
