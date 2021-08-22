@@ -13,9 +13,6 @@ pub enum Statement {
     Var(Var),
     Const(Const),
     ForIn(ForIn),
-
-    // TODO: Remove this nasty ass placeholder.
-    Empty
 }
 
 #[derive(Debug, Clone)]

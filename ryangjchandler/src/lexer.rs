@@ -284,6 +284,5 @@ pub fn generate(source: &str) -> Result<TokenList, LexerError> {
 
 #[derive(Error, Debug)]
 pub enum LexerError {
-    #[error("Unexpected character {0} on line {1} column {2}.")]
-    UnexpectedCharacter(char, usize, usize),
+
 }

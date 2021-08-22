@@ -48,7 +48,6 @@ pub enum TokenKind {
     String(String),
     Number(f64),
     ForwardSlash,
-    BackSlash,
     Eof,
     Fn,
     LeftBrace,

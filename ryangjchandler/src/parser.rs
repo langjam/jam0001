@@ -431,10 +431,6 @@ impl<'p> Parser<'p> {
         Ok(result)
     }
 
-    fn peek_is(&self, kind: TokenKind) -> bool {
-        discriminant(&self.peek.kind) == discriminant(&kind)
-    }
-
     fn current_is(&self, kind: TokenKind) -> bool {
         discriminant(&self.current.kind) == discriminant(&kind)
     }

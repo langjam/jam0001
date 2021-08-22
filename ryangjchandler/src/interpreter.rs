@@ -194,7 +194,6 @@ impl<'i> Interpreter<'i> {
                 
                 self.environment.borrow_mut().forget(iterator.clone());
             },
-            _ => todo!()
         };
 
         Ok(())
