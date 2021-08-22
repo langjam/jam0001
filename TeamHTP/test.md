@@ -13,5 +13,5 @@ this is a paragraph
 
 [TodoList]:: (
     print
-        true print
+        console log: 'hello'
 )

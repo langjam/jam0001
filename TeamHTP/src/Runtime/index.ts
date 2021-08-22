@@ -3,8 +3,9 @@ import {mdToMdast} from '../Markdown'
 import {Base, Function, wrap} from '../Types'
 import {Root} from 'mdast'
 import {get_parser} from "../mouthful"
-import transformer from "../transformer";
+import {makeTransformer} from "../transformer";
 
+const transformer = makeTransformer({})
 const parser = get_parser({transformer})
 
 class Runtime {
