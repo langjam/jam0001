@@ -1,4 +1,5 @@
 open Kl_parsing
+open Kl_errors
 
 type expr =
   | Leaf of value
@@ -75,7 +76,7 @@ let split_kw (kw : string) (comment : tok list) : tok list list =
 let parse_value (decl : (string * expr) list) (comment : tok list) : value =
   let rec build_value res = function
   | [] -> if List.mem_assoc res decl then Var res
-  else print_syntax_error (tok_pos (List.hd comment)) ("no variable named " ^ res)
+  else raise (SyntaxError (tok_pos (List.hd comment), "no variable named " ^ res))
   | t::q ->
     begin match string_of_tok t with
     | "something" -> Hole
@@ -89,7 +90,7 @@ let parse_value (decl : (string * expr) list) (comment : tok list) : value =
     | "argument" ->
       begin match q with
       | Int (_, n)::_ -> Arg n
-      | _ -> print_syntax_error (tok_pos t) "expected argument index"
+      | _ -> raise (SyntaxError (tok_pos t, "expected argument index"))
       end
     | "something" -> Hole
     | s -> build_value s q
@@ -105,38 +106,38 @@ let parse_operation (decl : (string * expr) list) (comment : tok list) : operati
             let a, b = look_for "and" q in
             let b, _ = look_for "otherwise" b in
             If (f a, f (List.rev prev), f b)
-          with Failure msg -> print_syntax_error (tok_pos t) msg end
+          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "sum" ->
           begin try
             let _, b = look_for "of" q in
             let a, b = look_for "and" b in
             Sum (f a, f b)
-          with Failure msg -> print_syntax_error (tok_pos t) msg end
+          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "difference" ->
           begin try
             let _, b = look_for "of" q in
             let a, b = look_for "and" b in
             Diff (f a, f b)
-          with Failure msg -> print_syntax_error (tok_pos t) msg end
+          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "product" ->
           begin try
             let _, b = look_for "of" q in
             let a, b = look_for "and" b in
             Prod (f a, f b)
-          with Failure msg -> print_syntax_error (tok_pos t) msg end
+          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "division" ->
           begin try
             let _, b = look_for "of" q in
             let a, b = look_for "and" b in
             Div (f a, f b)
-          with Failure msg -> print_syntax_error (tok_pos t) msg end
+          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "application" ->
           begin try
             let _, b = look_for "of" q in
             let a, b = look_for "on" b in
             let s = string_of_comment a and l = split_kw "and" b in
             if s = "self" then Rec (List.map f l) else App (s, List.map f l)
-          with Failure msg -> print_syntax_error (tok_pos t) msg end
+          with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
         | _ -> search (t::prev) q
       )
   in search [] comment
@@ -150,12 +151,12 @@ let rec parse_statement (decl : (string * expr) list) (comment : tok list) : cco
     | "take" | "takes" ->
       begin match q with
         | Int (_, n)::_ -> Takes n
-        | _ -> print_syntax_error (tok_pos t) "expected number of arguments"
+        | _ -> raise (SyntaxError (tok_pos t, "expected number of arguments"))
       end
     | "let" ->
       begin try
         let a, b = look_for "be" q in Let (string_of_comment a, f b)
-      with Failure msg -> print_syntax_error (tok_pos t) msg end
+      with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
     | "return" | "returns" -> Returns (f q)
     | "use" | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
     | _ -> parse_statement decl q
@@ -174,12 +175,12 @@ let generate_function (Spec (_, name, comment)) =
         | Yolo [] -> Function e
         | Yolo _ ->
           begin
-            print_warning (tok_pos (List.hd c)) (name ^ " was in yolo mode, now using return value");
+            located_warning (tok_pos (List.hd c)) (name ^ " was in yolo mode, now using return value");
             Function e
           end
         | Function _ ->
           begin
-            print_warning (tok_pos (List.hd c)) (name ^ " already has a return value, still using old return value");
+            located_warning (tok_pos (List.hd c)) (name ^ " already has a return value, still using old return value");
             f.result
           end
         in build_function {f with result = r} q
@@ -189,7 +190,7 @@ let generate_function (Spec (_, name, comment)) =
         | Yolo l' -> Yolo (l' @ l)
         | Function e ->
           begin
-            print_warning (tok_pos (List.hd c)) (name ^ " already has a return value, ignoring yolo mode");
+            located_warning (tok_pos (List.hd c)) (name ^ " already has a return value, ignoring yolo mode");
             Function e
           end
         in build_function {f with result = r} q
@@ -240,7 +241,7 @@ let rec complete_holes decl (remain : expr list) = function
       (Node (Rec l)), !r
 
 let rec compile_yolo decl = function
-  | [] -> print_compile_error "unable to complete yolo"
+  | [] -> raise (CompileError "unable to complete yolo")
   | e::q ->
     try let res, _ = complete_holes decl q e in res
     with Failure _ -> compile_yolo decl q
@@ -258,7 +259,7 @@ and compile_value ftable env = function
   | Arg x -> Kl_IR.Var (x - 1)
   | Cst n -> Kl_IR.Cst n
   | Var x -> List.assoc x env |> compile_expr ftable env
-  | Hole -> print_compile_error "remaining hole in expression, can't compile it down to Kl_IR"
+  | Hole -> raise (CompileError "remaining hole in expression, can't compile it down to Kl_IR")
 
 and compile_operation ftable env =
   let compile_ex = compile_expr ftable env in
