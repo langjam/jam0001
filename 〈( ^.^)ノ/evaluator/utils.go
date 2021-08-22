@@ -40,7 +40,7 @@ func (e *Evaluator) getRefValue(ref string) string {
 		os.Exit(1)
 	}
 
-	return arr[varIndex]
+	return arr[varIndex-1]
 }
 
 func makeNumberNode(number string) shared.Node {

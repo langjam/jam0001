@@ -379,7 +379,7 @@ func (e *Evaluator) Evaluate(input []Token, negativeCells, positiveCells []strin
 			if index > len(negativeCells) {
 				return errors.New("index -" + fmt.Sprint(index) + " out of range")
 			}
-			err = e.PushValue(negativeCells[index])
+			err = e.PushValue(negativeCells[index-1])
 			if err != nil {
 				return err
 			}
@@ -393,7 +393,7 @@ func (e *Evaluator) Evaluate(input []Token, negativeCells, positiveCells []strin
 			if index > len(positiveCells) {
 				return errors.New("index " + fmt.Sprint(index) + " out of range")
 			}
-			err = e.PushValue(positiveCells[index])
+			err = e.PushValue(positiveCells[index-1])
 			if err != nil {
 				return err
 			}

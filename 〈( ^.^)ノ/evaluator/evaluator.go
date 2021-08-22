@@ -15,7 +15,8 @@ type Evaluator struct {
 	positive []string
 	zero     string
 
-	comments []string
+	maxRef   int
+	comments map[string]shared.Node
 }
 
 func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
@@ -30,8 +31,8 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 
 	for i := 0; i < len(expr.Children); i++ { // for all children
 		// if it is an expression, recursively evaluate it
-		if expr.Children[i].IsExpression { // this fucking code makes the destruction
-			if len(expr.Children) == 1 {
+		if expr.Children[i].IsExpression {
+			if i == len(expr.Children) - 1 {
 				return e.eval_expr(expr.Children[i])
 			} else {
 				e.eval_expr(expr.Children[i])
@@ -54,6 +55,7 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 		case shared.TTnull:
   
 		case shared.TTwcomment, shared.TTwcommentAnd: // skip comments
+			return shared.Node{}
 
 		default:
 			fmt.Println("Unimplemented feature:", expr.Val)
@@ -65,8 +67,8 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 	return shared.Node{}
 }
 
-func RunEvaluator(nodes []shared.Node) {
-	evaluator := Evaluator{nodes, []string{"0", "0", "0", "0"}, []string{}, "0", []string{}}
+func RunEvaluator(nodes []shared.Node, comments map[string]shared.Node) {
+	evaluator := Evaluator{nodes, []string{"0", "0", "0", "0"}, []string{"0", "0", "0", "0"}, "0", 0, comments}
 	for _, node := range nodes {
 		evaluator.eval_expr(node)
 	}
