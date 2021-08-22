@@ -165,7 +165,13 @@ let generate_function (Spec (_, name, comment)) =
       | Let (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
       | Returns e -> build_function {f with result = Function e} q
       | Uses l ->
-        let r = match f.result with | Function e -> Yolo (e::l) | Yolo l' -> Yolo (l @ l')
+        let r = match f.result with
+        | Yolo l' -> Yolo (l' @ l)
+        | Function e ->
+          begin
+            print_warning (tok_pos (List.hd c)) (name ^ " already has a return value, ignoring yolo");
+            Function e
+          end
         in build_function {f with result = r} q
   in build_function {
     name; n_args = 0; declarations = []; result = Yolo []
