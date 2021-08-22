@@ -9,6 +9,7 @@
 *.cmxa
 
 test.*
+__pycache__/
 
 # ocamlbuild working directory
 _build/
