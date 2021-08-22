@@ -132,6 +132,8 @@ class Parser:
             self.parse_set_stmt()
         elif token == Token.IF_KEYWORD:
             self.parse_if_stmt()
+        elif token == Token.IDENTIFIER_WORD:
+            self.parse_func_call()
 
     def parse_set_stmt(self):
         token, value = self.advance()
@@ -151,6 +153,25 @@ class Parser:
         self.parse_expr()
         self.expect(Token.THEN)
         self.parse_stmt_contents()
+
+    def parse_func_call(self):
+        self.parse_call_body()
+
+    def parse_call_body(self):
+        self.parse_identifier()
+        token, value = self.peek_lexeme()
+        if token == Token.AND_CALL_IT:
+            self.parse_reverse_assignment()
+
+    def parse_reverse_assignment(self):
+        self.advance()
+        token, value = self.peek_lexeme()
+        if token == Token.IDENTIFIER_WORD:
+            self.parse_identifier()
+        else:
+            raise UnexpectedTokenError(
+                Token.IDENTIFIER_WORD, token
+            )
 
     def parse_expr(self):
         self.parse_operand()
@@ -325,6 +346,22 @@ if __name__ == "__main__":
         yield (Token.DOT, ".")
         yield (Token.EOL, "\n")
 
+    def function_call_no_params_no_result():
+        yield (Token.IDENTIFIER_WORD, "Open")
+        yield (Token.IDENTIFIER_WORD, "the")
+        yield (Token.IDENTIFIER_WORD, "pod")
+        yield (Token.IDENTIFIER_WORD, "bay")
+        yield (Token.IDENTIFIER_WORD, "doors")
+        yield (Token.DOT, ".")
+
+    def function_call_no_params_with_result():
+        yield (Token.IDENTIFIER_WORD, "Return")
+        yield (Token.IDENTIFIER_WORD, "one")
+        yield (Token.IDENTIFIER_WORD, "billion")
+        yield (Token.AND_CALL_IT, "and call it")
+        yield (Token.IDENTIFIER_WORD, "big")
+        yield (Token.DOT, ".")
+
     def code():
         yield (Token.CODE, "//")
 
@@ -378,10 +415,16 @@ if __name__ == "__main__":
     parser = Parser(program(code, set_var_to_constant))
     parser.parse()
 
-    input_file = "samples/fib.comment"
-    with open(input_file, "r") as f:
-        text = f.read()
-
-    tokeniser = Tokeniser(text)
-    parser = Parser(tokeniser.tokenise().__next__)
+    parser = Parser(program(function_call_no_params_no_result))
     parser.parse()
+
+    parser = Parser(program(function_call_no_params_with_result))
+    parser.parse()
+
+    # input_file = "samples/fib.comment"
+    # with open(input_file, "r") as f:
+    #     text = f.read()
+
+    # tokeniser = Tokeniser(text)
+    # parser = Parser(tokeniser.tokenise().__next__)
+    # parser.parse()
