@@ -70,7 +70,7 @@ output.append("\n### `<Num>`")
 output.append("* A sequence of 1 or more ASCII digit characters.")
 
 output.append("\n### `<Quote>`")
-output.append("* A string inside double quotes. Escapes are parsed identically to Rust, allowing most common escapes as well as `\\uXXXX` / `\\n{XXXXXX}`.")
+output.append("* A string inside double quotes. Escapes are parsed identically to Rust, allowing most common escapes as well as `\\uXXXX` / `\\U{XXXXXX}`.")
 
 with open(documentation_path, "w") as f:
     f.write("\n".join(output))
