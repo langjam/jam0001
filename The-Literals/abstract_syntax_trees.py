@@ -25,12 +25,14 @@ class DuplicateFunctionError(Exception):
         return f"Duplicate function: {self.func_name}"
 
 
-# All of the functions, by name.
+# All of the functions, by name. This will get populated by reset_functions
 functions = {}
 
 
 def reset_functions():
     functions.clear()
+    for func in builtin_funcs:
+        add_function(func.func_name, func)
 
 
 def add_function(func_name: str, function):
@@ -268,6 +270,24 @@ class Program:
     def execute(self):
         self.stmts.execute()
 
+
+builtin_funcs = {
+    Function(
+        func_name="Prints a number",
+        params=[Parameter("the number")],
+        body=Stmts(
+            [
+                Stmt(
+                    body=type(
+                        "PrintNumberStmt",
+                        (StmtContents, object),
+                        {"execute": lambda: print(get_var("the number"))},
+                    )
+                )
+            ]
+        ),
+    )
+}
 
 if __name__ == "__main__":
 
