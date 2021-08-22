@@ -1,45 +1,12 @@
-
 (** Code generator - To transpile to OCaml.
     Call emit_ast_as_function to print the generated code of a function,
     given its name and its AST. *)
 
 open Kl_IR
 
-let max2 x y = if x > y then x else y
-let max3 x y z = if z > x && z > y then z else max2 x y
-
-
-
-let op_count_params ?(self_param_count : int = 0) (op : op) : int =
-  match op with
-  | OUT -> 2
-  | ADD -> 2
-  | MUL -> 2
-  | DIV -> 2
-  | SUB -> 2
-  | FUN (_, func) -> ast_count_params func
-  | SELF -> self_param_count
-
-let rec ast_is_recursive (func : ast): bool =
-  let op_is_self (op: op): bool = 
-    match op with
-    | SELF -> true
-    | _ -> false
-  in
-  match func with
-  | Cst _ -> false
-  | Var _ -> false
-  | App (op, args) ->
-    if (op_is_self op) then
-      true
-    else
-      List.fold_right (fun ast acc -> (||) (ast_is_recursive ast) acc) args false
-  | If (cond, ifcase, elsecase) ->
-    (ast_is_recursive cond) || (ast_is_recursive ifcase) || (ast_is_recursive elsecase)
-
-let emit_indent oc (indent_lvl : int) = 
+let emit_indent oc (indent_lvl : int) =
   for _ = 0 to indent_lvl - 1 do
-    Printf.fprintf oc "%s" "  "
+    Printf.fprintf oc "  "
   done
 
 let emit_param_sequence oc (params_count : int) = 

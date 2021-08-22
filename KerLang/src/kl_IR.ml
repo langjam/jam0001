@@ -99,3 +99,17 @@ let rec ast_count_params (func : ast): int =
   | If (cond, ifcase, elsecase) ->
     max3 (ast_count_params cond) (ast_count_params ifcase) (ast_count_params elsecase)
 
+let op_count_params ?(self_param_count : int = 0) = function
+  | OUT | ADD | MUL | DIV | SUB -> 2
+  | FUN (_, func) -> ast_count_params func
+  | SELF -> self_param_count
+
+let rec ast_is_recursive (func : ast) : bool =
+  let op_is_self = function SELF -> true | _ -> false in
+  match func with
+  | Cst _ | Var _ -> false
+  | App (op, args) ->
+    if (op_is_self op) then true
+    else List.exists ast_is_recursive args
+  | If (cond, ifcase, elsecase) ->
+    List.exists ast_is_recursive [cond; ifcase; elsecase]
