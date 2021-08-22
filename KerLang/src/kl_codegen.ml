@@ -4,21 +4,14 @@
 *)
 
 open Kl_parsing
-open Kl_2ml
 open Kl_constraints
 open Kl_IR
 
 let emit_kl_ir (prog : spec list) : (string * ast) list =
   List.fold_left (fun ftable (Spec (_, fname, _) as s) ->
+    Printf.printf "\nProcessing function %s.\n" fname;
     (fname, generate_function s |> compile_function ftable)::ftable
   ) [] prog |> List.rev
-
-let print_info prog =
-  List.iter (fun (s, ast) ->
-    Format.asprintf "function %s :\n %a" s pp_ast ast
-    |> print_endline
-  ) prog |> print_newline;
-  List.iter (fun (name, ast) -> emit_ast_as_function_decl stdout name ast |> print_newline) prog
 
 module type TermRealizer = sig
   (** Realize an anonymous term *)
