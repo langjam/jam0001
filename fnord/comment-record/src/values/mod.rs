@@ -88,10 +88,10 @@ impl CommentValueData {
     }
 
     pub fn extend_with_lines(&mut self, lines: &[String]) {
-        println!();
-        println!("extending with lines");
-        println!("self: {:?}", self);
-        println!("lines: {:?}", lines);
+        debug!();
+        debug!("extending with lines");
+        debug!("self: {:?}", self);
+        debug!("lines: {:?}", lines);
 
         let mut text = self.text.clone();
         let mut fields = match &self.record {
@@ -126,8 +126,8 @@ impl CommentValueData {
         self.text = text;
         self.record = record;
 
-        println!("extended: {:?}", self);
-        println!();
+        debug!("extended: {:?}", self);
+        debug!();
     }
 }
 

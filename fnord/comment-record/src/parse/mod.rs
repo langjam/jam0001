@@ -271,7 +271,7 @@ pub fn parse_ast(input: &str) -> IResult<&str, Ast> {
             parse_value,
         )),
         |(comment, name, value)| {
-            println!("GOT {:?} {:?} {:?}", comment, name, value);
+            debug!("GOT {:?} {:?} {:?}", comment, name, value);
             let new_value = match value {
                 ValueAst::Struct(s) => {
                     let mut struct_value = s.inner().clone();
@@ -290,7 +290,7 @@ pub fn parse_ast(input: &str) -> IResult<&str, Ast> {
         |struct_type| Ast::TypeDef(struct_type),
     );
 
-    println!("parsing {}", input);
+    debug!("parsing {}", input);
 
     let res = terminated(
         alt((
@@ -300,7 +300,7 @@ pub fn parse_ast(input: &str) -> IResult<&str, Ast> {
         ws(char(';')),
     )(input);
 
-    println!("result {:?}", res);
+    debug!("result {:?}", res);
     res
 }
 

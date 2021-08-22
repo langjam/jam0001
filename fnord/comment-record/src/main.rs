@@ -1,3 +1,16 @@
+macro_rules! debug {
+    () => {
+        if std::env::var("CR_DEBUG") == Ok("1".into()) {
+            println!()
+        }
+    };
+    ($($t:tt)+) => {
+        if std::env::var("CR_DEBUG") == Ok("1".into()) {
+            println!($($t)+)
+        }
+    };
+}
+
 mod ast;
 mod env;
 mod parse;
@@ -127,7 +140,7 @@ notpi2 = NotPi{};
         ],
     };
 */
-    println!("{:?}", script);
+    debug!("{:?}", script);
 
     let mut env = env::Env::new();
 

@@ -20,14 +20,14 @@ impl Env {
     pub fn run_script(&mut self, script: &Script) -> Option<Value> {
         let mut last_value = None;
         for stmt in &script.statements {
-            println!("Running statement: {:?}", stmt);
+            debug!("Running statement: {:?}", stmt);
 
             match stmt {
                 Ast::TypeDef(ty) => {
                     let type_name = ty.name.as_ref().expect("struct must have name");
                     let resolved_type = self.resolve_type(ty).expect("invalid type");
 
-                    println!("Type: {:?}", resolved_type);
+                    debug!("Type: {:?}", resolved_type);
 
                     self.type_registry.insert(type_name.clone(), resolved_type);
 
@@ -36,7 +36,7 @@ impl Env {
                 Ast::ValueDef(name, val) => {
                     let resolved_value = self.evaluate(val).expect("invalid value");
 
-                    println!("Value: {:?}", resolved_value);
+                    debug!("Value: {:?}", resolved_value);
 
                     self.value_registry.insert(name.clone(), resolved_value.clone());
 
@@ -57,9 +57,9 @@ impl Env {
                 comment_source.push_str("!!");
                 let comment_query = crate::parse::parse_value(&comment_source)
                     .map_err(|e| format!("Error in comment reference: {:?}", e))?.1;
-                println!();
-                println!("Evaluating comment source: {:?}", comment_source);
-                println!("Query: {:?}", comment_query);
+                debug!();
+                debug!("Evaluating comment source: {:?}", comment_source);
+                debug!("Query: {:?}", comment_query);
                 match self.evaluate(&comment_query)? {
                     Value::Comment(c) => c,
                     other => return Err(format!("Invalid type from comment reference: {:?}", other)),
@@ -81,9 +81,9 @@ impl Env {
             comment_source.push_str("!!");
             let comment_query = crate::parse::parse_value(&comment_source)
                 .map_err(|e| format!("Error in comment reference: {:?}", e))?.1;
-            println!();
-            println!("Evaluating comment source: {:?}", comment_source);
-            println!("Query: {:?}", comment_query);
+            debug!();
+            debug!("Evaluating comment source: {:?}", comment_source);
+            debug!("Query: {:?}", comment_query);
             match self.evaluate(&comment_query)? {
                 Value::Comment(c) => c,
                 other => return Err(format!("Invalid type from comment reference: {:?}", other)),
@@ -100,14 +100,14 @@ impl Env {
             comment,
         }));
 
-        println!("");
-        println!("");
-        println!("Comment: {:?}", ty.comment);
-        println!("Resolved Comment: {:?}", CommentValue::from_lines(&ty.comment.lines));
-        println!("Source Type: {:?}", ty);
-        println!("Resolved Type: {:?}", resolved);
-        println!("");
-        println!("");
+        debug!("");
+        debug!("");
+        debug!("Comment: {:?}", ty.comment);
+        debug!("Resolved Comment: {:?}", CommentValue::from_lines(&ty.comment.lines));
+        debug!("Source Type: {:?}", ty);
+        debug!("Resolved Type: {:?}", resolved);
+        debug!("");
+        debug!("");
 
         Ok(resolved)
     }
@@ -128,7 +128,7 @@ impl Env {
                 let name = s.name.clone();
 
                 let (fields, mut comment) = if let Some(n) = &s.name {
-                    println!("resolving named struct: {:?}", n);
+                    debug!("resolving named struct: {:?}", n);
                     let resolved_type = self.type_registry.get(n).ok_or_else(|| format!("type not found: {}", n))?;
                     match resolved_type {
                         ResolvedType::Struct(s) => (s.fields.clone(), s.comment.inner().clone()),
@@ -144,18 +144,18 @@ impl Env {
                     comment_source.push_str("!!");
                     let comment_query = crate::parse::parse_value(&comment_source)
                         .map_err(|e| format!("Error in comment reference: {:?}", e))?.1;
-                    println!();
-                    println!("Evaluating comment source: {:?}", comment_source);
-                    println!("Query: {:?}", comment_query);
+                    debug!();
+                    debug!("Evaluating comment source: {:?}", comment_source);
+                    debug!("Query: {:?}", comment_query);
                     match self.evaluate(&comment_query)? {
                         Value::Comment(c) => comment = c.inner().clone(),
                         other => return Err(format!("Invalid type from comment reference: {:?}", other)),
                     }
                 }
                 else {
-                    println!("prior comment: {:?}", comment);
+                    debug!("prior comment: {:?}", comment);
                     comment.extend_with_lines(&s.comment.lines);
-                    println!("new comment: {:?}", comment);
+                    debug!("new comment: {:?}", comment);
                 }
 
                 let comment = comment.into();
@@ -171,9 +171,9 @@ impl Env {
                         comment_source.push_str("!!");
                         let comment_query = crate::parse::parse_value(&comment_source)
                             .map_err(|e| format!("Error in comment reference: {:?}", e))?.1;
-                        println!();
-                        println!("Evaluating comment source: {:?}", comment_source);
-                        println!("Query: {:?}", comment_query);
+                        debug!();
+                        debug!("Evaluating comment source: {:?}", comment_source);
+                        debug!("Query: {:?}", comment_query);
                         match self.evaluate(&comment_query)? {
                             Value::Comment(c) => c,
                             other => return Err(format!("Invalid type from comment reference: {:?}", other)),
