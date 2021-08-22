@@ -110,6 +110,7 @@ function startSocket() {
                 case "Print": {
                     const station = grid.stations.get(message.station.name);
                     station.last_print = message.message;
+                    prints.push(message.message)
 
                     break;
                 }
