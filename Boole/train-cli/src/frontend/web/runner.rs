@@ -7,7 +7,7 @@ use train::operations::Operation;
 use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
-use std::io::Write;
+use std::io::{Write, Error};
 use std::process::Command;
 use crate::frontend::web::MessageToWebpage;
 use futures_util::SinkExt;
@@ -67,10 +67,9 @@ impl WebRunner {
                 log::error!("{}", e);
             }
         }
-
     }
 
-    pub fn generate_visualizer_file(&self, connection_id: i64) -> Result<PathBuf, GenerateVisualizerDataError> {
+    pub async fn generate_visualizer_file(&self, connection_id: i64) -> Result<PathBuf, GenerateVisualizerDataError> {
         let mut res = Vec::new();
 
         let mut indices = HashMap::new();
@@ -80,7 +79,7 @@ impl WebRunner {
         }
 
         for station in &self.program.stations {
-            let mut to= Vec::new();
+            let mut to = Vec::new();
             for i in &station.output {
                 // make 1 indexed (again)
                 to.push(vec![*indices.get(&i.station).expect("must exist"), i.track + 1])
@@ -90,7 +89,7 @@ impl WebRunner {
                 r#type: station.operation,
                 inputs: station.operation.input_track_count(),
                 to,
-                name: station.name.to_string()
+                name: station.name.to_string(),
             })
         }
 
@@ -111,13 +110,40 @@ impl WebRunner {
 
         log::info!("calling python script to generate station layout");
 
-            let python_executor = std::env::var("PYTHON_EXECUTABLE").unwrap_or("python".to_string());
+        let python_executor = std::env::var("PYTHON_EXECUTABLE").unwrap_or("python".to_string());
         let mut command = Command::new(python_executor);
         command.arg("visualizer/router.py")
             .arg(format!("{:?}", &path));
         command.current_dir(".");
 
         let mut child = command.spawn()?;
+        // match procinfo::pid::status(child.id() as i32) {
+        //     Ok(mem_status) => {
+        //         let mem_size = mem_status.vm_size;
+        //         log::info!("{} kb", mem_size);
+        //     }
+        //     Err(e) => {
+        //         return Err(e.into());
+        //     }
+        // }
+
+        log::info!("python id: {}", child.id());
+        let mut x: u64 = 0;
+        // let memlimit = std::env::var("PYTHON_MEMLIMIT")?.parse()?;
+        while let Ok(None) = child.try_wait() {
+
+            let usage = WebRunner::python_mem_usage(child.id());
+            if x % 100 == 0 {
+                log::info!("Python is using {} kb of memory ({} mb, {} gb)", usage, usage/1024, usage/1024/1024);
+            }
+
+            if usage > 8000000 {
+                child.kill().unwrap();
+            }
+            tokio::task::yield_now().await;
+            x += 1;
+        }
+
         let status = child.wait()?;
         if !status.success() {
             return Err(GenerateVisualizerDataError::GenerateVisualizerData);
@@ -130,6 +156,21 @@ impl WebRunner {
         path.push(format!("{}.json.result.json", connection_id));
 
         Ok(path)
+    }
+
+    #[cfg(unix)]
+    fn python_mem_usage(id: u32) -> i64 {
+        let f = std::fs::read_to_string(format!("/proc/{}/status", id)).unwrap();
+        let re = regex::Regex::new(r"VmSize:\s+(\d+)\s+kB").unwrap();
+        if let Some(x) = re.captures(f.as_str()) {
+            return x.get(1).unwrap().as_str().parse().unwrap();
+        }
+        -1
+    }
+
+    #[cfg(not(unix))]
+    fn python_mem_usage(_: u32) -> i64 {
+        -1
     }
 }
 
@@ -156,7 +197,7 @@ impl Communicator for WebRunner {
         let (tx, mut rx) = channel(1);
 
         self.channels.lock().await.insert(input_identifier, tx);
-        self.send(MessageToWebpage::AskForInput{identifier: input_identifier})?;
+        self.send(MessageToWebpage::AskForInput { identifier: input_identifier })?;
 
         rx.recv().await.ok_or(CommunicatorError::SendError)
     }
@@ -170,13 +211,13 @@ impl Communicator for WebRunner {
             str += &data.to_string();
         }
 
-        self.send(MessageToWebpage::Print{station, message: str})
+        self.send(MessageToWebpage::Print { station, message: str })
     }
 
     fn print_char(&self, station: Station, data: Vec<i64>) -> Result<(), CommunicatorError> {
-        let char_data = data.iter().map(|x| (x&0xFF) as u8).collect();
+        let char_data = data.iter().map(|x| (x & 0xFF) as u8).collect();
         let str = String::from_utf8(char_data)?;
-        self.send(MessageToWebpage::Print{station, message: str})
+        self.send(MessageToWebpage::Print { station, message: str })
     }
 
     fn move_train(&self, from_station: Station, to_station: Station, train: Train, start_track: usize, end_track: usize) -> Result<(), CommunicatorError> {
@@ -190,6 +231,6 @@ impl Communicator for WebRunner {
     }
 
     fn delete_train(&self, train: Train) -> Result<(), CommunicatorError> {
-        self.send(MessageToWebpage::DeleteTrain {train })
+        self.send(MessageToWebpage::DeleteTrain { train })
     }
 }
