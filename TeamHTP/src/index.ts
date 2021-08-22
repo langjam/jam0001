@@ -4,7 +4,7 @@ import {startRepl} from './Repl'
 import {List} from './Types'
 import Runtime from './Runtime'
 import {mdastToMd} from './Markdown'
-import {commitToDisk} from "./Runtime/File";
+import {saveToDisk} from './Runtime/File'
 
 const srcPath = process.argv[2];
 
@@ -19,8 +19,8 @@ if (updatedListItem !== undefined) {
     console.log(mdastToMd(updatedListItem))
 }
 
-console.log('testing commit');
-commitToDisk(runtime)
+console.log('testing save')
+saveToDisk(runtime)
 
 startRepl((input) => {
     console.log(input)
