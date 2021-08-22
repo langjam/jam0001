@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 	"strings"
 )
@@ -30,9 +31,12 @@ const (
 	GEOp
 	EqOp
 	NEqOp
+	AbsOp
+	SqrtOp
 	SinOp
 	CosOp
 	TanOp
+	RandOp
 )
 
 var PrecedenceMap map[int]int = map[int]int{
@@ -50,9 +54,12 @@ var PrecedenceMap map[int]int = map[int]int{
 	GEOp:       1,
 	EqOp:       1,
 	NEqOp:      1,
+	AbsOp:      10,
+	SqrtOp:     10,
 	SinOp:      10,
 	CosOp:      10,
 	TanOp:      10,
+	RandOp:     10,
 }
 
 //============================================================================
@@ -192,12 +199,18 @@ func (l *Lexer) Lex(input string) error {
 			l.EatPushToken(LTOp)
 		} else if l.MatchPrefix(">") {
 			l.EatPushToken(GTOp)
+		} else if l.MatchPrefix("abs") {
+			l.EatPushToken(AbsOp)
+		} else if l.MatchPrefix("sqrt") {
+			l.EatPushToken(SqrtOp)
 		} else if l.MatchPrefix("sin") {
 			l.EatPushToken(SinOp)
 		} else if l.MatchPrefix("cos") {
 			l.EatPushToken(CosOp)
 		} else if l.MatchPrefix("tan") {
 			l.EatPushToken(TanOp)
+		} else if l.MatchPrefix("rand") {
+			l.EatPushToken(RandOp)
 		} else if l.MatchRanges("09") {
 			l.EatPushToken(NumberLiteral)
 		} else if l.MatchPrefix("$") {
@@ -356,6 +369,20 @@ func (e *Evaluator) Execute() error {
 			result = 1
 		}
 		e.values = append(e.values[:length-2], result)
+	case AbsOp:
+		length := len(e.values)
+		if length < 1 {
+			return errors.New("too few arguments for abs")
+		}
+		a := e.values[length-1]
+		e.values = append(e.values[:length-1], int(math.Abs(float64(a))))
+	case SqrtOp:
+		length := len(e.values)
+		if length < 1 {
+			return errors.New("too few arguments for sqrt")
+		}
+		a := e.values[length-1]
+		e.values = append(e.values[:length-1], int(math.Sqrt(float64(a))))
 	case SinOp:
 		length := len(e.values)
 		if length < 1 {
@@ -377,6 +404,8 @@ func (e *Evaluator) Execute() error {
 		}
 		a := e.values[length-1]
 		e.values = append(e.values[:length-1], int(math.Tan(float64(a))))
+	case RandOp:
+		e.values = append(e.values, rand.Intn(100))
 	default:
 		return errors.New("unknown operation")
 	}
@@ -422,7 +451,7 @@ func (e *Evaluator) Evaluate(input []Token) error {
 			e.operations = e.operations[:len(e.operations)-1]
 
 			// If this was a function call, make the call
-			if e.GetLastOperation().kind == SinOp || e.GetLastOperation().kind == CosOp || e.GetLastOperation().kind == TanOp {
+			if e.GetLastOperation().kind == AbsOp || e.GetLastOperation().kind == SqrtOp || e.GetLastOperation().kind == SinOp || e.GetLastOperation().kind == CosOp || e.GetLastOperation().kind == TanOp || e.GetLastOperation().kind == RandOp {
 				err := e.Execute()
 				if err != nil {
 					return err
