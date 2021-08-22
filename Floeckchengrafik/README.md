@@ -273,4 +273,6 @@ For a single-line-comment, write `\\`
 To start a multi-line-comment, write `/*`. To end it, write `*/`
 
 Function Signatures are needed when you want to pass a variable to a class or method.
-You can start a Function Signature with `/*` and end it with `*/`. To pass an argument to a class / function, you write `- param <name>` in a new line
+You can start a Function Signature with `/*` and end it with `*/`.<br><br>To pass an argument to a class / function, you write `- param <name>` in a new line.
+To allow a return value from the function, you write `- return` in a new line.
+The last statement in the function will be evaluated and returned.
