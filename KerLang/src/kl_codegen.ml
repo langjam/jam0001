@@ -43,7 +43,7 @@ module ML_Realizer = Realizer (struct
       Kl_2ml.emit_header oc
 
     let realize_term oc prog =
-      Kl_2ml.emit_ast oc prog
+      Kl_2ml.emit_ast_as_function oc prog
 
     let realize_decl oc name prog =
       Kl_2ml.emit_ast_as_function_decl oc name prog
