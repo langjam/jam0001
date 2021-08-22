@@ -29,14 +29,17 @@ To generate code, one can simply specify an output file. The KerLang compiler wi
 (* is not intended to be manually edited              *)
 (*----------------------------------------------------*)
 
-let twice = (fun x0 -> 
+let twice = (fun x0 ->
   (( * ) 
     x0
     2))
 ```
 
-If you don't want to generate source code it is possible too ! To execute directly a program in KerLang, you just need to provide a `main` function in your sources, the execution of the main function can be requested using the `-x` option for the compiler.
+If you don't want to generate source code it is possible to execute it directly too ! To do so you just need to provide a `main` function in your sources, the execution of the main function can be requested using the `-x` option of the compiler.
 
+## More about KerLang
+
+To know more about KerLang, examples are ready to be run in the `examples/` folder. The KerLang **manual** is also available as a pdf file.
 
 ## Build instructions
 
