@@ -231,6 +231,7 @@ export class Model {
     private mCallback: Function = () => {}
     constructor(callback: Function = () => {}) {
         this.mCallback = callback;
+        this.load();
     }
     addPost(post : any): void {
         let comments : ModelComment[] = [];
@@ -239,7 +240,7 @@ export class Model {
             comments.push(comment);
         }
         this.mCommentsMap.set(post.id, new ModelPost(post.title, post.content, post.id, "", post.upvotes, post.date, comments));
-        this.mCallback();
+        this.notifyChange();
     }
     getNexUniqueId() : number {
         return this.mCounter++;
@@ -248,7 +249,7 @@ export class Model {
         let commentObj : ModelComment = this.parseComment(commentId, commentJson)
         this.mCommentsMap.get(commentId)?.addChild(commentObj);
         this.mCommentsMap.set(commentObj.id, commentObj);
-        this.mCallback();
+        this.notifyChange();
     }
     makeCommentProvider(postId : string) : CommentProvider {
         return new ModelCommentProvider(this, postId);
@@ -261,6 +262,7 @@ export class Model {
     }
     notifyChange() {
         this.mCallback();
+        this.save();
     }
     vote(id: string, value: number) {
         let component : CommentBase | undefined = this.mCommentsMap.get(id);
@@ -288,7 +290,7 @@ export class Model {
                 parentTwo.children.push(entryOne as ModelComment)
             }
         }
-        this.mCallback();
+        this.notifyChange();
     }
 
     swapContent(idFirst: string, idSecond: string) {
@@ -300,7 +302,7 @@ export class Model {
             entryOne.content = entryTwo.content;
             entryTwo.content = tempContent;
         }
-        this.mCallback();
+        this.notifyChange();
     }
 
     private parseComment(parentId : string, jsonComment : any) : ModelComment {
