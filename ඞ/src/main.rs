@@ -12,14 +12,6 @@ pub type Result<T> = anyhow::Result<T>;
 
 fn main() -> Result<()> {
     let args = Args::read();
-    let path = Path::new(&args.path)
-        .to_str()
-        .ok_or(anyhow::anyhow!("Invalid source path"))?;
-    let input = fs::read_to_string(&args.path)?;
-    let input = input.as_str();
-    println!("Parsing Source File");
-    let ast = parse_input(input, path)?;
-    let ast = ast.to_value();
 
     let build_path = Path::new(&args.build_script)
         .to_str()
@@ -34,7 +26,15 @@ fn main() -> Result<()> {
     let call = ast_obj! { "ASTFnCall";
         "name" => Value::String("build".into()),
         "args" => Value::List{
-            elems: vec![Value::ObjectRef(Box::new(ast))]
+            elems: vec![
+                ast_obj!{ "ASTListLiteral";
+                    "elements" => Value::List {
+                        elems:  args.args.into_iter().map(|arg| ast_obj!{ "ASTStringLiteral";
+                                    "text" => Value::String(arg)
+                                }).collect()
+                    }
+                }
+            ]
         }
     };
     match &mut build_ast {

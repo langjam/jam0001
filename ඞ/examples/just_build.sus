@@ -1,5 +1,16 @@
 
-fn build(ast) {
-    print("Executing Source File");
-    eval(ast);
+fn build(args) {
+    for arg in args {
+        print("Parsing Source File '", arg, "'");
+        let input = read(arg);
+        if input.class == "Error" {
+            print("Error reading source file: ", input.msg);
+        }
+        let ast = parse(input, arg);
+        if ast.class == "Error" {
+            print("Parse error: ", ast.msg);
+        }
+        print("Executing Source File '", arg, "'");
+        eval(ast);
+    }
 }

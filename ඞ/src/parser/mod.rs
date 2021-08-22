@@ -20,6 +20,7 @@ where
 {
     input: &'input str,
     lexer: Peekable<I>,
+    pub(crate) allow_object_literals: bool,
 }
 
 impl<'input, I> Parser<'input, I>
@@ -30,6 +31,7 @@ where
         Self {
             input,
             lexer: lexer.peekable(),
+            allow_object_literals: true,
         }
     }
 }

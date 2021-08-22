@@ -169,7 +169,10 @@ where
                 let var_name = self.text().to_string();
                 self.consume(T![ident])?;
                 self.consume(T![in])?;
+                let current_allow_obj_literals = self.allow_object_literals;
+                self.allow_object_literals = false;
                 let target = self.parse_expr()?;
+                self.allow_object_literals = current_allow_obj_literals;
                 self.consume(T!['{'])?;
                 let mut body = Vec::new();
                 while !self.at(T!['}']) {
@@ -302,6 +305,7 @@ where
                         args,
                     }
                 } else if self.at(T!['{'])
+                    && self.allow_object_literals
                     && binding_power <= T![=].infix_binding_power().unwrap().1
                 {
                     // Object literal -- only allow at the beginning of an expr or on the RHS of an assignment

@@ -48,24 +48,6 @@ pub struct Token {
     pub span: Span,
 }
 
-impl Token {
-    pub fn len(&self) -> usize {
-        (self.span.end - self.span.start) as usize
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    pub fn is_trivia(&self) -> bool {
-        self.kind.is_trivia()
-    }
-
-    pub fn resolve_to_text<'input>(&self, input: &'input str) -> &'input str {
-        &input[self.span]
-    }
-}
-
 impl std::fmt::Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -536,7 +518,6 @@ impl TokenKind {
             T![error] => "<?>",
             T![ws] => "<Whitespace>",
             T![eof] => "<EOF>",
-            _ => return None,
         };
         Some(repr)
     }

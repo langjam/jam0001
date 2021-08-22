@@ -1,5 +1,5 @@
 
-fn build(ast) {
+fn build(args) {
     print("Ignoring your source file and building my own");
     let mul = ASTBinaryExpr {
         op: "*",

@@ -5,16 +5,7 @@ use structopt::StructOpt;
 #[derive(Debug, StructOpt)]
 #[structopt(name = "parser", author)]
 pub(crate) struct Args {
-    /// Path to the input file.
-    #[structopt(
-        short = "f",
-        long = "file",
-        parse(from_os_str),
-        name = "path to source file"
-    )]
-    pub(crate) path: PathBuf,
-
-    /// Path to the build script to use;
+    /// Path to the build script to use.
     #[structopt(
         long = "build",
         short = "b",
@@ -22,6 +13,10 @@ pub(crate) struct Args {
         name = "path to build script"
     )]
     pub(crate) build_script: PathBuf,
+
+    /// Args passed to build script
+    #[structopt(name = "build arguments")]
+    pub(crate) args: Vec<String>,
 }
 
 impl Args {

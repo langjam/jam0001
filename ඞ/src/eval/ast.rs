@@ -1,3 +1,7 @@
+use std::fs;
+
+use crate::parse_input;
+
 use super::{value::Function, *};
 
 #[allow(unused)]
@@ -299,6 +303,63 @@ impl Evaluator {
                                 remove_refs(ast);
                                 self.eval_ast(ast)?
                             }
+                            "read" => {
+                                if eval_args.len() != 1 {
+                                    return Err(format!(
+                                        "Expected 1 arguments for function `read`, but got {}",
+                                        eval_args.len()
+                                    ));
+                                }
+                                let ast = &eval_args[0];
+                                let path = match ast {
+                                    Value::String(s) => s,
+                                    v => {
+                                        return Err(format!(
+                                            "Argument to `read` must be a string (found {})",
+                                            v
+                                        ))
+                                    }
+                                };
+                                match fs::read_to_string(&path).map_err(|e| e.to_string()) {
+                                    Ok(content) => Value::String(content),
+                                    Err(e) => ast_obj! { "Error";
+                                        "msg" => Value::String(e)
+                                    },
+                                }
+                            }
+                            "parse" => {
+                                if eval_args.len() != 2 {
+                                    return Err(format!(
+                                        "Expected 2 arguments for function `parse`, but got {}",
+                                        eval_args.len()
+                                    ));
+                                }
+                                let input = match &eval_args[0] {
+                                    Value::String(s) => s,
+                                    v => {
+                                        return Err(format!(
+                                            "First argument to `parse` must be a source string (found {})",
+                                            v
+                                        ))
+                                    }
+                                };
+                                let input = input.as_str();
+                                let name = match &eval_args[1] {
+                                    Value::String(s) => s.clone(),
+                                    v => {
+                                        return Err(format!(
+                                            "Second argument to `parse` must be a name string (found {})",
+                                            v
+                                        ))
+                                    }
+                                };
+                                match parse_input(input, name) {
+                                    Ok(ast) => ast.to_value(),
+                                    Err(e) => ast_obj! { "Error";
+                                        "msg" => Value::String(e.to_string())
+                                    },
+                                }
+                            }
                             "range" => {
                                 let (start, stop) = match eval_args.len() {
                                     1 => (
@@ -534,7 +595,30 @@ impl Evaluator {
             "." => {
                 let target = match self.deref_val(lhs)? {
                     Value::Object(o) => o,
-                    v => return Err(format!("Cannot access a field of type {:?}", v)),
+                    v => {
+                        if let Value::VarRef { name } = rhs {
+                            if name == "class" {
+                                let class = match v {
+                                    Value::None => "None",
+                                    Value::Unit => "Unit",
+                                    Value::Bool(_) => "Bool",
+                                    Value::Int(_) => "Int",
+                                    Value::Float(_) => "Float",
+                                    Value::String(_) => "String",
+                                    Value::VarRef { .. } => "VarRef",
+                                    Value::Ptr(_) => "Ptr",
+                                    Value::Comment { .. } => "Comment",
+                                    Value::List { .. } => "List",
+                                    Value::Object(_) | Value::ObjectRef(_) => unreachable!(),
+                                };
+                                return Ok(Value::String(class.to_string()));
+                            } else {
+                                return Err(format!("Cannot access a field of type {:?}", v));
+                            }
+                        } else {
+                            return Err(format!("Cannot access a field of type {:?}", v));
+                        }
+                    }
                 };
 
                 match rhs {
