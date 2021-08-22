@@ -1,5 +1,5 @@
 /**********************
- * Example 6: While   *
+ * Example 8: Forever *
  **********************/
 
 forever({
