@@ -20,7 +20,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("{}", ast.ast_to_str());
 
-    let mut eval = dank::eval::Evaluator::default();
+    let mut eval = dank::eval::Evaluator::with_env({
+        let mut env = dank::env::Env::new();
+        env.add(
+            "clock".into(),
+            dank::data::Value::NativeFn(dank::data::Ptr::new(dank::data::NativeFn {
+                name: "clock".into(),
+                arity: 0,
+                func: Box::new(|_args| {
+                    Ok(dank::data::Value::Num(
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs() as f64,
+                    ))
+                }),
+            })),
+        );
+        env
+    });
     match eval.eval(&mut ast) {
         Ok(()) => (),
         Err(e) => {

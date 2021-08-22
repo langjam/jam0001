@@ -6,3 +6,11 @@
 // print("test test");
 
 print { name: "value", nested: { object: "here" } };
+
+let x = 5;
+print x;
+
+
+let obj = { name: "test" };
+print obj.name;
+print clock();

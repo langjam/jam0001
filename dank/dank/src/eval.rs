@@ -11,6 +11,9 @@ pub struct Evaluator<'a> {
 
 #[derive(Debug)]
 pub enum EvalError<'a> {
+    ArityMismatch(String),
+    NotCallable(String),
+    UndefinedProperty(Cow<'a, str>),
     DuplicatedLiteralField(Cow<'a, str>),
     UndefinedVariable(Cow<'a, str>),
 }
@@ -65,6 +68,9 @@ impl<'a> Evaluator<'a> {
                 .as_mut()
                 .map(|e| self.eval_comments_in_expr(e))
                 .unwrap_or(()),
+            StmtKind::FuncDecl(f) => {
+                self.eval_comments_in_block(&mut f.body);
+            }
             StmtKind::ExprStmt(expr) => self.eval_comments_in_expr(expr),
             StmtKind::Print(args) => args.iter_mut().for_each(|e| self.eval_comments_in_expr(e)),
             StmtKind::Block(b) => self.eval_comments_in_block(b),
@@ -77,8 +83,6 @@ impl<'a> Evaluator<'a> {
             ExprKind::ObjectLiteral(pairs) => pairs
                 .iter_mut()
                 .for_each(|(_, e)| self.eval_comments_in_expr(e)),
-            ExprKind::Literal(_) => (),
-            ExprKind::Variable(_) => (),
             ExprKind::Binary(l, _, r) => {
                 self.eval_comments_in_expr(l);
                 self.eval_comments_in_expr(r);
@@ -86,6 +90,13 @@ impl<'a> Evaluator<'a> {
             ExprKind::Unary(_, operand) => {
                 self.eval_comments_in_expr(operand);
             }
+            ExprKind::Call(callee, args) => {
+                self.eval_comments_in_expr(callee);
+                args.iter_mut().for_each(|a| self.eval_comments_in_expr(a));
+            }
+            ExprKind::Literal(_) => (),
+            ExprKind::Variable(_) => (),
+            ExprKind::Property(_, _) => (),
         }
     }
 
@@ -121,6 +132,79 @@ impl<'a> Evaluator<'a> {
             }
             ExprKind::Binary(_, _, _) => todo!(),
             ExprKind::Unary(_, _) => todo!(),
+            ExprKind::Property(name, obj) => {
+                let obj = self.eval_expr(obj)?;
+                self.get_prop(&obj, name.clone())
+            }
+            ExprKind::Call(callee, args) => {
+                let callee = self.eval_expr(callee)?;
+                let mut arg_values = vec![];
+                for a in args {
+                    arg_values.push(self.eval_expr(a)?);
+                }
+
+                self.call(&callee, arg_values)
+            }
+        }
+    }
+
+    fn call(
+        &mut self,
+        callee: &Value<'a>,
+        args: Vec<Value<'a>>,
+    ) -> Result<Value<'a>, EvalError<'a>> {
+        match callee {
+            Value::Fn(func) => {
+                if func.args.len() != args.len() {
+                    return Err(EvalError::ArityMismatch(format!(
+                        "{} expected {} arguments but was given {}",
+                        callee,
+                        func.args.len(),
+                        args.len()
+                    )));
+                }
+
+                self.env.push();
+                for (arg, arg_value) in func.args.iter().zip(args.into_iter()) {
+                    self.env.add(arg.clone(), arg_value);
+                }
+                self.eval_block(&func.body)?;
+                let _ = self.env.pop();
+                Ok(Value::Null)
+            }
+            Value::NativeFn(func) => {
+                if func.arity as usize != args.len() {
+                    return Err(EvalError::ArityMismatch(format!(
+                        "{} expected {} arguments but was given {}",
+                        callee,
+                        func.arity,
+                        args.len()
+                    )));
+                }
+
+                (func.func)(args)
+            }
+            Value::Obj(_) => todo!(),
+            Value::Num(_) | Value::Bool(_) | Value::Null | Value::Str(_) => Err(
+                EvalError::NotCallable(format!("`{}` is not a callable object.", callee)),
+            ),
+        }
+    }
+
+    fn get_prop(
+        &mut self,
+        obj: &Value<'a>,
+        name: Cow<'a, str>,
+    ) -> Result<Value<'a>, EvalError<'a>> {
+        match obj {
+            Value::Obj(obj) => {
+                let obj = obj.borrow();
+                obj.fields
+                    .get(&name)
+                    .cloned()
+                    .ok_or(EvalError::UndefinedProperty(name))
+            }
+            _ => Err(EvalError::UndefinedProperty(name)),
         }
     }
 
@@ -135,6 +219,19 @@ impl<'a> Evaluator<'a> {
                     }
                 }
                 println!();
+            }
+            StmtKind::LetDecl(name, initializer) => {
+                let value = if let Some(i) = initializer {
+                    self.eval_expr(i)?
+                } else {
+                    Value::Null
+                };
+                self.env.add(name.clone(), value);
+            }
+            StmtKind::FuncDecl(f) => {
+                let fn_ref = crate::data::Ptr::new((&**f).clone());
+                let fn_obj = Value::Fn(fn_ref);
+                self.env.add(f.name.clone(), fn_obj);
             }
             StmtKind::Block(b) => return self.eval_block(b),
             _ => unimplemented!(),

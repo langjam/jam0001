@@ -5,8 +5,9 @@ use ast2str::AstToStr;
 use crate::data::Value;
 
 pub type Span = std::ops::Range<usize>;
-pub type ExprPtr<'a> = Box<Expr<'a>>;
-pub type StmtPtr<'a> = Box<Stmt<'a>>;
+pub type Ptr<T> = Box<T>;
+pub type ExprPtr<'a> = Ptr<Expr<'a>>;
+pub type StmtPtr<'a> = Ptr<Stmt<'a>>;
 
 #[derive(Debug, Clone, PartialEq, AstToStr)]
 pub struct HeaderComment<'a> {
@@ -50,6 +51,7 @@ pub enum StmtKind<'a> {
         #[rename = "name"] Cow<'a, str>,
         #[rename = "initializer"] Option<ExprPtr<'a>>,
     ),
+    FuncDecl(#[forward] Ptr<Function<'a>>),
     ExprStmt(#[rename = "expr"] ExprPtr<'a>),
     Print(#[rename = "args"] Vec<Expr<'a>>),
     Block(#[rename = "statements"] Vec<LineComment<'a>>),
@@ -80,6 +82,14 @@ pub enum ExprKind<'a> {
     ObjectLiteral(Vec<(Cow<'a, str>, Expr<'a>)>),
     Literal(#[debug] Value<'a>),
     Variable(#[rename = "name"] Cow<'a, str>),
+    Property(
+        #[rename = "name"] Cow<'a, str>,
+        #[rename = "obj"] ExprPtr<'a>,
+    ),
+    Call(
+        #[rename = "callee"] ExprPtr<'a>,
+        #[rename = "args"] Vec<Expr<'a>>,
+    ),
     Binary(
         #[rename = "left"] ExprPtr<'a>,
         #[rename = "op"] BinOpKind,

@@ -19,7 +19,7 @@ impl<'s> Object<'s> {
 
 pub struct NativeFn<'s> {
     pub name: Cow<'s, str>,
-    pub arity: i8,
+    pub arity: u8, // todo: variadics
     // TODO: This needs a trait
     pub func: Box<dyn Fn(Vec<Value<'s>>) -> Result<Value<'s>, EvalError>>,
 }

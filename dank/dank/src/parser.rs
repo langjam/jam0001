@@ -82,6 +82,17 @@ peg::parser!(pub grammar dank() for str {
          / b:binding() ";" {b}
          / w:while_loop()  {w}
          / b:block() {b}
+         / f:func() {f}
+
+    pub rule func() -> Stmt<'input>
+    = start:position!() "fn" name:ident() "(" args:ident() ** ("," ___) ")" body:block() end:position!()
+    {
+        Stmt { span: start..end, kind: StmtKind::FuncDecl(Box::new(Function {
+            name: name.into(),
+            args: args.into_iter().map(Into::into).collect(),
+            body: match body.kind { StmtKind::Block(b) => b, _ => unreachable!() }
+        })) }
+    }
 
     pub rule block() -> Stmt<'input>
     = start:position!() "{" ___ statements:(s:line_comment() ___ {s})* ___ "}" end:position!() {
@@ -112,8 +123,18 @@ peg::parser!(pub grammar dank() for str {
         "-" x:(@) { op_node!(x, UnOpKind::Neg) }
         "!" x:(@) { op_node!(x, UnOpKind::Not) }
         --
-        p:primary() { p }
+        a:access() { a }
     }
+
+    #[cache_left_rec]
+    pub rule access() -> Expr<'input>
+    = start:position!() obj:access()  "." prop:ident() end:position!() {
+        Expr { span: start..end, kind: ExprKind::Property(prop.into(), Box::new(obj)) }
+      }
+      / start:position!() callee:access() "(" args:expr() ** ("," ___) ")" end:position!() {
+        Expr { span: start..end, kind: ExprKind::Call(Box::new(callee), args) }
+      }
+      / primary()
 
     pub rule primary() -> Expr<'input>
         = start:position!() i:ident() end:position!() { Expr { kind: ExprKind::Variable(i.into()), span: start..end } }
@@ -156,7 +177,7 @@ peg::parser!(pub grammar dank() for str {
 
     /// A list of identifiers separated by whitespace.
     rule ident_with_whitespace() -> Vec<&'input str>
-        = i:$(ident_chars()*) ** [' ' | '\t'] { i }
+        = i:$(ident()) ** [' ' | '\t'] { i }
 
     /// Parses the first character of an identifier, which cannot contain numbers
     rule ident_start() -> &'input str = s:$(['a'..='z'|'A'..='Z'|'_']) { s }
@@ -200,6 +221,110 @@ pub mod tests {
                 $expected.trim().as_display()
             )
         };
+    }
+
+    #[test]
+    fn properties_and_calls() {
+        let test = r#"
+
+        let x;
+        let y = x.abc;
+        let z = x.a.b.c.d;
+
+        let a = z();
+        let b = x.abc();
+        let c = y.a.b.c.d();
+        let d = c()()(1, 2, 3)();
+
+        "#;
+
+        test_eq!(
+            test,
+            r#"Ast
+  statements= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "x"
+        initializer: None
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "y"
+        initializer: ExprKind::Property
+          name: "abc"
+          obj: ExprKind::Variable
+            name: "x"
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "z"
+        initializer: ExprKind::Property
+          name: "d"
+          obj: ExprKind::Property
+            name: "c"
+            obj: ExprKind::Property
+              name: "b"
+              obj: ExprKind::Property
+                name: "a"
+                obj: ExprKind::Variable
+                  name: "x"
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "a"
+        initializer: ExprKind::Call
+          callee: ExprKind::Variable
+            name: "z"
+          args= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "b"
+        initializer: ExprKind::Call
+          callee: ExprKind::Property
+            name: "abc"
+            obj: ExprKind::Variable
+              name: "x"
+          args= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "c"
+        initializer: ExprKind::Call
+          callee: ExprKind::Property
+            name: "d"
+            obj: ExprKind::Property
+              name: "c"
+              obj: ExprKind::Property
+                name: "b"
+                obj: ExprKind::Property
+                  name: "a"
+                  obj: ExprKind::Variable
+                    name: "y"
+          args= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::LetDecl
+        name: "d"
+        initializer: ExprKind::Call
+          callee: ExprKind::Call
+            callee: ExprKind::Call
+              callee: ExprKind::Call
+                callee: ExprKind::Variable
+                  name: "c"
+                args= 
+              args= 
+            args= 
+              ExprKind::Literal
+                field0: Num(1.0)
+              ExprKind::Literal
+                field0: Num(2.0)
+              ExprKind::Literal
+                field0: Num(3.0)
+          args=
+        "#
+        );
     }
 
     #[test]
