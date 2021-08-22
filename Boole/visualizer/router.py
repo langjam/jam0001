@@ -208,10 +208,12 @@ class World:
                 if self.filled[(current[0] + 1, current[1])][0] == 2 and (
                         current[0] + 2, current[1]) not in self.filled:
                     neighbour = (current[0] + 2, current[1], 1)
+                    intermediate = (current[0] + 1, current[1], 1)
                     cost = [0, 2, 4, 6][current[2]]
                     tentative_score = g_score[current] + cost
                     if tentative_score < g_score[neighbour]:
-                        came_from[neighbour] = current
+                        came_from[neighbour] = intermediate
+                        came_from[intermediate] = current
                         g_score[neighbour] = tentative_score
                         f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
                         open_set.add(neighbour)
@@ -231,10 +233,12 @@ class World:
                 if self.filled[(current[0] - 1, current[1])][0] == 2 and (
                         current[0] - 2, current[1]) not in self.filled:
                     neighbour = (current[0] - 2, current[1], 1)
+                    intermediate = (current[0] - 1, current[1], 1)
                     cost = [0, 2, 4, 6][current[2]]
                     tentative_score = g_score[current] + cost
                     if tentative_score < g_score[neighbour]:
-                        came_from[neighbour] = current
+                        came_from[neighbour] = intermediate
+                        came_from[intermediate] = current
                         g_score[neighbour] = tentative_score
                         f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
                         open_set.add(neighbour)
@@ -254,10 +258,12 @@ class World:
                 if self.filled[(current[0], current[1] + 1)][0] == 2 and (
                         current[0], current[1] + 2) not in self.filled:
                     neighbour = (current[0], current[1] + 2, 2)
+                    intermediate = (current[0], current[1] +1, 2)
                     cost = [0, 4, 2, 6][current[2]]
                     tentative_score = g_score[current] + cost
                     if tentative_score < g_score[neighbour]:
-                        came_from[neighbour] = current
+                        came_from[neighbour] = intermediate
+                        came_from[intermediate] = current
                         g_score[neighbour] = tentative_score
                         f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
                         open_set.add(neighbour)
@@ -277,10 +283,12 @@ class World:
                 if self.filled[(current[0], current[1] - 1)][0] == 2 and (
                         current[0], current[1] - 2) not in self.filled:
                     neighbour = (current[0], current[1] - 2, 2)
+                    intermediate = (current[0], current[1] - 1, 2)
                     cost = [0, 4, 2, 6][current[2]]
                     tentative_score = g_score[current] + cost
                     if tentative_score < g_score[neighbour]:
-                        came_from[neighbour] = current
+                        came_from[neighbour] = intermediate
+                        came_from[intermediate] = current
                         g_score[neighbour] = tentative_score
                         f_score[neighbour] = tentative_score + goal.dist(neighbour[:2])
                         open_set.add(neighbour)
@@ -446,7 +454,7 @@ if __name__ == '__main__':
     stations = StationGroup.build(stations)
     # stations.plot()
     stations.scale(5)
-    stations.plot()
+    # stations.plot()
 
     world = World(stations.stations)
     world.build()
