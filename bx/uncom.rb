@@ -55,6 +55,8 @@ $uncom_words = {}
 
 [">", [:num, :num], lambda {|a, b| a > b }],
 ["<", [:num, :num], lambda {|a, b| a < b }],
+[">=", [:num, :num], lambda {|a, b| a >= b }],
+["<=", [:num, :num], lambda {|a, b| a <= b }],
 ["==", [:any, :any], lambda {|a, b| a == b }],
 
 ["and", [:bool, :bool], lambda {|a, b| a and b }],
@@ -69,6 +71,7 @@ $uncom_words = {}
 ["comment?", [:any], lambda {|a| a.is_a?(UnComment) }],
 ["array?", [:any], lambda {|a| a.is_a?(Array) }],
 
+["print", [:any], lambda {|a| print a ; STDOUT.flush ; nil }],
 ["puts", [:any], lambda {|a| puts a }],
 ["p", [:any], lambda {|a| p a }],
 ["inspect", [:any], lambda {|a| a.inspect }],
@@ -79,6 +82,14 @@ $uncom_words = {}
 ["get", [:array, :num], lambda {|a, i| a[i] }],
 ["set", [:array, :num, :any], lambda {|a, i, v| a[i] = v ; nil }],
 ["length", [:array], lambda {|a| a.length }],
+
+["commented?", [:comment], lambda {|a| a.is_commented? }],
+["uncomment", [:comment], lambda {|a| a.uncomment! ; nil }],
+["comment", [:comment], lambda {|a| a.comment! ; nil }],
+
+["bytes", [:str], lambda {|a| a.bytes}],
+["pack", [:array], lambda {|a| a.pack "C*"}],
+["readline", [], lambda { readline }],
 
 ].each {|word|
 	$uncom_words[word[0]] = UnFunc.new(*word)
@@ -134,16 +145,23 @@ $uncom_words["array"] = Class.new(UnFunc) do
 	end
 end.new("array", [], lambda {})
 
+$uncom_words["print-source"] = Class.new(UnFunc) do
+	def call(uncom)
+		e = uncom.data.pop - 1
+		start = uncom.data.pop - 1
+		lines = uncom.source.lines
+		lines.each_with_index do |l, idx|
+			puts "#{(idx + 1).to_s.rjust lines.length.to_s.length} #{l}" if idx >= start
+			break if idx >= e
+		end
+	end
+end.new("print-source", [:num, :num], lambda {|a, b|})
 
 class UnComment
-	# NOTE: MAKE SURE THAT THE LENGTH OF THE SOURCE STRING NEVER GETS CHANGED
-
 	def initialize(source, start, len)
 		@source = source
 		@start = start
 		@len = len
-
-		# TODO: save what it looks like at start, so we know what it's variable is called
 
 		name = ""
 		@name = source[start + 1, len - 2].split("").each_with_index do |c, idx|
@@ -159,15 +177,19 @@ class UnComment
 	end
 
 	def is_commented?
-		return @source[@start] ==  "#"
+		return @source[@start] == "#"
 	end
 
 	def comment!
-		# TODO: install comment
+		l = @source.length
+		@source[@start, @name.length + 2] = "#" + @name + ":" if @name != ""
+		raise "errr, source changed length" if @source.length != l
 	end
 
 	def uncomment!
-		# TODO: un do the comment
+		l = @source.length
+		@source[@start, @name.length + 2] = " " * (@name.length + 2) if @name != ""
+		raise "errr, source changed length" if @source.length != l
 	end
 
 	def inspect
@@ -199,13 +221,11 @@ end
 class Uncom
 	def initialize(source = "", file: "")
 		@source = source
-
 		if file != "" then
 			f = File.new file
 			@source = f.read
 			f.close
 		end
-
 		@func_stacks = [[]]
 		@data_stacks = [[]]
 		# first one is global, rest are used for func locals, where last is for current func
@@ -217,13 +237,9 @@ class Uncom
 		@return_stack = []
 	end
 
-	def func
-		return @func_stacks.last
-	end
-
-	def data
-		return @data_stacks.last
-	end
+	def source() @source end
+	def func() @func_stacks.last end
+	def data() @data_stacks.last end
 
 	def dict_set(k, v)
 		@dict.first[k] = v
@@ -468,6 +484,20 @@ end
 	["(1 2 3 4 array) length",[4]],
 	["(1 2 3 9 array) get 3",[9]],
 	["x= (1 2 3 9 array) set x 2 47 x",[[1, 2, 47, 9]]],
+	['def {five} {} {
+		#push5: 5
+		#push6: (1 + 5)
+	}
+	five
+	uncomment push5
+	five
+	comment push5 uncomment push6
+	five', [5, 6]],
+	['#com: ~something cool~ :D
+	commented? com
+	uncomment com commented? com', [true, false]],
+	['#$lol: its pasta time
+	[commented? $lol]', [true]]
 	].each_with_index {|t, idx|
 		u = Uncom.new(t[0]).run
 		raise "failed test number #{idx + 1} data_stack #{u.data}" if u.data != t[1]
