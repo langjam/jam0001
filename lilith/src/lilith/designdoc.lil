@@ -1,0 +1,49 @@
+!def[pitch, md]
+# The Lilith Pitch
+
+Code is more than .. just code for the compiler.
+We write lots of artifacts related to our software
+ - Design document
+ - Formatted API listing
+ - Formatted book which is MORE than just the API / source listing
+ - A spec? OpenAPI example
+ - Doctests? / inline test cases
+
+Theory - most of your "program" isn't code.
+idea: the parser is going to IGNORE stuff by default.
+
+Let's build an M-expression syntax with support for multiple co-equal languages and fragments/scopes with a meta-syntax allowing for references between them and consuming fragment-notation-defined blocks? (FIXME: better word?)
+
+!def[syntax, md]
+
+\![] bang-brackets is a meta-syntactic directive used both by the lil tangler and the lil object language.
+
+Programs consist of many fragments, which can reference each-other and from which executable framents are woven.
+
+Fragments define interpretations and scopes.
+
+Interpretations control sub-languages, the bang-bracket notation is more of a meta-language than a target language.
+Interpretation is defined by the `lang:` key of a bang-bracket.
+
+FIXME: how to define more langs?
+
+FIXME: how do scopes get defined?
+\!defscope[name: <>]
+
+FIXME: we need bare words, we need strings
+
+FIXME: We need the object language
+
+!def[openapi, yaml]
+---
+openapi: 3.1.0
+
+!def[join, py]
+return lambda s, frags: s.join(frags)
+
+!def[md, py]
+from markdown import markdown
+return lambda *args, body=None, **kwargs: markdown(body)
+
+!def[main, lil]
+print[join["\n", [pitch, syntax]]]
