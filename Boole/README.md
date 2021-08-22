@@ -13,7 +13,7 @@ For some examples, please refer to the [shunting yard](shunting_yard)
 ```bash
 cargo run -- -shunting_yard/truth_machine.train
 ```
-an optional argument (--cli / -c) can be added to run in headless mode.
+an optional argument (`--cli / -c`) can be added to run in headless mode.
 
 This program uses python. By default, it calls the "python" executable, and expects at least
 python 3.8. However, if your operating system sucks and only provides python 2 for instance,
@@ -31,6 +31,9 @@ While python runs, the memory usage is constantly printed, and when this value e
 PYTHON_MEMLIMIT (in kilobytes) the process is restarted until it succeeds. For small maps,
 it may help to just restart (with `cargo run -- programname`) everything again until it 
 succeeds. 
+
+When a map has succesfully been layed out, its layout is saved. 
+If you want to regenerate this layout, supply the optional argument (`--rebuild / -r`). 
 
 # LangJam
 
@@ -75,6 +78,6 @@ Additionally, once every while the comment is shown as a message from the train.
   ![](screenshots/map1.png)
 * rock_paper_scissors.train is possible but difficult to get running. It allows two players to play rock paper scissors, and the program will determine the winner.
 * fizzbuzz.train outputs all fizzbuzz values. It works in the CLI, but we have not gotten this running in the visualizer.
-* colatz.train takes a numbers as input, and outputs the numbers sequence to collatz sequence of the number
+* collatz.train takes a numbers as input, and outputs the numbers sequence to collatz sequence of the number
   ![](screenshots/collatz.png)
 * echo.train takes an input and outputs it immediately. Very simple, so useful for testing.
