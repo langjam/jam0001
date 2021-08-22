@@ -35,7 +35,7 @@ succeeds.
 # LangJam
 
 This programming language was written as a submission to the first LangJam
-in the weekend of saturday the 21st of august by Jonathan Brouwer, Jonathan Dönszelmann,
+in the weekend of saturday the 21st of august 2021 by Jonathan Brouwer, Jonathan Dönszelmann,
 Noah Jadoenathmisier, and Julius de Jeu.
 
 # Additional Documentation
@@ -63,3 +63,11 @@ At your destination you again see a weird sign, this one saying `PRINT NUMBER`. 
 the train, a woman walks up to you, and asks you what your number is. "69?" you say. Suddenly the woman
 shouts as loud as she can: "69!" Still not having any idea what this was about, you go on with your day. 
 
+# Interesting Programs
+* incrementer.train outputs all numbers from 1 to infinity.
+* fibonacci_simple.train outputs all fibonacci numbers, using a very simple circuit.
+* fibonacci_complex.train outputs all fibonacci numbers, using a somewhat complex ciruit. This circuit looks quite nice, so this is the one we recommend running for testing.
+* rock_paper_scissors.train is possible but difficult to get running. It allows two players to play rock paper scissors, and the program will determine the winner.
+* fizzbuzz.train outputs all fizzbuzz values. It works in the CLI, but we have not gotten this running in the visualizer.
+* colatz.train takes a numbers as input, and outputs the numbers sequence to 1 using the collatz conjecture.
+* echo.train takes an input and outputs it immediately. Very simple, so useful for testing.
