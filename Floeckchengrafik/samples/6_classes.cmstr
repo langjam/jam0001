@@ -17,7 +17,7 @@ myclass = class({
 
     hworld = function({
         /*
-         * This is the Constructor of the myclass-Class
+         * This is the hword-function of the myclass-Class
          */
 
          out(hw)?
@@ -25,4 +25,5 @@ myclass = class({
 })?
 
 inst = myclass("Hello")?
-inst.hworld()?
+hworld()?
+
