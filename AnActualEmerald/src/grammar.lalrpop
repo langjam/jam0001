@@ -10,14 +10,19 @@ pub Program: Vec<Box<Term>> = {
 
 
 Term: Box<Term> = {
-    <s:Str> => Box::new(Term::String(<>)),
     <k:Key> => Box::new(Term::Key(<>)),
+    Takes,
+    With,
     Operation,
+
 }
 
 Expr: Box<Term> = {
     <n:Num> => Box::new(Term::Number(<>)),
     <n:Name> => Box::new(Term::Ident(<>)),
+    <s:Str> => Box::new(Term::String(<>)),
+    <b:"true"> => Box::new(Term::Bool(true)),
+    <b:"false"> => Box::new(Term::Bool(false)),
 }
 
 Operation: Box<Term> = {
@@ -33,14 +38,29 @@ Factor: Box<Term> = {
     Expr
 }
 
+Takes: Box<Term> = {
+    "takes" <l:NameList> => Box::new(Term::Key(Keyword::Takes(l))),
+    "takes" <n:Name> => Box::new(Term::Key(Keyword::Takes(vec![n]))),
+    "takes" "nothing" => Box::new(Term::Key(Keyword::Takes(vec![]))),
+}
+With: Box<Term> = {
+    "with" <v: List> => Box::new(Term::Key(Keyword::With(v))),
+    "with" <e: Expr> => Box::new(Term::Key(Keyword::With(e))),
+    "with" "nothing" => Box::new(Term::Key(Keyword::With(Box::new(Term::Key(Keyword::Nothing))))),
+    "with" "\\n" => Box::new(Term::Key(Keyword::With(Box::new(Term::Newline)))),
+    "with" "newline" => Box::new(Term::Key(Keyword::With(Box::new(Term::Newline)))),
+
+}
 
 Key: Keyword = {
-    "takes" => Keyword::Takes,
     "function" => Keyword::Function,
     "call" => Keyword::Call,
+    "calls" => Keyword::Call,
     "returns" => Keyword::Returns,
+    "return" => Keyword::Returns,
     "equals" => Keyword::Equals,
     "prints" => Keyword::Prints,
+    "print" => Keyword::Prints,
     "is" => Keyword::Is,
     "and" => Keyword::And,
     "or" => Keyword::Or,
@@ -56,6 +76,15 @@ Name: String = <s:r"[A-Za-z~][A-Za-z0-9]*"> => s.into();
 Str: String = <s:r#""[^"]*""#> => s.strip_prefix('"').unwrap().strip_suffix('"').unwrap().to_string();
 Num: f32 = <n:r"[0-9]+"> => f32::from_str(n).unwrap();
 
+NameList: Vec<String> = <mut v:(<Name> ",")+> <e: Name> => {
+    v.push(e);
+    v
+};
+
+List: Box<Term> = <mut v:(<Expr> ",")+> <e: Expr> => {
+    v.push(e);
+    Box::new(Term::List(v))
+};
 
 match{
     "takes",
@@ -73,6 +102,10 @@ match{
     "while",
     "prints",
     "end",
+    "with",
+    "true",
+    "false",
+    "newline",
     r"\s*" => {},
 }else {
     _
