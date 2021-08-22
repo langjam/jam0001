@@ -1,5 +1,5 @@
 import Base from './Base'
-import {HTML as MdastHtml} from "mdast";
+import {HTML as MdastHtml} from 'mdast'
 
 class Html extends Base {
     getMdastContent(): MdastHtml {

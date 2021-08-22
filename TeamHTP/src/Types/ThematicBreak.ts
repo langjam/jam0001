@@ -1,5 +1,5 @@
 import Base from './Base'
-import {ThematicBreak as MdastThematicBreak} from "mdast";
+import {ThematicBreak as MdastThematicBreak} from 'mdast'
 
 class ThematicBreak extends Base {
     getMdastContent(): MdastThematicBreak {

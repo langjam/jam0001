@@ -1,5 +1,5 @@
 import Base from './Base'
-import {Paragraph as MdastParagraph} from "mdast";
+import {Paragraph as MdastParagraph} from 'mdast'
 
 class Paragraph extends Base {
     getMdastContent(): MdastParagraph {

@@ -1,5 +1,5 @@
 import Base from './Base'
-import {Definition as MdastDefinition} from "mdast";
+import {Definition as MdastDefinition} from 'mdast'
 
 class Definition extends Base {
     getMdastContent(): MdastDefinition {

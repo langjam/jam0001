@@ -1,5 +1,5 @@
 import Base from './Base'
-import {Heading as MdastHeading} from "mdast";
+import {Heading as MdastHeading} from 'mdast'
 
 class Heading extends Base {
     getMdastContent(): MdastHeading {

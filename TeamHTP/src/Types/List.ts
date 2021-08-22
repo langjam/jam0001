@@ -1,6 +1,6 @@
 import Base from './Base'
-import {List as MdastList, ListItem} from "mdast";
-import {mdastListItemToMd} from "../Markdown";
+import {List as MdastList, ListItem} from 'mdast'
+import {mdastListItemToMd} from '../Markdown'
 
 class List extends Base {
     getMdastContent(): MdastList {

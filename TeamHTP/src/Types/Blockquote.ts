@@ -1,5 +1,5 @@
 import Base from './Base'
-import {Blockquote as MdastBlockquote} from "mdast";
+import {Blockquote as MdastBlockquote} from 'mdast'
 
 class Blockquote extends Base {
     getMdastContent(): MdastBlockquote {
