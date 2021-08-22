@@ -7,7 +7,7 @@ class Ast(Enum):
     SCRIPT = auto()
     LET_DCLR = auto()
     RETURN_STMT = auto()
-    BLOCK = auto()
+    BLOCK_STMT = auto()
     EXPR_STMT = auto()
     IDENTIFIER = auto()
     ASSIGNMENT = auto()
@@ -22,7 +22,7 @@ class Ast(Enum):
     MEMBER = auto()
     IF_STMT = auto()
     WHILE_STMT = auto()
-    FUNCTION = auto()
+    FUNCTION_DCLR = auto()
     PRINT_STMT = auto()
 
 
@@ -53,11 +53,13 @@ class Parser:
 
     def function_dclr(self):
         line = self.advance()["line"]
+        old_in_function = self.in_function
+        self.in_function = True
         name = self.identifier()
         params = self.params()
-        body = self.block()
-
-        return {"type": Ast.FUNCTION, "name": name, "params": params, "body": body, "line": line}
+        body = self.block()["body"]
+        self.in_function = old_in_function
+        return {"type": Ast.FUNCTION_DCLR, "name": name, "params": params, "body": body, "line": line}
 
     def params(self):
         params = []
@@ -170,7 +172,7 @@ class Parser:
                     body.append(self.dclr())
 
         self.expect(TokenType.PUNCTUATOR, "}")
-        return {"type": Ast.BLOCK, "body": body, "line": line}
+        return {"type": Ast.BLOCK_STMT, "body": body, "line": line}
 
     def expr_stmt(self):
         expression = self.expression()
@@ -306,7 +308,7 @@ class Parser:
         match token:
             case {"type": TokenType.PUNCTUATOR, "value": "!"} | {"type": TokenType.PUNCTUATOR, "value": "-"}:
                 argument = self.unary()
-                return {"type": Ast.UNARY, "argument": argument, "line": token["line"]}
+                return {"type": Ast.UNARY, "operator": token["value"], "argument": argument, "line": token["line"]}
             case _:
                 return self.call()
 
