@@ -1,6 +1,8 @@
 import { CommentProvider } from "./CommentProvider";
 import { WrappedComment, WrappedCommentSorter } from "./WrappedComment";
 import { inspect } from "util";
+import * as fs from 'fs'
+import { fstat } from "fs";
 
 export enum Direction {
     UP,
@@ -311,9 +313,26 @@ export class Model {
         return comm;
     }
     toObject() {
-        console.log(this.posts)
         return {
             topics: this.posts.map(post => post.toObject())
+        }
+    }
+
+    save() {
+        let obj = {
+            counter: this.mCounter,
+            posts: this.toObject
+        }
+        let objString = JSON.stringify(obj);
+        fs.writeFileSync('state.json', objString)
+    }
+
+    load() {
+        let objString = fs.readFileSync('state.json').toString()
+        let obj = JSON.parse(objString);
+        this.mCounter = obj.counter;
+        for( let topic of obj.topics ) {
+            this.addPost(topic);
         }
     }
 }
