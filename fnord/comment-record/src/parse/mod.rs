@@ -4,11 +4,13 @@ use nom::IResult;
 
 use crate::ast::{
     Ast,
+    Comment as CommentAst,
     FieldType as FieldTypeAst,
     FieldValue as FieldValueAst,
     Script,
     StructType as StructTypeAst,
     StructTypeData,
+    StructValue as StructValueAst,
     TypeAst,
     ValueAst,
 };
@@ -29,7 +31,7 @@ pub fn parse(name: &str, input: &str) -> Result<Script, String> {
 /// trailing whitespace, returning the output of `inner`.
 fn ws<'a, F: 'a, O, E: nom::error::ParseError<&'a str>>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
     where
-    F: Fn(&'a str) -> IResult<&'a str, O, E>,
+    F: FnMut(&'a str) -> IResult<&'a str, O, E>,
 {
     use nom::character::complete::multispace0;
     use nom::sequence::delimited;
@@ -101,16 +103,47 @@ pub fn identifier(input: &str) -> IResult<&str, &str> {
     )(input)
 }
 
+pub fn parse_comment_line(input: &str) -> IResult<&str, &str> {
+    use nom::sequence::{delimited, pair};
+    use nom::multi::many0;
+    use nom::character::complete::{char, line_ending, one_of, not_line_ending};
+
+    delimited(
+        pair(
+            char('#'),
+            many0(one_of(" \t")),
+        ),
+        not_line_ending,
+        line_ending,
+    )(input)
+}
+
+pub fn parse_comment(input: &str) -> IResult<&str, CommentAst> {
+    use nom::combinator::map;
+    use nom::multi::many0;
+
+    map(
+        many0(ws(
+            map(
+                parse_comment_line,
+                |line| line.to_string(),
+            ),
+        )),
+        |lines| CommentAst { lines },
+    )(input)
+}
+
 pub fn struct_value(input: &str) -> IResult<&str, ValueAst> {
     use nom::character::complete::char;
     use nom::combinator::{map, opt};
     use nom::multi::many0;
-    use nom::sequence::{delimited, pair, terminated};
+    use nom::sequence::{delimited, terminated, tuple};
 
     use crate::ast::{Comment, StructValue, StructValueData};
 
     map(
-        pair(
+        tuple((
+            parse_comment,
             map(
                 opt(identifier),
                 |v| v.map(|s| s.to_string()),
@@ -125,12 +158,12 @@ pub fn struct_value(input: &str) -> IResult<&str, ValueAst> {
                 ),
                 ws(char('}')),
             ),
-        ),
-        |(name, fields)| {
+        )),
+        |(comment, name, fields)| {
             ValueAst::Struct(StructValue::from(StructValueData {
                 name,
                 fields,
-                comment: Comment { lines: vec![] }, // TODO
+                comment,
             }))
         }
     )(input)
@@ -139,23 +172,24 @@ pub fn struct_value(input: &str) -> IResult<&str, ValueAst> {
 pub fn field_value(input: &str) -> IResult<&str, FieldValueAst> {
     use nom::character::complete::char;
     use nom::combinator::map;
-    use nom::sequence::{pair, terminated};
+    use nom::sequence::{terminated, tuple};
 
     use crate::ast::Comment;
 
     map(
-        pair(
+        tuple((
+            parse_comment,
             terminated(
                 map(identifier, ToString::to_string),
                 ws(char(':')),
             ),
             parse_value,
-        ),
-        |(name, value)| {
+        )),
+        |(comment, name, value)| {
             FieldValueAst {
                 name,
                 value,
-                comment: Comment { lines: vec![] }, // TODO
+                comment,
             }
         }
     )(input)
@@ -218,17 +252,30 @@ pub fn parse_ast(input: &str) -> IResult<&str, Ast> {
     use nom::branch::alt;
     use nom::character::complete::char;
     use nom::combinator::map;
-    use nom::sequence::{pair, terminated};
+    use nom::sequence::{terminated, tuple};
 
-    let parse_value = map(
-        pair(
+    let parse_value_def = map(
+        tuple((
+            parse_comment,
             terminated(
                 identifier,
                 ws(char('=')),
             ),
             parse_value,
-        ),
-        |(name, value)| Ast::ValueDef(name.to_string(), value),
+        )),
+        |(comment, name, value)| {
+            println!("GOT {:?} {:?} {:?}", comment, name, value);
+            let new_value = match value {
+                ValueAst::Struct(s) => {
+                    let mut struct_value = s.inner().clone();
+                    struct_value.comment = comment; // TODO: extend instead probably!
+                    ValueAst::Struct(StructValueAst::from(struct_value))
+                }
+                _ => value,
+            };
+
+            Ast::ValueDef(name.to_string(), new_value)
+        },
     );
 
     let parse_type = map(
@@ -236,13 +283,18 @@ pub fn parse_ast(input: &str) -> IResult<&str, Ast> {
         |struct_type| Ast::TypeDef(struct_type),
     );
 
-    terminated(
+    println!("parsing {}", input);
+
+    let res = terminated(
         alt((
-            parse_value,
             parse_type,
+            parse_value_def,
         )),
         ws(char(';')),
-    )(input)
+    )(input);
+
+    println!("result {:?}", res);
+    res
 }
 
 pub fn parse_struct_type(input: &str) -> IResult<&str, StructTypeAst> {
@@ -250,12 +302,13 @@ pub fn parse_struct_type(input: &str) -> IResult<&str, StructTypeAst> {
     use nom::character::complete::{multispace1, char};
     use nom::combinator::{map, opt};
     use nom::multi::many0;
-    use nom::sequence::{pair, preceded, terminated, delimited};
+    use nom::sequence::{delimited, preceded, terminated, tuple};
 
     use crate::ast::Comment;
 
     map(
-        pair(
+        tuple((
+            parse_comment,
             preceded(
                 terminated(tag("struct"), multispace1),
                 opt(map(identifier, ToString::to_string)),
@@ -270,11 +323,11 @@ pub fn parse_struct_type(input: &str) -> IResult<&str, StructTypeAst> {
                 ),
                 ws(char('}')),
             ),
-        ),
-        |(name, fields)| StructTypeAst::from(StructTypeData {
+        )),
+        |(comment, name, fields)| StructTypeAst::from(StructTypeData {
             name,
             fields,
-            comment: Comment { lines: vec![] }
+            comment,
         }),
     )(input)
 }
@@ -282,23 +335,24 @@ pub fn parse_struct_type(input: &str) -> IResult<&str, StructTypeAst> {
 pub fn field_type(input: &str) -> IResult<&str, FieldTypeAst> {
     use nom::character::complete::char;
     use nom::combinator::map;
-    use nom::sequence::{pair, terminated};
+    use nom::sequence::{terminated, tuple};
 
     use crate::ast::Comment;
 
     map(
-        pair(
+        tuple((
+            parse_comment,
             terminated(
                 map(identifier, ToString::to_string),
                 ws(char(':')),
             ),
             parse_type,
-        ),
-        |(name, ty)| {
+        )),
+        |(comment, name, ty)| {
             FieldTypeAst {
                 name,
                 ty,
-                comment: Comment { lines: vec![] }, // TODO
+                comment,
             }
         }
     )(input)
@@ -443,6 +497,103 @@ mod test {
                 assert!(field_names.contains("blue"));
             }
             _ => assert!(false, "invalid result type {:?}", res),
+        }
+    }
+
+    #[test]
+    fn comment_single() {
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_comment_line)("# FOOBAR\n").expect("parse").1;
+        assert_eq!(res, "FOOBAR");
+    }
+
+    #[test]
+    fn comment_group() {
+        use nom::combinator::all_consuming;
+        use crate::ast::Comment;
+
+        let res = all_consuming(parse_comment)("    # FOO\n    # BAR\n").expect("parse").1;
+
+        assert_eq!(2, res.lines.len());
+        assert_eq!("FOO", res.lines[0]);
+        assert_eq!("BAR", res.lines[1]);
+    }
+
+    #[test]
+    fn commented_struct_type() {
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_ast)("# usually red\nstruct Color { red: Number, green: Number, blue: Number, };").expect("parse").1;
+        match res {
+            Ast::TypeDef(s) => {
+                assert_eq!(1, s.comment.lines.len());
+                assert_eq!("usually red", s.comment.lines[0]);
+            }
+            _ => assert!(false, "invalid result type {:?}", res),
+        }
+    }
+
+    #[test]
+    fn commented_field_type() {
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_ast)("struct Color {\n    # always zero\n    red: Number,\n    green: Number,\n    blue: Number,\n};").expect("parse").1;
+        match res {
+            Ast::TypeDef(s) => {
+                let red = &s.fields[0];
+                assert_eq!(1, red.comment.lines.len());
+                assert_eq!("always zero", red.comment.lines[0]);
+            }
+            _ => assert!(false, "invalid result type {:?}", res),
+        }
+    }
+
+    #[test]
+    fn commented_struct_value() {
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("# my nice struct\n{\n\tfoo: 42,\n}\n").expect("parse").1;
+        match res {
+            ValueAst::Struct(s) => {
+                assert_eq!(1, s.comment.lines.len());
+                assert_eq!("my nice struct", s.comment.lines[0]);
+            }
+            _ => assert!(false, "invalid result type"),
+        }
+    }
+
+    #[test]
+    fn commented_field_value() {
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_value)("{\n\t# my nice field\n\tfoo: 42,\n}\n").expect("parse").1;
+        match res {
+            ValueAst::Struct(s) => {
+                let f = &s.fields[0];
+                assert_eq!(1, f.comment.lines.len());
+                assert_eq!("my nice field", f.comment.lines[0]);
+            }
+            _ => assert!(false, "invalid result type"),
+        }
+    }
+
+    #[test]
+    fn commented_value_def() {
+        use nom::combinator::all_consuming;
+
+        let res = all_consuming(parse_ast)("# here we are\nfoo = { number: 42, };").expect("parse").1;
+        match res {
+            Ast::ValueDef(name, v) => {
+                match v {
+                    ValueAst::Struct(s) => {
+                        assert_eq!(1, s.comment.lines.len());
+                        assert_eq!("here we are", s.comment.lines[0]);
+                    }
+                    _ => assert!(false, "invalid result type"),
+                }
+            }
+            _ => assert!(false, "invalid result type"),
         }
     }
 }

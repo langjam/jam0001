@@ -57,6 +57,12 @@ pub struct StructValueData {
 #[derive(Debug, Clone)]
 pub struct StructValue(std::rc::Rc<StructValueData>);
 
+impl StructValue {
+    pub fn inner(&self) -> &StructValueData {
+        &self.0
+    }
+}
+
 impl std::ops::Deref for StructValue {
     type Target = StructValueData;
 

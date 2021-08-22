@@ -8,11 +8,16 @@ fn main() {
     let script = parse::parse(
         "test_script",
         "
+# A number obtained by taking the ratio between two integers.
+# DISPLAY: number
 struct Rational {
+    # The number on top
     numerator: Number,
     denominator: Number,
 };
 
+# VERIFIED: true
+# SOURCE: divine inspiration
 pi = Rational {
     numerator: 54,
     denominator: 17,
