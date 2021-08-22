@@ -105,5 +105,5 @@ _Also I am pretty sure there are a lot of bugs, this is probably the most obscur
 <img src="https://imgs.xkcd.com/comics/encoding.png" height="350" width="250">
 
 _https://xkcd.com/1209/_
-
-**NOTE:** I couldn't implement the language completely (all available examples works correctly, run `tests` for more) because I ran out of time (I was kinda busy during the time). Thank You for checking out a 1700 line spaghetti. :heart::raised_hands:
+ 
+---
