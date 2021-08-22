@@ -9,10 +9,10 @@ Done
 - [x] ADT instance printing
 - [x] rich comment printing
 - [x] embedded comment printing
+- [x] expression embedding in comments
 
 High priority
 
-- [ ] expression embedding in comments
 - [ ] example files/walkthrough
 - [ ] error reporting in console
 - [ ] `@expect` in examples

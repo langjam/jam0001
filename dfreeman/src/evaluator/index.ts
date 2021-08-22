@@ -3,7 +3,6 @@ import {
   ADTConstructor,
   BooleanLiteral,
   CallExpression,
-  CommentSegment,
   Expression,
   FunctionExpression,
   Identifier,
@@ -51,12 +50,22 @@ export class VoidValue {
   public readonly kind = 'Void';
 }
 
+export type TextSegmentValue = { kind: 'TextSegment'; content: string };
+export type EmbedSegmentValue = { kind: 'EmbedSegment'; content: LazyValue };
+export type ExampleSegmentValue = {
+  kind: 'ExampleSegment';
+  name: string;
+  source: string;
+  content: LazyValue;
+};
+
+export type CommentSegmentValue = TextSegmentValue | EmbedSegmentValue | ExampleSegmentValue;
+
 export class CommentValue {
   public readonly kind = 'Comment';
   public constructor(
     public readonly name: string,
-    public readonly segments: ReadonlyArray<CommentSegment>,
-    public readonly examples: Map<string, LazyValue>
+    public readonly segments: ReadonlyArray<CommentSegmentValue>
   ) {}
 }
 
@@ -134,7 +143,12 @@ export class Scope {
   }
 
   public resolveExample(name: string, specifier: string): Value | undefined {
-    return this.resolveMeta(name)?.examples.get(specifier)?.force();
+    let example = this.resolveMeta(name)?.segments.find(
+      (segment): segment is ExampleSegmentValue =>
+        segment.kind === 'ExampleSegment' && segment.name === specifier
+    );
+
+    return example?.content.force();
   }
 }
 
@@ -226,14 +240,27 @@ export class Evaluator {
   }
 
   private evaluateComment(name: string, expr: SemanticComment, scope: Scope): CommentValue {
-    let examples = new Map<string, LazyValue>();
-    for (let segment of expr.segments) {
-      if (segment.kind === 'ExampleSegment') {
-        let segmentValue = segment.value;
-        examples.set(segment.name, new LazyValue(() => this.evaluate(segmentValue, scope)));
+    let segments = expr.segments.map((segment): CommentSegmentValue => {
+      if (segment.kind === 'TextSegment') {
+        return segment;
+      } else if (segment.kind === 'EmbedSegment') {
+        let value = segment.content;
+        return {
+          kind: 'EmbedSegment',
+          content: new LazyValue(() => this.evaluate(value, scope)),
+        };
+      } else {
+        let value = segment.value;
+        return {
+          kind: 'ExampleSegment',
+          name: segment.name,
+          source: segment.source,
+          content: new LazyValue(() => this.evaluate(value, scope)),
+        };
       }
-    }
-    return new CommentValue(name, expr.segments, examples);
+    });
+
+    return new CommentValue(name, segments);
   }
 
   private evaluateFunction(expr: FunctionExpression, scope: Scope): FunctionValue {

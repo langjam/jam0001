@@ -35,10 +35,11 @@ const TokenMap: Record<string, string> = {
   RArrow: 'keyword.operator',
   Identifier: 'identifier',
   MetaIdentifier: 'heading',
-  CommentLine: 'comment',
+  CommentText: 'comment',
   CommentExample: 'heading',
   CommentExampleEnd: 'heading',
-  CommentExampleDescription: 'comment',
+  CommentEmbedStart: 'comment',
+  CommentEmbedEnd: 'comment',
 };
 
 class YackModeInstance extends TextMode {

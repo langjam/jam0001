@@ -122,6 +122,7 @@ export class Script {
 }
 
 export type TextSegment = { kind: 'TextSegment'; content: string };
+export type EmbedSegment = { kind: 'EmbedSegment'; content: Expression };
 export type ExampleSegment = {
   kind: 'ExampleSegment';
   name: string;
@@ -129,7 +130,7 @@ export type ExampleSegment = {
   value: Expression;
 };
 
-export type CommentSegment = TextSegment | ExampleSegment;
+export type CommentSegment = TextSegment | EmbedSegment | ExampleSegment;
 export class SemanticComment {
   public readonly kind = 'SemanticComment';
   public constructor(
@@ -143,6 +144,7 @@ export class SemanticComment {
       commentStart: Token,
       segments: Array<
         | Token
+        | { expression: Expression }
         | {
             source: string;
             example: [exampleStart: Token, exampleValue: Expression, exampleEnd: Token];
@@ -167,14 +169,18 @@ export class SemanticComment {
           currentText = undefined;
         }
 
-        let [startToken, value, endToken] = segment.example;
-        let name = startToken.content.slice(startToken.content.indexOf('#') + 1).trim();
-        let source = stripIndent`${segment.source.slice(
-          startToken.content.length,
-          segment.source.length - endToken.content.length
-        )}`;
+        if ('expression' in segment) {
+          segments.push({ kind: 'EmbedSegment', content: segment.expression });
+        } else {
+          let [startToken, value, endToken] = segment.example;
+          let name = startToken.content.slice(startToken.content.indexOf('#') + 1).trim();
+          let source = stripIndent`${segment.source.slice(
+            startToken.content.length,
+            segment.source.length - endToken.content.length
+          )}`;
 
-        segments.push({ kind: 'ExampleSegment', name, value, source });
+          segments.push({ kind: 'ExampleSegment', name, value, source });
+        }
       }
     }
 

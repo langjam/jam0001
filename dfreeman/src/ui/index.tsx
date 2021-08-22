@@ -73,6 +73,8 @@ const Playground: React.FC = () => {
     of value, and in fact they don't even need to include a
     terminating {Nil()} value.
 
+    Embed: {fn#second} {List#oneTwoThree} {fn#} {List#}
+
     @example#oneTwoThree
       Cons(1,
         Cons(2,
@@ -104,7 +106,6 @@ const Playground: React.FC = () => {
         evaluator.execute(ast.value);
       } catch (error) {
         // TODO
-        console.log(parser.tokenize(source));
         console.error(error);
       }
     },

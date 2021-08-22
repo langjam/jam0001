@@ -1,6 +1,6 @@
 import React, { createContext, RefObject, useContext, useEffect, useRef } from 'react';
 import type { Ace } from 'ace-builds';
-import { CommentValue, Evaluator, Value, VoidValue } from '../evaluator';
+import { CommentValue, Evaluator, ExampleSegmentValue, Value, VoidValue } from '../evaluator';
 import { YackEditor, YackMode } from './YackEditor';
 import { parser } from '../parser';
 import { ParseError } from 'feldspar';
@@ -182,6 +182,8 @@ const YackValue: React.FC<{ value: Value }> = ({ value, ...props }) => {
           border: '1px solid #444',
           borderRadius: '2px',
           backgroundColor: '#444',
+          margin: '0 -2px',
+          padding: '0 2px',
         }}
         onClick={() => pushMessage({ kind: 'log', value })}
         {...props}
@@ -261,9 +263,23 @@ const YackComment: React.FC<{ comment: CommentValue }> = ({ comment }) => {
       {comment.segments.map((segment, index) => {
         if (segment.kind === 'TextSegment') {
           return (
-            <div key={index} style={{ whiteSpace: 'pre-wrap' }}>
+            <span key={index} style={{ whiteSpace: 'pre-wrap' }}>
               {segment.content}
-            </div>
+            </span>
+          );
+        } else if (segment.kind === 'EmbedSegment') {
+          return (
+            <span
+              className="ace-tomorrow-night-eighties"
+              style={{
+                display: 'inline-block',
+                padding: '0 2px',
+                margin: '0 -2px',
+                borderRadius: '2px',
+              }}
+            >
+              <YackValue value={segment.content.force()} key={index} />
+            </span>
           );
         } else {
           return <YackCommentExample key={index} comment={comment} example={segment} />;
@@ -273,7 +289,7 @@ const YackComment: React.FC<{ comment: CommentValue }> = ({ comment }) => {
   );
 };
 
-const YackCommentExample: React.FC<{ comment: CommentValue; example: ExampleSegment }> = ({
+const YackCommentExample: React.FC<{ comment: CommentValue; example: ExampleSegmentValue }> = ({
   example,
   comment,
   ...props
@@ -287,7 +303,7 @@ const YackCommentExample: React.FC<{ comment: CommentValue; example: ExampleSegm
       style={{ marginTop: '1em', cursor: 'pointer' }}
       onClick={() => {
         pushMessage({ kind: 'in', text: fullName });
-        pushMessage({ kind: 'out', value: comment.examples.get(example.name)!.force() });
+        pushMessage({ kind: 'out', value: example.content.force() });
       }}
     >
       <div style={{ display: 'flex' }}>
