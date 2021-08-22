@@ -1,0 +1,151 @@
+extend_syntax
+    DefaultSeparator ::= /((?s:\s|#[^\n|][^\n]*|#\|.*?\|#)*)/ ;
+in
+    # Now we've got comments!
+    # This builds up a sort-of useable language in Unseemly.
+    # See `worked_example.unseemly` for a similar process,
+    #  but with detailed explanations.
+extend_syntax
+    ### Introduce `let` expressions.
+    Expr ::=also
+        forall T S . '{ [
+            lit ,{ DefaultToken }, = 'let'
+            [
+                pat := ( ,{ Pat<S> }, )
+                lit ,{ DefaultToken }, = '='
+                val := ( ,{ Expr<S> }, )
+                lit ,{ DefaultToken }, = ';'
+            ] *
+            lit ,{ DefaultToken }, = 'in'
+            body := ( ,{ Expr<T> }, <-- ...[pat = val]... )
+        ] }' let_macro -> .{
+            '[Expr |
+                match **[...[,val, >> ,[val], ]... ]**
+                    { **[...[,pat, >> ,[pat],]... ]** => ,[body], } ]'
+        }. ;
+in
+extend_syntax
+    ### Introduce `for` loops
+    Expr ::=also forall T . '{ [
+        lit ,{ DefaultToken }, = 'for'
+        pat := ( ,{ Pat<T> }, )
+        lit ,{ DefaultToken }, = 'in'
+        seq := ( ,{ Expr<Sequence<T>> }, )
+        # This uses `:` instead of `=`, because `T` is a type.
+        # `body` returns `Unit`; it's just being invoked for side-effects.
+        body := ( ,{ Expr<Unit> }, <-- pat : T )
+    ] }' for_loop -> .{
+        '[Expr |
+            (foldl ,[seq],
+                **[]**
+                # Interpolation into atom positions doesn't work yet,
+                #  so we use `let` to interpolate a pattern.
+                .[unit : Unit  arg : ,[prefab_type T], .
+                    let ,[pat], = arg ; in ,[body],
+                ]. )
+        ]'
+    }. ;
+in
+extend_syntax
+    ### Introduce `letfn` for defining 1-argument functions.
+    # Currently, `...[]...` can only be put around a whole expression/pattern/type (issue #38),
+    #  so, one has to make a separate macro for each number of arguments.
+    # Also, we can't interpolate into atom positions (issue #37).
+    Expr ::=also
+        forall I0 O T . '{ [
+            lit ,{ DefaultToken }, = 'letfn'
+            lit ,{ DefaultToken }, = '('
+            fn_name := ( ,{ Pat< [I0 -> O] > }, )
+            arg_name0 := ( ,{ Pat<I0> }, )
+            lit ,{ DefaultToken }, = ':'
+            # The fact that the syntax `[Int -> Int]` has type `Type<[Int -> Int]>` is weird,
+            #  but so far it works fine!
+            arg_type0 := ( ,{ Type<I0> }, )
+            lit ,{ DefaultToken }, = ')'
+            lit ,{ DefaultToken }, = '->'
+            ret_type := ( ,{ Type<O> }, )
+            lit ,{ DefaultToken }, = '='
+            fn_body := ( ,{ Expr<O> }, <-- arg_name0 = arg_type0 )
+            lit ,{ DefaultToken }, = ';'
+            lit ,{ DefaultToken }, = 'in'
+            body := ( ,{ Expr<T> }, <-- fn_name = [ arg_type0 -> ret_type ]  )
+        ] }' let_fn1 -> .{
+            # In case the function is recursive, wrap it in `fix`:
+            '[Expr | let ,[fn_name], = (fix
+                .[ again: [ -> [ ,[arg_type0], -> ,[ret_type], ] ] .
+                    .[ a0: ,[arg_type0],  .
+                        # Workaround for not being able to interpolate atoms:
+                        let ,[arg_name0], = a0; in ,[fn_body], ].
+            ].) ; in
+                ,[body],
+             ]'
+        }. ;
+in
+extend_syntax
+    ### Introduce `letfn` for defining 2-argument functions.
+    Expr ::=also
+        forall I0 I1 O T . '{ [
+            lit ,{ DefaultToken }, = 'letfn'
+            lit ,{ DefaultToken }, = '('
+            fn_name := ( ,{ Pat< [I0 I1 -> O] > }, )
+            arg_name0 := ( ,{ Pat<I0> }, )
+            lit ,{ DefaultToken }, = ':'
+            # The fact that the syntax `[Int -> Int]` has type `Type<[Int -> Int]>` is weird,
+            #  but so far it works fine!
+            arg_type0 := ( ,{ Type<I0> }, )
+            arg_name1 := ( ,{ Pat<I1> }, )
+            lit ,{ DefaultToken }, = ':'
+            arg_type1 := ( ,{ Type<I1> }, )
+            lit ,{ DefaultToken }, = ')'
+            lit ,{ DefaultToken }, = '->'
+            ret_type := ( ,{ Type<O> }, )
+            lit ,{ DefaultToken }, = '='
+            fn_body := ( ,{ Expr<O> }, <-- [ arg_name0 = arg_type0 o> arg_name1 = arg_type1 ] )
+            lit ,{ DefaultToken }, = ';'
+            lit ,{ DefaultToken }, = 'in'
+            body := ( ,{ Expr<T> }, <-- fn_name = [ arg_type0 arg_type1 -> ret_type ]  )
+        ] }' let_fn2 -> .{
+            # In case the function is recursive, wrap it in `fix`:
+            '[Expr | let ,[fn_name], = (fix
+                .[ again: [ -> [ ,[arg_type0], ,[arg_type1], -> ,[ret_type], ] ] .
+                    .[ a0: ,[arg_type0], a1: ,[arg_type1], .
+                        # Workaround for not being able to interpolate atoms:
+                        let ,[arg_name0], = a0; ,[arg_name1], = a1; in ,[fn_body], ].
+            ].) ; in
+                ,[body],
+             ]'
+        }. ;
+in
+extend_syntax
+    ### Add numeric literals.
+    Expr ::=also
+        forall . '{
+            # Awkward `pick` stuff just to have and then throw away `DefaultSeparator`:
+            digit_string := (pick tok in [,{DefaultSeparator}, tok := (/([0-9]+)/) ])
+        }' base_ten_literal -> .{
+            let number = (new_cell zero) ; in
+            -{
+                for digit in (string_to_sequence (ident_to_string digit_string))
+                    (assign number (plus (times (value number) ten)
+                                         # The character for digit 0 is codepoint 48:
+                                         (minus digit (plus (times ten four) eight)))) ;
+                (prefab (value number))
+            }-
+        }. ;
+in
+extend_syntax
+  Expr ::=also forall T . '{
+      [
+          lit ,{ DefaultToken }, = 'if'
+          cond := ( ,{ Expr< Bool > }, )
+          lit ,{ DefaultToken }, = 'then'
+          then_e := ( ,{ Expr< T > }, )
+          lit ,{ DefaultToken }, = 'else'
+          else_e := ( ,{ Expr< T > }, )
+      ]
+  }' conditional -> .{
+      '[Expr | match ,[cond], {
+                +[True]+ => ,[then_e],
+                +[False]+ => ,[else_e], } ]' }. ;
+in
+capture_language
