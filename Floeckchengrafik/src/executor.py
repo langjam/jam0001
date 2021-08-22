@@ -52,7 +52,10 @@ class ComstructExecutor:
             return _env[node.var_name]
 
         elif isinstance(node, StatementNode.VarNode):
-            return _env[node.var_name]
+            try:
+                return _env[node.var_name]
+            except KeyError:
+                raise ElementNotFoundException(f"Variable '{node.var_name}' not found!")
 
         elif isinstance(node, StatementNode.LiterallyNode):
             if node.walk_function is not None:
