@@ -2,13 +2,15 @@ domath := proc(x : int; y : int) int {
     i := 2 * y;
     z := 12 * i;
     print("Math works!"; ((x - (y >= 5)*8) - z) );
+    return 42;
 };
 
 dounary := proc(x : int) int {
     print(!-(x * x + 12));
+    return "Bob";
 };
 
 main := proc () int {
-    domath(12; .2);
-    dounary(032);
+    print(domath(12; .2));
+    print(dounary(032));
 };
