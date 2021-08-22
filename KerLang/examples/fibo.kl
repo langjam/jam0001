@@ -12,7 +12,9 @@
 function fibo;
 
 /*
-    It returns the application of fibo on 12.
+    Let a be the application of fibo on 12.
+    It shows a.
+    It returns a.
     The expected result is 144.
  */
 function fibo12;
