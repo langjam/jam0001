@@ -1,0 +1,37 @@
+{
+    #name: "test func";
+    #value: 4 + 6;
+}
+{
+    #name: "main";
+    #bindings: {
+        #argc: number;
+        #argv: strings;
+    };
+} <= [
+    { #name: "bottles"; } <= 99;
+    { #name: "loop"; } <= while 1 [
+        if bottles == 1 [
+            #print <= {
+                #format: "1 bottle of beer on the wall\n1 bottle of beer\nTake one down, pass it around\nNow there's no more bottles of beer on the wall!\n";
+            };
+            break loop;
+        ] elseif bottles == 2 [
+            #print <= {
+                #format: "{n} bottles of beer on the wall\n{n} bottles of beer\nTake one down, pass it around\n1 bottle of beer on the wall\n";
+                #arguments: {
+                    #n: bottles;
+                };
+            };
+        ] elseif bottles > 2 [
+            #print <= {
+                #format: "{old} bottles of beer on the wall\n{old} bottles of beer\nTake one down, pass it around\n{new} bottles of beer on the wall\n";
+                #arguments: {
+                    #old: bottles;
+                    #new: bottles - 1;
+                };
+            };
+        ];
+        let bottles := bottles - 1;
+    ];
+]
