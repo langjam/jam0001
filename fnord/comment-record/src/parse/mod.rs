@@ -2,7 +2,16 @@ mod strings;
 
 use nom::IResult;
 
-use crate::ast::{Ast, FieldValue as FieldValueAst, Script, ValueAst, StructType as StructTypeAst, StructTypeData};
+use crate::ast::{
+    Ast,
+    FieldType as FieldTypeAst,
+    FieldValue as FieldValueAst,
+    Script,
+    StructType as StructTypeAst,
+    StructTypeData,
+    TypeAst,
+    ValueAst,
+};
 
 pub fn parse(name: &str, input: &str) -> Result<Script, String> {
     todo!()
@@ -235,7 +244,8 @@ pub fn parse_ast(input: &str) -> IResult<&str, Ast> {
 pub fn parse_struct_type(input: &str) -> IResult<&str, StructTypeAst> {
     use nom::bytes::complete::tag;
     use nom::character::complete::{multispace1, char};
-    use nom::combinator::map;
+    use nom::combinator::{map, opt};
+    use nom::multi::many0;
     use nom::sequence::{pair, preceded, terminated, delimited};
 
     use crate::ast::Comment;
@@ -244,21 +254,60 @@ pub fn parse_struct_type(input: &str) -> IResult<&str, StructTypeAst> {
         pair(
             preceded(
                 terminated(tag("struct"), multispace1),
-                identifier,
+                opt(map(identifier, ToString::to_string)),
             ),
             delimited(
-                char('{'),
-                tag("todo"),
-                char('}'),
+                ws(char('{')),
+                many0(
+                    terminated(
+                        ws(field_type),
+                        ws(char(',')),
+                    ),
+                ),
+                ws(char('}')),
             ),
         ),
         |(name, fields)| StructTypeAst::from(StructTypeData {
-            name: Some(name.to_string()),
-            fields: vec![],
+            name,
+            fields,
             comment: Comment { lines: vec![] }
         }),
     )(input)
+}
 
+pub fn field_type(input: &str) -> IResult<&str, FieldTypeAst> {
+    use nom::character::complete::char;
+    use nom::combinator::map;
+    use nom::sequence::{pair, terminated};
+
+    use crate::ast::Comment;
+
+    map(
+        pair(
+            terminated(
+                map(identifier, ToString::to_string),
+                ws(char(':')),
+            ),
+            parse_type,
+        ),
+        |(name, ty)| {
+            FieldTypeAst {
+                name,
+                ty,
+                comment: Comment { lines: vec![] }, // TODO
+            }
+        }
+    )(input)
+}
+
+pub fn parse_type(input: &str) -> IResult<&str, TypeAst> {
+    use nom::branch::alt;
+    use nom::combinator::map;
+
+    alt((
+        map(identifier, |s| TypeAst::Named(s.to_string())),
+        map(parse_struct_type, |s| TypeAst::Struct(s)),
+    ))(input)
 }
 
 #[cfg(test)]
@@ -350,8 +399,22 @@ mod test {
     fn type_defs() {
         let res = parse_ast("struct Color { red: Number, green: Number, blue: Number, }").expect("parse").1;
         match res {
-            Ast::ValueDef(name, ValueAst::Number(42)) => assert_eq!("foo", name),
-            _ => assert!(false, "invalid result type"),
+            Ast::TypeDef(s) => {
+                assert_eq!(Some("Color".into()), s.name);
+                assert_eq!(3, s.fields.len());
+                let mut field_names = std::collections::HashSet::<&str>::new();
+                for field in &s.fields {
+                    match &field.ty {
+                        TypeAst::Named(n) => assert_eq!(n, "Number"),
+                        _ => assert!(false, "wrong type"),
+                    }
+                    field_names.insert(&field.name);
+                }
+                assert!(field_names.contains("red"));
+                assert!(field_names.contains("green"));
+                assert!(field_names.contains("blue"));
+            }
+            _ => assert!(false, "invalid result type {:?}", res),
         }
     }
 }
