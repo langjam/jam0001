@@ -107,6 +107,9 @@ class SetStmt(Stmt):
     def execute(self):
         defined_variables[self.target] = self.value
 
+def find_function(func_name: str):
+    # Move this later, and also define it!
+    pass
 
 class CallStmt(Stmt):
     def __init__(self, func_name, args, postfix_assignment=None):
@@ -120,6 +123,16 @@ class CallStmt(Stmt):
         else:
             return f"CALL {self.func_name} WITH {self.args}"
 
+    def execute(self):
+        function = find_function(self.func_name)
+        return_val = function.run(self.args)
+        if self.postfix_assignment:
+            # TODO: Assign some_env[postfix_assignment] = return_val
+            pass
+
+class ReturnStmt(Stmt):
+    pass
+
 class Stmts:
     def __init__(self, stmt_list):
         self.stmt_list = stmt_list
@@ -132,11 +145,11 @@ class Stmts:
     def execute(self):
         while self.current_index < self.length:
             next_stmt = self.stmt_list[self.current_index]
-            if (
-                True
-            ):  # TODO: build in a check here to ensure not a JUMP stmt or return from function
-                next_stmt.execute()
-            self.current_index += 1
+            next_stmt.execute()
+            if isinstance(next_stmt, ReturnStmt):
+                break
+            else:
+                self.current_index += 1
 
 
 class Function:
@@ -157,6 +170,9 @@ class Function:
             f"FUNC (NAME:{self.func_name}, PARAMS:{self.params}, "
             f"RETURNS:{self.return_var}, BODY={self.body}"
         )
+
+    def run(self):
+        self.body.execute()
 
 
 class Program:
