@@ -21,6 +21,7 @@ class UnFunc
 			return false if check == :str and not item.is_a? String
 			return false if check == :quote and not item.is_a? UnQuote
 			return false if check == :comment and not item.is_a? UnComment
+			return false if check == :array and not item.is_a? Array
 			# raise "i don't kow what type #{check} is" if check != :any
 		end
 		return true
@@ -66,11 +67,18 @@ $uncom_words = {}
 ["str?", [:any], lambda {|a| a.is_a?(String) }],
 ["quote?", [:any], lambda {|a| a.is_a?(UnQuote) }],
 ["comment?", [:any], lambda {|a| a.is_a?(UnComment) }],
+["array?", [:any], lambda {|a| a.is_a?(Array) }],
 
 ["puts", [:any], lambda {|a| puts a }],
 ["p", [:any], lambda {|a| p a }],
 ["inspect", [:any], lambda {|a| a.inspect }],
 ["to_s", [:any], lambda {|a| a.to_s }],
+
+["floor", [:num], lambda {|a| a.floor }],
+
+["get", [:array, :num], lambda {|a, i| a[i] }],
+["set", [:array, :num, :any], lambda {|a, i, v| a[i] = v ; nil }],
+["length", [:array], lambda {|a| a.length }],
 
 ].each {|word|
 	$uncom_words[word[0]] = UnFunc.new(*word)
@@ -118,7 +126,13 @@ $uncom_words["do"] = Class.new(UnFunc) do
 	def call(uncom)
 		uncom.call_quote uncom.data.pop()
 	end
-end.new("ifelse", [:quote], lambda {|a|})
+end.new("do", [:quote], lambda {|a|})
+
+$uncom_words["array"] = Class.new(UnFunc) do
+	def call(uncom)
+		uncom.data.push(uncom.data.pop(uncom.data.length))
+	end
+end.new("array", [], lambda {})
 
 
 class UnComment
@@ -450,6 +464,10 @@ end
 	["if true {1}",[1]],
 	["ifelse true {1} {2}",[1]],
 	["ifelse false {1} {2}",[2]],
+	["do { 1 2 }",[1, 2]],
+	["(1 2 3 4 array) length",[4]],
+	["(1 2 3 9 array) get 3",[9]],
+	["x= (1 2 3 9 array) set x 2 47 x",[[1, 2, 47, 9]]],
 	].each_with_index {|t, idx|
 		u = Uncom.new(t[0]).run
 		raise "failed test number #{idx + 1} data_stack #{u.data}" if u.data != t[1]
