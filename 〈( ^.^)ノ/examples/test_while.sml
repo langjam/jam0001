@@ -1,4 +1,7 @@
 
-set($1 "read, print, loop")
-print(inz(1 $1 1 "eval"))
-print(dnz(1 $1 0))
+print("hello") // thing
+and(m("10")) // thing
+
+"thing and thing"() // 2 things
+
+print("2 things"())
