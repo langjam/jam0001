@@ -4706,7 +4706,10 @@ var $author$project$Language$Core$encodeValue = function (value) {
 					]));
 	}
 };
-var $author$project$Language$Core$encodeStack = $elm$json$Json$Encode$list($author$project$Language$Core$encodeValue);
+var $author$project$Language$Core$encodeStack = A2(
+	$elm$core$Basics$composeR,
+	$elm$core$List$reverse,
+	$elm$json$Json$Encode$list($author$project$Language$Core$encodeValue));
 var $author$project$Language$AST$universeToString = function (universe) {
 	switch (universe.$) {
 		case 'Alpha':
@@ -4725,6 +4728,29 @@ var $author$project$Exchange$stateInfo = function (runtime) {
 		universe: $author$project$Language$AST$universeToString(runtime.universe)
 	};
 };
+var $elm$core$Debug$todo = _Debug_todo;
+var $author$project$Language$AST$flipUniverse = function (universe) {
+	switch (universe.$) {
+		case 'Alpha':
+			return $author$project$Language$AST$Omega;
+		case 'Omega':
+			return $author$project$Language$AST$Alpha;
+		default:
+			return _Debug_todo(
+				'Language.AST',
+				{
+					start: {line: 34, column: 13},
+					end: {line: 34, column: 23}
+				})('unreachable');
+	}
+};
+var $author$project$Language$Core$flip = function (runtime) {
+	return _Utils_update(
+		runtime,
+		{
+			universe: $author$project$Language$AST$flipUniverse(runtime.universe)
+		});
+};
 var $author$project$Language$Core$next = function (runtime) {
 	return _Utils_update(
 		runtime,
@@ -4733,7 +4759,8 @@ var $author$project$Language$Core$next = function (runtime) {
 var $author$project$Language$Core$commands = $elm$core$Dict$fromList(
 	_List_fromArray(
 		[
-			_Utils_Tuple2('next', $author$project$Language$Core$next)
+			_Utils_Tuple2('next', $author$project$Language$Core$next),
+			_Utils_Tuple2('flip', $author$project$Language$Core$flip)
 		]));
 var $elm$core$Array$setHelp = F4(
 	function (shift, index, value, tree) {
@@ -4938,7 +4965,6 @@ var $author$project$Language$Core$List = function (a) {
 var $author$project$Language$Core$Name = function (a) {
 	return {$: 'Name', a: a};
 };
-var $elm$core$Debug$todo = _Debug_todo;
 var $author$project$Language$Core$toValue = function (atom) {
 	switch (atom.$) {
 		case 'Int':
@@ -4962,8 +4988,8 @@ var $author$project$Language$Core$toValue = function (atom) {
 			return _Debug_todo(
 				'Language.Core',
 				{
-					start: {line: 345, column: 13},
-					end: {line: 345, column: 23}
+					start: {line: 352, column: 13},
+					end: {line: 352, column: 23}
 				})('unreachable');
 	}
 };

@@ -180,7 +180,9 @@ type alias Command =
 commands : Dict String Command
 commands =
     Dict.fromList
-        [ ( "next", next ) ]
+        [ ( "next", next )
+        , ( "flip", flip )
+        ]
 
 
 next : Command
@@ -191,6 +193,11 @@ next runtime =
 jump : Int -> Command
 jump ip runtime =
     { runtime | ip = ip }
+
+
+flip : Command
+flip runtime =
+    { runtime | universe = AST.flipUniverse runtime.universe }
 
 
 step : Command
