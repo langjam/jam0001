@@ -169,6 +169,13 @@ class ComstructExecutor:
 
             return ret
 
+        elif isinstance(node, StatementNode.ForEverLoopExecutorNode):
+            try:
+                while True:
+                    self.walkTree(StatementNode.ExecuteStoredProcedureNode(node.execute), _env)
+            except KeyboardInterrupt:
+                return
+
         else:
             return node
 

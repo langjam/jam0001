@@ -22,6 +22,10 @@ def _for(args):
     return StatementNode.ForLoopExecutorNode(varname, tgetfrm, execute)
 
 
+def _forever(args):
+    return StatementNode.ForEverLoopExecutorNode(args[0])
+
+
 def intrange(args):
     return list(range(args[0], args[1]))
 
@@ -43,6 +47,7 @@ internals = {
     "if": when,
     "exit": lambda args: exit(args[0] if len(args) == 1 else 0),
     "for": _for,
+    "forever": _forever,
     "list_add": lambda args: args[0].append(args[1]),
     "list_clear": lambda args: args[0].clear(),
     "list_extend": lambda args: args[0].extend(args[1]),
@@ -74,6 +79,7 @@ env = {
     "if": StatementNode.FunctionDefinitionNode("internal"),
     "exit": StatementNode.FunctionDefinitionNode("internal"),
     "for": StatementNode.FunctionDefinitionNode("internal"),
+    "forever": StatementNode.FunctionDefinitionNode("internal"),
     "list_add": StatementNode.FunctionDefinitionNode("internal"),
     "list_clear": StatementNode.FunctionDefinitionNode("internal"),
     "list_extend": StatementNode.FunctionDefinitionNode("internal"),

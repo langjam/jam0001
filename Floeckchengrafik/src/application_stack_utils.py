@@ -110,6 +110,11 @@ class StatementNode:
             self.tgetfrm = tgetfrm
             self.execute = execute
 
+    class ForEverLoopExecutorNode(GenericNode):
+
+        def __init__(self, execute):
+            self.execute = execute
+
     class FunctionDescriptionNode(GenericNode):
 
         def __init__(self, attrs):
