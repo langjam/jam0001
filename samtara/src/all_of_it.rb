@@ -1,4 +1,13 @@
+require 'set'
 require 'pp'
+
+DEBUG = false
+
+def debug(*args)
+  if DEBUG
+    puts *args
+  end
+end
 
 class String
   def matches(re)
@@ -12,25 +21,22 @@ class String
   end
 end
 
-def show_compose(rules)
-  rules.each do |rule|
-    puts to_regex(rule[:header]).inspect
-    puts "  match #{rule[:match].inspect}"
-    rule[:clauses].each do |clause|
-      puts "    #{to_regex(clause.first).inspect} -> #{clause.last.inspect}"
+def join_pattern(pattern)
+  pattern.map do |part|
+    case part.first
+    when :var
+      "<#{part.last}>"
+    when :plain
+      part.last
     end
-    puts
-  end
+  end.join
 end
 
 def run(code)
   input, rules = code.split(/\n-{3,}/m)
   rules = parse(rules || '')
-  show_compose(rules)
-  pp rules
   last_input = nil
-
-  puts "-> #{input}"
+  debug "-> #{input}"
   while input != last_input do
     last_input = input.clone
     rules.find do |rule|
@@ -39,10 +45,11 @@ def run(code)
         a.length <=> b.length
       end
       if shortest_match
-        puts "Using rule #{rule_regex.inspect}, match #{shortest_match.inspect}"
-        rewrite = run_rule(match_target(shortest_match, rule[:match]), rule[:clauses])
+        debug "match: #{join_pattern(rule[:header])}\t#{shortest_match.inspect}"
+        rewrite = run_rule(shortest_match, rule[:rewrite])
         input[shortest_match.begin(0)...shortest_match.end(0)] = rewrite
-        puts "===> #{input}"
+        debug "===> #{input}"
+        debug
         true
       else
         false
@@ -52,7 +59,7 @@ def run(code)
   input
 end
 
-def match_target(variables, match_pattern)
+def run_rule(variables, match_pattern)
   unless variables.is_a?(MatchData)
     raise ArgumentError, "Need MatchData, got #{variables.class}"
   end
@@ -69,28 +76,24 @@ def match_target(variables, match_pattern)
   end.join
 end
 
-def run_rule(target, clauses)
-  clauses.each do |clause| 
-    clause_regex = to_regex(clause.first, all: true)
-    if clause_regex.match?(target)
-      clause_match = clause_regex.match(target)
-      return match_target(clause_match, clause.last)
-    end
-  end
-  "❓"
-end
-
 def to_regex(pattern, all: false)
   # [[:plain, ""], [:var, "X"]]
+  past_captures = Set.new
   regex_string = pattern.map do |item|
     case item.first
     when :plain
       "#{Regexp.quote(item.last)}"
     when :var
-      if item.last.match?(/[A-Z]/)
-        "(?<#{item.last}>\\S*)"
+      capture_name = item.last
+      if past_captures.include?(capture_name)
+        "\\k<#{capture_name}>"
       else
-        "(?<#{item.last}>.)"
+        past_captures << capture_name
+        if item.last.match?(/[A-Z]/)
+          "(?<#{capture_name}>.+?)"
+        else
+          "(?<#{capture_name}>.)"
+        end
       end
     end
   end.join
@@ -104,10 +107,8 @@ end
 # :: String -> [Rule]
 def parse(rules)
   rules.split("\n").map do |line|
-    if line.start_with?("  match ")
-      [:match, line.chars.drop(8).join]
-    elsif line.start_with?("    ")
-      [:clause, line.chars.drop(4).join]
+    if line.start_with?("  ")
+      [:rewrite, parse_pattern(line.chars.drop(2).join)]
     elsif line.start_with?(/\S/)
       [:header, line]
     elsif line.empty?
@@ -120,18 +121,10 @@ def parse(rules)
     when :header
       rules << {
         header: parse_pattern(token.last),
-        match: nil,
-        clauses: []
+        rewrite: nil
       }
-    when :match
-      rules.last[:match] = parse_pattern(token.last)
-    when :clause
-      clause = token.last
-      pattern, result = clause.split(/\s+->\s+/)
-      rules.last[:clauses] << [
-        parse_pattern(pattern),
-        parse_pattern(result)
-      ]
+    when :rewrite
+      rules.last[:rewrite] = token.last
     else
       raise "Invalid token: #{token.inspect}"
     end
@@ -139,13 +132,14 @@ def parse(rules)
   end
 end
 
+# "foo <X> bar <Y> baz"
+# [[:plain, "foo "], [:var, "X"], [:plain, " bar "], [:var, "Y"], [:plain, " baz"]]
 def parse_pattern(pattern)
-  pattern.partition(/<.>/).reject(&:empty?).map do |bit|
-    if bit.match?(/<.>/)
-      [:var, bit[1]]
-    else
-      [:plain, bit]
-    end
+  before, var, after = pattern.partition(/<.>/)
+  if var.empty?
+    [[:plain, before]]
+  else
+    [[:plain, before], [:var, var[1]]] + parse_pattern(after)
   end
 end
 
@@ -170,11 +164,9 @@ TESTS = [
       not(yes))
       ----
       not(yes)
-        match yes
-          <X> -> no
+        no
       not(no)
-        match no
-          <X> -> yes
+        yes
     BO
     result: "no)"
   },
@@ -184,11 +176,9 @@ TESTS = [
       not(not(not(not(yes))))
       ----
       not(yes)
-        match yes
-          <X> -> no
+        no
       not(no)
-        match no
-          <X> -> yes
+        yes
     BO
     result: "yes"
   },
@@ -198,26 +188,258 @@ TESTS = [
     double(boom)
     ---
     double(<X>)
-      match <X>
-        <X> -> <X><X>
+      <X><X>
     BO
     result: 'boomboom'
+  },
+  {
+    name: 'Repeating strings',
+    code: <<~BO,
+    repeat hi [|||] times;
+    ----
+    repeat <X> [<Y>] times;
+      repeat() <X> [<Y>] times;
+
+    repeat() <X> [<Y>|] times;
+      repeat(<X>) <X> [<Y>] times;
+
+    repeat(<R>) <X> [|] times;
+      repeat(<R><X>) <X> [] times;
+
+    repeat(<R>) <X> [<Y>|] times;
+      repeat(<R><X>) <X> [<Y>] times;
+
+    repeat(<R>) <X> [] times;
+      <R>
+    BO
+    result: 'hihihi'
+  },
+  {
+    name: 'boolean logic',
+    code: <<~BO,
+    👍 and 👎
+    ----
+    👍 and 👍
+      👍
+
+    <X> and <Y>
+      👎
+
+    BO
+    result: '👎'
+  },
+  {
+    name: 'Addition',
+    code: <<~BO,
+    [|||] + [||]
+    ---
+    [<X>] + [<Y>]
+      [<X><Y>]
+    BO
+    result: '[|||||]'
+  },
+  {
+    name: 'Subtraction',
+    code: <<~BO,
+    [|||] - [||]
+    ---
+    [<X>|] - [<Y>|]
+      [<X>] - [<Y>]
+
+    [<X>|] - [<Y>|]
+      [<X>] - [<Y>]
+
+    [<X>|] - [|]
+      [<X>] - []
+
+    [] - [<Y>]
+      []
+
+    [<X>] - []
+      [<X>]
+    BO
+    result: '[|]'
+  },
+  {
+    name: 'Multiplication',
+    code: <<~BO,
+    [|||] * [||||]
+    ---
+    [<X>] * [<Y>]
+      *([]) [<X>] [<Y>]
+
+    *([]) [<X>] [<Y>|]
+      *([<X>]) [<X>] [<Y>]
+
+    *([<R>]) [<X>] [<Y>|]
+      *([<R><X>]) [<X>] [<Y>]
+
+    *([<R>]) [<X>] [|]
+      *([<R><X>]) [<X>] []
+
+    *([<R>]) [<X>] []
+      [<R>]
+
+    BO
+    result: '[||||||||||||]'
+  },
+  {
+    name: 'Split in two (Unification)',
+    code: <<~BO,
+    split ||||||;
+    ---------
+    split <X><X>;
+      <X> <X>
+    BO
+    result: "||| |||"
+  },
+  {
+    name: 'No-remainder division',
+    code: <<~BO,
+    [||||||||||||] / [|||]
+    ----------------------
+    [<X>] / [<Y>]
+      /() [<X>] [<Y>]
+
+    /(<R>) [<Y>] [<Y>]
+      [<R>|]
+
+    /() [<X><Y>] [<Y>]
+      /(|) [<X>] [<Y>]
+
+    /(<R>) [<X><Y>] [<Y>]
+      /(<R>|) [<X>] [<Y>]
+
+    /(<R>) [<X>] [<Y>]
+      [<R>]
+    BO
+    result: '[||||]'
+  },
+  {
+    name: 'Chained addition',
+    code: <<~BO,
+    [|] + [||] + [|||]
+    ----------------------
+    [<X>] + [<Y>]
+      [<X><Y>]
+    BO
+    result: '[||||||]'
+  },
+  {
+    name: 'Chained subtraction',
+    code: <<~BO,
+    [||||] - [||] - [|]
+    ----------------------
+    [<X>|] - [<Y>|]
+      [<X>] - [<Y>]
+
+    [<X>|] - [|]
+      [<X>] - []
+
+    [<X>] - []
+      [<X>]
+
+    [] - [<Y>]
+      []
+    BO
+    result: '[|]'
+  },
+  {
+    name: 'Modulo',
+    code: <<~BO,
+    [|||||] % [||]
+    ----------
+    [<X><Y>] % [<Y>]
+      [<X>] % [<Y>]
+
+    [<X>] % [<Y>]
+      [<X>]
+    BO
+    result: '[|]'
+  },
+  {
+    name: 'Parallel statements',
+    code: <<~BO,
+    first hello;
+    first world;
+    -----------
+    first <x><X>;
+      <x>
+    BO
+    result: "h\nw"
+  },
+  {
+    name: 'All in a row',
+    code: <<~BO,
+    print each letter of hello world
+    -----------
+    print each letter of <x><X>
+      <x> print each letter of <X>
+
+    print each letter of 
+      
+    BO
+    result: "h e l l o   w o r l d"
+  },
+  {
+    name: 'Fallback operator',
+    code: <<~BO,
+    ?:bar
+    ----
+    ?:<Y>
+      <Y>
+
+    ?<X>:<Y>
+      <X>
+    BO
+    result: "bar"
+  },
+  {
+    name: 'Fizzbuzz',
+    skip: true,
+    code: <<~BO,
+    fizz-num [||].
+    ----
+    fizz-num [<N>].
+      ?fizz-check fizz [<N>] [|||]:[<N>]
+
+    fizz-check <M> [<N><D>] [<D>]
+      fizz-check <M> [<N>] [<D>]
+
+    fizz-check <M> [] [<D>]
+      <M>
+
+    fizz-check <M> [<N>] [<D>]
+      
+    ?:<Y>
+      <Y>
+
+    ?<X>:<Y>
+      <X>
+    BO
+    result: "[|]\n[||]\nFizz\n[||||]\nBuzz"
   }
 ]
 def test
   ok = 0
+  skip = 0
 
   if (focus = TESTS.find{ |t| t[:focus] })
     run_test(focus)
     return
   else
     TESTS.each do |test|
+      if test[:skip]
+        skip += 1
+        next
+      end
+      next if test[:skip]
       ok += run_test(test) ? 1 : 0
     end
   end
 
   puts
-  puts "Done. #{ok}/#{TESTS.count} tests passed"
+  puts "Done. #{ok}/#{TESTS.count - skip} tests passed, #{skip} skipped."
 end
 
 def run_test(test)
