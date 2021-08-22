@@ -151,7 +151,7 @@ static enum Interpreter_Type resolve_type(strview_t name) {
 
 static void declaration(struct Parser_Node* node) {
     struct Interpreter_Value var = {
-        .type = resolve_type(node->data.decl.type)
+        .type = resolve_type(node->data.decl.type.name)
     };
     map_add(intrp.vars, node->data.decl.name, &var);   
 }
