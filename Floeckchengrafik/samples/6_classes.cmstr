@@ -5,6 +5,8 @@
 myclass = class({
     /*
      * This is just an example Class to explain classes in comstruct.
+     * It can
+     * - returns its own value
      */
 
     comment = function({
@@ -12,12 +14,13 @@ myclass = class({
          * This is the Constructor of the myclass-Class
          * - param hello , a String to print first
          */
+         out(1)?
          hw = hello + " World!"?
     })?
 
     hworld = function({
         /*
-         * This is the hword-function of the myclass-Class
+         * This is the hworld-function of the myclass-Class
          */
 
          out(hw)?
@@ -25,5 +28,5 @@ myclass = class({
 })?
 
 inst = myclass("Hello")?
-hworld()?
+\\ hworld()?
 

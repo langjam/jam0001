@@ -83,6 +83,8 @@ class ComstructExecutor:
             for arg in node.args:
                 processed_args.append(self.walkTree(arg, _env))
             if node_call == "internal":
+                print(node.func_name)
+
                 return self.walkTree(internals[node.func_name](processed_args), _env)
 
             for stmt_node in node_call.content:
