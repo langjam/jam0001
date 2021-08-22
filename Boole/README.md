@@ -11,8 +11,9 @@ For some examples, please refer to the [shunting yard](shunting_yard)
 
 # Compilation instructions
 ```bash
-cargo run -- --cli shunting_yard/truth_machine.train
+cargo run -- -shunting_yard/truth_machine.train
 ```
+an optional argument (--cli / -c) can be added to run in headless mode.
 
 This program uses python. By default, it calls the "python" executable, and expects at least
 python 3.8. However, if your operating system sucks and only provides python 2 for instance,
@@ -24,6 +25,12 @@ In this python install, be sure to add the following libraries:
 * noise
 * matplotlib
  
+## Large programs
+Large programs take a while to be layed out. They can also take a lot of memory to do so. 
+While python runs, the memory usage is constantly printed, and when this value exceeds
+PYTHON_MEMLIMIT (in kilobytes) the process is restarted until it succeeds. For small maps,
+it may help to just restart (with `cargo run -- programname`) everything again until it 
+succeeds. 
 
 # LangJam
 
