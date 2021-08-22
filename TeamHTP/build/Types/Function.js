@@ -7,7 +7,6 @@ class Function extends Base {
         super(mdastContent, tag);
         this.parent = parent;
         this.rawMd = rawMd;
-        console.log(this.rawMd);
     }
     getMdastContent() {
         return this.mdastContent;
@@ -33,7 +32,7 @@ class Function extends Base {
     evalRawJs() {
         if (this.rawJs !== undefined) {
             return function (rawJs) {
-                return eval(rawJs);
+                eval(`this['${rawJs.name}'] = ${rawJs.func}`);
             }.call(this.getParent().getTaggedElement(), this.rawJs);
         }
     }

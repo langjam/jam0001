@@ -8,6 +8,18 @@ import {makeTransformer} from "../transformer";
 const transformer = makeTransformer({})
 const parser = get_parser({transformer})
 
+Array.prototype['at'] = function (index) {
+    return this[index]
+}
+
+Number.prototype['to'] = function (upTo) {
+    return Array.from({length: upTo - this}, (x, i) => i + this)
+}
+
+Boolean.prototype['not'] = function() {
+    return !this
+}
+
 class Runtime {
     private readonly evalScope: Record<string, Base>
     private readonly tagDefs: Record<string, Tag>

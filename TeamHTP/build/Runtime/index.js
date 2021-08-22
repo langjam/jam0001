@@ -1,8 +1,9 @@
 import Tag from '../Types/Tag';
 import { mdToMdast } from '../Markdown';
 import { Function, wrap } from '../Types';
-import { get_parser } from "../mouthful";
-import transformer from "../transformer";
+import { get_parser, UnexpectedToken } from "../mouthful";
+import { makeTransformer } from "../transformer";
+const transformer = makeTransformer({});
 const parser = get_parser({ transformer });
 class Runtime {
     evalScope;
@@ -25,10 +26,21 @@ class Runtime {
             const wrappedObject = wrap(this, child, rawMd, lastTag);
             let body;
             if (wrappedObject instanceof Function && (body = wrappedObject.getBody())) {
-                const result = parser.parse(body);
-                console.log(result);
-                wrappedObject.setRawJs(result);
-                wrappedObject.evalRawJs();
+                // eslint-disable-next-line no-useless-catch
+                try {
+                    const result = parser.parse(body);
+                    //console.log(result)
+                    wrappedObject.setRawJs(result);
+                    wrappedObject.evalRawJs();
+                }
+                catch (e) {
+                    if (e instanceof UnexpectedToken) {
+                        console.log(`Syntax error on line ${wrappedObject.getMdastContent().position.start.line + e.token.line - 1}! :(`);
+                    }
+                    else {
+                        throw e;
+                    }
+                }
             }
             this.wrappedElements.push(wrappedObject);
             if (wrappedObject instanceof Tag) {

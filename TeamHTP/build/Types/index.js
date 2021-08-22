@@ -42,13 +42,7 @@ function wrap(runtime, mdastContent, rawMd, tag) {
             if (runtime.isTagDefined(tagName)) {
                 const wrappedTag = runtime.getTag(tagName);
                 const func = new type(mdastContent, wrappedTag, rawMd, tag);
-                if (wrappedTag.isMemberDefined(func.getName())) {
-                    throw new Error(`Function with name '${func.getName()}' is already defined in tag '${tagName}'`);
-                }
-                else {
-                    wrappedTag.addMember(func.getName(), func);
-                    return func;
-                }
+                return func;
             }
             else {
                 throw new Error(`Reference to undefined tag '${tagName}'`);

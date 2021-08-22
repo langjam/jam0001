@@ -18,6 +18,10 @@ class Base {
     getMdastContent(): Content {
         return this.mdastContent
     }
+
+    children() {
+        return this.getMdastContent()['children'] ?? undefined
+    }
 }
 
 export default Base

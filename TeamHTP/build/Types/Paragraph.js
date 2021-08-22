@@ -7,8 +7,14 @@ class Paragraph extends Base {
     append(item) {
         let md = mdastToMd(this.getMdastContent(), true);
         md += item;
-        const serializedChildren = mdToMdast(md).children[0].children;
-        this.getMdastContent().children = serializedChildren;
+        this.text(md);
+    }
+    text(text) {
+        if (text !== undefined) {
+            const serializedChildren = mdToMdast(text).children[0].children;
+            this.getMdastContent().children = serializedChildren;
+        }
+        return mdastToMd(this.getMdastContent(), true);
     }
 }
 export default Paragraph;

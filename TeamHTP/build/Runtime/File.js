@@ -1,4 +1,5 @@
 import { wrappedElementToMd } from '../Markdown';
+import fs from 'fs';
 function serializeRuntime(runtime) {
     let serialized = '';
     const wrappedElements = runtime.getWrappedElements();
@@ -7,8 +8,9 @@ function serializeRuntime(runtime) {
     }
     return serialized;
 }
-async function saveToDisk(runtime) {
-    console.log(serializeRuntime(runtime));
-    // TODO: save serialized to disk
+async function saveToDisk(path, runtime) {
+    const serialized = serializeRuntime(runtime);
+    //console.log(serialized)
+    fs.writeFileSync(path, serialized);
 }
 export { saveToDisk };
