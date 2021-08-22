@@ -25,7 +25,7 @@ and operation =
 type cconstraint =
   | Takes of int
   | Let of string * expr
-  | Shows of expr
+  | Shows of expr list
   | Returns of expr
   | Uses of expr list
   | Nothing
@@ -72,8 +72,9 @@ let pp_cconstraint oc (cc: cconstraint) =
     Format.fprintf oc "- Takes %d arguments\n" how_many_args
   | Let (var_name, expr) ->
     Format.fprintf oc "- Let %s be %a" var_name pp_expr expr
-  | Shows expr ->
-    Format.fprintf oc "- Shows %a" pp_expr expr
+  | Shows expr_list ->
+    Format.fprintf oc "- Shows";
+    List.iter (fun expr -> Format.fprintf oc "%s" "\n  * "; pp_expr oc expr) expr_list
   | Returns expr ->
     Format.fprintf oc "- Returns %a" pp_expr expr
   | Uses expr_list ->
@@ -250,7 +251,7 @@ let rec parse_statement (decl : (string * expr) list) (comment : tok list) : cco
       begin try
           let a, b = look_for "be" q in Let (string_of_comment a, f b)
         with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
-    | "show" | "shows" -> Shows (f q)
+    | "show" | "shows" -> let l = split_kw "and" q in Shows (List.map f l)
     | "return" | "returns" -> Returns (f q)
     | "use" | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
     | _ -> parse_statement decl q
@@ -265,7 +266,7 @@ let generate_function (Spec (_, name, comment)) =
       | Nothing -> build_function f q
       | Takes n -> build_function {f with n_args = n} q
       | Let (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
-      | Shows e -> build_function {f with printing = e::f.printing} q
+      | Shows l -> build_function {f with printing = f.printing @ l} q
       | Returns e ->
         let r = match f.result with
           | Yolo [] -> Function e
@@ -358,7 +359,7 @@ let rec compile_function (ftable : Kl_IR.ftable) { result; declarations; printin
   in let rec add_printing res = function
   | [] -> res
   | e::q -> add_printing (Kl_IR.show (compile_ex e) res) q
-  in add_printing res (List.rev printing)
+  in add_printing res printing
 
 and compile_expr ftable env = function
   | Leaf v -> compile_value ftable env v
