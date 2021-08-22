@@ -2,6 +2,7 @@
 name = "rundown"
 version = "0.1.0"
 edition = "2018"
+license = "MIT"
 
 [dependencies]
 anyhow = "1.0.43"
