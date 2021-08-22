@@ -468,6 +468,10 @@ mod tests {
         ) -> Result<(), CommunicatorError> {
             Ok(())
         }
+
+        fn delete_train(&self, train: Train) -> Result<(), CommunicatorError> {
+            Ok(())
+        }
     }
 
     macro_rules! create_program {
