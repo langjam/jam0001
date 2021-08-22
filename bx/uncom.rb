@@ -158,6 +158,12 @@ $uncom_words["print-source"] = Class.new(UnFunc) do
 	end
 end.new("print-source", [:num, :num], lambda {|a, b|})
 
+$uncom_words["print-stack"] = Class.new(UnFunc) do
+	def call(u)
+		puts " -> (data #{u.data.inspect} / func #{u.func.inspect})"
+	end
+end.new("print-stack", [], lambda {})
+
 class UnComment
 	def initialize(source, start, len)
 		@source = source
@@ -508,10 +514,20 @@ end
 
 # TODO
 
-# if we can load sdl2 load it and install the sdl2 functions before looping
-# add a function to check if we have sdl2
-# add a function to start sdl2, open the window etc
+begin
+	require "sdl2"
 
+	[ # sdl2 words
+	["has-sdl2?", [], lambda { true }],
+
+	].each {|word|
+		$uncom_words[word[0]] = UnFunc.new(*word)
+	}
+rescue LoadError
+	$uncom_words["has-sdl2"] = UnFunc.new("has-sdl2", [], lambda { false })
+end
+
+# run file or use repl #
 if ARGV[0] then
 	u = Uncom.new(file: ARGV[0])
 	u.run()
@@ -520,6 +536,7 @@ if ARGV[0] then
 else
 	source = ""
 	u = Uncom.new(source)
+	puts 'Welcome to Uncom\'s REPL https://github.com/bxwtf/jam0001/tree/main/bx'
 	loop do
 		puts " -> (data #{u.data.inspect} / func #{u.func.inspect})"
 		line = ""
