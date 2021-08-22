@@ -90,6 +90,7 @@ $uncom_words = {}
 ["bytes", [:str], lambda {|a| a.bytes}],
 ["pack", [:array], lambda {|a| a.pack "C*"}],
 ["readline", [], lambda { readline }],
+["read", [:num], lambda {|a| STDIN.read(a) }],
 
 ].each {|word|
 	$uncom_words[word[0]] = UnFunc.new(*word)
@@ -240,6 +241,7 @@ class Uncom
 	def source() @source end
 	def func() @func_stacks.last end
 	def data() @data_stacks.last end
+	def instruction_ptr=(v) @instruction_ptr = v end
 
 	def dict_set(k, v)
 		@dict.first[k] = v
@@ -430,12 +432,12 @@ class Uncom
 	end
 
 	def gen_variable_funcs(name, vars)
-		vars[name] = 0 # TODO: change default value ?
+		vars[name] = 0 # change default value ?
 		{name + "=" => UnFunc.new(name + "=", [:any], lambda {|x| vars[name] = x ; nil }),
 		name => UnFunc.new(name, [], lambda { vars[name] })}
 	end
 
-	def read_words() # good for degging reader
+	def read_words() # good for debugging reader
 		words = []
 		loop do
 			w = next_word
@@ -444,11 +446,6 @@ class Uncom
 		end
 		return words
 	end
-end
-
-def do_source(source)
-	uncom = Uncom.new source
-	uncom.run().data
 end
 
 # t e s t s #
@@ -504,10 +501,53 @@ end
 	}
 }).call
 
+def do_source(source) # nice for debuggin in pry
+	uncom = Uncom.new source
+	uncom.run().data
+end
 
+# TODO
 
+# if we can load sdl2 load it and install the sdl2 functions before looping
+# add a function to check if we have sdl2
+# add a function to start sdl2, open the window etc
 
+if ARGV[0] then
+	u = Uncom.new(file: ARGV[0])
+	u.run()
+	print "[done.] "
+	readline
+else
+	source = ""
+	u = Uncom.new(source)
+	loop do
+		puts " -> (data #{u.data.inspect} / func #{u.func.inspect})"
+		line = ""
+		while (line == "") do
+			begin
+				print "  > "
+				line = readline
+			rescue EOFError
+				#
+			end
+		end
 
+		if line.strip() == "help" then
+			puts ' type quit to leave repl'
+		elsif line.strip() == "quit" then
+			break
+		else
+			u.instruction_ptr = source.length
+			source[source.length, 0] = line
+		end
+
+		begin
+			u.run()
+		rescue RuntimeError => e
+			puts "err, #{e.message}"
+		end
+	end
+end
 
 
 
