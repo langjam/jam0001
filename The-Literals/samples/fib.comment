@@ -15,3 +15,5 @@ Ditto with n as n - 2 and call it y.
 
 // Set fib to x + y.
 // And we're done.
+
+// Calculate the nth fibonacci number with n as 5.

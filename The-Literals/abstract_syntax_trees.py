@@ -136,11 +136,27 @@ class Comparison(Expr):
 
 
 class Stmt:
+    def __init__(self, body, done=False):
+        self.body = body
+        self.done = done
+
+    def __repr__(self):
+        if self.done:
+            return f"{self.body} AND WE'RE DONE"
+        else:
+            return self.body.__repr__()
+
+    def execute(self):
+        # The "done" bit is handled by Stmts class
+        self.body.execute()
+
+
+class StmtContents:
     pass
 
 
-class IfStmt(Stmt):
-    def __init__(self, condition: Expr, thenpt: Stmt):
+class IfStmt(StmtContents):
+    def __init__(self, condition: Expr, thenpt: StmtContents):
         self.condition = condition
         self.thenpt = thenpt
 
@@ -153,7 +169,7 @@ class IfStmt(Stmt):
             self.thenpt.execute()
 
 
-class SetStmt(Stmt):
+class SetStmt(StmtContents):
     def __init__(self, target: Variable, value: Expr):
         self.target = target
         self.value = value
@@ -188,7 +204,7 @@ class CallStmt(Stmt):
             set_var(function.return_value, result)
 
 
-class ReturnStmt(Stmt):
+class ReturnStmt(StmtContents):
     pass
 
 
@@ -205,7 +221,7 @@ class Stmts:
         while self.current_index < self.length:
             next_stmt = self.stmt_list[self.current_index]
             next_stmt.execute()
-            if isinstance(next_stmt, ReturnStmt):
+            if next_stmt.done:
                 break
             else:
                 self.current_index += 1
@@ -250,6 +266,8 @@ class Program:
 
 
 if __name__ == "__main__":
+
+    from tokenise import Token
 
     def it_sets_variables():
         reset_env()
