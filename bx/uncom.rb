@@ -30,7 +30,7 @@ class UnFunc
 	def call(uncom)
 		# uncom.data.push(@func.call(*uncom.data.pop(@func.arity)))
 		val = (@func.call(*uncom.data.pop(@arity)))
-		uncom.data.push val if val != nil
+		uncom.data.push val if val != :no
 	end
 
 	def inspect
@@ -44,6 +44,7 @@ $uncom_words = {}
 
 ["false", [], lambda { false }],
 ["true", [], lambda { true }],
+["nil", [], lambda { nil }],
 
 ["+", [:num, :num], lambda {|a, b| a + b }],
 ["-", [:num, :num], lambda {|a, b| a - b }],
@@ -70,22 +71,23 @@ $uncom_words = {}
 ["quote?", [:any], lambda {|a| a.is_a?(UnQuote) }],
 ["comment?", [:any], lambda {|a| a.is_a?(UnComment) }],
 ["array?", [:any], lambda {|a| a.is_a?(Array) }],
+["nil?", [:any], lambda {|a| a.is_a?(NilClass) }],
 
-["print", [:any], lambda {|a| print a ; STDOUT.flush ; nil }],
-["puts", [:any], lambda {|a| puts a }],
-["p", [:any], lambda {|a| p a }],
+["print", [:any], lambda {|a| print a ; STDOUT.flush ; :no }],
+["puts", [:any], lambda {|a| puts a ; :no }],
+["p", [:any], lambda {|a| p a ; :no }],
 ["inspect", [:any], lambda {|a| a.inspect }],
 ["to_s", [:any], lambda {|a| a.to_s }],
 
 ["floor", [:num], lambda {|a| a.floor }],
 
 ["get", [:array, :num], lambda {|a, i| a[i] }],
-["set", [:array, :num, :any], lambda {|a, i, v| a[i] = v ; nil }],
+["set", [:array, :num, :any], lambda {|a, i, v| a[i] = v ; :no }],
 ["length", [:array], lambda {|a| a.length }],
 
 ["commented?", [:comment], lambda {|a| a.is_commented? }],
-["uncomment", [:comment], lambda {|a| a.uncomment! ; nil }],
-["comment", [:comment], lambda {|a| a.comment! ; nil }],
+["uncomment", [:comment], lambda {|a| a.uncomment! ; :no }],
+["comment", [:comment], lambda {|a| a.comment! ; :no }],
 
 ["bytes", [:str], lambda {|a| a.bytes}],
 ["pack", [:array], lambda {|a| a.pack "C*"}],
@@ -439,7 +441,7 @@ class Uncom
 
 	def gen_variable_funcs(name, vars)
 		vars[name] = 0 # change default value ?
-		{name + "=" => UnFunc.new(name + "=", [:any], lambda {|x| vars[name] = x ; nil }),
+		{name + "=" => UnFunc.new(name + "=", [:any], lambda {|x| vars[name] = x ; :no }),
 		name => UnFunc.new(name, [], lambda { vars[name] })}
 	end
 
