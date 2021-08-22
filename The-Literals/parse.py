@@ -10,7 +10,6 @@ from abstract_syntax_trees import (
     Stmts,
     Variable,
 )
-from run_code import apply_binop, apply_comparison
 from tokenise import Token, Tokeniser
 
 
