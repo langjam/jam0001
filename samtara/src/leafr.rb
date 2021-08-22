@@ -44,11 +44,8 @@ def run(code)
   end
   while input != last_input do
     last_input = input.clone
-    found = rules.map do |rule|
-      shortest_match = input.matches(rule[:header_regex]).min do |a, b|
-        a.match_length <=> b.match_length
-      end
-      [rule, shortest_match]
+    found = rules.flat_map do |rule|
+      shortest_match = input.matches(rule[:header_regex]).map { |m| [rule, m] }
     end.reject { |(_, match)| match.nil? }
       .min_by do |(rule, match)|
         [match.match_length, match.named_captures.keys.length]
@@ -122,6 +119,10 @@ def to_regex(pattern)
   Regexp.new(regex_string, Regexp::MULTILINE)
 end
 
+def remove_empties(str)
+  str.gsub('<>', '')
+end
+
 # :: String -> [Rule]
 def parse(rules)
   rules.split("\n").map do |line|
@@ -137,7 +138,7 @@ def parse(rules)
   end.compact.reduce([]) do |rules, token|
     case token.first
     when :header
-      pattern = parse_pattern(token.last)
+      pattern = parse_pattern(remove_empties(token.last))
       if rules.last && rules.last[:rewrite].nil?
         rules.last[:header] += pattern.prepend([:plain, "\n"])
       else
@@ -148,10 +149,11 @@ def parse(rules)
       end
     when :rewrite
       rules.last[:header_regex] = to_regex(rules.last[:header])
+      rewrite = remove_empties(token.last)
       if rules.last[:rewrite]
-        rules.last[:rewrite] += "\n#{token.last}"
+        rules.last[:rewrite] += "\n#{rewrite}"
       else
-        rules.last[:rewrite] = token.last
+        rules.last[:rewrite] = rewrite
       end
     else
       raise "Invalid token: #{token.inspect}"
@@ -553,6 +555,29 @@ TESTS = [
 
     BO
     result: 'hello world'
+  },
+  {
+    name: 'Remove empties',
+    code: <<~BO,
+    hi
+     hi
+    --------------
+
+    <> hi
+      world
+    BO
+    result: "hi\nworld"
+  },
+  {
+    name: 'Empties as placeholders',
+    code: <<~BO,
+    Hello ~there ~world
+    --------------
+
+    ~<X>~
+      <>
+    BO
+    result: "Hello world"
   }
 ]
 def test
