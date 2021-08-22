@@ -2,7 +2,7 @@ module Exchange exposing (..)
 
 import Json.Encode as JsonE
 import Language.AST exposing (universeToString)
-import Language.Core as Core exposing (Runtime)
+import Language.Core exposing (Runtime, encodeStack)
 
 
 type alias CompilationResult =
@@ -40,6 +40,6 @@ stateInfo : Runtime -> StateInfo
 stateInfo runtime =
     { universe = universeToString runtime.universe
     , activeLine = runtime.ip
-    , stack = Core.encodeStack runtime.stack
+    , stack = encodeStack runtime.stack
     , alive = runtime.ok
     }
