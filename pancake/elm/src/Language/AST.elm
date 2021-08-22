@@ -21,6 +21,19 @@ type Universe
     | Lambda
 
 
+flipUniverse : Universe -> Universe
+flipUniverse universe =
+    case universe of
+        Alpha ->
+            Omega
+
+        Omega ->
+            Alpha
+
+        Lambda ->
+            Debug.todo "unreachable"
+
+
 universeToString : Universe -> String
 universeToString universe =
     case universe of
