@@ -1,14 +1,46 @@
 from run_code import apply_binop, apply_comparison
 
-defined_variables = {}
 
-
-class undefinedVariableError(Exception):
+class UndefinedVariableError(Exception):
     def __init__(self, varname):
         self.varname = varname
 
     def __str__(self):
         return f"Undefined variable: {self.varname}"
+
+
+# All of the functions, by name.
+# Q. Would builtins go here also?
+functions = {}
+
+
+environments = []
+
+
+def reset_env():
+    environments.clear()
+    push_env()  # This may not be necessary.
+
+
+def get_var(name):
+    environment = environments[-1]
+    try:
+        return environment[name]
+    except KeyError:
+        raise UndefinedVariableError(name)
+
+
+def set_var(name, value):
+    environment = environments[-1]
+    environment[name] = value
+
+
+def push_env():
+    environments.append(dict())
+
+
+def pop_env():
+    environments.pop()
 
 
 class Expr:
@@ -41,7 +73,7 @@ class Variable(Operand):
         if self.varname in defined_variables:
             return defined_variables[self.varname]
         else:
-            raise undefinedVariableError(self.varname)
+            raise UndefinedVariableError(self.varname)
 
 
 class Parameter(Expr):
@@ -106,6 +138,19 @@ class SetStmt(Stmt):
 
     def execute(self):
         defined_variables[self.target] = self.value
+
+
+class CallStmt(Stmt):
+    def __init__(self, func_name, args, postfix_assignment=None):
+        self.func_name = func_name
+        self.args = args
+        self.postfix_assignment = postfix_assignment
+
+    def __repr__(self):
+        if self.postfix_assignment:
+            return f"CALL {self.func_name} WITH {self.args} AND CALL IT {self.postfix_assignment}"
+        else:
+            return f"CALL {self.func_name} WITH {self.args}"
 
 
 class Stmts:

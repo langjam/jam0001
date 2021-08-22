@@ -1,5 +1,7 @@
+from conjugate_third_person import get_funcdef_name
 from abstract_syntax_trees import (
     Binop,
+    CallStmt,
     Comparison,
     Function,
     IfStmt,
@@ -184,26 +186,31 @@ class Parser:
         return IfStmt(condition, stmt)
 
     def parse_func_call(self):
-        self.parse_call_body()
+        return self.parse_call_body()
 
     def parse_call_body(self):
-        self.parse_identifier()
-        self.parse_arguments()
+        imperative_func_name = self.parse_identifier()
+        result_var = None
+        func_def_name = get_funcdef_name(imperative_func_name)
+        args = self.parse_arguments()
         token, value = self.peek_lexeme()
         if token == Token.AND_CALL_IT:
-            self.parse_reverse_assignment()
+            result_var = self.parse_reverse_assignment()
+        return CallStmt(func_def_name, args, result_var)
 
     def parse_arguments(self):
         token, value = self.peek_lexeme()
+        args = []
         while token == Token.WITH:
-            self.parse_argument()
+            args.append(self.parse_argument())
             token, value = self.peek_lexeme()
+        return dict(args)
 
     def parse_argument(self):
         self.advance()
         token, value = self.peek_lexeme()
         if token == Token.IDENTIFIER_WORD:
-            self.parse_identifier()
+            arg_name = self.parse_identifier()
         else:
             raise UnexpectedTokenError(
                 Token.IDENTIFIER_WORD, token
@@ -215,18 +222,20 @@ class Parser:
                 Token.AS, token
             )
         self.advance()
-        self.parse_expr()
+        arg_value = self.parse_expr()
+        return (arg_name, arg_value)
 
 
     def parse_reverse_assignment(self):
         self.advance()
         token, value = self.peek_lexeme()
         if token == Token.IDENTIFIER_WORD:
-            self.parse_identifier()
+            target = self.parse_identifier()
         else:
             raise UnexpectedTokenError(
                 Token.IDENTIFIER_WORD, token
             )
+        return target
 
     def parse_expr(self):
         first_operand = self.parse_operand()
