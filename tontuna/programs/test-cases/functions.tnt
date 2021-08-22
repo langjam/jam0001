@@ -1,0 +1,14 @@
+fn add(a, b) {
+    return a + b;
+}
+
+println(add(40, 2));
+
+fn factorial(n) {
+    if n == 0 {
+        return 1;
+    }
+    return n * (factorial(n - 1));
+}
+
+println(factorial(5));

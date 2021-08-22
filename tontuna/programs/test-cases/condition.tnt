@@ -1,0 +1,11 @@
+if 1 < 2 {
+    println("1 < 2");
+} else {
+    println("false: 1 <= 2");
+}
+
+if true == false {
+    println("true == false");
+} else {
+    println("false: true == false");
+}
