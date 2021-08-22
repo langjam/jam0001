@@ -31,8 +31,11 @@ app.post("/api/upvote", (req: express.Request, res: express.Response) => {
 app.post("/api/downvote", (req: express.Request, res: express.Response) => {
     api.downvote(req, res);
 });
-app.post("/api/swap_down", (req: express.Request, res: express.Response) => {
+app.post("/api/move_down", (req: express.Request, res: express.Response) => {
     api.swapComment(req, res, Direction.DOWN);
+});
+app.post("/api/move_up", (req: express.Request, res: express.Response) => {
+    api.swapComment(req, res, Direction.UP);
 });
 
 app.get("/api/topic/:id", (req: express.Request, res: express.Response) => {
