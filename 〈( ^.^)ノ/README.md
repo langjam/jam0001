@@ -1,11 +1,11 @@
 # 〈( \^.\^)ノ
 
-insert-name-here is the the best think that happened since [blank](https://www.youtube.com/watch?v=dQw4w9WgXcQ) and an interpreted, **not** esoteric langanguage for writing complex **safety** oriented applications in large environments.
+〈( \^.\^)ノ the best think that happened since [blank](https://www.youtube.com/watch?v=dQw4w9WgXcQ) and an interpreted, **not** esoteric langanguage for writing complex **safety** oriented applications in large environments.
 It was created for [langjam0001](https://github.com/langjam/jam0001) by team ``〈( ^.^)ノ``.
 It is based around two tapes of registers for accessing variables, arguments, etc. and an interesting comment-first function approach, that allows for the dynamic creation of functions.
 
-## How to set up insert-name-here
-insert-name-here is written in go and will thus require the standard golang tools to be installed.
+## How to set up 〈( \^.\^)ノ
+〈( \^.\^)ノ is written in go and will thus require the standard golang tools to be installed.
 Documentation on how to install go can be found [here](https://golang.org/doc/install)
 
 As soon as everything is set up you can check if it works by running:
@@ -44,7 +44,7 @@ while (TRUE) {
 ```
 
 ### Instructions
-As can be seen above insert-name-here has a number of directives:
+As can be seen above 〈( \^.\^)ノ has a number of directives:
 1. ``set``: used to set variables, parameters can be strings (``"hello World"``) or numbers
 2. ``m``: takes in an arithmetic expression, such as ``8 + 9 * 1`` and evaluates it
 3. ``not``: inverts booleans (or in our case ints) simmilarly to ``!`` in c
@@ -64,7 +64,7 @@ set($-1 420)
 ```
 
 ### Variables
-Variables in insert-name-here are are based on two sets of registers, one in the negative namespace and one in the positive namespace.
+Variables in 〈( \^.\^)ノ are are based on two sets of registers, one in the negative namespace and one in the positive namespace.
 
 Both can be acessed by ``$num``
 
@@ -120,7 +120,7 @@ Will print:
 
 ### Comments
 Goal of the langjam was to create a language with ``first-class comments``, our implementation of comment-functions was the attempt to accomplish exactly this.
-With the comments in insert-name-here, you can annotate and chain together statements.
+With the comments in 〈( \^.\^)ノ, you can annotate and chain together statements.
 Using the identifiers in the comments you can then actually reference, assign and pass around the statements annotated by a comment.
 
 Statements can be annotated by comments by just writing a comment after a statement:
@@ -153,7 +153,7 @@ set($-1 $-3) // calc
 ```
 
 ### Loops
-insert-name-here only needs while loops to fuction.
+〈( \^.\^)ノ only needs while loops to fuction.
 Simmilarly to many other languages, while loops are declared by writing the while keyword followed, by an expression in parenthesis and a block of statements in curly brackets:
 
 ```go
