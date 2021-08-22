@@ -56,7 +56,7 @@ inlining the entire computation into a single return statement.
 
 When compiling to LaTeX then to PDF, we can see just how beautiful our code has become:
 
-![Sample LaFuN output](/images/readme-sample-latex-output.png)
+![Sample LaFuN output](/LaFuN/images/readme-sample-latex-output.png)
 
 Running it is also simple!
 
