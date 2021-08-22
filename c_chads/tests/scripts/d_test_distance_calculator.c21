@@ -20,9 +20,9 @@ main := proc () void {
             middle := start + (end - start) / 2;
             a_split = a / middle;
 
-            if (a_split == middle) { return middle; }
-            else if (middle > a_split) { end = middle; }
-            else { start = middle; }
+            if (a_split == middle) { return middle; };
+            else if (middle > a_split) { end = middle; };
+            else { start = middle; };
         };
 
         return start;
