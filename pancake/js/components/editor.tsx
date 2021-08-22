@@ -1,3 +1,4 @@
+import * as React from "react";
 import AceEditor from "react-ace";
 
 import "ace-builds/src-noconflict/mode-python";
@@ -18,6 +19,8 @@ export function Editor({ runtime, state }: EditorProps) {
     // on initialization start out empty or whatever
     // use props.pageEvents.onCodeChanged to notify of code changes
     // use the other props when they change (useEffect/useMemo for that) to alter the editor highlights
+
+    React.useEffect(() => runtime.setCode(defaultValue), []);
 
     return (
         <div style={{ textAlign: 'center'}}>
@@ -63,19 +66,13 @@ function onLoad(editor: Ace.Editor) {
 }
 
 const defaultValue = `\
-"welcome to the demo, please enter your name:"
-write str
-read str
-"enter your age:"
-write str
-read num
-18
-<
-flip if
-# "glad to see you here, be safe"
-# write str
-"yoohoo bro, wassup. let's get down to it"
-write str
+1
+# 3
+flip
+4
+5
+# 2
 # flip
-exit
++
+halt
 `;

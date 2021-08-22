@@ -1,8 +1,8 @@
-
 export interface StateInfo {
+    universe: string,
     currentLine: number;
     activeLines: number[];
-    currentStack: Value[]
+    stack: Value[]
 }
 
 export type Value = 
@@ -30,14 +30,8 @@ export class Interpreter {
     nextResultCallback?: (r: Result) => void;
     nextStateCallback?: (s: StateInfo) => void;
 
-    constructor() {
-        // TODO replace this mock with actual thing
-        this.ports = {
-            compile: { send: (a) => {} },
-            result: { subscribe: (a) => {} },
-            step: { send: (a) => {} },
-            state: { subscribe: (a) => {} }
-        } 
+    constructor(ports: any) {
+        this.ports = ports;
 
         // Bind results to call the next callback
         this.ports.result.subscribe((result: Result) => {
@@ -81,7 +75,7 @@ export class Interpreter {
             this.nextStateCallback = resolve
         });
 
-        this.ports.step.send();
+        this.ports.step.send(true);
 
         return promise;
     }
