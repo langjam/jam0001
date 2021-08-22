@@ -269,4 +269,4 @@ You name the constructor comment, because the theme of [this jam](https://github
 ## DocStrings
 
 DocStrings are nedded when you want to pass a variable to a class or method.
-You can start a DocString with `/*` and end it with `*/`. To pass an argument to a class / function, you write `- param <name>`
+You can start a DocString with `/*` and end it with `*/`. To pass an argument to a class / function, you write `- param <name>` in a new line
