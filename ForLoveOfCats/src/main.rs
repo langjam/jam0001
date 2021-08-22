@@ -2,17 +2,7 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::iter::Peekable;
 
-// const SOURCE: &str = r#"
-// (block
-// 	(define x 0)
-// 	(print "Initial value: " x)
-// 	(set x 96)
-// 	(print "Returned from block"
-// 		(block
-// 			(print "Something first in block")
-// 			(print "Hello world from block" (+ (- (* 10 5) 10) (/ 4 2)))
-// 			x)))
-// "#;
+type Result<T> = std::result::Result<T, ()>;
 
 #[derive(Debug)]
 enum Token<'a> {
@@ -138,13 +128,32 @@ enum TreeNode {
 
 type TokenIterator<'a> = Peekable<std::slice::Iter<'a, Token<'a>>>;
 
-fn parse_expression(tokens: &mut TokenIterator) -> TreeNode {
+macro_rules! parse_error {
+	( $($arg:tt)* ) => {{
+		println!($($arg)*);
+		Err(())
+	}}
+}
+
+macro_rules! expect_token {
+	($iterator:ident, $pattern:pat) => {
+		match $iterator.next() {
+			Some($pattern) => Ok(()),
+
+			None => parse_error!("Expected token {}", stringify!($pattern)),
+
+			_ => parse_error!("Unexpected EOF, expected token {}", stringify!($pattern)),
+		}
+	};
+}
+
+fn parse_expression(tokens: &mut TokenIterator) -> Result<TreeNode> {
 	let is_lone = !matches!(tokens.peek(), Some(Token::OpenParen));
 
 	if !is_lone {
 		parse_matching_parens(tokens)
 	} else {
-		match tokens.next() {
+		Ok(match tokens.next() {
 			Some(&Token::IntegerLiteral(num)) => TreeNode::IntegerLiteral(num),
 
 			Some(&Token::String(string)) => TreeNode::StringLiteral(string.to_string()),
@@ -157,15 +166,15 @@ fn parse_expression(tokens: &mut TokenIterator) -> TreeNode {
 				name: name.to_string(),
 			},
 
-			None => panic!("No token for literal"),
+			None => parse_error!("No token for literal")?,
 
-			token => panic!("Lone token not handled: {:?}", token),
-		}
+			token => parse_error!("Lone token not handled: {:?}", token)?,
+		})
 	}
 }
 
-fn parse_parameters(tokens: &mut TokenIterator) -> Vec<String> {
-	assert!(matches!(tokens.next(), Some(Token::OpenParen)));
+fn parse_parameters(tokens: &mut TokenIterator) -> Result<Vec<String>> {
+	expect_token!(tokens, Token::OpenParen)?;
 
 	let mut parameters = Vec::new();
 
@@ -175,7 +184,7 @@ fn parse_parameters(tokens: &mut TokenIterator) -> Vec<String> {
 
 			let name = match token {
 				Token::Ident(name) => name.to_string(),
-				_ => panic!("All parameter tokens must be identifiers"),
+				_ => parse_error!("All parameter tokens must be identifiers")?,
 			};
 
 			parameters.push(name);
@@ -184,31 +193,31 @@ fn parse_parameters(tokens: &mut TokenIterator) -> Vec<String> {
 		}
 	}
 
-	assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+	expect_token!(tokens, Token::CloseParen)?;
 
-	parameters
+	Ok(parameters)
 }
 
-fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
-	assert!(matches!(tokens.next(), Some(Token::OpenParen)));
+fn parse_matching_parens(tokens: &mut TokenIterator) -> Result<TreeNode> {
+	expect_token!(tokens, Token::OpenParen)?;
 
 	let ident = match tokens.next() {
 		Some(Token::Ident(ident)) => ident,
-		Some(Token::CloseParen) => return TreeNode::Unit,
-		_ => panic!("Expected close paren"),
+		Some(Token::CloseParen) => return Ok(TreeNode::Unit),
+		_ => parse_error!("Expected close paren")?,
 	};
 
-	match *ident {
+	Ok(match *ident {
 		"define" => {
 			let name = if let Some(Token::Ident(name)) = tokens.next() {
 				name
 			} else {
-				panic!("Needed name to define");
+				return parse_error!("Needed name to define");
 			};
 
-			let rhs = Box::new(parse_expression(tokens));
+			let rhs = Box::new(parse_expression(tokens)?);
 
-			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+			expect_token!(tokens, Token::CloseParen)?;
 
 			TreeNode::Define {
 				name: name.to_string(),
@@ -220,12 +229,12 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 			let name = if let Some(Token::Ident(name)) = tokens.next() {
 				name
 			} else {
-				panic!("Needed name to set");
+				return parse_error!("Needed name to set");
 			};
 
-			let rhs = Box::new(parse_expression(tokens));
+			let rhs = Box::new(parse_expression(tokens)?);
 
-			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+			expect_token!(tokens, Token::CloseParen)?;
 
 			TreeNode::Set {
 				name: name.to_string(),
@@ -238,32 +247,32 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 
 			while let Some(peeked) = tokens.peek() {
 				if !matches!(peeked, Token::CloseParen) {
-					block.push(parse_expression(tokens));
+					block.push(parse_expression(tokens)?);
 				} else {
 					break;
 				}
 			}
 
-			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+			expect_token!(tokens, Token::CloseParen)?;
 
 			TreeNode::Block(block)
 		}
 
 		"while" => {
-			let expr = Box::new(parse_expression(tokens));
-			let body = Box::new(parse_expression(tokens));
+			let expr = Box::new(parse_expression(tokens)?);
+			let body = Box::new(parse_expression(tokens)?);
 
-			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+			expect_token!(tokens, Token::CloseParen)?;
 
 			TreeNode::While { expr, body }
 		}
 
 		"if" => {
-			let expr = Box::new(parse_expression(tokens));
-			let true_body = Box::new(parse_expression(tokens));
-			let false_body = Box::new(parse_expression(tokens));
+			let expr = Box::new(parse_expression(tokens)?);
+			let true_body = Box::new(parse_expression(tokens)?);
+			let false_body = Box::new(parse_expression(tokens)?);
 
-			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+			expect_token!(tokens, Token::CloseParen)?;
 
 			TreeNode::If {
 				expr,
@@ -273,10 +282,10 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 		}
 
 		"lambda" => {
-			let parameters = parse_parameters(tokens);
-			let body = parse_expression(tokens);
+			let parameters = parse_parameters(tokens)?;
+			let body = parse_expression(tokens)?;
 
-			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+			expect_token!(tokens, Token::CloseParen)?;
 
 			let lambda = Lambda { parameters, body };
 
@@ -289,7 +298,7 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 
 				while let Some(peeked) = tokens.peek() {
 					if !matches!(peeked, Token::CloseParen) {
-						args.push(parse_expression(tokens));
+						args.push(parse_expression(tokens)?);
 					} else {
 						tokens.next();
 						break;
@@ -304,7 +313,22 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 				args,
 			}
 		}
-	}
+	})
+}
+
+macro_rules! runtime_error {
+	($state:ident, $($arg:tt)* ) => {{
+		print!("Runtime panic: ");
+		println!($($arg)*);
+
+		if !$state.in_repl {
+			$state.in_repl = true;
+			repl($state);
+			$state.in_repl = false;
+		}
+
+		Value::None
+	}}
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -316,7 +340,7 @@ struct Lambda {
 impl Lambda {
 	fn call(&self, state: &mut ScopeState, args: &[Value]) -> Value {
 		if args.len() != self.parameters.len() {
-			panic!("Invalid number of arguments");
+			runtime_error!(state, "Invalid number of arguments");
 		}
 
 		state.push_scope();
@@ -372,12 +396,14 @@ impl Scope {
 #[derive(Debug)]
 struct ScopeState {
 	scopes: Vec<Scope>,
+	in_repl: bool,
 }
 
 impl ScopeState {
 	fn new() -> ScopeState {
 		ScopeState {
 			scopes: vec![Scope::new()],
+			in_repl: false,
 		}
 	}
 
@@ -411,17 +437,17 @@ impl ScopeState {
 			}
 		}
 
-		panic!("Unknown variable {:?} to set", name);
+		runtime_error!(self, "Unknown variable {:?} to set", name)
 	}
 
-	fn read(&self, name: &str) -> Value {
+	fn read(&mut self, name: &str) -> Value {
 		for scope in self.scopes.iter().rev() {
 			if let Some(ptr) = scope.symbols.get(name) {
 				return ptr.clone();
 			}
 		}
 
-		panic!("Unknown variable {:?} to read", name);
+		runtime_error!(self, "Unknown variable {:?} to read", name)
 	}
 }
 
@@ -514,26 +540,26 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 			match name.as_str() {
 				"#" => insert_comment(state, &args),
 
-				"+" => add_all(&args),
-				"-" => sub_all(&args),
-				"*" => mul_all(&args),
-				"/" => div_all(&args),
+				"+" => add_all(state, &args),
+				"-" => sub_all(state, &args),
+				"*" => mul_all(state, &args),
+				"/" => div_all(state, &args),
 
-				"==" => all_equal(&args),
-				"!=" => all_not_equal(&args),
-				"!" => invert_bool(&args),
+				"==" => all_equal(state, &args),
+				"!=" => all_not_equal(state, &args),
+				"!" => invert_bool(state, &args),
 
-				"<" => less(&args),
-				"<=" => less_equal(&args),
-				">" => greater(&args),
-				">=" => greater_equal(&args),
+				"<" => less(state, &args),
+				"<=" => less_equal(state, &args),
+				">" => greater(state, &args),
+				">=" => greater_equal(state, &args),
 
-				"mod" => mod_impl(&args),
-				"and" => logical_and(&args),
-				"or" => logical_or(&args),
+				"mod" => mod_impl(state, &args),
+				"and" => logical_and(state, &args),
+				"or" => logical_or(state, &args),
 
-				"len" => len_impl(&args),
-				"slice" => slice_impl(&args),
+				"len" => len_impl(state, &args),
+				"slice" => slice_impl(state, &args),
 
 				"print" => print_values(&args),
 
@@ -543,7 +569,7 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 					let symbol = state.read(name);
 					match symbol {
 						Value::Lambda(lambda) => lambda.call(state, &args),
-						_ => panic!("Cannot call symbol {}", name),
+						_ => runtime_error!(state, "Cannot call symbol {}", name),
 					}
 				}
 			}
@@ -551,20 +577,22 @@ fn evaluate(state: &mut ScopeState, node: &TreeNode) -> Value {
 	}
 }
 
-fn add_all(values: &[Value]) -> Value {
+fn add_all(state: &mut ScopeState, values: &[Value]) -> Value {
 	let mut result = 0;
 
 	for value in values {
 		match value {
 			Value::I64(num) => result += num,
-			_ => panic!("Unsupported type of value passed to add"),
+			_ => {
+				runtime_error!(state, "Unsupported type of value passed to add");
+			}
 		}
 	}
 
 	Value::I64(result)
 }
 
-fn sub_all(values: &[Value]) -> Value {
+fn sub_all(state: &mut ScopeState, values: &[Value]) -> Value {
 	let mut result = None;
 
 	for value in values {
@@ -577,27 +605,31 @@ fn sub_all(values: &[Value]) -> Value {
 				}
 			}
 
-			_ => panic!("Unsupported type of value passed to sub"),
+			_ => {
+				runtime_error!(state, "Unsupported type of value passed to sub");
+			}
 		}
 	}
 
 	Value::I64(result.unwrap_or(0))
 }
 
-fn mul_all(values: &[Value]) -> Value {
+fn mul_all(state: &mut ScopeState, values: &[Value]) -> Value {
 	let mut result = 1;
 
 	for value in values {
 		match value {
 			Value::I64(num) => result *= num,
-			_ => panic!("Unsupported type of value passed to mul"),
+			_ => {
+				runtime_error!(state, "Unsupported type of value passed to mul");
+			}
 		}
 	}
 
 	Value::I64(result)
 }
 
-fn div_all(values: &[Value]) -> Value {
+fn div_all(state: &mut ScopeState, values: &[Value]) -> Value {
 	let mut result = None;
 
 	for value in values {
@@ -610,14 +642,16 @@ fn div_all(values: &[Value]) -> Value {
 				}
 			}
 
-			_ => panic!("Unsupported type of value passed to div"),
+			_ => {
+				runtime_error!(state, "Unsupported type of value passed to div");
+			}
 		}
 	}
 
 	Value::I64(result.unwrap_or(0))
 }
 
-fn all_equal(values: &[Value]) -> Value {
+fn all_equal(_: &mut ScopeState, values: &[Value]) -> Value {
 	for index in 1..values.len() {
 		if values[index - 1] != values[index] {
 			return Value::Bool(false);
@@ -627,7 +661,7 @@ fn all_equal(values: &[Value]) -> Value {
 	Value::Bool(true)
 }
 
-fn all_not_equal(values: &[Value]) -> Value {
+fn all_not_equal(_: &mut ScopeState, values: &[Value]) -> Value {
 	for index in 1..values.len() {
 		if values[index - 1] == values[index] {
 			return Value::Bool(false);
@@ -637,7 +671,7 @@ fn all_not_equal(values: &[Value]) -> Value {
 	Value::Bool(true)
 }
 
-fn invert_bool(values: &[Value]) -> Value {
+fn invert_bool(_: &mut ScopeState, values: &[Value]) -> Value {
 	match values.last() {
 		Some(Value::Bool(value)) => Value::Bool(!value),
 		_ => Value::Bool(false),
@@ -648,7 +682,7 @@ fn is_truthy(value: &Value) -> bool {
 	!matches!(value, Value::Bool(false))
 }
 
-fn logical_and(values: &[Value]) -> Value {
+fn logical_and(_: &mut ScopeState, values: &[Value]) -> Value {
 	for index in 1..values.len() {
 		let left = is_truthy(&values[index - 1]);
 		let right = is_truthy(&values[index]);
@@ -661,7 +695,7 @@ fn logical_and(values: &[Value]) -> Value {
 	Value::Bool(true)
 }
 
-fn logical_or(values: &[Value]) -> Value {
+fn logical_or(_: &mut ScopeState, values: &[Value]) -> Value {
 	for index in 1..values.len() {
 		let left = is_truthy(&values[index - 1]);
 		let right = is_truthy(&values[index]);
@@ -676,23 +710,17 @@ fn logical_or(values: &[Value]) -> Value {
 
 macro_rules! two_arg_int_function {
 	( $name:ident, $a:ident, $b:ident, $expr:expr, $return_type:ident ) => {
-		fn $name(values: &[Value]) -> Value {
+		fn $name(state: &mut ScopeState, values: &[Value]) -> Value {
 			if values.len() != 2 {
-				panic!(
+				runtime_error!(
+					state,
 					"{} arguments to builtin function only taking two arguments",
 					values.len()
 				);
 			}
 
-			fn unwrap(value: &Value) -> i64 {
-				match value {
-					&Value::I64(num) => num,
-					_ => panic!("Expected integer argument"),
-				}
-			}
-
-			let $a = unwrap(&values[0]);
-			let $b = unwrap(&values[1]);
+			let $a = unwrap_integer(state, &values[0]);
+			let $b = unwrap_integer(state, &values[1]);
 
 			Value::$return_type($expr)
 		}
@@ -706,44 +734,51 @@ two_arg_int_function!(greater_equal, a, b, a >= b, Bool);
 
 two_arg_int_function!(mod_impl, a, b, a % b, I64);
 
-fn unwrap_integer(value: &Value) -> i64 {
+fn unwrap_integer(state: &mut ScopeState, value: &Value) -> i64 {
 	match *value {
 		Value::I64(value) => value,
-		_ => panic!("Expected integer"),
+		_ => {
+			runtime_error!(state, "Expected integer");
+			0
+		}
 	}
 }
 
-fn unwrap_usize(value: i64) -> usize {
+fn unwrap_usize(state: &mut ScopeState, value: i64) -> usize {
 	if value < 0 {
-		panic!("Negative integer used as index");
+		runtime_error!(state, "Negative integer used as index");
 	}
 
 	value as usize
 }
 
-fn slice_impl(values: &[Value]) -> Value {
+fn slice_impl(state: &mut ScopeState, values: &[Value]) -> Value {
 	if values.len() != 3 {
-		panic!("Expected 3 arguments to slice, got {}", values.len());
+		runtime_error!(state, "Expected 3 arguments to slice, got {}", values.len());
 	}
 
 	let value = &values[0];
-	let start = unwrap_usize(unwrap_integer(&values[1]));
-	let end = unwrap_usize(unwrap_integer(&values[2]));
+
+	let start = unwrap_integer(state, &values[1]);
+	let start = unwrap_usize(state, start);
+
+	let end = unwrap_integer(state, &values[2]);
+	let end = unwrap_usize(state, end);
 
 	match value {
 		Value::String(string) => Value::String(string[start..end].to_string()),
-		_ => panic!("Cannot slice non-string"),
+		_ => runtime_error!(state, "Cannot slice non-string"),
 	}
 }
 
-fn len_impl(values: &[Value]) -> Value {
+fn len_impl(state: &mut ScopeState, values: &[Value]) -> Value {
 	if values.len() != 1 {
-		panic!("Expected 1 argument to len, got {}", values.len());
+		runtime_error!(state, "Expected 1 argument to len, got {}", values.len());
 	}
 
 	match &values[0] {
 		Value::String(string) => Value::I64(string.len() as i64),
-		_ => panic!("Cannot get len of non-string"),
+		_ => runtime_error!(state, "Cannot get len of non-string"),
 	}
 }
 
@@ -785,16 +820,17 @@ fn repl(state: &mut ScopeState) {
 			input => {
 				let tokens = tokenize(input);
 				let tree = parse_expression(&mut tokens.iter().peekable());
-				let result = evaluate(state, &tree);
-				print_values(&[result]);
+
+				if let Ok(tree) = tree {
+					let result = evaluate(state, &tree);
+					print_values(&[result]);
+				}
 			}
 		}
 	}
 }
 
 fn panic_impl(state: &mut ScopeState, values: &[Value]) -> Value {
-	println!();
-
 	if !values.is_empty() {
 		print!("Panic!: ");
 
@@ -810,7 +846,9 @@ fn panic_impl(state: &mut ScopeState, values: &[Value]) -> Value {
 		println!("Panic!");
 	}
 
+	state.in_repl = true;
 	repl(state);
+	state.in_repl = false;
 
 	std::process::exit(-1);
 }
@@ -841,6 +879,8 @@ fn main() {
 	let tokens = tokenize(&source);
 	let tree = parse_matching_parens(&mut tokens.iter().peekable());
 
-	let mut state = ScopeState::new();
-	evaluate(&mut state, &tree);
+	if let Ok(tree) = tree {
+		let mut state = ScopeState::new();
+		evaluate(&mut state, &tree);
+	}
 }
