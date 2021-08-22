@@ -27,7 +27,8 @@ comments are a core part of the logic of a program. What if you could write comm
 and have a series of rules fill in the logic behind them? Here is an example of that in Leafr
 
 
-```function my_function(str) {
+```
+function my_function(str) {
   // call the reverse method on "str" and print that out
   // do all of that 10 times
 }
@@ -51,6 +52,7 @@ and have a series of rules fill in the logic behind them? Here is an example of 
 yields
 
 ```
+
 function my_function(str) {
   for (let i = 0; i < 10; i++) {
      
