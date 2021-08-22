@@ -36,10 +36,11 @@ or tests for other platforms, we'll be happy to add them to this readme. Don't h
 on [this repo](https://github.com/Floeckchengrafik/jam0001).
 
 ## Starting the Interpreter
-If you [compiled the Interpreter](#Compiling-the-Interpreter), you can run the binary file in dist/ like this:
-`comstruct.exe example.cmstr`<br>
+If you [compiled the Interpreter](#Compiling-the-Interpreter), you can run the binary file in `dist/` like this:
+`./comstruct example.cmstr`<br>
 If not, you can run `cd src && python comstruct.py example.cmstr`<br>
-Of course, replace example.cmstr with whatever your filename is
+Of course, replace example.cmstr with whatever your filename is.
+When you don´t have a .cmstr file to execute, you can also run `./comstruct` in `dist/` or `python comstruct.py` in `src`.
 
 # Code Documentation
 
