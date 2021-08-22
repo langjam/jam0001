@@ -37,7 +37,7 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 	case lexer.II_m:
 		mathInput := instruction_args[0].Val.Value
 		mathInput = e.unrefString(mathInput)
-		mResult, err := m.Do(mathInput, e.negative, e.positive)
+		mResult, err := m.Do(mathInput)
 		if err != nil {
 			fmt.Println("MathError: expression invalid: ", mathInput)
 		}

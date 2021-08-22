@@ -356,7 +356,7 @@ func (e *Evaluator) GetLastOperation() Operation {
 	return e.operations[len(e.operations)-1]
 }
 
-func (e *Evaluator) Evaluate(input []Token, negativeCells, positiveCells []string) error {
+func (e *Evaluator) Evaluate(input []Token) error {
 	e.values = []int{}
 
 	// Establish a sentinal operation with the lowest precedence (will never be executed)
@@ -366,34 +366,6 @@ func (e *Evaluator) Evaluate(input []Token, negativeCells, positiveCells []strin
 		switch token.kind {
 		case NumberLiteral:
 			err := e.PushValue(token.value)
-			if err != nil {
-				return err
-			}
-
-		case NegativeCellReference:
-			// Dereference a negative cell value
-			index, err := strconv.Atoi(token.value)
-			if err != nil {
-				return errors.New("failed to parse int '" + token.value + "'")
-			}
-			if index > len(negativeCells) {
-				return errors.New("index -" + fmt.Sprint(index) + " out of range")
-			}
-			err = e.PushValue(negativeCells[index-1])
-			if err != nil {
-				return err
-			}
-
-		case PositiveCellReference:
-			// Dereference a positive cell value
-			index, err := strconv.Atoi(token.value)
-			if err != nil {
-				return errors.New("failed to parse int '" + token.value + "'")
-			}
-			if index > len(positiveCells) {
-				return errors.New("index " + fmt.Sprint(index) + " out of range")
-			}
-			err = e.PushValue(positiveCells[index-1])
 			if err != nil {
 				return err
 			}
@@ -454,11 +426,11 @@ func (e *Evaluator) Evaluate(input []Token, negativeCells, positiveCells []strin
 // Supports operator precedence and integer math
 //============================================================================
 
-func Do(input string, negativeCells, positiveCells []string) (string, error) {
+func Do(input string) (string, error) {
 	// Lex tookens
 	lexer := Lexer{}
 	lexer.Lex(input)
 	e := Evaluator{}
-	e.Evaluate(lexer.out, negativeCells, positiveCells)
+	e.Evaluate(lexer.out)
 	return fmt.Sprint(e.values[0]), nil
 }
