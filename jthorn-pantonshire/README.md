@@ -145,7 +145,7 @@ function twice(f, a)
 ```
 ## Example programs
 
-The `langjam/example_programs/` directory contains several example programs.
+The `example_programs/` directory contains several example programs.
 
 Here are a few of them:
 
