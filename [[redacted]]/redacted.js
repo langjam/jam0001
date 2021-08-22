@@ -966,8 +966,10 @@ function run(compilation_result, pc=0, func, args) {
 			}
 			case operation.COMMENT: {
 				const comment = compilation_result.comments[arg()].data
-				if (comment.kind === 'naked') {}
-				else if (comment.kind === 'tagged') {
+				if (comment.kind === 'naked') {
+					const handler = comment_handlers.get('naked')
+					if (handler !== undefined) handler.call(redactify(comment.text))
+				} else if (comment.kind === 'tagged') {
 					const handler = comment_handlers.get(comment.tag)
 					if (handler !== undefined) handler.call(redactify(comment.text))
 				} else {
