@@ -2,18 +2,19 @@ from comparator_constants import EQUAL, GREATER_THAN, GT_OR_EQ, LESS_THAN, LT_OR
 
 
 def apply_binop(op, left_operand, right_operand):
+    print(f"L = {left_operand.evaluate()}, R = {right_operand.evaluate()}")
     if op == "+":
-        op_result = int(left_operand) + int(right_operand)
+        op_result = left_operand.evaluate() + right_operand.evaluate()
     elif op == "-":
-        op_result = int(left_operand) - int(right_operand)
+        op_result = left_operand.evaluate() - right_operand.evaluate()
     elif op == "*":
-        op_result = int(left_operand) * int(right_operand)
+        op_result = left_operand.evaluate() * right_operand.evaluate()
     elif op == "/":
         # Equivalent to python's integer division!
-        op_result = int(left_operand) // int(right_operand)
+        op_result = left_operand.evaluate() // right_operand.evaluate()
     else:
         # potential_operator_value must be '%'
-        op_result = int(left_operand) % int(right_operand)
+        op_result = left_operand.evaluate() % right_operand.evaluate()
     return op_result
 
 

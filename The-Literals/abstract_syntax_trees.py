@@ -67,7 +67,8 @@ def set_var(name, value):
     environment[name] = value
 
 
-def push_env(preconfigured_env=dict()):
+def push_env(preconfigured_env=None):
+    preconfigured_env = dict() if preconfigured_env is None else preconfigured_env
     environments.append(preconfigured_env)
 
 
@@ -142,6 +143,7 @@ class Comparison(Expr):
 class Stmt:
     def __init__(self, body, done=False):
         self.body = body
+        print(self.body)
         self.done = done
 
     def __repr__(self):
@@ -152,7 +154,8 @@ class Stmt:
 
     def execute(self):
         # The "done" bit is handled by Stmts class
-        self.body.execute()
+        premature_done = self.body.execute()
+        return self.done or premature_done
 
 
 class StmtContents:
@@ -160,9 +163,10 @@ class StmtContents:
 
 
 class IfStmt(StmtContents):
-    def __init__(self, condition: Expr, thenpt: StmtContents):
+    def __init__(self, condition: Expr, thenpt: StmtContents, thenpt_contains_done: bool):
         self.condition = condition
         self.thenpt = thenpt
+        self.thenpt_contains_done = thenpt_contains_done
 
     def __repr__(self):
         return f"IF {self.condition} THEN {self.thenpt}"
@@ -171,6 +175,8 @@ class IfStmt(StmtContents):
         condition_result = self.condition.evaluate()
         if condition_result:
             self.thenpt.execute()
+            return self.thenpt_contains_done
+        
 
 
 class SetStmt(StmtContents):
@@ -182,7 +188,7 @@ class SetStmt(StmtContents):
         return f"SET {self.target} TO {self.value}"
 
     def execute(self):
-        set_var(self.target, self.value)
+        set_var(self.target, self.value.evaluate())
 
 
 class CallStmt(Stmt):
@@ -198,8 +204,9 @@ class CallStmt(Stmt):
             return f"CALL {self.func_name} WITH {self.args}"
 
     def execute(self):
+        print(f"Calling {self.func_name} with args {self.args}")
         function = find_function(self.func_name)
-        evaluated_args = {name: value for (name, value) in self.args.items()}
+        evaluated_args = {name: value.evaluate() for (name, value) in self.args.items()}
         result = function.run(evaluated_args)
         set_var("it", result)
         if self.postfix_assignment:
@@ -222,10 +229,11 @@ class Stmts:
         return str(self.stmt_list)
 
     def execute(self):
+        self.current_index = 0
         while self.current_index < self.length:
             next_stmt = self.stmt_list[self.current_index]
-            next_stmt.execute()
-            if next_stmt.done:
+            is_done = next_stmt.execute()
+            if is_done:
                 break
             else:
                 self.current_index += 1
