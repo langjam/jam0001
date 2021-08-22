@@ -46,6 +46,10 @@ func (e *Evaluator) eval_string_call(expr shared.Node) (shared.Node, error) {
 	val := shared.Node{}
 
 	for _, comment := range comments {
+		if comment == "" {
+			continue
+		}
+
 		_, ok := ev.comments[comment]
 		if !ok {
 			return shared.Node{}, &EvalError{"Trying to call non existant comment.", expr.Val.Pos}

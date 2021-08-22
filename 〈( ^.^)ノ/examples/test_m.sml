@@ -1,3 +1,5 @@
+// example: the m function
+
 set($-1 5)
 print(m("$-1"))
 print(m("1 + 3"))
