@@ -33,7 +33,10 @@ enum ExprType {
     ExprTypeAdd,
     ExprTypeSub,
     ExprTypeMul,
-    ExprTypeDiv
+    ExprTypeDiv,
+    ExprTypeEquals,
+    ExprTypeSmallerThen,
+    ExprTypeBiggerThen
 };
 
 struct Expr {

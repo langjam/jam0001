@@ -166,6 +166,24 @@ bool lexer_tokenize(struct Lexer* const lexer) {
         lexer->token.string = lexer->stream++;
         return true;
     }
+    if (lexer->stream[0] == '=') {
+        lexer->token.name = TokenNameEquals;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
+    if (lexer->stream[0] == '<') {
+        lexer->token.name = TokenNameSmallerThan;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
+    if (lexer->stream[0] == '>') {
+        lexer->token.name = TokenNameBiggerThan;
+        lexer->token.length = 1;
+        lexer->token.string = lexer->stream++;
+        return true;
+    }
     // try to tokenize `log`
     if (lexer_match_keyword(lexer, "log", 3, TokenNameLog))
         return true;

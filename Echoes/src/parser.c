@@ -9,6 +9,7 @@
 
 typedef enum Precedence {
     PrecedenceLowest = 1,
+    PrecedenceComparison,
     PrecedenceSum,
     PrecedenceProduct
 } Precedence;
@@ -94,6 +95,12 @@ static struct Expr *parser_parse_literal_expr(struct Parser* const parser) {
 
 static enum ExprType token_name_to_expr_type(const enum ExprType type) {
     switch (type) {
+    case TokenNameEquals:
+        return ExprTypeEquals;
+    case TokenNameSmallerThan:
+        return ExprTypeSmallerThen;
+    case TokenNameBiggerThan:
+        return ExprTypeBiggerThen;
     case TokenNameAdd:
         return ExprTypeAdd;
     case TokenNameSub:
@@ -109,6 +116,10 @@ static enum ExprType token_name_to_expr_type(const enum ExprType type) {
 
 static Precedence token_name_to_precedence(const enum TokenName name) {
     switch (name) {
+    case TokenNameEquals:
+    case TokenNameSmallerThan:
+    case TokenNameBiggerThan:
+        return PrecedenceComparison;
     case TokenNameAdd:
     case TokenNameSub:
         return PrecedenceSum;
@@ -151,6 +162,9 @@ static struct Expr *parser_parse_expr(struct Parser* const parser) {
         case TokenNameSub:
         case TokenNameMul:
         case TokenNameDiv:
+        case TokenNameEquals:
+        case TokenNameSmallerThan:
+        case TokenNameBiggerThan:
             if (op_idx > 0 &&
                     token_name_to_precedence(parser->lexer.token.name) <= token_name_to_precedence(operator_stack[op_idx-1].name)) {
                 // pop operations into output_stack
@@ -177,7 +191,10 @@ static struct Expr *parser_parse_expr(struct Parser* const parser) {
         case ExprTypeAdd:
         case ExprTypeSub:
         case ExprTypeMul:
-        case ExprTypeDiv: {
+        case ExprTypeDiv:
+        case ExprTypeEquals:
+        case ExprTypeSmallerThen:
+        case ExprTypeBiggerThen: {
             struct Expr *expr;
             if (expr_idx < 2) {
                 parser_error(parser, "Expected operator between operands");

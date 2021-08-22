@@ -19,7 +19,10 @@ enum TokenName {
     TokenNameRoutine,
     TokenNameComma,
     TokenNameLeftCur,
-    TokenNameRightCur
+    TokenNameRightCur,
+    TokenNameEquals,
+    TokenNameSmallerThan,
+    TokenNameBiggerThan
 };
 
 struct Token {

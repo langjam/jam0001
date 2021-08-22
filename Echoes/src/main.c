@@ -111,6 +111,15 @@ static void print_expr(struct Expr *expr) {
     case ExprTypeDiv:
         print_indent(); printf("/\n");
         break;
+    case ExprTypeEquals:
+        print_indent(); printf("=\n");
+        break;
+    case ExprTypeSmallerThen:
+        print_indent(); printf("<\n");
+        break;
+    case ExprTypeBiggerThen:
+        print_indent(); printf(">\n");
+        break;
     case ExprTypeKey:
         print_indent(); printf("key\n");
         ++indent;
