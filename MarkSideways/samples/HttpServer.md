@@ -8,7 +8,7 @@ When run and accessed on localhost, it looks like this:
 
 ![](httpserver.jpg)
 
-This demo primarily utilizes two built-in functions in MarkSideways: `http_server_create_handler` &amp; `http_server_start`.
+This demo primarily utilizes two functions in the MarkSideways built-in library: `http_server_create_handler` &amp; `http_server_start`
 
 To start, we determine the port number. If no port is specified as a command line argument, then we use `8080`.
 
