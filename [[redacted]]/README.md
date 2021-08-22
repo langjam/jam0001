@@ -87,8 +87,7 @@ Objects are created with the `obj>>call` primitive.
 * **<**: A function that makes comparisons for host values. If the values
   cannot be compared returns `none`
 * **+**: A function that add two numbers
-* **=**: A function that makes an equality comparison for host values. If the
-  values cannot be compared returns `none`
+* **=**: A function that makes an equality comparison.
 * **none**: A kind of dummy value, our `undefined`
 * **print**: Prints to the screen, our `console.log`
 * **str_concat**: Mashes an arbitrary number of values into a string

@@ -509,7 +509,7 @@ add_primitive('<', (lhs, rhs) => {
 add_primitive('=', (lhs, rhs) => {
 	if (lhs.kind === 'jsvalue' && rhs.kind === 'jsvalue')
 		return lhs.v === rhs.v
-	return RedactedNone
+	return lhs === rhs
 })
 add_primitive('+', (lhs, rhs) => {
 	if (lhs.kind === 'jsvalue' && rhs.kind === 'jsvalue')
