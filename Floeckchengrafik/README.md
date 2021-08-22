@@ -1,44 +1,5 @@
 # Comstruct
 
-```
-########################################################################################################################################################
-##                                                                                                                                                    ##
-##                                                                                                                                                    ##
-##           ########        ########     ###           ###   #########   ############  ##########   ##        ##     ########    ############        ##
-##         ###      ###    ###      ###   ####         ####  ###     ###       ##       ##      ###  ##        ##   ###      ###       ##             ##
-##        ##              ##          ##  ## ##       ## ##  ##                ##       ##       ##  ##        ##  ##                  ##             ##
-##        ##              ##          ##  ##  ##     ##  ##   #######          ##       ##########   ##        ##  ##                  ##             ##
-##        ##              ##          ##  ##   ##   ##   ##      ######        ##       ##    ##     ##        ##  ##                  ##             ##
-##        ##              ##          ##  ##    ## ##    ##           ##       ##       ##     ##    ##        ##  ##                  ##             ##
-##         ###      ###    ###      ###   ##     ###     ##  ###     ###       ##       ##      ##   ###      ###   ###      ###       ##             ##
-##           ########        ########     ##      #      ##   #########        ##       ##       ##    ########       ########         ##             ##
-##                                                                                                                                                    ##
-##                                                                      /* By */                                                                      ##
-##                                                                                                                                                    ##
-##    #########     ##               ########     ###########     ########    ##      ##       ########    ##        ##  ###########  ####      ##    ##
-##    ##      ##    ##             ###      ###   ##            ####     ###  ##     ##      ####     ###  ##        ##  ##           #####     ##    ##
-##    ##      ##    ##            ##          ##  ##           ###            ##    ##      ###            ##        ##  ##           ## ###    ##    ##
-##    #########     ##            ##          ##  #######      ##             #######       ##             ############  #######      ##  ###   ##    ##
-##    ##      ##    ##            ##          ##  ##           ##             ##    ##      ##             ##        ##  ##           ##   ###  ##    ##
-##    ##      ###   ##            ##          ##  ##           ###            ##     ##     ###            ##        ##  ##           ##    ### ##    ##
-##    ##      ###   ##             ###      ###   ##            ####     ###  ##      ##     ####     ###  ##        ##  ##           ##     #####    ##
-##    ##########    ###########      ########     ###########     ########    ##       ##      ########    ##        ##  ###########  ##      ####    ##
-##                                                                                                                                                    ##
-##                                                                      /* and */                                                                     ##
-##                                                                                                                                                    ##
-##                 ###########  ##               ########               ###           ###   ##   ############            ##        ##                 ##
-##                 ##           ##             ###      ###             ####         ####   ##        ##                 ##        ##                 ##
-##                 ##           ##            ##          ##            #####       #####   ##        ##                 ##        ##                 ##
-##                 #######      ##            ##          ##            ## ###     ### ##   ##        ##                 ############                 ##
-##                 ##           ##            ##          ##  ########  ##  ###   ###  ##   ##        ##       ########  ##        ##                 ##
-##                 ##           ##            ##          ##            ##   ### ###   ##   ##        ##                 ##        ##                 ##
-##                 ##           ##             ###      ###             ##    #####    ##   ##        ##                 ##        ##                 ##
-##                 ##           ###########      ########               ##     ###     ##   ##        ##                 ##        ##                 ##
-##                                                                                                                                                    ##
-##                                                                                                                                                    ##
-########################################################################################################################################################
-```
-
 ### The Constructor is named `comment` / Probably some other things too
 
 ## Content
@@ -57,6 +18,7 @@
 12. [Booleans](#Booleans)
 13. [Classes](#classes)
 14. [Comments and Function Signatures](#Comments-and-Function-Signatures)
+15. [Examples](#Examples)
 
 ## Compiling the Interpreter
 
@@ -75,11 +37,12 @@ or tests for other platforms, we'll be happy to add them to this readme. Don't h
 on [this repo](https://github.com/Floeckchengrafik/jam0001).
 
 ## Starting the Interpreter
+
 If you [compiled the Interpreter](#Compiling-the-Interpreter), you can run the binary file in `dist/` like this:
 `./comstruct example.cmstr`<br>
-If not, you can run `cd src && python comstruct.py example.cmstr`<br>
-Of course, replace example.cmstr with whatever your filename is.
-When you don´t have a .cmstr file to execute, you can also run `./comstruct` in `dist/` or `python comstruct.py` in `src`.
+If not, you can run `python src/comstruct.py example.cmstr`.<br>
+Of course, replace example.cmstr with whatever your filename is. When you don´t have a .cmstr file to execute, you can
+also run `./comstruct` in `dist/` or `python comstruct.py` in `src` to get to the repl.
 
 # Code Documentation
 
@@ -309,13 +272,28 @@ To run a class method, use `<class_instance_name>.<method_name>([args])?`
 You define a constructor using `comment = function ({ /* Constructor body here */ })?`.
 You name the constructor comment, because the theme of [this jam](https://github.com/langjam/jam0001) is "first-class-comments", and the constructor is the `first` thing that gets executed in a `class`.
 
-
 ## Comments and Function Signatures
 
 For a single-line-comment, write `\\`
 To start a multi-line-comment, write `/*`. To end it, write `*/`
 
-Function Signatures are needed when you want to pass a variable to a class or method.
-You can start a Function Signature with `/*` and end it with `*/`.<br><br>To pass an argument to a class / function, you write `- param <name>` in a new line.
-To allow a return value from the function, you write `- return` in a new line.
-The last statement in the function will be evaluated and returned.
+Function Signatures are needed when you want to pass a variable to a class or method. You can start a Function Signature
+with `/*` and end it with `*/`.<br><br>To pass an argument to a class / function, you write `- param <name>` in a new
+line. To allow a return value from the function, you write `- return` in a new line. The last statement in the function
+will be evaluated and returned.
+
+## Examples
+
+In this repo, there are 9 examples:
+
+- [Simple Maths and Operations](samples/1_simplemath.cmstr)
+- [A Hello World, implemented with functions and String Concat](samples/2_helloworld.cmstr)
+- [If and For-Loops (and exit)](samples/3_if_and_for.cmstr)
+- [Playing around with lists](samples/4_lists.cmstr)
+- [Functions and how they are defined](samples/5_functionsignatures.cmstr)
+- [Classes](samples/6_classes.cmstr)
+- [Additional String Methods](samples/7_string.cmstr)
+- [The Forever-Loop](samples/8_forever.cmstr)
+- [A fully in the command line playable version of Sokoban](samples/9_sokoban.cmstr)
+
+If you have any ideas for other examples, just create an issue or a pullrequest.
