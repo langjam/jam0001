@@ -5,15 +5,15 @@ _ := ' '*
 
 WhileComment := 'while' _ whileExpression=Expression ':'
 
-ManipulationComment := base=ManipulationCommentBase _ self={'including' _ 'self'}?
+ManipulationComment := ManipulationCommentBase
 ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate
-ManipulationCommentSwap := 'swap' _ target=CommentSelector
+ManipulationCommentSwap := swapKind={'swapContent' | 'swapFull'} _ target=CommentSelector
 ManipulationCommentMove := 'move' _ target=CommentSelector
 ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
 
 SetComment := 'set ' _ target=CommentSelector  _ 'to' _ value=Expression
 
-CommentSelector := '{' _ 'get' _ count='[0-9]+' _ {'comment' | 'comments'} _ navigations={distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* _ '}'
+CommentSelector := '{' _ 'get' _ countSelector={sth='comment' | count='[0-9]+' _ 'comments' _ aboveBelow={'above' | 'below'}} _ navigations={distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* _ '}'
 
 IfComment := 'if' _ condition=Expression _ ':'
 

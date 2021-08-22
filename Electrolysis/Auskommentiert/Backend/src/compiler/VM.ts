@@ -18,15 +18,6 @@ class VMFunction {
     }
 }
 
-class FoundComments {
-    private mComments : WrappedComment[];
-    constructor(comments : WrappedComment[]) {
-        this.mComments = comments;
-    }
-    get comments() {
-        return this.mComments;
-    }
-}
 class VMValueArray {
     private mArray : VMValue[];
     constructor(array : VMValue[]) {
@@ -37,7 +28,7 @@ class VMValueArray {
     }
 }
 
-type VMValue = number | string | boolean | undefined | VMFunction | VMValueArray | FoundComments;
+type VMValue = number | string | boolean | undefined | VMFunction | VMValueArray | WrappedComment;
 
 export class VM {
     private mASTProvider : CommentProvider;
@@ -74,7 +65,10 @@ export class VM {
         } else if(ast.kind === AST.ASTKinds.SetComment) {
             let comments = this.findComments(comment, ast.target);
             let target = this.evaluateExpression(comment, ast.value);
-            for(let c of comments.comments) {
+            for(let c of comments.array) {
+                if(!(c instanceof WrappedComment)) {
+                    throw new Error("Not a comment!");
+                }
                 c.content = this.stringify(target);
             }
             
@@ -82,6 +76,19 @@ export class VM {
             if(this.evaluateExpression(comment, ast.condition) === true) {
                 this.evaluteChildren(comment);
             }
+        } else if(ast.kind === AST.ASTKinds.ManipulationCommentSwap) {
+            let target = this.findComments(comment, ast.target);
+            if(!(target instanceof VMValueArray)) {
+                throw new Error("Not an array!");
+            }
+            if(target.array.length != 2) {
+                throw new Error("Can only swap 2 comments, not " + target.array.length);
+            }
+            let commentA = target.array[0] as WrappedComment;
+            let commentB = target.array[1] as WrappedComment;
+            let swapKind = ast.swapKind;
+            // TODO SWAP
+            //this.mASTProvider.swapComments(commentA, commentB);
         } else {
             return this.evaluateExpression(comment, ast as AST.Expression);
         }
@@ -179,20 +186,33 @@ export class VM {
             return this.findComments(parentComment, expression);
         } else if(expression.kind === AST.ASTKinds.EvalExpression) {
             let comments = this.evaluateExpression(parentComment, expression.toEval);
-            if(!(comments instanceof FoundComments)) {
+            if(!(comments instanceof VMValueArray)) {
                 throw new Error("You can only evaluate comments, not " + comments);
             }
-            if(comments.comments.length == 1) {
-                let ret = this.traverse(comments.comments[0]);
+            if(comments.array.length == 1) {
+                if(!(comments.array[0] instanceof WrappedComment)) {
+                    throw new Error("Not a comment!");
+                }
+                let ret = this.traverse(comments.array[0]);
                 return ret;
             }
-            return new VMValueArray(comments.comments.map((c) => this.traverse(c)));
+            return new VMValueArray(comments.array.map((c) => {
+                if(!(c instanceof WrappedComment)) {
+                    throw new Error("Not a comment!");
+                }
+                return this.traverse(c)
+            }));
         }
         throw new Error("Unknown kind " + expression["kind"]);
         return false;
     }
-    findComments(parentComment : WrappedComment, expression : AST.CommentSelector): FoundComments {
-        let count = Number(expression.count);
+    findComments(parentComment : WrappedComment, expression : AST.CommentSelector): VMValueArray {
+        let count = 0;
+        let aboveBelow = "";
+        if(expression.countSelector.kind === AST.ASTKinds.CommentSelector_$0_2) {
+            count = Number(expression.countSelector.count);
+            aboveBelow = expression.countSelector.aboveBelow;
+        }
         let current : WrappedComment = parentComment;
         let next : WrappedComment | undefined;
         for(let nav of expression.navigations) {
@@ -220,6 +240,22 @@ export class VM {
                 current = next;
             }
         }
-        return new FoundComments([current]);
+        let ret = [current];
+        if(aboveBelow === "above" || aboveBelow === "below") {
+            for(let i = 1; i < count; ++i) {
+                let c = undefined;
+                if(aboveBelow === "above") {
+                    c = this.mASTProvider.getPrevComment(current.id);
+                } else if(aboveBelow === "below") {
+                    c = this.mASTProvider.getNextComment(current.id);
+                }
+                if(c === undefined) {
+                    throw new Error("Can't navigate there!");
+                }
+                current = c;
+                ret.push(current);
+            }
+        }
+        return new VMValueArray(ret);
     }
 }

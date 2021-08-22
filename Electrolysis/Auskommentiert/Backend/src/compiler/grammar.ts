@@ -4,13 +4,13 @@
 * Comment := WhileComment | ManipulationComment | SetComment | IfComment | Expression
 * _ := ' '*
 * WhileComment := 'while' _ whileExpression=Expression ':'
-* ManipulationComment := base=ManipulationCommentBase _ self={'including' _ 'self'}?
+* ManipulationComment := ManipulationCommentBase
 * ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate
-* ManipulationCommentSwap := 'swap' _ target=CommentSelector
+* ManipulationCommentSwap := swapKind={'swapContent' | 'swapFull'} _ target=CommentSelector
 * ManipulationCommentMove := 'move' _ target=CommentSelector
 * ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
 * SetComment := 'set ' _ target=CommentSelector  _ 'to' _ value=Expression
-* CommentSelector := '{' _ 'get' _ count='[0-9]+' _ {'comment' | 'comments'} _ navigations={distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* _ '}'
+* CommentSelector := '{' _ 'get' _ countSelector={sth='comment' | count='[0-9]+' _ 'comments' _ aboveBelow={'above' | 'below'}} _ navigations={distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* _ '}'
 * IfComment := 'if' _ condition=Expression _ ':'
 * VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
 * Expression := ComparisionExpression
@@ -49,11 +49,12 @@ export enum ASTKinds {
     _ = "_",
     WhileComment = "WhileComment",
     ManipulationComment = "ManipulationComment",
-    ManipulationComment_$0 = "ManipulationComment_$0",
     ManipulationCommentBase_1 = "ManipulationCommentBase_1",
     ManipulationCommentBase_2 = "ManipulationCommentBase_2",
     ManipulationCommentBase_3 = "ManipulationCommentBase_3",
     ManipulationCommentSwap = "ManipulationCommentSwap",
+    ManipulationCommentSwap_$0_1 = "ManipulationCommentSwap_$0_1",
+    ManipulationCommentSwap_$0_2 = "ManipulationCommentSwap_$0_2",
     ManipulationCommentMove = "ManipulationCommentMove",
     ManipulationCommentRotate = "ManipulationCommentRotate",
     ManipulationCommentRotate_$0_1 = "ManipulationCommentRotate_$0_1",
@@ -62,6 +63,8 @@ export enum ASTKinds {
     CommentSelector = "CommentSelector",
     CommentSelector_$0_1 = "CommentSelector_$0_1",
     CommentSelector_$0_2 = "CommentSelector_$0_2",
+    CommentSelector_$0_$0_1 = "CommentSelector_$0_$0_1",
+    CommentSelector_$0_$0_2 = "CommentSelector_$0_$0_2",
     CommentSelector_$1 = "CommentSelector_$1",
     CommentSelector_$1_$0_1 = "CommentSelector_$1_$0_1",
     CommentSelector_$1_$0_2 = "CommentSelector_$1_$0_2",
@@ -125,22 +128,19 @@ export interface WhileComment {
     kind: ASTKinds.WhileComment;
     whileExpression: Expression;
 }
-export interface ManipulationComment {
-    kind: ASTKinds.ManipulationComment;
-    base: ManipulationCommentBase;
-    self: Nullable<ManipulationComment_$0>;
-}
-export interface ManipulationComment_$0 {
-    kind: ASTKinds.ManipulationComment_$0;
-}
+export type ManipulationComment = ManipulationCommentBase;
 export type ManipulationCommentBase = ManipulationCommentBase_1 | ManipulationCommentBase_2 | ManipulationCommentBase_3;
 export type ManipulationCommentBase_1 = ManipulationCommentSwap;
 export type ManipulationCommentBase_2 = ManipulationCommentMove;
 export type ManipulationCommentBase_3 = ManipulationCommentRotate;
 export interface ManipulationCommentSwap {
     kind: ASTKinds.ManipulationCommentSwap;
+    swapKind: ManipulationCommentSwap_$0;
     target: CommentSelector;
 }
+export type ManipulationCommentSwap_$0 = ManipulationCommentSwap_$0_1 | ManipulationCommentSwap_$0_2;
+export type ManipulationCommentSwap_$0_1 = string;
+export type ManipulationCommentSwap_$0_2 = string;
 export interface ManipulationCommentMove {
     kind: ASTKinds.ManipulationCommentMove;
     target: CommentSelector;
@@ -160,12 +160,22 @@ export interface SetComment {
 }
 export interface CommentSelector {
     kind: ASTKinds.CommentSelector;
-    count: string;
+    countSelector: CommentSelector_$0;
     navigations: CommentSelector_$1[];
 }
 export type CommentSelector_$0 = CommentSelector_$0_1 | CommentSelector_$0_2;
-export type CommentSelector_$0_1 = string;
-export type CommentSelector_$0_2 = string;
+export interface CommentSelector_$0_1 {
+    kind: ASTKinds.CommentSelector_$0_1;
+    sth: string;
+}
+export interface CommentSelector_$0_2 {
+    kind: ASTKinds.CommentSelector_$0_2;
+    count: string;
+    aboveBelow: CommentSelector_$0_$0;
+}
+export type CommentSelector_$0_$0 = CommentSelector_$0_$0_1 | CommentSelector_$0_$0_2;
+export type CommentSelector_$0_$0_1 = string;
+export type CommentSelector_$0_$0_2 = string;
 export interface CommentSelector_$1 {
     kind: ASTKinds.CommentSelector_$1;
     distance: string;
@@ -379,34 +389,7 @@ export class Parser {
             });
     }
     public matchManipulationComment($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationComment> {
-        return this.run<ManipulationComment>($$dpth,
-            () => {
-                let $scope$base: Nullable<ManipulationCommentBase>;
-                let $scope$self: Nullable<Nullable<ManipulationComment_$0>>;
-                let $$res: Nullable<ManipulationComment> = null;
-                if (true
-                    && ($scope$base = this.matchManipulationCommentBase($$dpth + 1, $$cr)) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && (($scope$self = this.matchManipulationComment_$0($$dpth + 1, $$cr)) || true)
-                ) {
-                    $$res = {kind: ASTKinds.ManipulationComment, base: $scope$base, self: $scope$self};
-                }
-                return $$res;
-            });
-    }
-    public matchManipulationComment_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationComment_$0> {
-        return this.run<ManipulationComment_$0>($$dpth,
-            () => {
-                let $$res: Nullable<ManipulationComment_$0> = null;
-                if (true
-                    && this.regexAccept(String.raw`(?:including)`, $$dpth + 1, $$cr) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && this.regexAccept(String.raw`(?:self)`, $$dpth + 1, $$cr) !== null
-                ) {
-                    $$res = {kind: ASTKinds.ManipulationComment_$0, };
-                }
-                return $$res;
-            });
+        return this.matchManipulationCommentBase($$dpth + 1, $$cr);
     }
     public matchManipulationCommentBase($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentBase> {
         return this.choice<ManipulationCommentBase>([
@@ -427,17 +410,30 @@ export class Parser {
     public matchManipulationCommentSwap($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentSwap> {
         return this.run<ManipulationCommentSwap>($$dpth,
             () => {
+                let $scope$swapKind: Nullable<ManipulationCommentSwap_$0>;
                 let $scope$target: Nullable<CommentSelector>;
                 let $$res: Nullable<ManipulationCommentSwap> = null;
                 if (true
-                    && this.regexAccept(String.raw`(?:swap)`, $$dpth + 1, $$cr) !== null
+                    && ($scope$swapKind = this.matchManipulationCommentSwap_$0($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$target = this.matchCommentSelector($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.ManipulationCommentSwap, target: $scope$target};
+                    $$res = {kind: ASTKinds.ManipulationCommentSwap, swapKind: $scope$swapKind, target: $scope$target};
                 }
                 return $$res;
             });
+    }
+    public matchManipulationCommentSwap_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentSwap_$0> {
+        return this.choice<ManipulationCommentSwap_$0>([
+            () => this.matchManipulationCommentSwap_$0_1($$dpth + 1, $$cr),
+            () => this.matchManipulationCommentSwap_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchManipulationCommentSwap_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentSwap_$0_1> {
+        return this.regexAccept(String.raw`(?:swapContent)`, $$dpth + 1, $$cr);
+    }
+    public matchManipulationCommentSwap_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentSwap_$0_2> {
+        return this.regexAccept(String.raw`(?:swapFull)`, $$dpth + 1, $$cr);
     }
     public matchManipulationCommentMove($$dpth: number, $$cr?: ErrorTracker): Nullable<ManipulationCommentMove> {
         return this.run<ManipulationCommentMove>($$dpth,
@@ -507,7 +503,7 @@ export class Parser {
     public matchCommentSelector($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector> {
         return this.run<CommentSelector>($$dpth,
             () => {
-                let $scope$count: Nullable<string>;
+                let $scope$countSelector: Nullable<CommentSelector_$0>;
                 let $scope$navigations: Nullable<CommentSelector_$1[]>;
                 let $$res: Nullable<CommentSelector> = null;
                 if (true
@@ -515,15 +511,13 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.regexAccept(String.raw`(?:get)`, $$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$count = this.regexAccept(String.raw`(?:[0-9]+)`, $$dpth + 1, $$cr)) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && this.matchCommentSelector_$0($$dpth + 1, $$cr) !== null
+                    && ($scope$countSelector = this.matchCommentSelector_$0($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$navigations = this.loop<CommentSelector_$1>(() => this.matchCommentSelector_$1($$dpth + 1, $$cr), true)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.regexAccept(String.raw`(?:})`, $$dpth + 1, $$cr) !== null
                 ) {
-                    $$res = {kind: ASTKinds.CommentSelector, count: $scope$count, navigations: $scope$navigations};
+                    $$res = {kind: ASTKinds.CommentSelector, countSelector: $scope$countSelector, navigations: $scope$navigations};
                 }
                 return $$res;
             });
@@ -535,10 +529,47 @@ export class Parser {
         ]);
     }
     public matchCommentSelector_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$0_1> {
-        return this.regexAccept(String.raw`(?:comment)`, $$dpth + 1, $$cr);
+        return this.run<CommentSelector_$0_1>($$dpth,
+            () => {
+                let $scope$sth: Nullable<string>;
+                let $$res: Nullable<CommentSelector_$0_1> = null;
+                if (true
+                    && ($scope$sth = this.regexAccept(String.raw`(?:comment)`, $$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.CommentSelector_$0_1, sth: $scope$sth};
+                }
+                return $$res;
+            });
     }
     public matchCommentSelector_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$0_2> {
-        return this.regexAccept(String.raw`(?:comments)`, $$dpth + 1, $$cr);
+        return this.run<CommentSelector_$0_2>($$dpth,
+            () => {
+                let $scope$count: Nullable<string>;
+                let $scope$aboveBelow: Nullable<CommentSelector_$0_$0>;
+                let $$res: Nullable<CommentSelector_$0_2> = null;
+                if (true
+                    && ($scope$count = this.regexAccept(String.raw`(?:[0-9]+)`, $$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && this.regexAccept(String.raw`(?:comments)`, $$dpth + 1, $$cr) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$aboveBelow = this.matchCommentSelector_$0_$0($$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.CommentSelector_$0_2, count: $scope$count, aboveBelow: $scope$aboveBelow};
+                }
+                return $$res;
+            });
+    }
+    public matchCommentSelector_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$0_$0> {
+        return this.choice<CommentSelector_$0_$0>([
+            () => this.matchCommentSelector_$0_$0_1($$dpth + 1, $$cr),
+            () => this.matchCommentSelector_$0_$0_2($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchCommentSelector_$0_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$0_$0_1> {
+        return this.regexAccept(String.raw`(?:above)`, $$dpth + 1, $$cr);
+    }
+    public matchCommentSelector_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$0_$0_2> {
+        return this.regexAccept(String.raw`(?:below)`, $$dpth + 1, $$cr);
     }
     public matchCommentSelector_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$1> {
         return this.run<CommentSelector_$1>($$dpth,
