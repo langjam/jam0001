@@ -95,7 +95,7 @@ macro_rules! parse {
     }};
     ($self:ident, $what:ident, $value:expr) => {{
         let new_value = $self.arena.alloc($value.to_string());
-        match $crate::parser::dank::$what(new_value) {
+        match $crate::parser::grammar::$what(new_value) {
             Ok(expr) => expr,
             Err(e) => {
                 return Self::syntax_error(stringify!($what), new_value, e);
@@ -267,6 +267,13 @@ impl<'s> AstProxy<'s> {
                 dyn_prop!(self, name, value
                     | b.statements => stmt |slot: &mut LineComment<'s>, stmt| slot.stmt = Some(stmt)
                 );
+            }
+            ptr @ StmtKind::Block(_) if name == "unscoped" => {
+                let statements = match ptr {
+                    StmtKind::Block(b) => std::mem::take(&mut b.statements),
+                    _ => unreachable!(),
+                };
+                *ptr = StmtKind::UnscopedBlock(statements);
             }
             StmtKind::UnscopedBlock(b) if dyn_prop!(self, name | b) => {
                 dyn_prop!(self, name, value

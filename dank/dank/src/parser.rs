@@ -30,7 +30,7 @@ fn parse_comment(comment: Vec<&str>) -> CommentBody<'_> {
     // TODO: do not leak the string here to get around lifetimes
     let text_on_heap = Box::leak(Box::new(format!("{{\n{}\n}}", comment_text)));
 
-    match dank::block(text_on_heap) {
+    match grammar::block(text_on_heap) {
         Ok(block) => CommentBody::Stmt(block),
         Err(e) => {
             // TODO: optionally log the error
@@ -42,7 +42,7 @@ fn parse_comment(comment: Vec<&str>) -> CommentBody<'_> {
     }
 }
 
-peg::parser!(pub grammar dank() for str {
+peg::parser!(pub grammar grammar() for str {
     /// Parses whitespace
     rule _() = [' ' | '\t']*
     /// Parses newlines
@@ -91,7 +91,7 @@ peg::parser!(pub grammar dank() for str {
             Stmt { span: start..end, kind: StmtKind::Return(value.map(Box::new)).alloc() }
          }
          / start:position!() ( "please" / "do" ) _ func:ident_with_whitespace() _
-                             args:( ( "with" / ( ( "this" " " )?  "to" ) ) [' ' | '\t'] args:(expr() ++ ("," _)) _ "."? {args})? _ ";"?
+                             args:( ( "with" / ( ( "this" " " )?  "to" ) / "of" ) [' ' | '\t'] args:(expr() ++ ("," _)) _ "."? {args})? _ ";"?
            end:position!() {
             Stmt {
                 span: start..end,
@@ -271,7 +271,7 @@ peg::parser!(pub grammar dank() for str {
     /// Parses an entire identifier, ensuring no reserved keywords are used
     rule ident() -> &'input str
         = i:quiet!{ $(ident_start() ident_chars()*) } {?
-              if ["null", "false", "true", "fn", "return", "print", "with", "to", "this"].contains(&i) {
+              if ["null", "false", "true", "fn", "return", "print", "with", "to", "of", "this"].contains(&i) {
                   Err("Cannot use a reserved keyword as an identifier")
               } else {
                   Ok(i)
@@ -367,7 +367,7 @@ pub mod tests {
     macro_rules! test_eq {
         ($input:expr, $expected:expr) => {
             assert_eq!(
-                dank::file($input)
+                grammar::file($input)
                     .unwrap()
                     .ast_to_str()
                     .replace(|c| ['├', '─', '│', '╰', '✕', '↓'].contains(&c), " ")
@@ -852,7 +852,7 @@ Ast
 
         "#;
         assert_eq!(
-            dank::file(test).unwrap(),
+            grammar::file(test).unwrap(),
             Ast {
                 statements: vec![LineComment {
                     body: CommentBody::Text("test comment".into()),

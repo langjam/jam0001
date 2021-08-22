@@ -1,0 +1,47 @@
+// File: examples/comment-time-execution.ln
+
+// Note: At the moment, the entire comment group must consist of valid Liner code, so
+// double comments have to be employed if additional annotations are desired.
+
+// // Way #1: print the desired code
+// // The comment below will cause the `null;` statement to be replaced with a print.
+// print "print 'Hello, World!';";
+null;
+
+// // Way #2: modify the AST
+// AST.__stmt__ = "print 'changing the AST';";
+null;
+
+// A function defined during comment-time execution will be available to all following comments,
+// but not the runtime objects:
+
+// fn display ast() {
+//     dbg(AST.tree);
+// }
+
+print "runtime output";
+
+// // Now we can use this function to print a statement's AST like this:
+// please display ast
+let tau = 3.151592 * 2;
+print tau; // this statement will not be affected
+
+// // It is possible to selectively modify parts of the ast:
+// AST.initializer.left.name = "tau";
+let pi = X / 2;
+
+print pi;
+
+
+// Printing the AST at comment-time was neat, but what if we want to do this at runtime?
+// Easy, we just need to insert it into the output stream, while preserving the existing content:
+
+// fn display ast at runtime () {
+//     AST.__stmt__ = fmt("{ print '{}';\n {} }", AST.tree, AST.code);
+//     AST.unscoped = true; // this disables the block scoping introduced on the previous line
+// }
+
+// please display ast at runtime
+let receipt = { subtotal: 146.6, tax: 0.13 };
+print receipt;
+

@@ -140,7 +140,9 @@ impl<'s> std::fmt::Display for Value<'s> {
             Value::Obj(obj) => {
                 write!(f, "{{ ")?;
                 let obj = obj.borrow();
-                for (i, (k, v)) in obj.fields.iter().enumerate() {
+                let mut fields = obj.fields.iter().collect::<Vec<_>>();
+                fields.sort_by_key(|(k, _)| *k);
+                for (i, (k, v)) in fields.into_iter().enumerate() {
                     write!(
                         f,
                         "{}: {}",

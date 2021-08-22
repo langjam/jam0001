@@ -173,7 +173,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 let code = self.arena.alloc(self.buf_stack.pop().unwrap()).trim();
                 let code = if code.is_empty() { None } else { Some(code) };
                 is_success.and(code).and_then(move |code| {
-                    crate::parser::dank::file(code)
+                    crate::parser::grammar::file(code)
                         .map(|ast| Stmt {
                             span: 0..0,
                             kind: StmtKind::UnscopedBlock(ast.statements).alloc(),
@@ -222,7 +222,9 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                     self.eval_comments_in_stmt(b)
                 }
             }
-            StmtKind::UnscopedBlock(_) => unreachable!("Cannot appear while processing comments"),
+            StmtKind::UnscopedBlock(b) => {
+                self.eval_comments_in_block(b);
+            }
             StmtKind::Return(v) => v
                 .as_mut()
                 .map(|v| self.eval_comments_in_expr(v))

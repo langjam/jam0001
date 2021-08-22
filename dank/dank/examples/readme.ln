@@ -1,0 +1,35 @@
+// Liner has objects (essentially hashmaps), functions (named and anonymous), numbers, strings, booleans, and null.
+// In terms of control flow, there are if-else, while, break/continue, and return statements.
+let object = {
+    number: 42,
+    string: 'a' + " string",
+    bool: true,
+    nil: null,
+    cmp: fn (x, y) {
+        if x == y { return "x is the same as y"; }
+        else if x < y { return "x is less than y"; }
+        else { return "y is less than x"; }
+    }
+};
+// Assign dynamic properties with the bracket syntax
+object[7] = "seven";
+// And access fields with the dot syntax
+print object.cmp(2, 3);
+
+// Almost everything can be pretty-printed.
+print object;
+
+while object.number < 50 {
+    object.number = object.number + 1;
+    break;
+}
+
+// Functions can contain spaces in their names
+fn display sum(x, y) { print x + y; }
+
+// and be called either normally
+display sum(3, 2);
+
+// or with the `please` and `do` statements
+please display sum of 4, 5.
+

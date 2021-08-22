@@ -22,7 +22,6 @@ fn test(a, b, c) {
 print func(2, 2, 2);
 
 
-
 fn traverse(root) {
     if !root { return; }
 
@@ -69,4 +68,3 @@ if x != y {
 } else {
     print "y is less than x";
 }
-
