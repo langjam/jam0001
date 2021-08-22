@@ -8,7 +8,7 @@ import (
 )
 
 func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
-	wholeComment := expr.Children[0].Val.Value
+	wholeComment := e.unrefString(expr.Children[0].Val.Value)
 
 	andSplit := strings.Split(wholeComment, " and ")
 
@@ -36,7 +36,12 @@ func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
 	for i, comment := range comments {
 		_, ok := ev.comments[comment]
 		if !ok {
-			fmt.Println("Trying to call non existant comment")
+			fmt.Println("Trying to call non existant comment.")
+			os.Exit(1)
+		}
+
+		if ev.maxRef > len(ev.positive) {
+			fmt.Println("Not enough arguments.")
 			os.Exit(1)
 		}
 
