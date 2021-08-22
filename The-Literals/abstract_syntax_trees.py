@@ -262,7 +262,10 @@ class Function:
     def run(self, args):
         push_env(args)
         self.body.execute()
-        result = get_var(self.return_var)
+        if self.return_var is not None:
+            result = get_var(self.return_var)
+        else:
+            result = None
         pop_env()
         return result
 
