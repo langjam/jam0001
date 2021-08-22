@@ -5,6 +5,10 @@ pages like Reddit. You can create a Topic (a Program if you want), and can
 comment on the Topic. On every comment, you can leave your answers as another
 comment.
 
+This was originally intended as a Reddit bot, but the rules of the langjam state 
+that the language must be easy to install, which would have been impossible 
+because of API keys etc. This is why we made our own tiny Reddit clone.
+
 You can swap comments, change the content of comments and store data in form of
 comments.
 
@@ -58,4 +62,9 @@ There are a few basics comment types:
 - move _targetExpression_ _navigation_
   - Moves all comments specified by _targetExpression_ using the _navigation_ directions.
   - Example: move {get comment} 1 left; moves the current comment one to the left; this is the only direction that's currently implemented
-  - 
+- if _expression_:
+  - Only evaluates the children of this comment if the _expression_ is true; remember the :
+- while _expression_:
+  - Evaluates all children in a loop while _expression_ is true; remember the :
+
+Because the language is self-modifying, the code you've written might get overwritten after running it!
