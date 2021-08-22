@@ -27,15 +27,21 @@ module type TermRealizer = sig
   (** Realize a named declaration *)
   val realize_decl : out_channel -> string -> ast -> unit
 
+  (** Realize a header containing a comment and maybe some helper functions *)
   val realize_header : out_channel -> unit
+
+  (** Realize an automatic call to the "main" function (provided it exists) *)
+  val realize_entrypoint_call : out_channel -> unit
 end
 
 (** Type of kl_IR realizers *)
 module Realizer (X : TermRealizer) = struct
   include X
-  let realize oc =
+  let realize oc (prog_list : (string * ast) list) =
+    let has_main = List.exists (fun (name, _) -> name = "main") prog_list in
     realize_header oc;
-    List.iter (fun (name, code) -> realize_decl oc name code)
+    List.iter (fun (name, prog) -> realize_decl oc name prog) prog_list;
+    if has_main then realize_entrypoint_call oc
 end
 
 module ML_Realizer = Realizer (struct
@@ -47,6 +53,9 @@ module ML_Realizer = Realizer (struct
 
     let realize_decl oc name prog =
       Kl_2ml.emit_ast_as_function_decl oc name prog
+
+    let realize_entrypoint_call oc = 
+      Kl_2ml.emit_entrypoint_call oc
   end)
 
 module PY_Realizer = Realizer (struct
@@ -58,6 +67,9 @@ module PY_Realizer = Realizer (struct
 
     let realize_decl oc name prog =
       Kl_2py.emit_ast_as_function_decl oc name prog
+
+    let realize_entrypoint_call oc = 
+      Kl_2py.emit_entrypoint_call oc
   end)
 
 module C_Realizer = Realizer (struct
@@ -69,6 +81,9 @@ module C_Realizer = Realizer (struct
 
     let realize_decl oc name prog =
       Kl_2c.emit_ast_as_function_decl oc name prog
+
+    let realize_entrypoint_call oc = 
+      Kl_2c.emit_entrypoint_call oc
   end)
 
 type lang = ML | PY | C

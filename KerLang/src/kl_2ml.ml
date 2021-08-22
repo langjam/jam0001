@@ -83,3 +83,6 @@ let emit_ast_as_function_decl oc ?(indent_lvl : int = 0) (name : string) (func :
     (if ast_is_recursive func then "rec " else "")
     name
     (emit_ast_as_function ~indent_lvl:(indent_lvl + 1) ~self_name:(Some name)) func
+
+let emit_entrypoint_call oc =
+  Printf.fprintf oc "\nlet () = main\n"

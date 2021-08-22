@@ -4,77 +4,32 @@
 /* is not intended to be manually edited              */
 /*----------------------------------------------------*/
 
+#include <stdio.h>  /* printf, fprintf */
 #include <stdlib.h> /* exit, EXIT_FAILURE */
-#include <stdio.h> /* printf, fprintf */
 
-static inline int out(int x0, int x1)
-{
-    printf("%d\n", x0);
-    return x1;
+static inline int out(int x0, int x1) {
+  printf("%d\n", x0);
+  return x1;
 }
-static inline int add(int x0, int x1)
-{
-    return x0 + x1;
-}
-static inline int sub(int x0, int x1)
-{
-    return x0 - x1;
-}
-static inline int mul(int x0, int x1)
-{
-    return x0 * x1;
-}
-static inline int div(int x0, int x1)
-{
-    if (x1 == 0)
-    {
-        fprintf(stderr, "Division by zero fatal error: aborting.\n");
-        exit(EXIT_FAILURE);
-    }
-    return x0 / x1;
+static inline int add(int x0, int x1) { return x0 + x1; }
+static inline int sub(int x0, int x1) { return x0 - x1; }
+static inline int mul(int x0, int x1) { return x0 * x1; }
+static inline int div(int x0, int x1) {
+  if (x1 == 0) {
+    fprintf(stderr, "Division by zero fatal error: aborting.\n");
+    exit(EXIT_FAILURE);
+  }
+  return x0 / x1;
 }
 
-int f(int x0, int x1, int x2)
-{
-    sub(
-        mul(
-            x0, 
-            x1), 
-        x2);
-}
-int g(int x0, int x1)
-{
-    mul(
-        f(
-            x0, 
-            42, 
-            x1), 
-        f(
-            x0, 
-            42, 
-            x1));
-}
-int equals_10(int x0)
-{
-    sub(
-        x0, 
-        10) ?
-    0 :
-    1;
-}
-int gap_sum(int x0, int x1)
-{
-    add(
-        sub(
-            x0, 
-            10), 
-        x1);
-}
-int nani(int x0)
-{
-    add(
-        add(
-            3, 
-            7), 
-        x0);
-}
+int f(int x0, int x1, int x2) { return sub(mul(x0, x1), x2); }
+
+int g(int x0, int x1) { return mul(f(x0, 42, x1), f(x0, 42, x1)); }
+
+int equals_10(int x0) { return sub(x0, 10) ? 0 : 1; }
+
+int gap_sum(int x0, int x1) { return add(sub(x0, 10), x1); }
+
+int nani(int x0) { return add(add(3, 7), x0); }
+
+int main(void) { return 8; }

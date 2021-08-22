@@ -33,3 +33,9 @@ function gap_sum;
     It returns the sum of a variable involving sum and argument 1.
  */
 function nani;
+
+/*
+    This function takes 0 arguments,
+	It uses 8 and 9.
+ */
+function main;

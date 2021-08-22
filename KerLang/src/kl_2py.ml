@@ -73,3 +73,6 @@ let emit_ast_as_function_decl oc (name : string) (func : ast) =
     name
     emit_param_sequence (ast_count_params func)
     (emit_ast ~self_name:(Some(name))) func
+
+let emit_entrypoint_call oc =
+  Printf.fprintf oc "\nif __name__ == \"__main__\":\n    main()\n"

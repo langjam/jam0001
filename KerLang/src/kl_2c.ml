@@ -103,7 +103,11 @@ and emit_op oc ?(self_name : string option = None) (op: op) =
 
 let emit_ast_as_function_decl oc ?(indent_lvl : int = 0) (name : string) (func : ast) =
   emit_indent oc indent_lvl;
-  Printf.fprintf oc "int %s(%a)\n{%a;\n}\n"
+  Printf.fprintf oc "int %s(%a)\n{\n%areturn%a;\n}\n\n"
     name
     emit_param_sequence (ast_count_params func)
-    (emit_ast ~indent_lvl:(indent_lvl + 1) ~self_name:(Some name)) func
+    emit_indent (indent_lvl + 1)
+    (emit_ast ~indent_lvl:(indent_lvl + 2) ~self_name:(Some name)) func
+
+let emit_entrypoint_call oc = 
+  Printf.fprintf oc "%s" "\n"
