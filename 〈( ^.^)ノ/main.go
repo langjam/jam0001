@@ -18,7 +18,7 @@ func main() {
 	rand.Seed(time.Now().Unix())
 
 	// load test code from disk
-	dat, err := ioutil.ReadFile("examples/test_while.sml")
+	dat, err := ioutil.ReadFile("examples/100doors.sml")
 	if err != nil {
 		log.Fatal(err)
 	}

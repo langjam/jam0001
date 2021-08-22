@@ -13,6 +13,10 @@ const II_false = "FALSE"
 const II_smile = "smile"
 const II_inz = "inz"
 const II_dnz = "dnz"
+const II_place = "place"
+const II_peek = "peek"
+const II_grow = "grow"
+const II_len = "len"
 
 const instruction_size_min = 3
 const instruction_size_max = 5
@@ -40,12 +44,18 @@ func (l *Lexer) makeIdentifierToken() (shared.Token, error) {
 		return shared.Token{Type: shared.TTinstruction, Value: II_dnz, Pos: l.pos}, nil
 	} else if string(inst) == II_inz {
 		return shared.Token{Type: shared.TTinstruction, Value: II_inz, Pos: l.pos}, nil
+	} else if string(inst) == II_len {
+		return shared.Token{Type: shared.TTinstruction, Value: II_len, Pos: l.pos}, nil
 	}
 
 	inst = append(inst, l.currentChar)
 	l.advance()
 	if string(inst) == II_true {
 		return shared.Token{Type: shared.TTconst, Value: II_true, Pos: l.pos}, nil
+	} else if string(inst) == II_peek {
+		return shared.Token{Type: shared.TTinstruction, Value: II_peek, Pos: l.pos}, nil
+	} else if string(inst) == II_grow {
+		return shared.Token{Type: shared.TTinstruction, Value: II_grow, Pos: l.pos}, nil
 	}
 
 	for i := len(inst); i < instruction_size_max; i++ {
@@ -61,6 +71,8 @@ func (l *Lexer) makeIdentifierToken() (shared.Token, error) {
 		return shared.Token{Type: shared.TTconst, Value: II_false, Pos: l.pos}, nil
 	} else if string(inst) == II_smile {
 		return shared.Token{Type: shared.TTinstruction, Value: II_smile, Pos: l.pos}, nil
+	} else if string(inst) == II_place {
+		return shared.Token{Type: shared.TTinstruction, Value: II_place, Pos: l.pos}, nil
 	}
 
 	return shared.Token{}, &IllegalInstructionError{string(inst), l.pos}

@@ -143,6 +143,10 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 		"smile": 0,
 		"inz":   4,
 		"dnz":   3,
+		"grow":  2,
+		"peek":  2,
+		"place": 3,
+		"len":   1,
 		"and":   2}[ins]) {
 
 		log.Fatal(IncorrectSignatureError{ins, pos})
@@ -165,6 +169,10 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 }
 
 func (p *Parser) parseCall(args []shared.Node) {
+	if len(args) == 0 {
+		return
+	}
+
 	if !args[0].IsExpression {
 		log.Fatal(UnexpectedError{args[0].Val.Value, args[0].Val.Pos})
 	}

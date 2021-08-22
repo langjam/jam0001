@@ -50,3 +50,12 @@ type UnimplementedError struct {
 func (err *UnimplementedError) Error() string {
 	return fmt.Sprintf("UnimplementedError (at line %d): %s", err.pos.Line, err.message)
 }
+
+type OutOfRangeError struct {
+	index, r int
+	pos shared.Position
+}
+
+func (err *OutOfRangeError) Error() string {
+	return fmt.Sprintf("OutOfRangeError (at line %d): %d > %d", err.pos.Line, err.index, err.r)
+}
