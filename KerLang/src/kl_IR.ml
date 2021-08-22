@@ -14,6 +14,16 @@ and ast =
 
 type ftable = (string * ast) list
 
+let flookup (fname : string) (ftable : ftable) : ast =
+  match List.assoc_opt fname ftable with
+  | None -> raise (Kl_errors.CompileError ("unknown function " ^ fname))
+  | Some x -> x
+
+let elookup (vname : string) env =
+  match List.assoc_opt vname env with
+  | None -> raise (Kl_errors.CompileError ("unknown name " ^ vname ^ " in context"))
+  | Some x -> x
+
 let[@inline] add x y = App (ADD, [x; y])
 let[@inline] sub x y = App (SUB, [x; y])
 let[@inline] mul x y = App (MUL, [x; y])
