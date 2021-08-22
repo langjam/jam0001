@@ -55,7 +55,6 @@ lazy_static! {
         m.insert("I can't swim", TokenKind::Pop);
         m.insert("Let's go to the beach beach!", TokenKind::Push);
         m.insert("I am confusion", TokenKind::Compare);
-        m.insert("Hi, welcome to Chili's", TokenKind::Main);
         m.insert("Happy Chrismis", TokenKind::If);
         m.insert("Its Chrismin", TokenKind::ElseIf);
         m.insert("Merry Chrisis", TokenKind::Else);
