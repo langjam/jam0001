@@ -15,15 +15,25 @@ class Comment extends Component<CommentType, CommentType> {
     constructor(props: CommentType) {
         super(props);
         this.state = props;
-        for (let entry of this.props.children) {
+        this.initAnswers(this.props);
+    }
+
+    initAnswers(values: CommentType) {
+        this.answers = [];
+        for (let entry of values.children) {
             let component = <Comment id={entry.id} content={entry.content} children={entry.children} upvotes={entry.upvotes} date={entry.date}></Comment>
             this.answers.push(component)
         }
     }
 
+    componentDidMount() {
+        this.setState(this.props);
+        this.initAnswers(this.state);
+    }
+
     render() {
         return (
-            <div className="">
+            <div className="" key={Date.now()}>
                 <div className="body comment">
                     <p className="content">{this.state.content}</p>
                     <button onClick={() => this.upvote()}>{this.state.upvotes} &#8593;</button>

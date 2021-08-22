@@ -50,4 +50,14 @@ export class ApiModel {
         this.mModel.swapComments(obj, direction);
         res.sendStatus(200);
     }
+
+    queryTopic(req: express.Request, res: express.Response) { 
+        let results = this.mModel.posts.filter( value => value.id + "" === req.params.id)
+        if(results.length > 0) {
+            let jsonString = JSON.stringify(results[0].toObject());
+            res.send(jsonString);
+        } else {
+            res.sendStatus(500);
+        }
+    }
 }

@@ -93,7 +93,7 @@ class App extends Component<{}, AppType> {
 
     render() {
         return (
-            <div key={this.state.topics.length}>
+            <div key={Date.now()}>
                 <Router>
                     <Route exact path="/create_topic">
                         <TopicCreate></TopicCreate>

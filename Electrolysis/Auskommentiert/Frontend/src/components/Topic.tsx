@@ -11,11 +11,17 @@ import GlobalTopicStore from './GlobalTopicStore';
 
 class Topic extends Component<TopicType, TopicType> {
     comments: Array<ReactElement<any, any>> = [];
+    timer: NodeJS.Timeout | undefined = undefined
 
     constructor(props: TopicType) {
         super(props);
         this.state = this.props;
-        for (let entry of this.props.children) {
+        this.initComments(this.state);
+    }
+
+    initComments(values: TopicType) {
+        this.comments = [];
+        for (let entry of values.children) {
             let component = <Comment id={entry.id} content={entry.content} children={entry.children} upvotes={entry.upvotes} date={entry.date}></Comment>
             this.comments.push(component)
         }
@@ -23,11 +29,17 @@ class Topic extends Component<TopicType, TopicType> {
 
     componentDidMount() {
         GlobalTopicStore.setTopic(this.state);
+        this.timer = setInterval(() => {
+            fetch("http://" + window.location.hostname + ":6789/api/topic/" + this.state.id).then(data => data.json()).then(data => {
+                this.setState(data);
+                this.initComments(data);
+            }).catch(reason => { console.log(reason) })
+        }, 100)
     }
 
     render() {
         return (
-            <div className="middle">
+            <div className="middle" key={Date.now()}>
                 <div className="">
                     <h2 className="heading_element">{this.state.title}</h2>
                     <h4 className="heading_element">{new Date(this.state.date).toLocaleString()}</h4>
@@ -42,10 +54,12 @@ class Topic extends Component<TopicType, TopicType> {
                         <button onClick={() => GlobalTopicStore.setTopic(this.state)}>Answer</button>
                     </Link>
                 </div>
-                <h3>Comments:</h3>
-                <>
-                    {this.comments}
-                </>
+                <div key={Date.now()}>
+                    <h3>Comments:</h3>
+                    <>
+                        {this.comments}
+                    </>
+                </div>
             </div>
         );
     }
