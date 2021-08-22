@@ -35,3 +35,6 @@ let print_position outx pos =
 let print_syntax_error pos msg =
   Printf.eprintf "\x1b[1;31msyntax error\x1b[0m (%a) : %s\n" print_position pos msg;
   exit 1
+
+let print_warning pos msg =
+  Printf.eprintf "\x1b[1;33mwarning\x1b[0m (%a) : %s\n" print_position pos msg
