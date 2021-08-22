@@ -16,6 +16,12 @@ Inside comments, backticks indicate code that will be executed
 Code inside backticks is typechecked, just like the surrounding code. Try:
 `unseemly commentary.unseemly type_error.commentary`
 
+To demonstrate two different implementations of the fibonacci function, try:
+
+`COMMENTARY_SEARCH='evaluating' unseemly commentary.unseemly slow_fib.commentary`
+
+`COMMENTARY_SEARCH='evaluating' unseemly commentary.unseemly fast_fib.commentary`
+
 Commentary is written in [Unseemly](https://github.com/paulstansifer/unseemly),
  a language for typed language-oriented programs.
 It is implemented as a set of Unseemly macros, though the surface syntax is entirely different.
@@ -42,7 +48,7 @@ Also, "normal" recursive functions sadly don't work,
  so you need to use the `fix` form to define them.
 
 
-The implementation is in `commentary.unseemly`. 
+The implementation is in `commentary.unseemly`.
 
 `build_a_language.unseemly` is a library mostly pre-existing code
  that adds some very basic features to Unseemly, which is *extremely* barebones.

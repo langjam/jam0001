@@ -1,0 +1,40 @@
+/* First, we need to bootstrap up to cons cells using lambda expressions. */
+
+fn cons(a : Int, b : Int) -> [Int -> Int] {
+    |x: Int| if equal?(x, 0) {a} else {b}
+}
+
+fn car(a : [Int -> Int]) -> Int {
+    a(0)
+}
+
+fn cdr(a : [Int -> Int]) -> Int {
+    a(1)
+}
+
+/* Now we implement a linear-time fibonacci function */
+
+fn fib_fast_inner(recurse : [-> [Int -> [Int -> Int]]]) -> [Int -> [Int -> Int]] {
+    |a : Int|
+    /* evaluating fib ( `a` ) */
+    if equal?(a, 0) {
+        cons(1, 0)
+    } else {
+        if equal?(a, 1) {
+            cons(1, 1)
+        } else {
+            let ff : [Int -> Int] = recurse()(minus(a, 1));
+            cons(
+                plus(car(ff), cdr(ff)),
+                car(ff)
+            )
+        }
+    }
+}
+
+fn fib_fast(a : Int) -> Int {
+    car(fix(fib_fast_inner)(a))
+}
+
+fib_fast(7)
+
