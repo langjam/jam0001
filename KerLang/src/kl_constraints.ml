@@ -356,7 +356,7 @@ and compile_expr ftable env = function
 and compile_value ftable env = function
   | Arg x -> Kl_IR.Var (x - 1)
   | Cst n -> Kl_IR.Cst n
-  | Var x -> List.assoc x env |> compile_expr ftable env
+  | Var x -> elookup x env |> compile_expr ftable env
   | Hole -> raise (CompileError "remaining hole in expression, can't compile it down to Kl_IR")
 
 and compile_operation ftable env =
