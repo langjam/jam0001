@@ -89,6 +89,41 @@ export class VM {
             let swapKind = ast.swapKind;
             // TODO SWAP
             //this.mASTProvider.swapComments(commentA, commentB);
+        } else if(ast.kind === AST.ASTKinds.ManipulationCommentMove) {
+            let target = this.findComments(comment, ast.target);
+            if(!(target instanceof VMValueArray)) {
+                throw new Error("Not an array!");
+            }
+            for(let comment of target.array) {
+                if(!(comment instanceof WrappedComment)) {
+                    throw new Error(comment + " is not a comment!");
+                }
+                for(let n of ast.nav.navigations) {
+                    for(let i = 0; i < Number(n.distance); ++i ){
+                        switch (n.dir) {
+                            case "up":
+                                this.mASTProvider.moveCommentUp(comment.id);
+                                break;
+                            
+                            case "down":
+                                this.mASTProvider.moveCommentDown(comment.id);
+                                break;
+                                
+                            case "left":
+                                this.mASTProvider.moveCommentLeft(comment.id);
+                                break;
+                            
+                            case "right":
+                                this.mASTProvider.moveCommentRight(comment.id);
+                                break;
+                        
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+            
         } else {
             return this.evaluateExpression(comment, ast as AST.Expression);
         }
@@ -146,6 +181,9 @@ export class VM {
         } else if(expression.kind === AST.ASTKinds.AtomicExpression_6) {
             // list creation
             return new VMValueArray(this.evalFunctionParams(parentComment, expression.listParams));
+        } else if(expression.kind === AST.ASTKinds.AtomicExpression_8) {
+            // list creation
+            return expression.str.map((ch) => ch.char).join("");
         } else if(expression.kind === AST.ASTKinds.AddExpression) {
             let lhs = this.evaluateExpression(parentComment, expression.lhs);
             let rhs = this.evaluateExpression(parentComment, expression.rhs);
@@ -215,7 +253,7 @@ export class VM {
         }
         let current : WrappedComment = parentComment;
         let next : WrappedComment | undefined;
-        for(let nav of expression.navigations) {
+        for(let nav of expression.navigations.navigations) {
             for(let i = 0; i < Number(nav.distance); ++i) {
                 switch (nav.dir) {
                     case "up":
@@ -235,7 +273,7 @@ export class VM {
                         throw new Error("This shouldn't happen!");
                 }
                 if(next === undefined) {
-                    throw new Error("Can't navigate there!");
+                    throw new Error("Can't navigate further " + nav.dir + ", should have moved " + nav.distance + ", but only could move " + i);
                 }
                 current = next;
             }

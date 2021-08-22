@@ -7,10 +7,11 @@
 * ManipulationComment := ManipulationCommentBase
 * ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate
 * ManipulationCommentSwap := swapKind={'swapContent' | 'swapFull'} _ target=CommentSelector
-* ManipulationCommentMove := 'move' _ target=CommentSelector
+* ManipulationCommentMove := 'move' _ target=CommentSelector _ nav=Navigations
 * ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
 * SetComment := 'set ' _ target=CommentSelector  _ 'to' _ value=Expression
-* CommentSelector := '{' _ 'get' _ countSelector={sth='comment' | count='[0-9]+' _ 'comments' _ aboveBelow={'above' | 'below'}} _ navigations={distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* _ '}'
+* Navigations := _ navigations={ distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* 
+* CommentSelector := '{' _ 'get' _ countSelector={sth='comment' | count='[0-9]+' _ 'comments' _ aboveBelow={'above' | 'below'}} _ navigations=Navigations _ '}'
 * IfComment := 'if' _ condition=Expression _ ':'
 * VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
 * Expression := ComparisionExpression
@@ -32,7 +33,14 @@
 * FunctionCall := funcName=AtomicExpression _ '\(' _ params=FunctionParameters? _ '\)'
 * GetLengthExpression := list=AtomicExpression _ '.length'
 * IndexExpression := list=AtomicExpression _ '\[' _ index=Expression _ '\]'
-* AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)' | '\[' listParams=FunctionParameters? '\]' | CommentSelector
+* AtomicExpression := value='true' 
+*     | value='false' 
+*     | varName=VarName 
+*     | num='[0-9]+' 
+*     | '\(' sub=Expression '\)' 
+*     | '\[' listParams=FunctionParameters? '\]' 
+*     | CommentSelector 
+*     | '\'' str={!'\'' char='.'}* '\''
 */
 type Nullable<T> = T | null;
 type $$RuleType<T> = () => Nullable<T>;
@@ -60,16 +68,17 @@ export enum ASTKinds {
     ManipulationCommentRotate_$0_1 = "ManipulationCommentRotate_$0_1",
     ManipulationCommentRotate_$0_2 = "ManipulationCommentRotate_$0_2",
     SetComment = "SetComment",
+    Navigations = "Navigations",
+    Navigations_$0 = "Navigations_$0",
+    Navigations_$0_$0_1 = "Navigations_$0_$0_1",
+    Navigations_$0_$0_2 = "Navigations_$0_$0_2",
+    Navigations_$0_$0_3 = "Navigations_$0_$0_3",
+    Navigations_$0_$0_4 = "Navigations_$0_$0_4",
     CommentSelector = "CommentSelector",
     CommentSelector_$0_1 = "CommentSelector_$0_1",
     CommentSelector_$0_2 = "CommentSelector_$0_2",
     CommentSelector_$0_$0_1 = "CommentSelector_$0_$0_1",
     CommentSelector_$0_$0_2 = "CommentSelector_$0_$0_2",
-    CommentSelector_$1 = "CommentSelector_$1",
-    CommentSelector_$1_$0_1 = "CommentSelector_$1_$0_1",
-    CommentSelector_$1_$0_2 = "CommentSelector_$1_$0_2",
-    CommentSelector_$1_$0_3 = "CommentSelector_$1_$0_3",
-    CommentSelector_$1_$0_4 = "CommentSelector_$1_$0_4",
     IfComment = "IfComment",
     VarName = "VarName",
     Expression = "Expression",
@@ -111,6 +120,8 @@ export enum ASTKinds {
     AtomicExpression_5 = "AtomicExpression_5",
     AtomicExpression_6 = "AtomicExpression_6",
     AtomicExpression_7 = "AtomicExpression_7",
+    AtomicExpression_8 = "AtomicExpression_8",
+    AtomicExpression_$0 = "AtomicExpression_$0",
     $EOF = "$EOF",
 }
 export interface start {
@@ -144,6 +155,7 @@ export type ManipulationCommentSwap_$0_2 = string;
 export interface ManipulationCommentMove {
     kind: ASTKinds.ManipulationCommentMove;
     target: CommentSelector;
+    nav: Navigations;
 }
 export interface ManipulationCommentRotate {
     kind: ASTKinds.ManipulationCommentRotate;
@@ -158,10 +170,24 @@ export interface SetComment {
     target: CommentSelector;
     value: Expression;
 }
+export interface Navigations {
+    kind: ASTKinds.Navigations;
+    navigations: Navigations_$0[];
+}
+export interface Navigations_$0 {
+    kind: ASTKinds.Navigations_$0;
+    distance: string;
+    dir: Navigations_$0_$0;
+}
+export type Navigations_$0_$0 = Navigations_$0_$0_1 | Navigations_$0_$0_2 | Navigations_$0_$0_3 | Navigations_$0_$0_4;
+export type Navigations_$0_$0_1 = string;
+export type Navigations_$0_$0_2 = string;
+export type Navigations_$0_$0_3 = string;
+export type Navigations_$0_$0_4 = string;
 export interface CommentSelector {
     kind: ASTKinds.CommentSelector;
     countSelector: CommentSelector_$0;
-    navigations: CommentSelector_$1[];
+    navigations: Navigations;
 }
 export type CommentSelector_$0 = CommentSelector_$0_1 | CommentSelector_$0_2;
 export interface CommentSelector_$0_1 {
@@ -176,16 +202,6 @@ export interface CommentSelector_$0_2 {
 export type CommentSelector_$0_$0 = CommentSelector_$0_$0_1 | CommentSelector_$0_$0_2;
 export type CommentSelector_$0_$0_1 = string;
 export type CommentSelector_$0_$0_2 = string;
-export interface CommentSelector_$1 {
-    kind: ASTKinds.CommentSelector_$1;
-    distance: string;
-    dir: CommentSelector_$1_$0;
-}
-export type CommentSelector_$1_$0 = CommentSelector_$1_$0_1 | CommentSelector_$1_$0_2 | CommentSelector_$1_$0_3 | CommentSelector_$1_$0_4;
-export type CommentSelector_$1_$0_1 = string;
-export type CommentSelector_$1_$0_2 = string;
-export type CommentSelector_$1_$0_3 = string;
-export type CommentSelector_$1_$0_4 = string;
 export interface IfComment {
     kind: ASTKinds.IfComment;
     condition: Expression;
@@ -281,7 +297,7 @@ export interface IndexExpression {
     list: AtomicExpression;
     index: Expression;
 }
-export type AtomicExpression = AtomicExpression_1 | AtomicExpression_2 | AtomicExpression_3 | AtomicExpression_4 | AtomicExpression_5 | AtomicExpression_6 | AtomicExpression_7;
+export type AtomicExpression = AtomicExpression_1 | AtomicExpression_2 | AtomicExpression_3 | AtomicExpression_4 | AtomicExpression_5 | AtomicExpression_6 | AtomicExpression_7 | AtomicExpression_8;
 export interface AtomicExpression_1 {
     kind: ASTKinds.AtomicExpression_1;
     value: string;
@@ -307,6 +323,14 @@ export interface AtomicExpression_6 {
     listParams: Nullable<FunctionParameters>;
 }
 export type AtomicExpression_7 = CommentSelector;
+export interface AtomicExpression_8 {
+    kind: ASTKinds.AtomicExpression_8;
+    str: AtomicExpression_$0[];
+}
+export interface AtomicExpression_$0 {
+    kind: ASTKinds.AtomicExpression_$0;
+    char: string;
+}
 export class Parser {
     private readonly input: string;
     private pos: PosInfo;
@@ -439,13 +463,16 @@ export class Parser {
         return this.run<ManipulationCommentMove>($$dpth,
             () => {
                 let $scope$target: Nullable<CommentSelector>;
+                let $scope$nav: Nullable<Navigations>;
                 let $$res: Nullable<ManipulationCommentMove> = null;
                 if (true
                     && this.regexAccept(String.raw`(?:move)`, $$dpth + 1, $$cr) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$target = this.matchCommentSelector($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$nav = this.matchNavigations($$dpth + 1, $$cr)) !== null
                 ) {
-                    $$res = {kind: ASTKinds.ManipulationCommentMove, target: $scope$target};
+                    $$res = {kind: ASTKinds.ManipulationCommentMove, target: $scope$target, nav: $scope$nav};
                 }
                 return $$res;
             });
@@ -500,11 +527,62 @@ export class Parser {
                 return $$res;
             });
     }
+    public matchNavigations($$dpth: number, $$cr?: ErrorTracker): Nullable<Navigations> {
+        return this.run<Navigations>($$dpth,
+            () => {
+                let $scope$navigations: Nullable<Navigations_$0[]>;
+                let $$res: Nullable<Navigations> = null;
+                if (true
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$navigations = this.loop<Navigations_$0>(() => this.matchNavigations_$0($$dpth + 1, $$cr), true)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.Navigations, navigations: $scope$navigations};
+                }
+                return $$res;
+            });
+    }
+    public matchNavigations_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<Navigations_$0> {
+        return this.run<Navigations_$0>($$dpth,
+            () => {
+                let $scope$distance: Nullable<string>;
+                let $scope$dir: Nullable<Navigations_$0_$0>;
+                let $$res: Nullable<Navigations_$0> = null;
+                if (true
+                    && ($scope$distance = this.regexAccept(String.raw`(?:[0-9]+)`, $$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                    && ($scope$dir = this.matchNavigations_$0_$0($$dpth + 1, $$cr)) !== null
+                    && this.match_($$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.Navigations_$0, distance: $scope$distance, dir: $scope$dir};
+                }
+                return $$res;
+            });
+    }
+    public matchNavigations_$0_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<Navigations_$0_$0> {
+        return this.choice<Navigations_$0_$0>([
+            () => this.matchNavigations_$0_$0_1($$dpth + 1, $$cr),
+            () => this.matchNavigations_$0_$0_2($$dpth + 1, $$cr),
+            () => this.matchNavigations_$0_$0_3($$dpth + 1, $$cr),
+            () => this.matchNavigations_$0_$0_4($$dpth + 1, $$cr),
+        ]);
+    }
+    public matchNavigations_$0_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<Navigations_$0_$0_1> {
+        return this.regexAccept(String.raw`(?:up)`, $$dpth + 1, $$cr);
+    }
+    public matchNavigations_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<Navigations_$0_$0_2> {
+        return this.regexAccept(String.raw`(?:down)`, $$dpth + 1, $$cr);
+    }
+    public matchNavigations_$0_$0_3($$dpth: number, $$cr?: ErrorTracker): Nullable<Navigations_$0_$0_3> {
+        return this.regexAccept(String.raw`(?:left)`, $$dpth + 1, $$cr);
+    }
+    public matchNavigations_$0_$0_4($$dpth: number, $$cr?: ErrorTracker): Nullable<Navigations_$0_$0_4> {
+        return this.regexAccept(String.raw`(?:right)`, $$dpth + 1, $$cr);
+    }
     public matchCommentSelector($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector> {
         return this.run<CommentSelector>($$dpth,
             () => {
                 let $scope$countSelector: Nullable<CommentSelector_$0>;
-                let $scope$navigations: Nullable<CommentSelector_$1[]>;
+                let $scope$navigations: Nullable<Navigations>;
                 let $$res: Nullable<CommentSelector> = null;
                 if (true
                     && this.regexAccept(String.raw`(?:{)`, $$dpth + 1, $$cr) !== null
@@ -513,7 +591,7 @@ export class Parser {
                     && this.match_($$dpth + 1, $$cr) !== null
                     && ($scope$countSelector = this.matchCommentSelector_$0($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$navigations = this.loop<CommentSelector_$1>(() => this.matchCommentSelector_$1($$dpth + 1, $$cr), true)) !== null
+                    && ($scope$navigations = this.matchNavigations($$dpth + 1, $$cr)) !== null
                     && this.match_($$dpth + 1, $$cr) !== null
                     && this.regexAccept(String.raw`(?:})`, $$dpth + 1, $$cr) !== null
                 ) {
@@ -570,43 +648,6 @@ export class Parser {
     }
     public matchCommentSelector_$0_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$0_$0_2> {
         return this.regexAccept(String.raw`(?:below)`, $$dpth + 1, $$cr);
-    }
-    public matchCommentSelector_$1($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$1> {
-        return this.run<CommentSelector_$1>($$dpth,
-            () => {
-                let $scope$distance: Nullable<string>;
-                let $scope$dir: Nullable<CommentSelector_$1_$0>;
-                let $$res: Nullable<CommentSelector_$1> = null;
-                if (true
-                    && ($scope$distance = this.regexAccept(String.raw`(?:[0-9]+)`, $$dpth + 1, $$cr)) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                    && ($scope$dir = this.matchCommentSelector_$1_$0($$dpth + 1, $$cr)) !== null
-                    && this.match_($$dpth + 1, $$cr) !== null
-                ) {
-                    $$res = {kind: ASTKinds.CommentSelector_$1, distance: $scope$distance, dir: $scope$dir};
-                }
-                return $$res;
-            });
-    }
-    public matchCommentSelector_$1_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$1_$0> {
-        return this.choice<CommentSelector_$1_$0>([
-            () => this.matchCommentSelector_$1_$0_1($$dpth + 1, $$cr),
-            () => this.matchCommentSelector_$1_$0_2($$dpth + 1, $$cr),
-            () => this.matchCommentSelector_$1_$0_3($$dpth + 1, $$cr),
-            () => this.matchCommentSelector_$1_$0_4($$dpth + 1, $$cr),
-        ]);
-    }
-    public matchCommentSelector_$1_$0_1($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$1_$0_1> {
-        return this.regexAccept(String.raw`(?:up)`, $$dpth + 1, $$cr);
-    }
-    public matchCommentSelector_$1_$0_2($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$1_$0_2> {
-        return this.regexAccept(String.raw`(?:down)`, $$dpth + 1, $$cr);
-    }
-    public matchCommentSelector_$1_$0_3($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$1_$0_3> {
-        return this.regexAccept(String.raw`(?:left)`, $$dpth + 1, $$cr);
-    }
-    public matchCommentSelector_$1_$0_4($$dpth: number, $$cr?: ErrorTracker): Nullable<CommentSelector_$1_$0_4> {
-        return this.regexAccept(String.raw`(?:right)`, $$dpth + 1, $$cr);
     }
     public matchIfComment($$dpth: number, $$cr?: ErrorTracker): Nullable<IfComment> {
         return this.run<IfComment>($$dpth,
@@ -1051,6 +1092,7 @@ export class Parser {
             () => this.matchAtomicExpression_5($$dpth + 1, $$cr),
             () => this.matchAtomicExpression_6($$dpth + 1, $$cr),
             () => this.matchAtomicExpression_7($$dpth + 1, $$cr),
+            () => this.matchAtomicExpression_8($$dpth + 1, $$cr),
         ]);
     }
     public matchAtomicExpression_1($$dpth: number, $$cr?: ErrorTracker): Nullable<AtomicExpression_1> {
@@ -1137,6 +1179,35 @@ export class Parser {
     }
     public matchAtomicExpression_7($$dpth: number, $$cr?: ErrorTracker): Nullable<AtomicExpression_7> {
         return this.matchCommentSelector($$dpth + 1, $$cr);
+    }
+    public matchAtomicExpression_8($$dpth: number, $$cr?: ErrorTracker): Nullable<AtomicExpression_8> {
+        return this.run<AtomicExpression_8>($$dpth,
+            () => {
+                let $scope$str: Nullable<AtomicExpression_$0[]>;
+                let $$res: Nullable<AtomicExpression_8> = null;
+                if (true
+                    && this.regexAccept(String.raw`(?:\')`, $$dpth + 1, $$cr) !== null
+                    && ($scope$str = this.loop<AtomicExpression_$0>(() => this.matchAtomicExpression_$0($$dpth + 1, $$cr), true)) !== null
+                    && this.regexAccept(String.raw`(?:\')`, $$dpth + 1, $$cr) !== null
+                ) {
+                    $$res = {kind: ASTKinds.AtomicExpression_8, str: $scope$str};
+                }
+                return $$res;
+            });
+    }
+    public matchAtomicExpression_$0($$dpth: number, $$cr?: ErrorTracker): Nullable<AtomicExpression_$0> {
+        return this.run<AtomicExpression_$0>($$dpth,
+            () => {
+                let $scope$char: Nullable<string>;
+                let $$res: Nullable<AtomicExpression_$0> = null;
+                if (true
+                    && this.negate(() => this.regexAccept(String.raw`(?:\')`, $$dpth + 1, $$cr)) !== null
+                    && ($scope$char = this.regexAccept(String.raw`(?:.)`, $$dpth + 1, $$cr)) !== null
+                ) {
+                    $$res = {kind: ASTKinds.AtomicExpression_$0, char: $scope$char};
+                }
+                return $$res;
+            });
     }
     public test(): boolean {
         const mrk = this.mark();

@@ -6,4 +6,9 @@ export abstract class CommentProvider {
     abstract getNextComment(currentCommentId : string) : WrappedComment | undefined;
     abstract getFirstChildComment(parentCommentId : string) : WrappedComment | undefined;
     abstract getParentComment(childCommentId : string) : WrappedComment | undefined;
+
+    abstract moveCommentLeft(commentId : string) : void;
+    abstract moveCommentRight(commentId : string) : void;
+    abstract moveCommentUp(commentId : string) : void;
+    abstract moveCommentDown(commentId : string) : void;
 }

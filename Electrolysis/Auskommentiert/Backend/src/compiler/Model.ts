@@ -59,6 +59,9 @@ class CommentBase {
     get parentId() {
         return this.mParentId;
     }
+    set parentId(newParentId : string) {
+        this.mParentId = newParentId;
+    }
     addChild(child : ModelComment):void {
         this.mChildren.push(child);
     }
@@ -176,6 +179,47 @@ class ModelCommentProvider extends CommentProvider {
             return (parent as ModelComment).makeWrappedComment();
         }
         return undefined;
+    }
+
+    moveCommentLeft(commentId : string) : void {
+        let srcComment = this.mModel.allCommentBases.get(commentId);
+        if(srcComment === undefined || !(srcComment instanceof ModelComment)) {
+            throw new Error("Comment not found!");
+        }
+        let parentId = srcComment.parentId;
+        if(parentId === undefined) {
+            throw new Error("No parent!");
+        }
+        let parent = this.mModel.allCommentBases.get(parentId);
+        if(parent === undefined) {
+            throw new Error("Parent comment not found!");
+        }
+        let parentsParentId = parent.parentId;
+        if(parentsParentId === undefined) {
+            throw new Error("No parent's parent!");
+        }
+        let parentsParent = this.mModel.allCommentBases.get(parentsParentId);
+        if(parentsParent === undefined) {
+            throw new Error("Parent's parent nound found!");
+        }
+        let parentsSiblings = parentsParent.childrenSorted;
+        for(let i = 0; i < parentsSiblings.length; ++i) {
+            if(parentsSiblings[i].id === parentId) {
+                parentsSiblings.splice(i + 1, 0, srcComment);
+                parent.children.splice(parent.children.indexOf(srcComment), 1);
+                srcComment.parentId = parentsParentId;
+                break;
+            }
+        }
+    }
+    moveCommentRight(commentId : string) : void {
+
+    }
+    moveCommentUp(commentId : string) : void {
+
+    }
+    moveCommentDown(commentId : string) : void {
+
     }
 }
 

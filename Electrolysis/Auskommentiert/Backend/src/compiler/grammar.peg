@@ -8,12 +8,13 @@ WhileComment := 'while' _ whileExpression=Expression ':'
 ManipulationComment := ManipulationCommentBase
 ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate
 ManipulationCommentSwap := swapKind={'swapContent' | 'swapFull'} _ target=CommentSelector
-ManipulationCommentMove := 'move' _ target=CommentSelector
+ManipulationCommentMove := 'move' _ target=CommentSelector _ nav=Navigations
 ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
 
 SetComment := 'set ' _ target=CommentSelector  _ 'to' _ value=Expression
 
-CommentSelector := '{' _ 'get' _ countSelector={sth='comment' | count='[0-9]+' _ 'comments' _ aboveBelow={'above' | 'below'}} _ navigations={distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* _ '}'
+Navigations := _ navigations={ distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* 
+CommentSelector := '{' _ 'get' _ countSelector={sth='comment' | count='[0-9]+' _ 'comments' _ aboveBelow={'above' | 'below'}} _ navigations=Navigations _ '}'
 
 IfComment := 'if' _ condition=Expression _ ':'
 
@@ -44,4 +45,11 @@ FunctionCall := funcName=AtomicExpression _ '\(' _ params=FunctionParameters? _ 
 GetLengthExpression := list=AtomicExpression _ '.length'
 IndexExpression := list=AtomicExpression _ '\[' _ index=Expression _ '\]'
 
-AtomicExpression := value='true' | value='false' | varName=VarName | num='[0-9]+' | '\(' sub=Expression '\)' | '\[' listParams=FunctionParameters? '\]' | CommentSelector
+AtomicExpression := value='true' 
+    | value='false' 
+    | varName=VarName 
+    | num='[0-9]+' 
+    | '\(' sub=Expression '\)' 
+    | '\[' listParams=FunctionParameters? '\]' 
+    | CommentSelector 
+    | '\'' str={!'\'' char='.'}* '\''
