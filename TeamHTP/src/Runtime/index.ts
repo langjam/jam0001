@@ -16,9 +16,23 @@ Number.prototype['to'] = function (upTo) {
     return Array.from({length: upTo - this}, (x, i) => i + this)
 }
 
-Boolean.prototype['not'] = function() {
+Boolean.prototype['not'] = function () {
     return !this
 }
+
+Boolean.prototype['ifTrue'] = function (then) {
+    if (this) return then()
+}
+
+Boolean.prototype['ifFalse'] = function (then) {
+    if (!this) return then()
+}
+
+Boolean.prototype['ifFalse$ifTrue'] = function (f, t) {
+    if (this) return t(); else return f()
+}
+
+Object['from$get'] = (from, get) => from[get]
 
 class Runtime {
     private readonly evalScope: Record<string, Base>
