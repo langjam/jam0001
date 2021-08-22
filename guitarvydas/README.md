@@ -1,7 +1,3 @@
----
-layout: post
-title:  "Jam0001"
----
 # Synopsis
 
 Transpile diagrams to code.
@@ -18,9 +14,15 @@ The following is a discussion about the [language jam](https://github.com/langja
 
 # Build and Run
 - to see the source code, open `sequence.drawio` and `details.drawio`
-- yes, the source code is in the form of diagrams (see Discussion section)
+
+- yes, the source code is in the form of diagrams (see Discussion section)<img src="https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/sequence.png?raw=true" alt="sequence.png" style="zoom:67%;" />
+
+  
+
+  <img src="https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/details.png?raw=true" alt="details.png" style="zoom:67%;" />
 
 - (`sequence.drawio` shows the order in which components must be executed)
+
 - (`details.drawio` shows the details within the components (BASH at the moment))
 
 - run `run.bash` from the command line, it should print 
@@ -70,13 +72,13 @@ This is done using drawio, PROLOG, Ohm-JS and JavaScript.
 
 # Drawings
 
-I grok and transpile .drawio files for this project.
+.Drawio files are _groked_ and _transpiled_ for this project.
 
 .SVG should be another easy-to-grok drawing format (rectangles, ellipses, text, lines).
 
 ## Exhaustive Search
 
-I used PROLOG (SWIPL) for this project, but, there are other choices, e.g.
+I used PROLOG (SWIPL) for this project, but, there are other[^1] choices, e.g.
 - miniKanren
 - datalog
 - core.logic
@@ -84,12 +86,14 @@ I used PROLOG (SWIPL) for this project, but, there are other choices, e.g.
 - prolog.js
 - etc.
 
+[^1]: I've tried only some of these choices.
+
 # PEG
 PEG means Parsing Expression Grammars.
 
 Many PEG libraries exist for many languages.
 
-I currently think the Ohm-JS, and especially the Ohm Editor, are the best-of-breed in PEG technologies.
+I currently think that Ohm-JS, and especially the Ohm Editor, are the best-of-breed in PEG technologies.
 
 # Separation of Concerns
 
@@ -99,7 +103,7 @@ I use multiple paradigms for this problem.
 
 Each paradigm is a view.
 
-Each paradigm (view) gets its own syntax (I call it an SCN - like a mini-DSL).
+Each paradigm (view) gets its own syntax (I call it an *SCN* - like a mini-DSL).
 
 ## Ohm-JS
 
@@ -107,21 +111,21 @@ Ohm-JS separates concerns into
 - grammar
 - semantics (understanding and emitting).
 
-Most PEG libraries conflate grammar+semantics (e.g. by annotating the grammar with variable names).
+Most PEG libraries conflate grammar+semantics, e.g. by annotating the grammar with variable names. Ohm-JS does this differently.
 
 # Isolation
 
 Build and forget.
 
-Regression testing is a _tell_ that isolation is not present.  
+Heavy use of regression testing is a _tell_ that isolation is not present.  
 
-[_If new code impacts existing code, the problem is lack-of-isolation._]
+[_If new code impacts existing code, the primary problem is lack-of-isolation, not lack of testing._]
 
 # Concurrency
 
 It is not possible to build isolated components unless they are concurrent-by-default.
 
-Synchrony is a hidden from of dependency.
+Synchrony is a hidden form of dependency.
 
 Dependency is anti-isolation.
 
@@ -133,21 +137,21 @@ JSON has problems, but, JSON is ubiquitous.
 
 # Simplicity
 
-The goal is to make this project _so simple_ that it evokes _this is not hard enough_ and _this is not powerful enough_ and _this is cheating_ gag reflexes.
+The goal is to make this project _so simple_ that it evokes the _this is not hard enough_ and _this is not powerful enough_ and _this is cheating_ gag reflexes.
 
 We should not be wasting brain power on the fine details required by most GPLs. 
 
-We should devote that brain power to more interesting concepts.
+We should devote our brain power to more interesting concepts.
 
 # The New Assembler
 
 I use GPLs (general purpose languages), in this case JavaScript and JSON and PROLOG, as _assembly_ languages.
 
-The less syntax and the less type checking (!) the better (see, also, Readability section below).
+The less syntax and the less type checking (!) the better (see, also, the Readability section below).
 
 Lisp (Common Lisp, Racket) would be my choice, but Ohm-JS has not yet been ported to lisp.
 
-80x86 is Old Assembler.
+80x86 is Old Assembler.  JS and Lisp are the New Assemblers.
 
 # Discussion
 To me, 1st class comments means that:
@@ -156,12 +160,14 @@ To me, 1st class comments means that:
 This means that comments need to compile to code.
 
 In my opinion, this means a separation between:
-- DI (Design Intent), sometimes labelled as Software Architecture
+- DI[^DI]
 - Implementation.
 
 DI must result in Implementation.
 
-On the first cut, I want DI to generate Implementation.
+[^DI]:  DI means Design Intent. Sometimes DI is labelled as Software Architecture.
+
+On the first cut of this project, I want DI to generate Implementation.  DI diagrams to Implementation code.
 
 If Implementation is manually tweaked, then there should be some "providence" that shows how the DI was transmogrified into the Implementation code.
 
@@ -175,7 +181,7 @@ Is tweaking the same as "Round Trip"?
 - No, Round Trip is hard.
 - No, Round Trip usually means that anyone can tweak the Implementation to their hearts' content. In Structural Engineering, this does not happen, it's one-way only. The Implementors (Construction Workers) don't get to change the blueprints. It's one-way only. If a design change is required, the Implementor goes back to the Engineer and, if necessary, the Engineer goes back to the Architect. The blueprint gets modified by the signatory (usually an Engineer) and the Implementors must build according to the blueprint specification. DI'ers (Architects and Engineers) get paid big bucks, but are liable - in Law - for their designs. [Certified Engineers can be sued if their design fails.  It is _illegal_ to call yourself an Engineer unless you've been certified.].
 
-Note that git, github, diff, etc. 
+Note that git, github, diff, etc. should help with provinence of DI. Instead, they are used for provinence of Implementation (code).
 
 I see at least two ways to make languages for DI:
 1. Cast the code as markdown.  Generate code from the .md file(s).
@@ -183,7 +189,7 @@ I see at least two ways to make languages for DI:
 
 I've done both of the above.
 
-I'm going to start simple and work my way up.
+I'm going to start simple, for this langjam, and work my way up.
 
 # Bare Essentials
 What are the _bare essentials_ for making DI languages for human use?
@@ -193,11 +199,13 @@ What are the _bare essentials_ for making DI languages for human use?
 ## Concurrency
 Concurrency is necessary, because that is what normal humans are used to.  
 
-For example, we teach 5 year-olds hard realtime and we use a several-hundred year old notation for hard realtime. Piano lessons.
+For example, we teach 5 year-olds hard realtime and we use a several-hundred year old notation for hard realtime. 
 
-For another example, when we cook dinner, we follow a concurrent specification, called a _recipe_ (while the potatoes cook, chop blah blah blah).
+Piano lessons.
 
-Normal concurrent solutions often fail when we try to scale them up. Spreadsheets work up-to-a-point, then collapse into a big mess. We don't need to switch to thinking synchronously to solve the scaling-up problem, but most programmers are taught this way of doing things and most programming languages are synchronous at their core (thread libraries are a symptom of anti-concurrency).
+For another example, when we cook dinner, we follow a concurrent specification, called a _recipe_ ("while the potatoes cook, chop blah blah blah").
+
+Normal concurrent solutions often fail when we try to scale them up. Spreadsheets work up-to-a-point, then collapse into a big mess. We don't need to switch to thinking synchronously to solve the scaling-up problem, but most programmers are taught this way of doing things and most programming languages are synchronous at their core (thread libraries are a symptom of *anti*-concurrency).
 
 Programmers have concurrency beat out of them in university. A lot of accidental complexity has been caused by trying to use synchronous languages for asynchronous problems.
 
@@ -206,11 +214,11 @@ Build and forget.
 
 Tweaking a component must not not affect how other components work. 
 
-Developing a new component must not not affect how existing components work. 
+Developing a new component must not affect how existing components work. 
 
 Eschew dependency.
 
-Unix does this, but this kind of isolation has been overlooked. Even a C program is isolated under Unix. 
+Unix does this, but this kind of isolation has been overlooked. Even a lowly C program is isolated when run under Unix. 
 - It doesn't matter if the C program has a garbage collector or not ; when the process dies, Unix cleans up after it.
 - It doesn't matter if the program manipulates State or not. Programs are black boxes, we don't know (don't care) how they are implemented.  If a program runs too slow, give it to a Production Engineer. If a program is hard to maintain, give it to a Maintenance Engineer.
 
@@ -238,7 +246,7 @@ At this very moment, I am working on something that uses a _bash_ script to buil
 
 The _bash_ script contains a lot of detail.
 
-If I were tasked with maintaining this project, the first thing that I would want to know is "what is the bare essence of what this does?".
+If I were tasked with maintaining this project, the first thing that I would want to know is "what is the bare essence of what this project accomplishes?".
 
 I don't trust text comments, so, as a maintainer, I would skip over the text comments and look at the code.
 
@@ -301,11 +309,13 @@ This script is essentially a _toy example_.  I chose something simple to help il
 
 [_Again, you don't need to understand why I wrote these 2 lines to understand the techniques I describe in this essay._]
 
+[_Late addition: The example script has been reduced._]
+
 ## Desired Script
 
 What I really want is something like...
 
-![2021-08-20-jam0001-top level.png](https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/2021-08-20-jam0001-top%20level.png?raw=true)
+<img src="https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/2021-08-20-jam0001-top%20level.png?raw=true" alt="2021-08-20-jam0001-top level.png" style="zoom:67%;" />
 
 ## Making It Simpler
 
@@ -322,11 +332,11 @@ Let's start by making separate diagrams for each of the view.
 
 ## Sequence Diagram
 
-
+<img src="https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/sequence.png?raw=true" alt="sequence.png" style="zoom:67%;" />
 
 ## Details Diagram
 
-![2021-08-20-jam0001-details.png](https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/2021-08-20-jam0001-details.png?raw=true)
+<img src="https://github.com/guitarvydas/jam0001/blob/guitarvydas/guitarvydas/details.png?raw=true" alt="details.png" style="zoom:67%;" />
 
 "Red" boxes mean _synchronous_ code.  (The default is asynchronous code).
 
@@ -336,6 +346,13 @@ Let's start by making separate diagrams for each of the view.
 - use ohm editor to test/develop against sequence.json and details.json
 [_Status: done_]
 ## Create Identity Emitter
+
+This is a step that reduces development time.
+
+Most compiler technologies - scanners and parsers - destroy information along the way.  They destroy spaces and newlines and *tokenize* the input.  Using such technologies, it is almost impossible to build an identity emitter.  
+
+Worse, it is almost *unimaginable* to build an identity emitter.
+
 - identity.glue
 - basic.html
 ## Emitter 4 - Details
