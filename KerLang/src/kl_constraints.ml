@@ -1,6 +1,8 @@
 open Kl_parsing
 open Kl_errors
 
+exception InterruptParsing
+
 type expr =
   | Leaf of value
   | Node of operation
@@ -79,7 +81,7 @@ let pp_cconstraint oc (cc: cconstraint) =
     Printf.fprintf oc "- Uses";
     List.iter (fun expr -> Printf.fprintf oc "%s" "\n  * "; pp_expr oc expr) expr_list
   | Nothing ->
-    Printf.fprintf oc "- Has comments for humans\n"  
+    Printf.fprintf oc "- Has comments for humans\n"
 
 type comment_function = {
   name : string;
@@ -144,9 +146,11 @@ let rec string_of_comment = function
   | [t] -> string_of_tok t
   | t::q -> (string_of_tok t) ^ " " ^ (string_of_comment q)
 
+exception KeywordNotFound of string
+
 let look_for (kw : string) (comment : tok list) : tok list * tok list =
   let rec search (prev : tok list) = function
-    | [] -> dev_error ("expected keyword " ^ kw)
+    | [] -> raise (KeywordNotFound ("expected keyword " ^ kw))
     | t::q -> if string_of_tok t = kw then (List.rev prev, q)
       else search (t::prev) q
   in search [] comment
@@ -183,7 +187,7 @@ let parse_value (decl : (string * expr) list) (comment : tok list) : value =
 let parse_operation (decl : (string * expr) list) (comment : tok list) : operation =
   let f x = Leaf (parse_value decl x) in
   let rec search (prev : tok list) = function
-    | [] -> failwith "no operation"
+    | [] -> raise InterruptParsing
     | t::q -> (
         match string_of_tok t with
         | "if" ->
@@ -191,44 +195,44 @@ let parse_operation (decl : (string * expr) list) (comment : tok list) : operati
               let a, b = look_for "and" q in
               let b, _ = look_for "otherwise" b in
               If (f a, f (List.rev prev), f b)
-            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+            with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "sum" ->
           begin try
               let _, b = look_for "of" q in
               let a, b = look_for "and" b in
               Sum (f a, f b)
-            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+            with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "difference" ->
           begin try
               let _, b = look_for "of" q in
               let a, b = look_for "and" b in
               Diff (f a, f b)
-            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+            with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "product" ->
           begin try
               let _, b = look_for "of" q in
               let a, b = look_for "and" b in
               Prod (f a, f b)
-            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+            with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "division" ->
           begin try
               let _, b = look_for "of" q in
               let a, b = look_for "and" b in
               Div (f a, f b)
-            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+            with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
         | "application" ->
           begin try
               let _, b = look_for "of" q in
               let a, b = look_for "on" b in
               let s = string_of_comment a and l = split_kw "and" b in
               if s = "self" then Rec (List.map f l) else App (s, List.map f l)
-            with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+            with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
         | _ -> search (t::prev) q
       )
   in search [] comment
 
 let rec parse_statement (decl : (string * expr) list) (comment : tok list) : cconstraint =
-  let f x = try Node (parse_operation decl x) with _ -> Leaf (parse_value decl x) in
+  let f x = try Node (parse_operation decl x) with InterruptParsing -> Leaf (parse_value decl x) in
   match comment with
   | [] -> Nothing
   | t::q ->
@@ -241,7 +245,7 @@ let rec parse_statement (decl : (string * expr) list) (comment : tok list) : cco
     | "let" ->
       begin try
           let a, b = look_for "be" q in Let (string_of_comment a, f b)
-        with Failure msg -> raise (SyntaxError (tok_pos t, msg)) end
+        with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
     | "return" | "returns" -> Returns (f q)
     | "use" | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
     | _ -> parse_statement decl q
@@ -291,7 +295,7 @@ let generate_function (Spec (_, name, comment)) =
 let rec complete_holes decl (remain : expr list) = function
   | Leaf Hole ->
     begin match remain with
-      | [] -> dev_error "unable to complete holes"
+      | [] -> raise InterruptParsing
       | e::q -> complete_holes decl q e
     end
   | Leaf (Var s) -> complete_holes decl remain (List.assoc s decl)
@@ -334,7 +338,7 @@ let rec compile_yolo decl = function
   | [] -> raise (CompileError "unable to synthetize the function !")
   | e::q ->
     try let res, _ = complete_holes decl q e in res
-    with Failure _ -> compile_yolo decl q
+    with InterruptParsing -> compile_yolo decl q
 
 let rec compile_function (ftable : Kl_IR.ftable) { result; declarations; _ } =
   match result with
