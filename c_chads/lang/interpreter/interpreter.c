@@ -101,6 +101,14 @@ static struct Interpreter_Value cfunc_readf(struct Vec OF(struct Interpreter_Val
     return (struct Interpreter_Value){.type = IT_FLOAT, .data.flt.val = val};
 }
 
+static struct Interpreter_Value cfunc_len(struct Vec OF(struct Interpreter_Value) *args) {
+    struct Interpreter_Value* val = vec_get(args, 0);
+    if (val->type != IT_ARRAY)
+        error_mmtype(IT_ARRAY, val->type, intrp.cfunc_call_pos);
+
+    return (struct Interpreter_Value){.type = IT_INT, .data.intg.val = (int)val->data.array.values.size};
+}
+
 static struct Interpreter_Value cfunc_int(struct Vec OF(struct Interpreter_Value) *args) {
     struct Interpreter_Value val = VEC_GET_VAL(struct Interpreter_Value, args, 0);
     val.data.intg.val = (int)val.data.flt.val;
@@ -122,6 +130,7 @@ void intrp_init() {
     map_add(intrp.vars, strview_from("print"), &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_print });
     map_add(intrp.vars, strview_from("read"),  &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_read  });
     map_add(intrp.vars, strview_from("readf"), &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_readf});
+    map_add(intrp.vars, strview_from("len"),   &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_len});
     map_add(intrp.vars, strview_from("int"),   &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_int   });
     map_add(intrp.vars, strview_from("float"), &(struct Interpreter_Value){ IT_CFUNC, .data.cfunc.func = cfunc_float });
 }
@@ -193,6 +202,7 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
     struct Interpreter_Value ret = void_val(); 
     switch (func->type) {
         case IT_CFUNC: {
+            intrp.cfunc_call_pos = node->pos;
 
             struct Vec params = vec_new(sizeof(struct Interpreter_Value));
             for (usize i = 0; i < args->size; i += 1) {
@@ -205,6 +215,8 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
             vec_drop(&params);
         } break;
         case IT_FUNC: {
+            intrp.rettype = func->data.func.rettype;
+
             struct Vec* params = &pnode_left(func->data.func.ast)->children;
             for (usize i = 0; i < args->size; i++) {
                 struct Interpreter_Value arg = intrp_run(vec_get(args, i), NULL);
@@ -227,9 +239,17 @@ static struct Interpreter_Value call(struct Parser_Node* node) {
 }
 
 static enum Interpreter_Type resolve_type(strview_t name) {
+    if (name.view[0] == ':') return IT_ARRAY;
     if (strview_eq(name, strview_from("int")))    return IT_INT;    else 
+    if (strview_eq(name, strview_from("float")))    return IT_INT;    else 
+    if (strview_eq(name, strview_from("struct"))) return IT_STRUCT;    else 
     if (strview_eq(name, strview_from("float")))  return IT_FLOAT;  else 
     if (strview_eq(name, strview_from("string"))) return IT_STRING;
+    if (strview_eq(name, strview_from("_"))) return IT_VOID;
+    else {
+        EH_MESSAGE("Unknown type: '%.*s'", (int)name.size, name.view);
+        error_pos(get_pos(name));    
+    }
 
     return IT_VOID;
 }
@@ -241,21 +261,55 @@ static void declaration(struct Parser_Node* node) {
     map_add(intrp.vars, node->data.decl.name, &var);   
 }
 
+static struct Interpreter_Value* faccess(struct Parser_Node* node) {
+    struct Interpreter_Value array = intrp_run(pnode_left(node), NULL);
+    struct Interpreter_Value index = intrp_run(pnode_right(node), NULL);
+    if (array.type != IT_ARRAY)
+        error_mmtype(IT_ARRAY, index.type, pnode_left(node)->pos);
+    if (index.type != IT_INT)
+        error_mmtype(IT_INT, index.type, pnode_right(node)->pos);
+
+    int idx = index.data.intg.val;
+    if (idx < 0) idx = (int)array.data.array.values.size + idx;
+
+    return vec_get(&array.data.array.values, (usize)idx);
+}
+
+static struct Interpreter_Value* field(struct Parser_Node* node) {
+    struct Interpreter_Value strct = intrp_run(pnode_uvalue(node), NULL);
+    strview_t field = node->data.field.name; 
+    if (strct.type != IT_STRUCT)
+        error_mmtype(IT_STRUCT, strct.type, node->pos);
+
+    struct Interpreter_Value* val = map_get(&strct.data.strct.fields, field);
+    if (!val) {
+        EH_MESSAGE("Field '%.*s' not found in struct", (int)field.size, field.view);
+        error_pos(get_pos(field));
+    }
+
+    return val;
+}
+
 static struct Interpreter_Value assign(struct Parser_Node* node) {
     struct Parser_Node* dst = pnode_left(node); 
-    strview_t dstname;
+    struct Interpreter_Value* dstval = NULL;
     if (dst->kind == PN_DECL) {
         declaration(dst);
-        dstname = dst->data.decl.name;
-    } else
-        dstname = dst->data.ident.val;
+        dstval = get_var(dst->data.decl.name);
+    } else if (dst->kind == PN_ACCESS)
+        dstval = faccess(dst);
+    else if (dst->kind == PN_FIELD)
+        dstval = field(dst);
+    else {
+        EH_MESSAGE("Cannot assign to value");
+        error_pos(dst->pos);
+    }
 
     struct Interpreter_Value val = intrp_run(pnode_right(node), NULL);
-    struct Interpreter_Value *var = get_var(dstname);
-    if (val.type != var->type && var->type != IT_VOID)
-        error_mmtype(var->type, val.type, get_pos(dstname));
+    if (val.type != dstval->type && dstval->type != IT_VOID)
+        error_mmtype(dstval->type, val.type, dst->pos);
 
-    return (*var = val);
+    return (*dstval = val);
 }
 
 struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return) {
@@ -274,6 +328,9 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
         break;
         case PN_RETURN:
             ret = intrp_run(pnode_uvalue(node), should_return);
+            if (ret.type != intrp.rettype)
+                error_mmtype(intrp.rettype, ret.type, pnode_uvalue(node)->pos);
+
             *should_return = true;
         break;
         case PN_IF: {
@@ -308,6 +365,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
         break;
         case PN_PROC:
             ret.type = IT_FUNC;
+            ret.data.func.rettype = resolve_type(node->data.proc.return_type.name);
             ret.data.func.ast = node;
         break;
         case PN_STRUCT:
@@ -333,18 +391,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
 
         break;
         case PN_FIELD: {
-            struct Interpreter_Value strct = intrp_run(pnode_uvalue(node), should_return);
-            strview_t field = node->data.field.name; 
-            if (strct.type != IT_STRUCT)
-                error_mmtype(IT_STRUCT, strct.type, node->pos);
-
-            struct Interpreter_Value* val = map_get(&strct.data.strct.fields, field);
-            if (!val) {
-                EH_MESSAGE("Field '%.*s' not found in struct", (int)field.size, field.view);
-                error_pos(get_pos(field));
-            }
-
-            ret = *val;
+            return *field(node);
         } break;
         case PN_STRING:
             ret.type = IT_STRING;
@@ -362,16 +409,7 @@ struct Interpreter_Value intrp_run(struct Parser_Node* node, bool* should_return
             }
         break;
         case PN_ACCESS: {
-            struct Interpreter_Value array = intrp_run(pnode_left(node), should_return);
-            struct Interpreter_Value index = intrp_run(pnode_right(node), should_return);
-            if (array.type != IT_ARRAY)
-                error_mmtype(IT_ARRAY, index.type, pnode_left(node)->pos);
-            if (index.type != IT_INT)
-                error_mmtype(IT_INT, index.type, pnode_right(node)->pos);
-
-            int idx = index.data.intg.val;
-            if (idx < 0) idx = (int)array.data.array.values.size + idx;
-            ret = VEC_GET_VAL(struct Interpreter_Value, &array.data.array.values, (usize)idx);
+            ret = *faccess(node);
         } break;
         case PN_NUMBER:
 

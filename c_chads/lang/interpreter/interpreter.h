@@ -21,6 +21,7 @@ struct Interpreter_Value {
     enum Interpreter_Type type;
     union {
         struct {
+            enum Interpreter_Type rettype;
             struct Parser_Node* ast;
         } func;
         struct {
@@ -51,6 +52,8 @@ struct Interpreter_Value {
 struct Interpreter_State {
     struct Map OF(struct Interpreter_Value) global;
     struct Map OF(struct Interpreter_Value) *vars;
+    usize cfunc_call_pos;
+    enum Interpreter_Type rettype;
 };
 
 void intrp_init();
