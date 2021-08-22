@@ -251,6 +251,10 @@ class Train {
     }
 
     update() {
+        if (paused) {
+            return;
+        }
+
         if (this.animation_count > 1) {
             this.animation_count = 0
             this.path_index += 1;
@@ -276,8 +280,6 @@ class Train {
 
         const x = lerp(this.traveling_from[0], this.traveling_to[0], this.animation_count)
         const y = lerp(this.traveling_from[1], this.traveling_to[1], this.animation_count)
-
-        // console.log(x, y, this.traveling_from, this.traveling_to, this.animation_count)
 
         this.location.x = x;
         this.location.y = y;
@@ -319,8 +321,10 @@ class Train {
         }
         const new_clouds = []
         for (const cloud of this.clouds) {
-            if (cloud.draw()) {
-                new_clouds.push(cloud);
+            if (!paused) {
+                if (cloud.draw()) {
+                    new_clouds.push(cloud);
+                }
             }
         }
         this.clouds = new_clouds;

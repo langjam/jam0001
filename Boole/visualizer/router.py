@@ -481,7 +481,7 @@ if __name__ == '__main__':
     world = World(stations.stations)
     world.build()
     print(world.roads)
-    world.plot()
+    # world.plot()
     outp = world.to_json()
 
     with open(f"{file}.result.json","w") as f:

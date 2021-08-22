@@ -120,7 +120,10 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
                                     runner.input_response(identifier, input).await;
                                 }
                             }
-                            Err(e) => log::error!("serde: {}", e)
+                            Err(e) => {
+                                log::error!("serde: {}", e);
+                                runner.send(MessageToWebpage::Error{message: format!("{:?} (vm crashed, please reload simulation)", e)}).expect("failed to send")
+                            }
                         }
                     }
                     Err(_) => log::error!("couldn't convert message to string (binary?)")

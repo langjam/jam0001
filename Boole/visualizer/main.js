@@ -8,6 +8,16 @@ async function ask_for_input(prompt_message) {
     return prompt(prompt_message)
 }
 
+let paused = false;
+function togglePause() {
+    paused = !paused;
+    if (paused) {
+        document.getElementById("pause").style.background = "orangered";
+    } else {
+        document.getElementById("pause").style.background = "unset";
+    }
+}
+
 let socket;
 window.addEventListener("load", () => {
     socket = startSocket()
