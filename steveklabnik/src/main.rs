@@ -56,14 +56,13 @@ impl fmt::Display for Exp {
             Exp::Boolean(b) => write!(f, "{}", b),
             Exp::Datetime(dt) => write!(f, "{}", dt),
             Exp::Array(a) => {
-                write!(f, "(")?;
+                let out = a
+                    .iter()
+                    .map(|v| v.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ");
 
-                // yeah this has an extra , at the end idk for now
-                for v in a {
-                    write!(f, "{}, ", v)?;
-                }
-
-                write!(f, ")")
+                write!(f, "({})", out)
             }
             Exp::Table(_t) => write!(f, "[table]"),
             Exp::Fn(_func) => write!(f, "[func]"),
@@ -81,6 +80,21 @@ impl From<toml::Value> for Exp {
             Value::Datetime(dt) => Exp::Datetime(dt),
             Value::Array(a) => Exp::Array(a),
             Value::Table(t) => Exp::Table(t),
+        }
+    }
+}
+
+impl From<Exp> for toml::Value {
+    fn from(exp: Exp) -> Self {
+        match exp {
+            Exp::String(s) => Value::String(s),
+            Exp::Integer(i) => Value::Integer(i),
+            Exp::Float(f) => Value::Float(f),
+            Exp::Boolean(b) => Value::Boolean(b),
+            Exp::Datetime(dt) => Value::Datetime(dt),
+            Exp::Array(a) => Value::Array(a),
+            Exp::Table(t) => Value::Table(t),
+            Exp::Fn(_func) => panic!("cannot turn a Fn into a Value"),
         }
     }
 }
@@ -114,19 +128,29 @@ fn main() {
 
 fn eval(exp: &Exp, env: &mut Env) -> Exp {
     match exp {
-        Exp::String(_) => exp.clone(),
-        Exp::Array(values) => {
-            if let Value::String(s) = &values[0] {
-                if let Some(Exp::Fn(f)) = env.env.get(s) {
-                    // if the string is a function, we need to treat it like one
-                    let args = &values[1..];
-
-                    // we want to return out because we're done here
-                    return f(args).into();
-                }
+        Exp::String(s) => {
+            if let Some(Exp::Fn(f)) = env.env.get(s) {
+                Exp::Fn(*f)
+            } else {
+                exp.clone()
             }
+        }
+        Exp::Array(values) => {
+            let first = eval(&Exp::from(values[0].clone()), env);
 
-            panic!("can't find a function '{}'", values[0]);
+            if let Exp::Fn(f) = first {
+                let args: Vec<Value> = values[1..]
+                    .iter()
+                    .map(|v| {
+                        let exp = Exp::from(v.clone());
+                        eval(&exp, env).into()
+                    })
+                    .collect();
+
+                f(&args).into()
+            } else {
+                panic!("needs to be a function");
+            }
         }
         Exp::Integer(_) => exp.clone(),
         Exp::Float(_) => exp.clone(),
