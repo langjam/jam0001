@@ -60,15 +60,15 @@ and emit_op oc ?(self_name : string option = None) (op: op) =
     Printf.fprintf oc "%s" name
   | SELF ->
     match self_name with
-    | None -> failwith "were gonna need a self name here"
+    | None -> assert false
     | Some name -> Printf.fprintf oc "%s" name
 
-and emit_ast_as_function oc ?(indent_lvl : int = 0) ~name (func : ast) =
+and emit_ast_as_function oc ?(indent_lvl : int = 0) ?self_name:(self_name = None) (func : ast) =
   let params = ast_count_params func in
   if params > 0 then
     Printf.fprintf oc "(fun %a -> %a)"
       emit_param_sequence params
-      (emit_ast ~self_name:(Some name) ~indent_lvl) func
+      (emit_ast ~self_name ~indent_lvl) func
   else
     emit_ast oc ~indent_lvl func
 
@@ -78,4 +78,4 @@ let emit_ast_as_function_decl oc ?(indent_lvl : int = 0) (name : string) (func :
   Printf.fprintf oc "let %s%s = %a\n"
   (if ast_is_recursive func then "rec " else "")
   name
-  (emit_ast_as_function ~indent_lvl:(indent_lvl + 1) ~name) func
+  (emit_ast_as_function ~indent_lvl:(indent_lvl + 1) ~self_name:(Some name)) func
