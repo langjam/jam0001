@@ -1,0 +1,15 @@
+say_is_awesome := proc (string : name) void {
+
+    if (name != "Doigt") return;
+
+    print(name);
+    print("is");
+    print("awesome");
+};
+
+main := proc () void {
+
+    sia = say_is_awesome;
+    sia("Doigt");
+    sia("Jacob"); # :-P
+};
