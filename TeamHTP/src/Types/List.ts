@@ -84,6 +84,15 @@ class List extends Base {
     removeItemAtIndex(index: number): void {
         this.getMdastContent().children.splice(index, 1)
     }
+
+    isChecked(itemName: string): boolean | undefined {
+        for (const listItem of this.getMdastContent().children) {
+            const listItemMd = mdastListItemToMd(listItem)
+            if (itemName === listItemMd && listItem.checked !== undefined) {
+                return listItem.checked
+            }
+        }
+    }
 }
 
 export default List
