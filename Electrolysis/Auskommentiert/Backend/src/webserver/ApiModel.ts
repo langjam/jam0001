@@ -94,6 +94,7 @@ export class ApiModel {
 
     delete(req: express.Request, res: express.Response) {  
         let obj = req.body
+        console.log("Delete apicall")
         this.mModel.deleteComment(obj.id);
     }
 

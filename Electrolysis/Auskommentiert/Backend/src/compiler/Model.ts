@@ -227,6 +227,12 @@ class ModelCommentProvider extends CommentProvider {
     notifyContentChanged() : void {
         this.mModel.notifyChange();
     }
+    swapFull(idFirstComment: string, idSecondComment: string) {
+        this.mModel.swapFull(idFirstComment, idSecondComment);
+    }
+    swapContent(idFirstComment : string, idSecondComment : string) {
+        this.mModel.swapContent(idFirstComment, idSecondComment);
+    }
 }
 
 export class Model {
@@ -316,8 +322,12 @@ export class Model {
         if (comment !== undefined && comment instanceof ModelComment) {
             let parent = this.mCommentsMap.get(comment.parentId);
 
+            console.log("delet")
             this.mCommentsMap.delete(id);
-            parent?.children.slice(parent.children.indexOf(comment), 1);
+            if(parent !== undefined) {
+                console.log("parent exists");
+            parent.children.slice(parent.children.indexOf(comment), 1);
+            }
         }
         this.notifyChange();
     }
@@ -357,7 +367,6 @@ export class Model {
         try {
 
         let objString = fs.readFileSync('state.json').toString()
-        console.log(objString)
         let obj = JSON.parse(objString);
         this.mCounter = obj.counter;
         for( let topic of obj.posts.topics ) {
