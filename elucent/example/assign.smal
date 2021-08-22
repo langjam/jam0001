@@ -1,0 +1,12 @@
+we can define variables using the "=" function.
+
+    x = 1
+    y = 2
+    putv (x + y)
+
+we can also mutate variables by redefining them.
+if we do this, we need to quote the name, since it's been
+defined and would otherwise get looked up.
+
+    [x] = 3
+    putv (x + y)

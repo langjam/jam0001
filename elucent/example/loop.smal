@@ -1,0 +1,13 @@
+iteration in smalang is done via recursion.
+
+    fn countdown [
+        in [i]
+        if (i == 0) [done] [
+            putv i
+            (i - 1) countdown
+        ]
+    ]
+
+we'll use the function above to count down from 10.
+
+    countdown 10

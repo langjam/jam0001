@@ -1,0 +1,27 @@
+this sets up the initial sequence variables.
+
+    fn fib [
+        in [n]
+        [a] = 0
+        [b] = 1
+        [c] = 1
+
+        if (n < 3) [n] [fib-helper (n - 3)]
+    ]
+
+we'll use this helper method to iteratively increase
+a, b, and c until we reach the desired number.
+
+    fn fib-helper [
+        in [n]
+        [tmp] = c
+        [c] = (c + b)
+        [a] = b
+        [b] = tmp
+        if (n == 0) [c] [fib-helper (n - 1)]
+    ]
+
+let's try it out by computing fib 10.
+
+    putv [fib(10) = ]
+    putv (fib 10)
