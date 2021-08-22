@@ -5,7 +5,7 @@ $i = 0
 # We'll also keep a string accumulator for our output.
 $str = ""
 
-# Then, we'll enter a loop
+# Then, we'll enter a loop:
 repeat:
   # Now, we'll increase i.
   $i = $i + 1

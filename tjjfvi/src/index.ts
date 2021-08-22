@@ -1,5 +1,4 @@
 import { readFileSync } from "fs"
-import { inspect } from "util"
 import * as p from "./parserCombinator"
 
 run(readFileSync(process.argv[2], "utf8"), process.argv.slice(3).join(" "))
@@ -119,8 +118,6 @@ function run(text: string, input: string){
     function executeExpression(expression: Expression): unknown{
       if(expression.kind === "literal")
         return expression.value
-      if(expression.kind === "array")
-        return expression.values.map(executeExpression)
       if(expression.kind === "variable")
         return scope[expression.name]?.value ?? null
       if(expression.kind === "call") {
@@ -180,8 +177,12 @@ function run(text: string, input: string){
     return !!value
   }
 
-  function dbg(value: unknown){
-    return value + ""
+  function dbg(value: unknown): string{
+    if(typeof value === "number" || value === null)
+      return value + ""
+    else if(typeof value === "string")
+      return JSON.stringify(value)
+    return "null"
   }
 
   function toString(value: unknown){
@@ -233,7 +234,6 @@ function run(text: string, input: string){
     // eslint-disable-next-line max-len
     | { kind: "binaryOp", op: "+" | "-" | "*" | "/" | "%" | "&&" | "||" | "==" | "!=" | ">" | "<" | ">=" | "<=", args: [Expression, Expression] }
     | { kind: "call", name: string, args: Expression[] }
-    | { kind: "array", values: Expression[] }
   function _parseExpression(){
     const numberLiteral = p.map(p.regex(/\d+|\d+.\d*|\d*.\d+/), (x): Expression => (
       { kind: "literal", value: +x }
@@ -248,10 +248,12 @@ function run(text: string, input: string){
       p.multiple(p.suffix(() => expr, p.string(","))),
       p.suffix(() => expr, p.optional(p.string(","), null)),
     ), x => [...x[0], x[1]]), [])
-    const val = p.ws(p.or(
+    const val: p.Parser<Expression> = p.ws(p.or(
       numberLiteral,
       stringLiteral,
       variable,
+      p.map(p.or(p.string("true"), p.string("false")), x => ({ kind: "literal" as const, value: x === "true" })),
+      p.map(p.string("null"), () => ({ kind: "literal" as const, value: null })),
       p.surround(p.string("("), () => expr, p.string(")")),
       p.map(p.concat(
         p.regex(/\w+/),
@@ -263,16 +265,6 @@ function run(text: string, input: string){
       ), (x): Expression => (
         { kind: "call", name: x[0][0], args: x[1] }
       )),
-      p.map(
-        p.surround(
-          p.string("["),
-          exprs,
-          p.string("]"),
-        ),
-        (x): Expression => (
-          { kind: "array", values: x }
-        ),
-      ),
     ))
     const op = p.ws(p.or(...([
       "+", "-", "*", "/", "%", "&&", "||", "==", "!=", "!", "<=", ">=", ">", "<",
