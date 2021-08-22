@@ -32,25 +32,25 @@ impl Default for Env {
                 Value::Float(answer)
             }),
         );
-        default.env.insert(
-            String::from("pi"),
-            Exp::Fn(|_, _| {
-                Value::Float(PI)
-            }));
+        default
+            .env
+            .insert(String::from("pi"), Exp::Fn(|_, _| Value::Float(PI)));
 
         default.env.insert(
             String::from("*"),
             Exp::Fn(|args, env| {
-                let answer: f64 = args.iter().map(|v| {
-                    match eval(&Exp::from(v.clone()), env) {
+                let answer: f64 = args
+                    .iter()
+                    .map(|v| match eval(&Exp::from(v.clone()), env) {
                         Exp::Float(f) => f,
                         Exp::Integer(i) => i as f64,
                         _ => panic!("you can only multiply numbers, silly"),
-                    }
-                }).product();
+                    })
+                    .product();
 
                 Value::Float(answer)
-            }));
+            }),
+        );
 
         default
     }
@@ -153,12 +153,10 @@ fn main() {
 
 fn eval(exp: &Exp, env: &mut Env) -> Exp {
     match exp {
-        Exp::String(s) => {
-            match env.env.get(s) {
-                Some(a) => a.clone(),
-                None => Exp::String(s.clone())
-            }
-        }
+        Exp::String(s) => match env.env.get(s) {
+            Some(a) => a.clone(),
+            None => Exp::String(s.clone()),
+        },
         Exp::Array(values) => {
             let first = &values[0];
             let rest: Vec<Exp> = values[1..].iter().map(|v| Exp::from(v.clone())).collect();
@@ -176,7 +174,10 @@ fn eval(exp: &Exp, env: &mut Env) -> Exp {
             let first = eval(&Exp::from(first.clone()), env);
 
             if let Exp::Fn(f) = first {
-                let args: Vec<Value> = rest.iter().map(|v| exp_to_value(eval(v, env), env)).collect();
+                let args: Vec<Value> = rest
+                    .iter()
+                    .map(|v| exp_to_value(eval(v, env), env))
+                    .collect();
 
                 f(&args, env).into()
             } else {
