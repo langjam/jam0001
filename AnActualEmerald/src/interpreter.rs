@@ -80,18 +80,18 @@ pub struct VM {
 
 pub fn run(ctx: &mut VM, instr: Vec<Box<Term>>) -> Value {
     let mut iter = instr.iter().peekable();
-    let mut stack = vec![];
     while let Some(n) = iter.peek() {
         match &***n {
-            Term::Key(Keyword::Equals) => {
+            Term::Key(Keyword::Equals(s)) => {
                 iter.next();
-                if let Value::Name(name) = stack.pop().unwrap() {
-                    let val = step(ctx, &mut iter);
-                    ctx.vars.insert(name, val);
-                }
+                let val = step(ctx, &mut iter);
+                ctx.vars.insert(s.into(), val.0);
             }
             _ => {
-                stack.push(step(ctx, &mut iter));
+                let v = step(ctx, &mut iter);
+                if v.1 {
+                    return v.0;
+                }
             }
         }
     }
@@ -99,13 +99,13 @@ pub fn run(ctx: &mut VM, instr: Vec<Box<Term>>) -> Value {
     Value::None
 }
 
-fn step<'a>(ctx: &mut VM, instr: &mut Peekable<std::slice::Iter<'a, Box<Term>>>) -> Value {
+fn step<'a>(ctx: &mut VM, instr: &mut Peekable<std::slice::Iter<'a, Box<Term>>>) -> (Value, bool) {
     if let Some(t) = instr.next() {
         match &**t {
             Term::Key(k) => match k {
                 Keyword::Prints => {
                     let next = instr.next().expect("Expected value to print");
-                    
+
                     let text = match &**next {
                         Term::Ident(n) => {
                             if let Some(val) = ctx.vars.get(n) {
@@ -123,18 +123,16 @@ fn step<'a>(ctx: &mut VM, instr: &mut Peekable<std::slice::Iter<'a, Box<Term>>>)
                     };
                     if let Some(w) = instr.peek() {
                         match &***w {
-                            Term::Key(Keyword::With(nl)) => {
-                                match &**nl {
-                                    Term::Newline => {
-                                        println!("{}", text);
-                                    },
-                                    Term::String(s) => print!("{}{}", text, s),
-                                    _ => print!("{}", text),
+                            Term::Key(Keyword::With(nl)) => match &**nl {
+                                Term::Newline => {
+                                    println!("{}", text);
                                 }
-                            }
+                                Term::String(s) => print!("{}{}", text, s),
+                                _ => print!("{}", text),
+                            },
                             _ => print!("{}", text),
                         }
-                    }else {
+                    } else {
                         print!("{}", text);
                     }
                 }
@@ -148,31 +146,37 @@ fn step<'a>(ctx: &mut VM, instr: &mut Peekable<std::slice::Iter<'a, Box<Term>>>)
                                 .clone();
                             if let Some(b) = instr.peek() {
                                 if let Term::Key(Keyword::With(a)) = &***b {
-                                    // triple deref just to borrow it again .-.
                                     instr.next();
-                                    run_func(ctx, &*func, Some(a.clone()));
+                                    return (run_func(ctx, &*func, Some(a.clone())), false);
                                 }
                             } else {
-                                run_func(ctx, &*func, None);
+                                return (run_func(ctx, &*func, None), false);
                             }
                         } else {
                             panic!("Expected identifier after 'call'");
                         }
                     }
                 }
+                Keyword::Returns => {
+                    if let Some(f) = instr.peek() {
+                        let dbg = eval(ctx, &*f);
+                        return (eval(ctx, &*f), true);
+                    }
+                }
                 _ => {}
             },
             term => {
-                return eval(ctx, term);
+                return (eval(ctx, term), false);
             }
         }
     }
 
-    Value::None
+    (Value::None, false)
 }
 
 fn run_func(ctx: &mut VM, func: &Func, args: Option<Box<Term>>) -> Value {
     let mut func_ctx = VM::default();
+    func_ctx.heap = ctx.heap.clone();
     if let Some(t) = args {
         match *t {
             Term::List(a) => {

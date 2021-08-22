@@ -7,7 +7,7 @@ pub enum Term {
     Operation(Op),
     Bool(bool),
     List(Vec<Box<Term>>),
-    Newline
+    Newline,
 }
 
 impl std::fmt::Display for Term {
@@ -31,7 +31,7 @@ pub enum Keyword {
     Returns,
     Prints,
     Nothing,
-    Equals,
+    Equals(String),
     Is,
     And,
     Or,
