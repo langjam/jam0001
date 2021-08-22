@@ -1,0 +1,34 @@
+{
+  "name": "comp",
+  "version": "0.1.0-SNAPSHOT",
+  "description": "COMP - A stack based interpreter based on various comment syntaxes written for langjam0001.",
+  "author": "Alex Michael Berry <alexmiberry@gmail.com>",
+  "homepage": "https://github.com/almibe/COMP#readme",
+  "license": "BSD-2-Clause",
+  "main": "lib/index.ts",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha -r ts-node/register test/**/*.spec.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/almibe/COMP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/almibe/COMP/issues"
+  },
+  "dependencies": {
+    "chevrotain": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.21",
+    "@types/mocha": "^9.0.0",
+    "chai": "^4.3.4",
+    "mocha": "^9.0.3",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.3.5"
+  }
+}

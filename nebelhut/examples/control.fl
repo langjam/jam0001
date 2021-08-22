@@ -1,0 +1,32 @@
+if yes [
+	println "Hello, world."
+]
+
+if no [
+	println "Bye."
+]
+
+if yes [
+	println "Print this."
+	if no [
+		println "But not this."
+	]
+]
+
+if no [
+	println "This shouldn’t occur."
+] else [
+	println "But this should."
+]
+
+for ch ('a 'b 'c) [
+	println ch
+]
+
+for ch () [
+	println "This doesn’t print."
+]
+
+for i iota 5 [
+	println << i "^2 = " * i i >>
+]

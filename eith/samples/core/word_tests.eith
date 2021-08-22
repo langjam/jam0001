@@ -1,0 +1,185 @@
+\ Tests core words.
+
+." TEST /MOD : "
+1 2 /MOD . .
+CR
+
+." TEST */: "
+6 2 3 */ .
+CR
+
+." TEST 0< : "
+0 0< .
+-1 0< .
+2 0< .
+CR
+
+." TEST 0= : "
+0 0= .
+-1 0= .
+2 0= .
+CR
+
+." TEST 1+ :"
+1 1+ .
+0 1+ .
+-3 1+ .
+
+." TEST 1- : "
+1 1- .
+0 1- .
+-3 1- .
+CR
+
+." TEST 2* : "
+0 2* .
+8 2* .
+-4 2* .
+CR
+
+." TEST 2/ : "
+0 2/ .
+8 2/ .
+-4 2/ .
+CR
+
+." TEST 2DROP : "
+1 2 3 2DROP .
+2 3 2DROP 0 .
+CR
+
+." TEST 2DUP : "
+1 2 2DUP . . . .
+CR
+
+." TEST 2OVER : "
+1 2 3 4 2OVER . . . . . .
+CR
+
+." TEST 2SWAP : "
+1 2 3 4 2SWAP . . . .
+CR
+
+." TEST < : "
+1 2 < .
+-1 -2 < .
+1 1 < .
+CR
+
+." TEST = : "
+1 2 = .
+-1 -2 = .
+1 1 = .
+CR
+
+." TEST > : "
+1 2 > .
+-1 -2 > .
+1 1 > .
+CR
+
+." TEST ?DUP : "
+-1 ?DUP . .
+0 ?DUP .
+1 ?DUP . .
+CR
+
+." TEST ABS : "
+-1 ABS .
+0 ABS .
+1 ABS .
+CR
+
+." TEST AND : "
+0 23 AND .
+4 5 AND .
+-1 45 AND .
+CR
+
+." TEST BL : "
+BL .
+CR
+
+." TEST CR : "
+CR 1 .
+CR
+
+." TEST DEPTH : "
+0 1 DEPTH . . .
+0 DEPTH . .
+DEPTH .
+CR
+
+." TEST DROP : "
+0 1 DROP .
+CR
+
+." TEST DUP : "
+1 DUP . .
+CR
+
+." TEST EMIT : "
+36 EMIT
+CR
+
+." TEST LSHIFT : "
+1 0 LSHIFT .
+1 1 LSHIFT .
+CR
+
+." TEST MAX : "
+1 0 MAX .
+-1 1 MAX .
+1 1 MAX .
+CR
+
+." TEST MIN : "
+1 0 MIN .
+-1 1 MIN .
+1 1 MIN .
+CR
+
+." TEST MOD : "
+7 3 MOD .
+-7 3 MOD .
+CR
+
+." TEST NEGATE : "
+-1 NEGATE .
+1 NEGATE .
+0 NEGATE .
+CR
+
+." TEST OR : "
+-1 23 OR .
+0 2 OR .
+CR
+
+." TEST OVER : "
+1 2 OVER . . .
+CR
+
+." TEST ROT : "
+1 2 3 ROT . . .
+CR
+
+." TEST RSHIFT : "
+2 2 RSHIFT .
+CR
+
+." TEST SPACE : "
+SPACE 3 .
+CR
+
+." TEST SPACES : "
+5 SPACES 3 .
+CR
+
+." TEST SWAP : "
+1 2 SWAP . .
+CR
+
+." TEST XOR : "
+-1 -1 XOR .
+0 -1 XOR .
+CR

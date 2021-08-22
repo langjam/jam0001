@@ -1,0 +1,7 @@
+infinity = [ |
+  [ | True ].whileTrue([ |
+    print("uh oh ")
+    ])
+  ]
+
+infinity()

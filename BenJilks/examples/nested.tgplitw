@@ -1,0 +1,22 @@
+Name: BenJilks
+Date: Sunday the 22nd of August 2021
+Mood: good
+-------------------------------
+Show how nested functions work
+-------------------------------
+
+Functions can also be nested inside other function. Everything is scoped.
+
+// please define none -> nested -> none
+// {
+        // please define none -> test -> none
+        // {
+                // in + 1 -> out
+        // } thanks
+        // in -> test -> out
+// } thanks
+
+// a -> nested -> print -> /dev/null
+
+-------------------------------
+

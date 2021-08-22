@@ -1,0 +1,13 @@
+//fibonaccis 20 then prints it
+function main()
+
+//A function which if n == 0 does returns 0, otherwise if n == 1 does returns 1,
+//otherwise fibonaccis n - 2, storing the result in a, then fibonaccis n - 1,
+//storing the result in b, then returns a + b
+function fibonacci(n)
+
+//twices print, "hello"
+function foo()
+
+//fs a then fs a
+function twice(f, a)

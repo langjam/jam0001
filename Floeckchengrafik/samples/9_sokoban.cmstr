@@ -1,0 +1,286 @@
+/**********************
+ * Example 9: Sokoban *
+ **********************/
+
+
+printlvl = function({
+   /*
+    * This function prints a given Level object to the console. The params are: The
+    * - param level to be printed.
+    * - param char is a list with the player's cordinates, origined in the top-left corner
+    * - param movtiles is a list of player-movable tiles, origined in the top-left corner
+    */
+
+    for ("i" : intrange(0 : 5) : {
+       out()?
+    })?
+
+    for ("b" : banner : {
+       out(b)?
+    })?
+
+    out()?
+
+    player_x = list_get(char : 0)?
+    player_y = list_get(char : 1)?
+
+   inc_x = 0?
+
+    for ("x" : level : {
+        str = ""?
+
+        inc_y = 0?
+
+        for ("y" : x : {
+            if ((inc_x == player_x) && (inc_y == player_y) : {
+                y = "ඞ"?
+            })?
+
+            for ("tile" : movtiles : {
+                tile_x = list_get(tile : 0)?
+                tile_y = list_get(tile : 1)?
+
+                if ((inc_x == tile_x) && (inc_y == tile_y) : {
+                    y = "■"?
+                })?
+            })?
+
+            str = str + y + " "?
+
+            inc_y = inc_y + 1?
+        })?
+        
+        out(str)?
+
+        inc_x = inc_x + 1?
+    })?
+})?
+
+
+ispospossible = function({
+   /*
+    * This function evaluates if its possible for the player to perform certain actions
+    * For this, it needs the
+    * - param level to look up the tiles, the
+    * - param movtiles to evaluate the boxes, the
+    * - param char for obvious reasons and finally the
+    * - param movement to analyze the situation. It
+    * - returns a boolean if the move is valid.
+    */
+
+    valid = true?
+
+    char_x = list_get(char :0)?
+    char_y = list_get(char :1)?
+
+    action_x = list_get(movement :0)?
+    action_y = list_get(movement :1)?
+
+    char_x = char_x + action_x?
+    char_y = char_y + action_y?
+
+    grid_line = list_get(level : char_x)?
+    grid_char = list_get(grid_line : char_y)?
+
+    if (string_startswith(grid_char : "#") : {
+        valid = false?
+    })?
+
+    for ("tile" : movtiles : {
+        tile_x = list_get(tile : 0)?
+        tile_y = list_get(tile : 1)?
+
+        if (tile_x == char_x && tile_y == char_y : {
+            box_x = char_x + action_x?
+            box_y = char_y + action_y?
+
+            box_grid_line = list_get(level : box_x)?
+            box_grid_char = list_get(box_grid_line : box_y)?
+
+            if (string_startswith(box_grid_char : "#") : {
+                valid = false?
+            })?
+
+            for ("tile_behind" : movtiles : {
+
+                possible_behind_x = box_x?
+                possible_behind_y = box_y?
+
+                behind_x = list_get(tile_behind : 0)?
+                behind_y = list_get(tile_behind : 1)?
+
+                if (possible_behind_x == behind_x && possible_behind_y == behind_y : {
+                    valid = false?
+                })?
+
+            })?
+
+            if(valid : {
+                \\ move tile
+                list_set(tile : 0 : box_x)?
+                list_set(tile : 1 : box_y)?
+            })?
+        })?
+    })?
+
+    valid?
+})?
+
+
+checkwin = function({
+   /*
+    * This function evaluates if the user won the game
+    * For this, it needs the
+    * - param level to look up the tiles and the
+    * - param movtiles to check if everything is on place
+    */
+
+    incorrect = false?
+
+    for ("tile" : movtiles : {
+        tile_x = list_get(tile : 0)?
+        tile_y = list_get(tile : 1)?
+
+        grid_line = list_get(level : tile_x)?
+        grid_char = list_get(grid_line : tile_y)?
+
+        if (grid_char != "x" : {
+            incorrect = true?
+        })?
+
+        if(!!incorrect : {
+            out()?
+            out("You won!")?
+            out()?
+            readline("Press enter to exit!")?
+            exit()?
+        })?
+    })?
+})?
+
+banner = [
+    " ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄   ▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄    ▄ " :
+    "█       █       █   █ █ █       █  ▄    █      █  █  █ █" :
+    "█  ▄▄▄▄▄█   ▄   █   █▄█ █   ▄   █ █▄█   █  ▄   █   █▄█ █" :
+    "█ █▄▄▄▄▄█  █ █  █      ▄█  █ █  █       █ █▄█  █       █" :
+    "█▄▄▄▄▄  █  █▄█  █     █▄█  █▄█  █  ▄   ██      █  ▄    █" :
+    " ▄▄▄▄▄█ █       █    ▄  █       █ █▄█   █  ▄   █ █ █   █" :
+    "█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄▄▄█ █▄█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄█ █▄▄█▄█  █▄▄█"
+]?
+
+level = [
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "#" : "#" : "#" : "#" : " " : " " : " " : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "." : "." : "#" : "#" : "#" : "#" : "#" ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "#" : "." : "#" : "#" : "." : "." : "#" ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "." : "." : "." : "." : "." : "." : "#" ] :
+    [ "#" : "#" : "#" : "#" : "#" : "#" : "#" : "#" : "#" : "." : "#" : "#" : "#" : "." : "." : "." : "#" ] :
+    [ "#" : "x" : "x" : "x" : "x" : "." : "." : "#" : "#" : "." : "." : "." : "." : "." : "#" : "#" : "#" ] :
+    [ "#" : "x" : "x" : "x" : "x" : "." : "." : "." : "." : "." : "." : "." : "." : "." : "#" : "#" : " " ] :
+    [ "#" : "x" : "x" : "x" : "x" : "." : "." : "#" : "#" : "." : "." : "." : "." : "." : "." : "#" : " " ] :
+    [ "#" : "#" : "#" : "#" : "#" : "#" : "#" : "#" : "#" : "." : "." : "." : "." : "." : "#" : "#" : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "." : "." : "." : "." : "." : "#" : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : "#" : "#" : "#" : "." : "#" : "#" : "." : "#" : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : " " : " " : "#" : "." : "." : "." : "." : "#" : " " ] :
+    [ " " : " " : " " : " " : " " : " " : " " : " " : " " : " " : "#" : "#" : "#" : "#" : "#" : "#" : " " ]
+]?
+
+char = [ 7 : 14 ]?
+
+movtiles = [
+    [  2 : 11 ] :
+    [  3 : 14 ] :
+    [  5 : 10 ] :
+    [  5 : 13 ] :
+    [  6 : 9  ] :
+    [  6 : 11 ] :
+    [  6 : 12 ] :
+    [  7 : 9  ] :
+    [  7 : 12 ] :
+    [  8 : 11 ] :
+    [  9 : 10 ] :
+    [  9 : 12 ]
+]?
+
+ACTION_W = [ 0-1 :   0 ]?
+ACTION_A = [ 0   : 0-1 ]?
+ACTION_S = [ 1   :   0 ]?
+ACTION_D = [ 0   :   1 ]?
+
+forever({
+    printlvl(level : char)?
+    command = readline("Use w, a, s, d to move, x to exit: ")?
+
+    if(string_startswith(command : "w") : {
+        if(ispospossible(level : movtiles : char : ACTION_W) : {
+            out("Up valid")?
+            char_x = list_get(char :0)?
+            char_y = list_get(char :1)?
+
+            action_x = list_get(ACTION_W :0)?
+            action_y = list_get(ACTION_W :1)?
+
+            char_x = char_x + action_x?
+            char_y = char_y + action_y?
+
+            list_set(char : 0 : char_x)?
+            list_set(char : 1 : char_y)?
+        })?
+    })?
+
+    if(string_startswith(command : "a") : {
+        if(ispospossible(level : movtiles : char : ACTION_A) : {
+            out("Left valid")?
+            char_x = list_get(char :0)?
+            char_y = list_get(char :1)?
+
+            action_x = list_get(ACTION_A :0)?
+            action_y = list_get(ACTION_A :1)?
+
+            char_x = char_x + action_x?
+            char_y = char_y + action_y?
+
+            list_set(char : 0 : char_x)?
+            list_set(char : 1 : char_y)?
+        })?
+    })?
+
+    if(string_startswith(command : "s") : {
+        if(ispospossible(level : movtiles : char : ACTION_S) : {
+            out("Right valid")?
+            char_x = list_get(char :0)?
+            char_y = list_get(char :1)?
+
+            action_x = list_get(ACTION_S :0)?
+            action_y = list_get(ACTION_S :1)?
+
+            char_x = char_x + action_x?
+            char_y = char_y + action_y?
+
+            list_set(char : 0 : char_x)?
+            list_set(char : 1 : char_y)?
+        })?
+    })?
+
+    if(string_startswith(command : "d") : {
+        if(ispospossible(level : movtiles : char : ACTION_D) : {
+            out("Down valid")?
+            char_x = list_get(char :0)?
+            char_y = list_get(char :1)?
+
+            action_x = list_get(ACTION_D :0)?
+            action_y = list_get(ACTION_D :1)?
+
+            char_x = char_x + action_x?
+            char_y = char_y + action_y?
+
+            list_set(char : 0 : char_x)?
+            list_set(char : 1 : char_y)?
+        })?
+    })?
+
+    if(string_startswith(command : "x") : {
+        exit()?
+    })?
+
+    checkwin(level : movtiles)?
+})?

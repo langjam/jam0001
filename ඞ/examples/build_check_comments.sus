@@ -1,0 +1,88 @@
+
+fn get_ast(path) {
+    print("Parsing Source File '", arg, "'");
+    let input = read(arg);
+    if input.class == "Error" {
+        print("Error reading source file: ", input.msg);
+    }
+    let ast = parse(input, arg);
+    if ast.class == "Error" {
+        print("Parse error: ", ast.msg);
+    }
+    return ast;
+}
+
+fn build(args) {
+    for arg in args {
+        let ast = get_ast(arg);
+        print("Checking comments of '", arg, "'");
+        for elem in ast.elements {
+            check_comments(ref elem);
+        }
+        print("Executing Source File '", arg, "'");
+        eval(ast);
+    }
+}
+
+let trace_next_fn = false;
+
+fn check_comments(ast) {
+    if trace_next_fn && ast.class != "ASTFnDef" {
+        trace_next_fn = false;
+    }
+    if ast.class == "ASTComment" {
+        for word in ast.text.split() {
+            if word.starts_with("@") {
+                if word.contains("todo") || word.contains("fixme") {
+                    print("Warning: unresolved `", word, "`: '", ast.text, "'");
+                } else if word.contains("trace") {
+                    trace_next_fn = true;
+                }
+            }
+        }
+    } else if ast.class == "ASTFnDef" {
+        if trace_next_fn {
+            trace_next_fn = false;
+            let new_body = [];
+            let msg = [
+                ASTStringLiteral { text: "Calling fn `" },
+                ASTStringLiteral { text: ast.name }, 
+                ASTStringLiteral { text: "` with " }, 
+            ];
+            for param in ast.params {
+                 msg.add(ASTStringLiteral { text: "(" } );
+                 msg.add(ASTStringLiteral { text: param } );
+                 msg.add(ASTStringLiteral { text: " = " } );
+                 msg.add(ASTIdent { name: param } );
+                 msg.add(ASTStringLiteral { text: ") " });
+            }
+            new_body.add( ASTFnCall {
+                name: "print",
+                args: msg,
+            });
+            for stmt in ast.body {
+                new_body.add(stmt);
+            }
+            ast.body = new_body;
+        }
+        for stmt in ast.body {
+            check_comments(ref stmt);
+        }
+    } else if ast.class == "ASTIfStmt" {
+        for stmt in ast.body {
+            check_comments(ref stmt);
+        }
+        for e in ast.elses {
+            check_comments(ref e);
+        }
+    } else if ast.class == "ASTForLoop" {
+        for stmt in ast.body {
+            check_comments(ref stmt);
+        }
+    } else if ast.class == "ASTLetStmt" {
+        check_comments(ref ast.value);
+    } else if ast.class == "ASTBinaryExpr" {
+        check_comments(ref ast.lhs);
+        check_comments(ref ast.rhs);
+    }
+}

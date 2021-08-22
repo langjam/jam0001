@@ -1,0 +1,19 @@
+export struct complex number has a `real part` and an `imaginary part`;
+
+export func square a complex number `z` {
+	return complex number {
+		re := pow(z.re, 2.0) - pow(z.im, 2.0),
+		im := 2.0 * z.re * z.im
+	};
+}
+
+export func add complex numbers `z1` and `z2` {
+	return complex number {
+		re := z1.re + z2.re,
+		im := z1.im + z2.im
+	};
+}
+
+export func magnitude squared of complex number `z` {
+	return z.re * z.re + z.im * z.im;
+}

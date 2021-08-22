@@ -1,0 +1,5 @@
+\ Reads an integer from a comment.
+
+\ 5
+3 READ-COMMENT
+.

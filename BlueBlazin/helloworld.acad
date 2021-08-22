@@ -1,0 +1,3 @@
+print /* [1] the most common first program greeting */;
+
+/* [[1]] {{"Hello, world!"}} */

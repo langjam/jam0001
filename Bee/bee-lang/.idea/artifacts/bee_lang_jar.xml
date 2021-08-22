@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="bee-lang:jar">
+    <output-path>$PROJECT_DIR$/bin</output-path>
+    <root id="archive" name="bee-lang.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/bin/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="bee-lang" />
+    </root>
+  </artifact>
+</component>

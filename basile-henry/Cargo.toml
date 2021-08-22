@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "comment-errors",
+    "comment-errors-test",
+]

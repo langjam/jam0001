@@ -1,0 +1,24 @@
+
+# First, we'll define a function to compute factorials.
+factorial($n):
+  # Ok, so the factorial function has been passed $n.
+  # First, we'll check is n is 0.
+  if $n == 0:
+    # It is 0! The factorial of 0 is 1 (a little weird, I know), so we'll just return that.
+    return 1
+  else:
+    # It's not, that means that we'll need to calculate the factorial of n-1, and multiply it by n.
+    # First, we'll calculate the factorial of n-1
+    $x = factorial($n - 1)
+    # Ok, the factorial of n-1 is $x.
+    # Now, we'll multiply that value by n.
+    $result = $x * $n
+    # The result of that is $result -- this is the factorial of n!
+    # All that's left to do is to return the result.
+    return $result
+
+$input = toNumber($input)
+# Then, we'll call it with our input, $input.
+$result = factorial($input)
+# Great, the result is $result!
+return $result

@@ -1,0 +1,12 @@
+/**
+ * Multiplies two numbers.
+ *
+ * @param x
+ * @param y
+ * @return result
+ */
+// Set result to x * y.
+// And we're done.
+
+// Multiply two numbers with x as 3 and y as 9 and call it the product.
+// Print a number with the number as the product.

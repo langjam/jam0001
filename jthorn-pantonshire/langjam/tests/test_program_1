@@ -1,0 +1,17 @@
+//constant a is 1 then prints a then baas "hello", 3
+function main()
+
+//baas [moos "hello", 3]
+
+//outputs 3
+function give()
+
+//repeat (prints a) b times
+function baa(a, b)
+
+//constant a is 1 then stores 2 in a
+function foo()
+
+
+//higher-orderism only works with functions returning expressions
+

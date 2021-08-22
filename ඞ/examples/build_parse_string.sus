@@ -1,0 +1,9 @@
+
+fn build(args) {
+    let ast = parse("error", "This is a mistake from the build script");
+    if ast.class == "Error" {
+        print("Parse error: ", ast.msg);
+    }
+    let ast = parse("let x = 3; print(x);", "This is live");
+    eval(ast);
+}

@@ -1,0 +1,12 @@
+#function task
+/*
+    @call sleep with 1000
+    @call println with "AmrDeveloper"
+*/
+
+#loop 100
+/*
+    @wait (@run task)
+*/
+
+@call println with 1

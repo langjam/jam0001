@@ -1,0 +1,25 @@
+print("Give me a number to check: ");
+let number to check := int(read line());
+
+let prime check := 1;
+
+if number < 2 {
+    prime := 0;
+} else {
+    let i the potential divisor := 2;
+    while i*i <= number {
+        println("considering ", i);
+        if number % i == 0 {
+            prime := 0;
+            break;
+        }
+        
+        i := i + 1;
+    }
+}
+
+if prime {
+    println(number, " is prime");
+} else {
+    println(number, " is not prime");
+}

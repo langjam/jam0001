@@ -1,0 +1,15 @@
+[package]
+name = "todo_fix"
+version = "0.1.0"
+authors = ["Olivia Palmu <oliviaspalmu@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+lalrpop = "0.19.6"
+
+[dependencies]
+lalrpop-util = "0.19.6"
+regex = "1"
+syn = "1.0.75"

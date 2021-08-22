@@ -1,0 +1,2 @@
+# first-class
+main = ["begin", ["define", "r", 10], ["*", "pi", ["*", "r", "r"]]]

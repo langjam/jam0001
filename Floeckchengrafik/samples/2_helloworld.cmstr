@@ -1,0 +1,23 @@
+/**************************
+ * Example 2: Hello World *
+ **************************/
+
+helloworld = function({ \\ Declare a Function
+    /*
+     * This function prints "Hello World!" twice to the console.
+     *
+     * By the way, this comment is a Function-Description-Comment in this context.
+     * More informations in the Readme under `Functions`.
+     */
+
+    h="Hello"? \\ Declare the first word
+    space=" "? \\ Declare the space
+    w="World"? \\ Declare the second word
+
+    out(h + space + w + "!")? \\ Print it to the screen
+
+    out(h : w + "!")? \\ The better way to print it to the screen, even without the space variable
+
+})?
+
+helloworld()? \\ Call the previously declared method

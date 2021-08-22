@@ -1,0 +1,17 @@
+\ Demonstrates dynamic commenting out.
+\ This is useful for ensuring parts of code do (not) run
+\ under certain conditions.
+
+\ Uncomment below to run 5 + 5
+\ 0
+
+\ Only trigger (un)comment if change is needed
+DEPTH 1 =
+DUP
+14 18 IS-COMMENT-RANGE INVERT XOR
+IF IF 14 18 UNCOMMENT-RANGE ELSE 14 18 COMMENT-RANGE THEN THEN
+
+\ 5
+\ 5
+\ +
+\ .

@@ -1,0 +1,31 @@
+
+fn build(args) {
+    print("Ignoring your source file and building my own");
+    let mul = ASTBinaryExpr {
+        op: "*",
+        lhs: ASTIntLiteral { value: 3 },
+        rhs: ASTIdent { name: "it" }
+    };
+    let let_stmt = ASTLetStmt {
+        var_name: "x",
+        value: mul,
+    };
+    let print_call = ASTFnCall {
+        name: "print",
+        args: [ ASTIdent { name: "x" } ]
+    };
+    let r = ASTFnCall {
+        name: "range",
+        args: [ ASTIntLiteral { value: 5 } ]
+    };
+    let for_loop = ASTForLoop {
+        var_name: "it",
+        target: r,
+        body: [ let_stmt, print_call ]
+    };
+    let ast = ASTFile {
+        elements: [ for_loop ]
+    };
+    print("Executing ", ast);
+    eval(ast);
+}

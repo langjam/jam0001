@@ -1,0 +1,22 @@
+cradle:
+  cabal:
+    - path: "src/Syntax.hs"
+      component: "boros:exe:boros"
+
+    - path: "src/Preprocess.hs"
+      component: "boros:exe:boros"
+
+    - path: "src/Parser.hs"
+      component: "boros:exe:boros"
+
+    - path: "src/Val.hs"
+      component: "boros:exe:boros"
+
+    - path: "src/Intrinsics.hs"
+      component: "boros:exe:boros"
+
+    - path: "src/Eval.hs"
+      component: "boros:exe:boros"
+
+    - path: "src/Main.hs"
+      component: "boros:exe:boros"
