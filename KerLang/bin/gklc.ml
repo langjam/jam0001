@@ -45,4 +45,6 @@ let () =
   else
     parse_file !input_files
     |> Kerlang.Kl_codegen.emit_kl_ir
-    |> Kerlang.Kl_codegen.print_prog
+    |> fun x ->
+      Kerlang.Kl_codegen.print_info x;
+      Kerlang.Kl_codegen.synthetize (open_out !output_file) x

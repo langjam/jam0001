@@ -161,7 +161,7 @@ and compile_operation ftable env =
   | Rec vs -> Kl_IR.app Kl_IR.SELF (List.map compile_val vs)
 
 and compile_value ftable env = function
-  | Arg x -> Kl_IR.Var x
+  | Arg x -> Kl_IR.Var (x - 1)
   | Cst n -> Kl_IR.Cst n
   | Var x -> List.assoc x env |> compile_expr ftable env
   | Hole -> failwith "remaning hole in expression, can't compile it down to Kl_IR"
