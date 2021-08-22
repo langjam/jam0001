@@ -281,6 +281,26 @@ impl<'i> Interpreter<'i> {
                     TokenKind::Or => {
                         Value::Bool(left.to_bool() || right.to_bool())
                     },
+                    TokenKind::BitwiseAnd => {
+                        match (left.clone(), right.clone()) {
+                            (Value::Number(l), Value::Number(r)) => {
+                                Value::Number((l as i64 & r as i64) as f64)
+                            }
+                            _ => {
+                                return Err(InterpreterError::UnsupportedOperandTypes(left.type_string(), "&".to_owned(), right.type_string()));
+                            }
+                        }
+                    },
+                    TokenKind::BitwiseOr => {
+                        match (left.clone(), right.clone()) {
+                            (Value::Number(l), Value::Number(r)) => {
+                                Value::Number((l as i64 | r as i64) as f64)
+                            }
+                            _ => {
+                                return Err(InterpreterError::UnsupportedOperandTypes(left.type_string(), "&".to_owned(), right.type_string()));
+                            }
+                        }
+                    },
                     TokenKind::Plus => {
                         match (left, right) {
                             (Value::String(mut l), Value::String(r)) => {
@@ -295,36 +315,27 @@ impl<'i> Interpreter<'i> {
                         }
                     },
                     TokenKind::Asterisk => {
-                        match (left, right) {
-                            (Value::String(l), Value::String(r)) => {
-                                return Err(InterpreterError::UnsupportedOperandTypes("string".to_owned(), "*".to_owned(), "string".to_owned()));
-                            },
+                        match (left.clone(), right.clone()) {
                             (Value::Number(l), Value::Number(r)) => {
                                 Value::Number(l * r)
                             }
-                            _ => todo!()
+                            _ => return Err(InterpreterError::UnsupportedOperandTypes("string".to_owned(), "*".to_owned(), "string".to_owned()))
                         }
                     },
                     TokenKind::Minus => {
-                        match (left, right) {
-                            (Value::String(l), Value::String(r)) => {
-                                return Err(InterpreterError::UnsupportedOperandTypes("string".to_owned(), "-".to_owned(), "string".to_owned()));
-                            },
+                        match (left.clone(), right.clone()) {
                             (Value::Number(l), Value::Number(r)) => {
                                 Value::Number(l - r)
                             }
-                            _ => todo!()
+                            _ => return Err(InterpreterError::UnsupportedOperandTypes("string".to_owned(), "*".to_owned(), "string".to_owned()))
                         }
                     },
                     TokenKind::ForwardSlash => {
-                        match (left, right) {
-                            (Value::String(l), Value::String(r)) => {
-                                return Err(InterpreterError::UnsupportedOperandTypes("string".to_owned(), "/".to_owned(), "string".to_owned()));
-                            },
+                        match (left.clone(), right.clone()) {
                             (Value::Number(l), Value::Number(r)) => {
                                 Value::Number(l / r)
                             }
-                            _ => todo!()
+                            _ => return Err(InterpreterError::UnsupportedOperandTypes("string".to_owned(), "*".to_owned(), "string".to_owned()))
                         }
                     },
                     _ => todo!()
