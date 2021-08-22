@@ -1,8 +1,7 @@
 package parser
 
 import (
-	"fmt"
-	"os"
+	"log"
 	"strings"
 
 	"github.com/grossamos/jam0001/shared"
@@ -97,8 +96,7 @@ func (p *Parser) makeAst() []shared.Node {
 		case shared.TTwhile:
 			p.neededBlocks += 1
 			if len(p.toks) <= 1 {
-				fmt.Println((&MissingBlockError{tok.Pos}).Error())
-				os.Exit(1)
+				log.Fatal(MissingBlockError{tok.Pos})
 			}
 
 			out = append(out,
@@ -124,20 +122,17 @@ func GenerateAst(toks []shared.Token) ([]shared.Node, map[string]shared.Node) {
 	parser := Parser{toks, 0, 0, map[string]shared.Node{}}
 	ast := parser.makeAst()
 	if parser.neededBlocks != 0 {
-		fmt.Println((&MissingBlockError{toks[0].Pos}).Error())
-		os.Exit(1)
+		log.Fatal(MissingBlockError{toks[0].Pos})
 	}
 
 	parser.Parse(shared.Node{IsExpression: true, Children: ast})
-		shared.Node{IsExpression: true, Children: ast}.Print("")
 
 	return ast, parser.Comments
 }
 
 func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Position) {
 	if !args[0].IsExpression {
-		fmt.Println((&UnexpectedError{args[0].Val.Value, args[0].Val.Pos}).Error())
-		os.Exit(1)
+		log.Fatal(UnexpectedError{args[0].Val.Value, args[0].Val.Pos})
 	}
 
 	if len(args[0].Children) != (map[string]int{
@@ -150,8 +145,7 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 		"dnz":   3,
 		"and":   2}[ins]) {
 
-		fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
-		os.Exit(1)
+		log.Fatal(IncorrectSignatureError{ins, pos})
 	}
 
 	if ins == "and" {
@@ -159,8 +153,7 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 			args[0].Children[0].Val.Type = shared.TTwcommentAnd
 			p.Parse(args[0])
 		} else {
-			fmt.Println((&IncorrectSignatureError{ins, pos}).Error())
-			os.Exit(1)
+			log.Fatal(IncorrectSignatureError{ins, pos})
 		}
 
 		return
@@ -173,8 +166,7 @@ func (p *Parser) parseInstruction(ins string, args []shared.Node, pos shared.Pos
 
 func (p *Parser) parseCall(args []shared.Node) {
 	if !args[0].IsExpression {
-		fmt.Println((&UnexpectedError{args[0].Val.Value, args[0].Val.Pos}).Error())
-		os.Exit(1)
+		log.Fatal(UnexpectedError{args[0].Val.Value, args[0].Val.Pos})
 	}
 
 	for _, arg := range args[0].Children {
@@ -192,8 +184,6 @@ func (p *Parser) parseComment(content string, add bool, value []shared.Node) {
 			IsExpression: true,
 			Children:     []shared.Node{p.Comments[content], value[0]}}
 
-		p.Comments[content].Print("")
-		fmt.Println("")
 	} else {
 		p.Comments[content] = value[0]
 	}
@@ -201,13 +191,11 @@ func (p *Parser) parseComment(content string, add bool, value []shared.Node) {
 
 func (p *Parser) parseWhile(args []shared.Node) {
 	if len(args) != 2 {
-		fmt.Println((&IncorrectSignatureError{"while", args[0].Val.Pos}).Error())
-		os.Exit(1)
+		log.Fatal(IncorrectSignatureError{"while", args[0].Val.Pos})
 	}
 
 	if !(args[0].IsExpression && args[1].IsExpression) {
-		fmt.Println((&IncorrectSignatureError{"while", args[0].Val.Pos}).Error())
-		os.Exit(1)
+		log.Fatal(&IncorrectSignatureError{"while", args[0].Val.Pos})
 	}
 
 	p.Parse(args[0])

@@ -23,3 +23,30 @@ type TypeError struct {
 func (te *TypeError) Error() string {
 	return fmt.Sprintf("TypeError (at line %d): %s", te.pos.Line, te.message)
 }
+
+type MathEvalError struct {
+	message string
+	pos     shared.Position
+}
+
+func (err *MathEvalError) Error() string {
+	return fmt.Sprintf("MathEvalError (at line %d): %s", err.pos.Line, err.message)
+}
+
+type EvalError struct {
+	message string
+	pos     shared.Position
+}
+
+func (err *EvalError) Error() string {
+	return fmt.Sprintf("EvalError (at line %d): %s", err.pos.Line, err.message)
+}
+
+type UnimplementedError struct {
+	message string
+	pos     shared.Position
+}
+
+func (err *UnimplementedError) Error() string {
+	return fmt.Sprintf("UnimplementedError (at line %d): %s", err.pos.Line, err.message)
+}

@@ -1,8 +1,7 @@
 package evaluator
 
 import (
-	"fmt"
-	"os"
+	"log"
 
 	"github.com/grossamos/jam0001/shared"
 )
@@ -33,7 +32,7 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 	for i := 0; i < len(expr.Children); i++ { // for all children
 		// if it is an expression, recursively evaluate it
 		if expr.Children[i].IsExpression {
-			if i == len(expr.Children) - 1 {
+			if i == len(expr.Children)-1 {
 				return e.eval_expr(expr.Children[i])
 			} else {
 				e.eval_expr(expr.Children[i])
@@ -54,13 +53,12 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 			return e.eval_while(expr)
 
 		case shared.TTnull:
-  
+
 		case shared.TTwcomment, shared.TTwcommentAnd: // skip comments
 			return shared.Node{}
 
 		default:
-			fmt.Println("Unimplemented feature:", expr.Val)
-			os.Exit(1)
+			log.Fatal(UnimplementedError{message: "opperation either doesn't exist or isn't implemented so far", pos: expr.Val.Pos})
 			return shared.Node{}
 		}
 	}

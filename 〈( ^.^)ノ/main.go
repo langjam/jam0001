@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+	"log"
 
 	"io/ioutil"
 	"math/rand"
@@ -10,22 +11,28 @@ import (
 	"github.com/grossamos/jam0001/evaluator"
 	"github.com/grossamos/jam0001/lexer"
 	"github.com/grossamos/jam0001/parser"
+	"github.com/grossamos/jam0001/shared"
 )
 
 func main() {
 	rand.Seed(time.Now().Unix())
 
+	// load test code from disk
 	dat, err := ioutil.ReadFile("examples/test_while.sml")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-
 	code := string(dat)
 	fmt.Println(code)
 
+	// run lexer
 	toks := lexer.RunLexer(code)
 	fmt.Println(toks)
+
+	// run parser
 	nodes, comments := parser.GenerateAst(toks)
-	// nodes.Print("")
+	shared.Node{IsExpression: true, Children: nodes}.Print("")
+
+	// run evaluator
 	evaluator.RunEvaluator(nodes, comments)
 }
