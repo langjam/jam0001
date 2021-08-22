@@ -64,7 +64,6 @@ func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
 func (e *Evaluator) eval_while(expr shared.Node) shared.Node {
 	for isTrue(e.eval_expr(expr.Children[1]).Val.Value) {
 		e.eval_expr(expr.Children[2])
-		break
 	}
 
 	return shared.Node{}
@@ -83,8 +82,11 @@ func (e *Evaluator) eval_expr(expr shared.Node) shared.Node {
 	for i:=0; i < len(expr.Children); i++ { // for all children
 		// if it is an expression, recursively evaluate it
 		if expr.Children[i].IsExpression { // this fucking code makes the destruction
-			expr.Children[i] = e.eval_expr(expr.Children[i])
-			return e.eval_expr(expr)
+			if len(expr.Children) == 1 {
+				return e.eval_expr(expr.Children[i])
+			} else {
+				e.eval_expr(expr.Children[i])
+			}
 		}
 
 		switch expr.Children[i].Val.Type {
