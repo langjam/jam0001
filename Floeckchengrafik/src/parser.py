@@ -4,11 +4,18 @@ from lexer import ComstructLexer
 from application_stack_utils import StatementNode
 
 
+class CustomLog:
+    def warning(self, *args):
+        pass
+
+
 # noinspection PyUnusedLocal
 class ComstructParser(Parser):
     tokens = ComstructLexer.tokens
 
     # debugfile = "parser.log"
+
+    log = CustomLog()
 
     precedence = (
         ("left", "NAME", "NUMBER", "STRING"),
