@@ -89,7 +89,7 @@ env = {
     "string_islower": StatementNode.FunctionDefinitionNode("internal"),
     "string_isupper": StatementNode.FunctionDefinitionNode("internal"),
     "string_lower": StatementNode.FunctionDefinitionNode("internal"),
-    "string_uppper": StatementNode.FunctionDefinitionNode("internal"),
+    "string_upper": StatementNode.FunctionDefinitionNode("internal"),
     "string_removeprefix": StatementNode.FunctionDefinitionNode("internal"),
     "string_removesuffix": StatementNode.FunctionDefinitionNode("internal"),
     "string_replace": StatementNode.FunctionDefinitionNode("internal"),
