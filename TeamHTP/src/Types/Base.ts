@@ -11,6 +11,10 @@ class Base {
         //console.log(`[${tag?.getMdastContent().label}]: ${mdastContent.type}`)
     }
 
+    type() {
+        return this.getMdastContent().type
+    }
+
     getMdastContent(): Content {
         return this.mdastContent
     }

@@ -10,8 +10,15 @@ class Paragraph extends Base {
     append(item: string): void {
         let md = mdastToMd(this.getMdastContent(), true)
         md += item
-        const serializedChildren = (<MdastParagraph>mdToMdast(md).children[0]).children
-        this.getMdastContent().children = serializedChildren
+        this.text(md)
+    }
+
+    text(text?: string): string {
+        if (text) {
+            const serializedChildren = (<MdastParagraph>mdToMdast(text).children[0]).children
+            this.getMdastContent().children = serializedChildren
+        }
+        return mdastToMd(this.getMdastContent(), true)
     }
 }
 

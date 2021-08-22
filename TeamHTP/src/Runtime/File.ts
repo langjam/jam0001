@@ -13,7 +13,7 @@ function serializeRuntime(runtime: Runtime) {
 
 async function saveToDisk(path: string, runtime: Runtime) {
     const serialized = serializeRuntime(runtime)
-    console.log(serialized)
+    //console.log(serialized)
     fs.writeFileSync(path, serialized)
 }
 

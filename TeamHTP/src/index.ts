@@ -21,5 +21,6 @@ startRepl(async (input) => {
     const out = function (js: string) {
         return eval(js)
     }.call(evalScope, js)
+    console.log(out)
     await saveToDisk(srcPath, runtime)
 }).catch(console.log)
