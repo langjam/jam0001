@@ -9,8 +9,10 @@ open Kl_IR
 
 let emit_kl_ir (prog : spec list) : (string * ast) list =
   List.fold_left (fun ftable (Spec (_, fname, _) as s) ->
-    Printf.printf "\nProcessing function %s.\n" fname;
-    (fname, generate_function s |> compile_function ftable)::ftable
+    Printf.printf "\n[Processing function \x1b[1;36m%s\x1b[0m]\n" fname;
+    let res = (fname, generate_function s |> compile_function ftable)::ftable in
+    Printf.printf "[\x1b[1;32mOk\x1b[0m]\n";
+    res
   ) [] prog |> List.rev
 
 module type TermRealizer = sig
@@ -81,8 +83,17 @@ module C_Realizer = Realizer (struct
 
 type lang = ML | PY | C
 
+let pp_lang fmt = function
+  | ML -> Printf.fprintf fmt "OCaml"
+  | PY -> Printf.fprintf fmt "Python"
+  | C -> Printf.fprintf fmt "C"
+
 let realize oc lang prog =
+  Printf.printf "[Realizing the program in \x1b[1;36m%a\x1b[0m]\n" pp_lang lang;
   match lang with
-  | ML -> ML_Realizer.realize oc prog
-  | PY -> PY_Realizer.realize oc prog
+  | ML ->
+    ML_Realizer.realize oc prog
+  | PY ->
+    PY_Realizer.realize oc prog
   | C -> C_Realizer.realize oc prog
+

@@ -331,15 +331,19 @@ let rec complete_holes decl (remain : expr list) = function
       (Node (Rec l)), !r
 
 let rec compile_yolo decl = function
-  | [] -> raise (CompileError "unable to complete yolo")
+  | [] -> raise (CompileError "unable to synthetize the function !")
   | e::q ->
     try let res, _ = complete_holes decl q e in res
     with Failure _ -> compile_yolo decl q
 
 let rec compile_function (ftable : Kl_IR.ftable) { result; declarations; _ } =
   match result with
-  | Function e -> compile_expr ftable declarations e
-  | Yolo l -> compile_expr ftable declarations (compile_yolo declarations l)
+  | Function e ->
+    Printf.printf "- compiling the function to KL_IR\n";
+    compile_expr ftable declarations e
+  | Yolo l ->
+    Printf.printf "- perform function synthesis\n";
+    compile_expr ftable declarations (compile_yolo declarations l)
 
 and compile_expr ftable env = function
   | Leaf v -> compile_value ftable env v
