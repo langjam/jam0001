@@ -42,11 +42,11 @@ At the second station you again see a big sign underneath the station name, this
 you hear a man shout at you to multiply your number by 3. Again, not really knowing why you do this, 
 you multiply your number. The train departs again, not really knowing what to expect. 
 
-Just before you arrive at the station where you have to get off of the train, you notice something.
+Just before you arrive at the station where you have to get off the train, you notice something.
 There is no one else in the train? How did you not see this before? "That's pretty weird" you say to 
 yourself. 
 
-At your destination you again see a weird sign, this one saying `PRINT NUMBER`. When you get off of
+At your destination you again see a weird sign, this one saying `PRINT NUMBER`. When you get off
 the train, a woman walks up to you, and asks you what your number is. "69?" you say. Suddenly the woman
 shouts as loud as she can: "69!" Still not having any idea what this was about, you go on with your day. 
 
