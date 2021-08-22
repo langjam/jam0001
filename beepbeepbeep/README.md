@@ -25,11 +25,11 @@ fn hello() {
     ];
     let mut out = stdout();
     // TODO: somehow fix this cursed code
-    let mut buf = Vec::with_capacity(chars.len() * 4);
     for c in chars.iter().rev() {
+        let mut buf = vec![0; 4];
         c.encode_utf8(&mut buf).unwrap();
+        out.write(&buf).unwrap();
     }
-    out.write(&buf).unwrap();
     out.flush.expect("unwrap");
 }
 ```
