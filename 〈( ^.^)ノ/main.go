@@ -37,5 +37,8 @@ func main() {
 	}
 
 	// run evaluator
-	evaluator.RunEvaluator(nodes, comments)
+	err = evaluator.RunEvaluator(nodes, comments)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

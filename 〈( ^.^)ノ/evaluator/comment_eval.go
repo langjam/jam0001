@@ -1,9 +1,8 @@
 package evaluator
 
 import (
-	"os"
-	"fmt"
 	"strings"
+
 	"github.com/grossamos/jam0001/shared"
 )
 
@@ -17,7 +16,8 @@ func splitComments(input string) (comments []string) {
 	return
 }
 
-func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
+func (e *Evaluator) eval_string_call(expr shared.Node) (shared.Node, error) {
+	var err error
 	wholeComment := e.unrefString(expr.Children[0].Val.Value)
 
 	comments := splitComments(wholeComment)
@@ -29,13 +29,15 @@ func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
 	args := make([]string, len(expr.Children[1].Children))
 
 	for i, child := range expr.Children[1].Children {
-		args[i] = e.eval_expr(child).Val.Value
+		var evaled_expr shared.Node
+		evaled_expr, err = e.eval_expr(child)
+		args[i] = evaled_expr.Val.Value
 	}
 
 	ev := Evaluator{
 		negative: e.negative,
 		positive: args,
-		zero: e.zero,
+		zero:     e.zero,
 		comments: e.comments}
 
 	val := shared.Node{}
@@ -43,23 +45,21 @@ func (e *Evaluator) eval_string_call(expr shared.Node) shared.Node {
 	for _, comment := range comments {
 		_, ok := ev.comments[comment]
 		if !ok {
-			fmt.Println("Trying to call non existant comment.")
-			os.Exit(1)
+			return shared.Node{}, &EvalError{"Trying to call non existant comment.", expr.Val.Pos}
 		}
 
 		if ev.maxRef > len(ev.positive) {
-			fmt.Println("Not enough arguments.")
-			os.Exit(1)
+			return shared.Node{}, &EvalError{"Not enough arguments", expr.Val.Pos}
 		}
 
 		ev.positive = ev.positive[ev.maxRef:]
 		ev.maxRef = 0
 
-		val = ev.eval_expr(ev.comments[comment])
+		val, err = ev.eval_expr(ev.comments[comment])
 	}
 
 	e.zero = ev.zero
 	e.negative = ev.negative
 
-	return val
+	return val, err
 }

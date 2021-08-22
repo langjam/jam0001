@@ -9,14 +9,15 @@ import (
 	"github.com/grossamos/jam0001/shared"
 )
 
-func (e *Evaluator) eval_children(parentNode []shared.Node) []shared.Node {
+func (e *Evaluator) eval_children(parentNode []shared.Node) ([]shared.Node, error) {
+	var err error
 	out := make([]shared.Node, len(parentNode))
 
 	for index, subnode := range parentNode {
-		out[index] = e.eval_expr(subnode)
+		out[index], err = e.eval_expr(subnode)
 	}
 
-	return out
+	return out, err
 }
 
 func (e *Evaluator) unrefString(str string) string {
@@ -60,7 +61,7 @@ func (e *Evaluator) getRefValue(ref string) string {
 	}
 
 	if len(arr) < varIndex {
-		toAppend := make([]string, varIndex - len(arr))
+		toAppend := make([]string, varIndex-len(arr))
 
 		if varIndex < 0 {
 			e.negative = append(e.negative, toAppend...)

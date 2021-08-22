@@ -5,33 +5,36 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
-	"log"
 
 	"github.com/grossamos/jam0001/evaluator/m"
 	"github.com/grossamos/jam0001/lexer"
 	"github.com/grossamos/jam0001/shared"
 )
 
-func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
+func (e *Evaluator) eval_instruction(expr shared.Node) (shared.Node, error) {
+	var err error
 	instruction_type := expr.Children[0].Val.Value
 	instruction_args := expr.Children[1].Children
 
 	switch instruction_type {
 	case lexer.II_set:
 		set_ref := instruction_args[0]
-		set_values := e.eval_children(instruction_args[1:])
+		var set_values []shared.Node
+		set_values, err = e.eval_children(instruction_args[1:])
 
 		if set_ref.Val.Type != shared.TTref {
-			log.Fatal(EvalError{message: "set can only be used on tape", pos: expr.Val.Pos})
+			err = &EvalError{message: "set can only be used on tape", pos: expr.Val.Pos}
+			return shared.Node{}, err
 		}
 
 		e.setRefValue(
 			set_ref.Val.Value, set_values[0].Val.Value)
 
-		return set_ref
+		return set_ref, err
 
 	case lexer.II_print:
-		args := e.eval_children(instruction_args)
+		var args []shared.Node
+		args, err = e.eval_children(instruction_args)
 		printString := args[0].Val.Value
 		printString = e.unrefString(printString)
 		fmt.Println(printString)
@@ -41,12 +44,13 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 		mathInput = e.unrefString(mathInput)
 		mResult, err := m.Do(mathInput)
 		if err != nil {
-			log.Fatal(MathEvalError{message: "expression: \"" + mathInput + "\"produced error: " + err.Error(), pos: expr.Val.Pos})
+			err = &MathEvalError{message: "expression: \"" + mathInput + "\"produced error: " + err.Error(), pos: expr.Val.Pos}
 		}
-		return makeNumberNode(mResult)
+		return makeNumberNode(mResult), err
 
 	case lexer.II_not:
-		args := e.eval_children(instruction_args)
+		var args []shared.Node
+		args, err = e.eval_children(instruction_args)
 		input := args[0].Val.Value
 
 		out := ""
@@ -63,24 +67,27 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 		}
 
 		instruction_args[0].Val.Value = out
-		return instruction_args[0]
+		return instruction_args[0], err
 
 	case lexer.II_smile:
 		smiles := []string{"〈( ^.^)ノ", "(>̯-̮<̯)", "(/^▽^)/", "(⌐■_■)", "( ¬_¬)"}
 
-		return makeStringNode(smiles[rand.Int()%len(smiles)])
+		return makeStringNode(smiles[rand.Int()%len(smiles)]), err
 
 	case lexer.II_inz:
-		args := e.eval_children(instruction_args)
+		var args []shared.Node
+		args, err = e.eval_children(instruction_args)
 		if !stringIsTrue(args[0].Val.Value) {
 			break
 		}
 
-		split := splitComments(args[1].Val.Value)	
+		split := splitComments(args[1].Val.Value)
 
-		pos, err := strconv.Atoi(args[2].Val.Value)
+		var pos int
+		pos, err = strconv.Atoi(args[2].Val.Value)
 		if err != nil {
-			// TODO
+			// TODO: replace with propper error
+			return shared.Node{}, err
 		}
 
 		// pass by reference hell
@@ -91,27 +98,30 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 			args[3].Val.Value)
 		out = append(out, split[pos:]...)
 
-		return makeStringNode(strings.Join(out, ","))
+		return makeStringNode(strings.Join(out, ",")), err
 	case lexer.II_dnz:
-		args := e.eval_children(instruction_args)
+		var args []shared.Node
+		args, err = e.eval_children(instruction_args)
 		if !stringIsTrue(args[0].Val.Value) {
 			break
 		}
 
-		split := splitComments(args[1].Val.Value)	
+		split := splitComments(args[1].Val.Value)
 
-		pos, err := strconv.Atoi(args[2].Val.Value)
+		var pos int
+		pos, err = strconv.Atoi(args[2].Val.Value)
 		if err != nil {
-			// TODO
+			// TODO: replace with propper error
+			return shared.Node{}, err
 		}
 
-		if pos >= len(split) -1 {
+		if pos >= len(split)-1 {
 			break
 		}
 
 		split = append(split[:pos], split[pos+1:]...)
 
-		return makeStringNode(strings.Join(split, ","))
+		return makeStringNode(strings.Join(split, ",")), err
 	}
-	return shared.Node{}
+	return shared.Node{}, err
 }
