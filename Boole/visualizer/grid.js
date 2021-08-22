@@ -62,6 +62,14 @@ const STATION_TYPE = {
     "switch_empty": "op_switch%20empty.png",
 }
 
+const DECORATIONS = {
+    Decoration1: "decoration1.png",
+    Decoration2: "decoration2.png",
+    Decoration3: "decoration3.png",
+    Decoration4: "decoration4.png",
+    Decoration5: "decoration5.png"
+}
+
 let locomotiveBackground;
 let locomotiveForeground;
 let locomotiveAccent = {}
@@ -72,7 +80,7 @@ let stopper;
 let cloud;
 let stationTypeImages = {}
 let lineLookup = new Map();
-
+let decorations = []
 
 
 function preloadTrain() {
@@ -93,6 +101,11 @@ function preloadTrain() {
     for (const i in STATION_TYPE) {
         const station = STATION_TYPE[i];
         stationTypeImages[i] = loadImage(`tiles/${station}`)
+    }
+
+    for (const i in DECORATIONS) {
+        const dec = DECORATIONS[i];
+        decorations.push(loadImage(`tiles/${dec}`))
     }
 }
 
