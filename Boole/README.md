@@ -63,6 +63,11 @@ At your destination you again see a weird sign, this one saying `PRINT NUMBER`. 
 the train, a woman walks up to you, and asks you what your number is. "69?" you say. Suddenly the woman
 shouts as loud as she can: "69!" Still not having any idea what this was about, you go on with your day. 
 
+# First class passengers
+While the second class passengers determine the data, first class passengers ("comments") influence the way the visualizer looks. They influence the color, length and accents of the train. 
+Additionally, once every while the comment is shown as a message from the train.
+![](screenshots/comment.png)
+
 # Interesting Programs
 * incrementer.train outputs all numbers from 1 to infinity.
 * fibonacci_simple.train outputs all fibonacci numbers, using a very simple circuit.
