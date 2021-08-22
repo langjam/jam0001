@@ -18,6 +18,7 @@ Leafr is written in Ruby 2.6.3.
     -t, --tests                      Run the test suite used to develop the language
     -h, --help                       Display this help
   ```
+![Demo gif of Rule 110 in Leafr](images/rule110_demo.gif)
 
 ## Samtara Team Members
 
