@@ -1,8 +1,1 @@
-main = [
-    { puts = "Hello, world" },
-    { puts2 = [] },
-]
-
-puts2 = [
-    { puts = "Hello 2" },
-]
+main = "Hello, world!"
