@@ -5,10 +5,12 @@ import {Definition} from 'mdast'
 class Tag extends Base {
     private readonly members: Record<string, Function>
     private child: Base | undefined
+    private rawMd: string
 
-    constructor(mdastContent: Definition, tag?: Tag) {
+    constructor(mdastContent: Definition, rawMd: string, tag?: Tag) {
         super(mdastContent, tag);
         this.child = undefined
+        this.rawMd = rawMd
         this.members = {}
     }
 
@@ -34,6 +36,10 @@ class Tag extends Base {
 
     addMember(memberName:string, memberFunction: Function): void {
         this.members[memberName] = memberFunction
+    }
+
+    getRawMd(): string {
+        return this.rawMd
     }
 }
 

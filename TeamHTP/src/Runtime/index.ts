@@ -1,8 +1,7 @@
 import Tag from '../Types/Tag'
 import {mdToMdast} from '../Markdown'
-import {Base, Function, wrap} from '../Types'
+import {Base, wrap} from '../Types'
 import {Root} from 'mdast'
-import {Position} from 'unist'
 
 class Runtime {
     private readonly tagDefs: Record<string, Tag>

@@ -3,7 +3,7 @@ import {fromMarkdown} from 'mdast-util-from-markdown'
 import {toMarkdown} from 'mdast-util-to-markdown'
 import {gfm} from 'micromark-extension-gfm'
 import {gfmFromMarkdown, gfmToMarkdown} from 'mdast-util-gfm'
-import {Base} from './Types'
+import {Base, Function, Tag} from './Types'
 
 function mdToMdast(src: string): Root {
     return fromMarkdown(src, {
@@ -17,6 +17,12 @@ function mdastToMd(content: Content | Root): string {
 }
 
 function wrappedElementToMd(content: Base): string {
+    if (content instanceof Function) {
+        return content.getRawMd()
+    }
+    if (content instanceof Tag) {
+        return content.getRawMd()
+    }
     return mdastToMd(content.getMdastContent())
 }
 
@@ -33,4 +39,5 @@ export {
     mdastToMd,
     mdToMdast,
     mdastListItemToMd,
+    wrappedElementToMd,
 }

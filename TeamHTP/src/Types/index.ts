@@ -39,7 +39,7 @@ function wrap(runtime: Runtime, mdastContent: MdastContent, rawMd: string, tag?:
             if (runtime.isTagDefined(tagName)) {
                 throw new Error(`Tag with this name is already defined '${tagName}'`)
             }
-            const wrappedTag = new (type as typeof Tag)(mdastContent, tag)
+            const wrappedTag = new (type as typeof Tag)(mdastContent, rawMd, tag)
             runtime.defineTag(tagName, wrappedTag)
             return wrappedTag
         }
