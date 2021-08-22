@@ -460,7 +460,7 @@ func (e *Evaluator) Evaluate(input []Token) error {
 				}
 			}
 
-		case SinOp, CosOp, TanOp:
+		case AbsOp, SqrtOp, SinOp, CosOp, TanOp, RandOp:
 			// Execut a function call on the arguments
 			e.operations = append(e.operations, Operation{token.kind, PrecedenceMap[token.kind]})
 
