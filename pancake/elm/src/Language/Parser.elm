@@ -1,6 +1,6 @@
 module Language.Parser exposing (..)
 
-import Char exposing (isAlphaNum)
+import Char exposing (isAlpha)
 import Language.AST exposing (AST, Atom(..), Instruction, Universe(..))
 import Parser exposing (..)
 import Tuple exposing (pair)
@@ -38,6 +38,8 @@ instruction =
             |= atom
             |. spaces
             |. end
+        , succeed (pair Lambda)
+            |= label
         , succeed (pair Alpha)
             |. spaces
             |= atom
@@ -72,6 +74,16 @@ atom =
         ]
 
 
+label : Parser Atom
+label =
+    succeed Label
+        |. symbol "@"
+        |. spaces
+        |= identifier
+        |. spaces
+        |. end
+
+
 identifier : Parser String
 identifier =
     getChompedString (chompWhile isIdentifier)
@@ -79,4 +91,4 @@ identifier =
 
 isIdentifier : Char -> Bool
 isIdentifier c =
-    isAlphaNum c || List.member c (String.toList "<=>!+-*/")
+    isAlpha c || List.member c (String.toList "<=>!$%&^?+-*/")

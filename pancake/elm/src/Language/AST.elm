@@ -35,6 +35,7 @@ type alias Instruction =
 type Universe
     = Alpha
     | Omega
+    | Lambda
 
 
 universeToString : Universe -> String
@@ -45,6 +46,9 @@ universeToString universe =
 
         Omega ->
             "comment"
+
+        Lambda ->
+            "label"
 
 
 
@@ -58,6 +62,7 @@ type Atom
     = Int Int
     | Str String
     | List (List Atom)
+    | Label String
     | Quoted String
     | Actual String
 
