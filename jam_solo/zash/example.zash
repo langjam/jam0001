@@ -1,7 +1,12 @@
-#: Comments can go to the end of the line...
-y := #: ...or can be assigned to a variable. :#
+#: Welcome to the zash Programming Language!
+#: Where comments are First-Class Citizens.
 
-x := 2 * 4 #: ...or be embedded inline! :# / 2
+#: Comments extend to the end of the line...
+y := #: ...can be assigned to a variable. :#
+
+x := 2 * 4 #: ...can be embedded! :# / 2
+
+y = #: ...can be #: nested :# too. :#
 
 #: This function concatenates comments.
 #: So it receives comments as args and 
@@ -12,4 +17,4 @@ fn comment_concat(a, b) {
 
 #: Here we pass a comment literal(?) and
 #: a variable containing a comment as a value.
-comment_concat(#: Pre :#, y)
+comment_concat(#: Pre: :#, y)
