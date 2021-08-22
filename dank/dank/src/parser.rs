@@ -88,6 +88,20 @@ peg::parser!(pub grammar dank() for str {
          / start:position!() "return" ___ value:expr()? ";" end:position!() {
             Stmt { span: start..end, kind: StmtKind::Return(value.map(Box::new)).alloc() }
          }
+         / start:position!() ( "please" / "do" ) _ func:ident_with_whitespace() _
+                             args:( "with" [' ' | '\t'] args:(expr() ++ ("," _)) _ "."? {args})? _ ";"?
+           end:position!() {
+            Stmt {
+                span: start..end,
+                kind: StmtKind::ExprStmt(Box::new(Expr {
+                    span: start..end,
+                    kind: ExprKind::Call(Box::new(Expr {
+                        span: start..end,
+                        kind: ExprKind::Variable(func.into()).alloc()
+                    }), args.unwrap_or_default()).alloc()
+                })).alloc()
+            }
+         }
          / start:position!() name:ident() ___ "=" ___ value:expr() ___ ";" end:position!() {
           Stmt { span: start..end, kind: StmtKind::Assignment(name.into(), Box::new(value)).alloc() }
          }
@@ -106,7 +120,7 @@ peg::parser!(pub grammar dank() for str {
 
 
     pub rule func() -> Stmt<'input>
-    = start:position!() "fn" [' ' | '\t']+ ___ name:ident() _ "(" args:ident() ** ("," ___) ")" ___ body:block() end:position!()
+    = start:position!() "fn" [' ' | '\t']+ ___ name:ident_with_whitespace() _ "(" args:ident() ** ("," ___) ")" ___ body:block() end:position!()
     {
         Stmt { span: start..end, kind: StmtKind::FuncDecl(Box::new(Function {
             name: name.into(),
@@ -195,7 +209,8 @@ peg::parser!(pub grammar dank() for str {
     pub rule primary() -> Expr<'input>
         = lambda()
         / start:position!() l:literal() end:position!() { Expr { kind: ExprKind::Literal(l).alloc(), span: start..end }}
-        / start:position!() i:ident() end:position!() { Expr { kind: ExprKind::Variable(i.into()).alloc(), span: start..end } }
+        // XXX: this might break
+        / start:position!() i:ident_with_whitespace() end:position!() { Expr { kind: ExprKind::Variable(i.into()).alloc(), span: start..end } }
         / "(" _ e:expr() _ ")" { e }
         / object()
 
@@ -234,8 +249,8 @@ peg::parser!(pub grammar dank() for str {
         / "print"
 
     /// A list of identifiers separated by whitespace.
-    rule ident_with_whitespace() -> Vec<&'input str>
-        = i:$(ident()) ** [' ' | '\t'] { i }
+    rule ident_with_whitespace() -> &'input str
+        = i:$(ident() ++ " ") { i }
 
     /// Parses the first character of an identifier, which cannot contain numbers
     rule ident_start() -> &'input str = s:$(['a'..='z'|'A'..='Z'|'_']) { s }
@@ -246,7 +261,7 @@ peg::parser!(pub grammar dank() for str {
     /// Parses an entire identifier, ensuring no reserved keywords are used
     rule ident() -> &'input str
         = i:quiet!{ $(ident_start() ident_chars()*) } {?
-              if ["null", "false", "true", "fn", "return", "print"].contains(&i) {
+              if ["null", "false", "true", "fn", "return", "print", "with"].contains(&i) {
                   Err("Cannot use a reserved keyword as an identifier")
               } else {
                   Ok(i)
@@ -559,6 +574,10 @@ Ast
 
         fn returns_x(x) { return x; }
         fn returns_nothing() { return; }
+
+        fn spaced name() {}
+        do spaced name
+        do spaced name with 1
       "#;
 
         test_eq!(
@@ -638,6 +657,29 @@ Ast
             body: CommentBody::Empty
             stmt: StmtKind::Return
               value: None
+    LineComment
+      body: CommentBody::Empty
+      stmt: Function
+        name: "spaced name"
+        args= 
+        body= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::ExprStmt
+        expr: ExprKind::Call
+          callee: ExprKind::Variable
+            name: "spaced name"
+          args= 
+    LineComment
+      body: CommentBody::Empty
+      stmt: StmtKind::ExprStmt
+        expr: ExprKind::Call
+          callee: ExprKind::Variable
+            name: "spaced name"
+          args= 
+            ExprKind::Literal
+              field0: Num(1.0)
+
         "#
         );
     }

@@ -3,12 +3,12 @@
 //     print "print '" + x + "';";
 // }
 //
-// fn print_ast() {
+// fn show ast() {
 //      print "print '" + AST.tree + "';";
 // }
 //
 
-// print_ast()
+// please show ast
 let x = 7;
 
 // this is a test comment
