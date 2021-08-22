@@ -11,7 +11,7 @@ Here is an example program :
 ```c
 /*
 	This function takes 1 argument,
-	and multiply it by 2
+	it returns the product of argument 1 and 2.
 */
 function twice;
 ```
@@ -22,7 +22,7 @@ When executing a program written in KerLang, you first ask the compiler to gener
 gklc file.kl
 ```
 
-outputs : 
+outputs :
 
 ```ocaml
 let twice x = 2 * x
@@ -47,5 +47,3 @@ opam install dune
 ### Compiling the project
 
 Compiling the Glorious KerLang Compiler is as simple as typing `dune build` at the project's root !
-
-
