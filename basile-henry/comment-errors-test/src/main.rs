@@ -13,7 +13,9 @@ fn get_config() -> eyre::Result<String> {
     /// # Reading config file
     ///
     let file = {
-        /// ## Opening file: `doesn't exist`
+        // We can refer to variables from scope in error messages!
+
+        /// ## Opening file: `<config_path>`
         ///
         /// It **failed**, for one of the following reasons:
         ///
