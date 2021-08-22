@@ -22,39 +22,7 @@ For example, the above program prints "all your base are belong to us", not "hel
 
 Also for convenience, you can either use "function" or "#" to express functions
 
-## Constants and variables
-Variables can be set using `stores|storing <expression> in <variable name>`.
 
-A constant can be set using `constant <name> is <expression>`. Once set, it cannot be reassigned.
-
-```
-//constant pi is 3.14
-# pi()
-
-//stores 1 in x
-# x()
-
-//storing 1 in x
-# x()
-```
-Conditional, looping and chaining syntax respectively:
-
-- `if <expression> <statement> else|otherwise <statement>`
-- `repeatedly <statement> <number of iterations> times`
-- `<statement> then <statement>*`
-
-## Conditional statements, looping and statement chaining
-```
-//if 5==6 prints "true" else "false"
-# decision()
-
-//repeatedly prints "hello" 5 times
-# looping()
-
-//prints "hello" then prints "world"
-# chain()
-
-```
 ## Functions
 To declare a function, use `function <name>()` (or shorthand `# <name>()`), with a comment above it to define the function's behaviour.
 
@@ -111,6 +79,38 @@ function average(a, b)
 ## Main Function
 The entry point to a program is a function called `main` which takes no arguments.
 
+## Constants and variables
+Variables can be set using `stores|storing <expression> in <variable name>`.
+
+A constant can be set using `constant <name> is <expression>`. Once set, it cannot be reassigned.
+
+```
+//constant pi is 3.14
+# pi()
+
+//stores 1 in x
+# x()
+
+//storing 1 in x
+# x()
+```
+Conditional, looping and chaining syntax respectively:
+
+- `if <expression> <statement> else|otherwise <statement>`
+- `repeatedly <statement> <number of iterations> times`
+- `<statement> then <statement>*`
+
+## Conditional statements, looping and statement chaining
+```
+//if 5==6 prints "true" else "false"
+# decision()
+
+//repeatedly (prints "hello") 5 times
+# looping()
+
+//prints "hello" then prints "world"
+# chain()
+```
 ## Native Functions
 
 The `measure` function returns the length of a string or list.
@@ -150,7 +150,11 @@ function twice(f, a)
 ```
 # Example programs
 
-Fibonacci sequence
+The `langjam/example_programs/` directory contains several example programs.
+
+Here are a few of them:
+
+## Fibonacci sequence
 ```
 // This function fibonaccis 20 then prints it
 function main()
@@ -162,7 +166,7 @@ function fibonacci(n)
 ```
 
 
-A mapping function
+## A mapping function
 ```
 // This function maps increment, list[1, 2, 3] then prints it
 function main()
