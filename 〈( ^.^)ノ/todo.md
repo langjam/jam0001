@@ -34,13 +34,11 @@
 			- [ ] - functions
 
 		- [x] - set
-		- [ ] - not
+		- [x] - not
 		- [x] - print
-		- [ ] - del
-		- [ ] - ins
-		- [ ] - inz
-		- [ ] - dnz
-		- [ ] - smile
+		- [x] - inz
+		- [x] - dnz
+		- [x] - smile
 
 	- [x] - referencing variables
 	- [x] - replacing refs in strings
