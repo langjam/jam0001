@@ -81,7 +81,12 @@ struct Parser_Node {
 void parser_init(const string src);
 struct Parser_Node parser_parse_toplevel();
 struct Parser_State *parser_get_state();
+
 struct Parser_Node *pnode_uvalue(struct Parser_Node *of);
 struct Parser_Node *pnode_right(struct Parser_Node *of);
 struct Parser_Node *pnode_left(struct Parser_Node *of);
+struct Parser_Node *pnode_cond(pnode_t *of);
+struct Parser_Node *pnode_body(pnode_t *of);
+struct Parser_Node *pnode_alt(pnode_t *of);
+
 void parser_deinit();
