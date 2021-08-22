@@ -1,6 +1,6 @@
 # 〈( \^.\^)ノ
 
-insert-name-here is the second coming of **Jesus** and an interpreted, **not** esoteric langanguage for writing complex **safety** oriented applications in large environments.
+insert-name-here is the the best think that happened since [blank](https://www.youtube.com/watch?v=dQw4w9WgXcQ) and an interpreted, **not** esoteric langanguage for writing complex **safety** oriented applications in large environments.
 It was created for [langjam0001](https://github.com/langjam/jam0001) by team ``〈( ^.^)ノ``.
 It is based around two tapes of registers for accessing variables, arguments, etc. and an interesting comment-first function approach, that allows for the dynamic creation of functions.
 
