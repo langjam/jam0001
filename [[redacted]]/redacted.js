@@ -237,7 +237,7 @@ function build_parser() {
 		if (result === undefined) return undefined
 		let access_token
 		while ((access_token = try_consume('>>')) !== undefined) {
-			const field = consume('ident')
+			const field = try_consume('ident') || consume('int')
 			result = { kind: 'field-access', source: result, field, children: [result, access_token, field] }
 		}
 		return result
@@ -380,7 +380,7 @@ class RedactedArray extends RedactedObject {
 		this.elements = elements
 	}
 	load_prop(key) {
-		if (/^[1-9][0-9]+$/.test(key))
+		if ((typeof key === 'number' && key === Math.floor(key)) || /^[1-9][0-9]+$/.test(key))
 			return this.elements[key]
 		else if (key === 'length')
 			return redactify(this.elements.length)
@@ -402,7 +402,7 @@ class RedactedArray extends RedactedObject {
 			return redactify(() => redactify(this.elements.pop()))
 	}
 	store_prop(key, value) {
-		if (/^[1-9][0-9]+$/.test(key))
+		if ((typeof key === 'number' && key === Math.floor(key)) || /^[1-9][0-9]+$/.test(key))
 			return this.elements[key]
 		if (key === 'length' || key === 'at' || key === 'set' || key === 'push' || key === 'pop') return
 		super.store(key, value)
