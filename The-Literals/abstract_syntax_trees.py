@@ -251,14 +251,22 @@ class Stmts:
         current_index = 0
         while current_index < self.length:
             next_stmt = self.stmt_list[current_index]
+            next_body = next_stmt.body
             is_done = next_stmt.execute()
             if is_done:
                 break
-            elif isinstance(next_stmt, JumpStmt):
-                if next_stmt.direction == "back":
-                    current_index -= next_stmt.num_lines
+            elif isinstance(next_body, JumpStmt):
+                if "back" in next_body.direction:
+                    current_index -= next_body.num_lines.evaluate()
                 else:
-                    current_index += next_stmt.num_lines
+                    current_index += next_body.num_lines.evaluate()
+            elif isinstance(next_body, IfStmt) and next_body.condition.evaluate():
+                thenpt = next_body.thenpt
+                if isinstance(thenpt, JumpStmt):
+                    if "back" in thenpt.direction:
+                        current_index -= thenpt.num_lines.evaluate()
+                    else:
+                        current_index += thenpt.num_lines.evaluate()
             else:
                 current_index += 1
 

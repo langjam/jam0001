@@ -179,11 +179,11 @@ class Parser:
 
     def parse_jump_stmt(self):
         direction_token, direction_value = self.advance()
-        num_lines_token, num_lines_value = self.advance()
+        num_lines = self.parse_operand()
         token, value = self.advance()
         if token != Token.LINES:
             raise UnexpectedTokenError(Token.LINES, token)
-        return JumpStmt(direction_value, num_lines_value)
+        return JumpStmt(direction_value, num_lines)
 
     def parse_set_stmt(self):
         target = self.parse_identifier()
@@ -249,7 +249,6 @@ class Parser:
             raise UnexpectedTokenError(Token.AS, token)
         self.advance()
         arg_value = self.parse_expr()
-        print(arg_value)
         return (arg_name, arg_value)
 
     def parse_reverse_assignment(self):
@@ -498,55 +497,55 @@ if __name__ == "__main__":
 
         return generator().__next__
 
-    # parser = Parser(program())
-    # parser.parse()
+    parser = Parser(program())
+    parser.parse()
 
-    # parser = Parser(program(set_var_to_constant))
-    # parser.parse()
+    parser = Parser(program(set_var_to_constant))
+    parser.parse()
 
-    # parser = Parser(program(set_var_to_var))
-    # parser.parse()
+    parser = Parser(program(set_var_to_var))
+    parser.parse()
 
-    # parser = Parser(program(set_var_to_var_binop))
-    # parser.parse()
+    parser = Parser(program(set_var_to_var_binop))
+    parser.parse()
 
-    # parser = Parser(program(if_stmt_compare_constants))
-    # parser.parse()
+    parser = Parser(program(if_stmt_compare_constants))
+    parser.parse()
 
-    # parser = Parser(program(if_stmt_compare_variable_and_constant))
-    # parser.parse()
+    parser = Parser(program(if_stmt_compare_variable_and_constant))
+    parser.parse()
 
-    # parser = Parser(program(if_stmt_compare_variable_and_variable))
-    # parser.parse()
+    parser = Parser(program(if_stmt_compare_variable_and_variable))
+    parser.parse()
 
-    # parser = Parser(program(if_stmt_compare_constants_and_leave))
-    # parser.parse()
+    parser = Parser(program(if_stmt_compare_constants_and_leave))
+    parser.parse()
 
-    # parser = Parser(
-    #     program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
-    # )
-    # parser.parse()
+    parser = Parser(
+        program(if_stmt_compare_constants, if_stmt_compare_variable_and_constant)
+    )
+    parser.parse()
 
-    # parser = Parser(program(function_no_params_no_return))
-    # parser.parse()
+    parser = Parser(program(function_no_params_no_return))
+    parser.parse()
 
-    # parser = Parser(program(function_params_no_return))
-    # parser.parse()
+    parser = Parser(program(function_params_no_return))
+    parser.parse()
 
-    # parser = Parser(program(function_params_and_return))
-    # parser.parse()
+    parser = Parser(program(function_params_and_return))
+    parser.parse()
 
-    # parser = Parser(program(code, set_var_to_constant))
-    # parser.parse()
+    parser = Parser(program(code, set_var_to_constant))
+    parser.parse()
 
-    # parser = Parser(program(function_call_no_params_no_result))
-    # parser.parse()
+    parser = Parser(program(function_call_no_params_no_result))
+    parser.parse()
 
-    # parser = Parser(program(function_call_no_params_with_result))
-    # parser.parse()
+    parser = Parser(program(function_call_no_params_with_result))
+    parser.parse()
 
-    # parser = Parser(program(function_call_with_params_and_result))
-    # parser.parse()
+    parser = Parser(program(function_call_with_params_and_result))
+    parser.parse()
 
     input_file = "samples/echo.comment"
     with open(input_file, "r") as f:

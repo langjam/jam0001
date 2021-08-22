@@ -10,7 +10,7 @@ This is a sample .comment program. This line, ironically, is ignored because it 
 // If total number of repetitions is 0 then jump forward 4 lines.
 // Print with the string as the phrase.
 // Set repetitions so far to repetitions so far + 1.
-// Jump back 2 lines.
+// If repetitions so far is less than total number of repetitions then jump back 2 lines.
 // And we're done.
 
 The main program is below!
