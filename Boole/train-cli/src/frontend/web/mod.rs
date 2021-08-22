@@ -79,7 +79,7 @@ async fn receive_message(ws: WebSocket, program: Program, connection_id: i64) ->
         let mut vm = Arc::new(Data::new(program).await);
 
 
-        let visualizer_res = runner.generate_visualizer_file(connection_id);
+        let visualizer_res = runner.generate_visualizer_file(connection_id).await;
         let visualizer_path = match visualizer_res {
             Ok(i) => i,
             Err(e) => {
