@@ -37,15 +37,16 @@ which we are calling "mouthful".
 
 Building off of the last snippet:
 ```markdown
-[TodoList]: KickAss (
-    [self CheckItem:"Kick ass"]
+[TodoList]:: (
+    kickAss
+        this CheckItem: 'Kick ass'
 )
 ```
 
 Once a function has been defined and associated with a tag, that function can now be called from the REPL:
 
 ```smalltalk
-[TodoList KickAss]
+TodoList kickAss
 ```
 
 ## REPL
