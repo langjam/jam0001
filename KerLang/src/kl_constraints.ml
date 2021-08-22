@@ -189,7 +189,7 @@ let parse_value (decl : (string * expr) list) (comment : tok list) : value =
     | "something" -> Hole
     | s -> build_value s q
 
-let parse_operation (decl : (string * expr) list) (comment : tok list) : operation =
+let parse_operation ftable (decl : (string * expr) list) (comment : tok list) : operation =
   let f x = Leaf (parse_value decl x) in
   let rec search (prev : tok list) = function
     | [] -> raise InterruptParsing
@@ -230,14 +230,16 @@ let parse_operation (decl : (string * expr) list) (comment : tok list) : operati
               let _, b = look_for "of" q in
               let a, b = look_for "on" b in
               let s = string_of_comment a and l = split_kw "and" b in
-              if s = "self" then Rec (List.map f l) else App (s, List.map f l)
+              if s = "self" then Rec (List.map f l)
+              else if List.mem_assoc s ftable then App (s, List.map f l)
+              else raise (SyntaxError (tok_pos t, "no function named " ^ s))
             with KeywordNotFound msg -> raise (SyntaxError (tok_pos t, msg)) end
         | _ -> search (t::prev) q
       )
   in search [] comment
 
-let rec parse_statement (decl : (string * expr) list) (comment : tok list) : cconstraint =
-  let f x = try Node (parse_operation decl x) with InterruptParsing -> Leaf (parse_value decl x) in
+let rec parse_statement ftable (decl : (string * expr) list) (comment : tok list) : cconstraint =
+  let f x = try Node (parse_operation ftable decl x) with InterruptParsing -> Leaf (parse_value decl x) in
   match comment with
   | [] -> Nothing
   | t::q ->
@@ -254,15 +256,15 @@ let rec parse_statement (decl : (string * expr) list) (comment : tok list) : cco
     | "show" | "shows" -> let l = split_kw "and" q in Shows (List.map f l)
     | "return" | "returns" -> Returns (f q)
     | "use" | "uses" -> let l = split_kw "and" q in Uses (List.map f l)
-    | _ -> parse_statement decl q
+    | _ -> parse_statement ftable decl q
 
-let generate_function (Spec (_, name, comment)) =
+let generate_function ftable (Spec (_, name, comment)) =
   Printf.printf "- generating function %s\n" name;
   let comments = split_lines comment in
   let rec build_function (f : comment_function) = function
     | [] -> f
     | c::q ->
-      match parse_statement f.declarations c with
+      match parse_statement ftable f.declarations c with
       | Nothing -> build_function f q
       | Takes n -> build_function {f with n_args = n} q
       | Let (s, e) -> build_function {f with declarations = (s, e)::f.declarations} q
