@@ -43,6 +43,25 @@ func (e *Evaluator) eval_instruction(expr shared.Node) shared.Node {
 			os.Exit(1)
 		}
 		return makeNumberNode(mResult)
+
+	case lexer.II_not:
+		input := instruction_args[0].Val.Value
+
+		out := ""
+
+		switch input {
+		case "TRUE":
+			out = "FALSE"
+		case "FALSE":
+			out = "TRUE"
+		case "0":
+			out = "1"
+		default:
+			out = "0"
+		}
+
+		instruction_args[0].Val.Value = out
+		return instruction_args[0]
 	}
 	return shared.Node{}
 }
