@@ -244,6 +244,8 @@ fn parse_matching_parens(tokens: &mut TokenIterator) -> TreeNode {
 				}
 			}
 
+			assert!(matches!(tokens.next(), Some(Token::CloseParen)));
+
 			TreeNode::Block(block)
 		}
 
