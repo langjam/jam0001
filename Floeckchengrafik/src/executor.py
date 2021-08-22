@@ -13,7 +13,7 @@ class ComstructExecutor:
 
     def walkTree(self, node, _env):
 
-        if isinstance(node, StatementNode.MathNode):
+        if isinstance(node, StatementNode.OperationNode):
             if node.type == "+":
                 return self.walkTree(node.var1, _env) + self.walkTree(node.var2, _env)
 
@@ -28,6 +28,15 @@ class ComstructExecutor:
 
             elif node.type == "%":
                 return self.walkTree(node.var1, _env) % self.walkTree(node.var2, _env)
+
+            elif node.type == "||":
+                return self.walkTree(node.var1, _env) or self.walkTree(node.var2, _env)
+
+            elif node.type == "&&":
+                return self.walkTree(node.var1, _env) and self.walkTree(node.var2, _env)
+
+            elif node.type == "!!":
+                return not self.walkTree(node.var1, _env)
 
         elif isinstance(node, StatementNode.EqualNode):
             return self.walkTree(node.var1, _env) == self.walkTree(node.var2, _env)

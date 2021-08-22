@@ -2,7 +2,7 @@ class StatementNode:
     class GenericNode:
         pass
 
-    class MathNode(GenericNode):
+    class OperationNode(GenericNode):
 
         def __init__(self, _type, var1, var2):
             self.type = _type

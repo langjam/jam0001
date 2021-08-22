@@ -52,25 +52,37 @@ class ComstructParser(Parser):
     def expr(self, p):
         return StatementNode.VarNode(p.NAME)
 
+    @_("expr OR expr")
+    def expr(self, p):
+        return StatementNode.OperationNode("||", p.expr0, p.expr1)
+
+    @_("expr AND expr")
+    def expr(self, p):
+        return StatementNode.OperationNode("&&", p.expr0, p.expr1)
+
+    @_("NOT expr")
+    def expr(self, p):
+        return StatementNode.OperationNode("!!", p.expr, None)
+
     @_("expr PLUS expr")
     def expr(self, p):
-        return StatementNode.MathNode("+", p.expr0, p.expr1)
+        return StatementNode.OperationNode("+", p.expr0, p.expr1)
 
     @_("expr MINUS expr")
     def expr(self, p):
-        return StatementNode.MathNode("-", p.expr0, p.expr1)
+        return StatementNode.OperationNode("-", p.expr0, p.expr1)
 
     @_("expr MULTIPLY expr")
     def expr(self, p):
-        return StatementNode.MathNode("*", p.expr0, p.expr1)
+        return StatementNode.OperationNode("*", p.expr0, p.expr1)
 
     @_("expr DIVIDE expr")
     def expr(self, p):
-        return StatementNode.MathNode("/", p.expr0, p.expr1)
+        return StatementNode.OperationNode("/", p.expr0, p.expr1)
 
     @_("expr MODULO expr")
     def expr(self, p):
-        return StatementNode.MathNode("%", p.expr0, p.expr1)
+        return StatementNode.OperationNode("%", p.expr0, p.expr1)
 
     @_("LPAREN expr RPAREN")
     def expr(self, p):

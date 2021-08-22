@@ -7,6 +7,9 @@ class ComstructLexer(Lexer):
         "NAME",  # Any name like a var
         "NUMBER",  # A number like an int or a float
         "STRING",  # One or multible Lines of words
+        "OR",  # ||
+        "AND",  # &&
+        "NOT",  # !!
         "PLUS",  # +
         "MINUS",  # -
         "MULTIPLY",  # *
@@ -40,6 +43,9 @@ class ComstructLexer(Lexer):
 
     FUNCDESC = r'/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/'
     FUNCSEP = r'\.'
+    OR = r"\|\|"
+    AND = r"&&"
+    NOT = r"!!"
     NONE = r"None"
     TRUE = r"true"
     FALSE = r"false"
