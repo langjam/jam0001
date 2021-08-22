@@ -158,17 +158,19 @@ static struct Value *expr_eval(struct Interpreter* const interp, struct Expr* co
         if (lhs->type == rhs->type == ValueTypeNumber) {
             value->type = ValueTypeNumber;
             value->as.number = number_add(lhs->as.number, rhs->as.number);
-        } else if (lhs->type == rhs->type == ValueTypeString) {
+        }/* else if (lhs->type == rhs->type == ValueTypeString) {
+            printf("aaa3");
             size_t len_lhs, len_rhs;
             // TODO: optimise this!!!
             value->type = ValueTypeString;
             value->as.string = malloc(((len_lhs=strlen(lhs->as.string))+(len_rhs=strlen(rhs->as.string))+1)*sizeof(char));
             if (!value->as.string)
                 runtime_error("Allocation failure when adding up two strings");
+            printf("%s %s", lhs->as.string, rhs->as.string);
             strcpy(value->as.string, lhs->as.string);
             strcpy(value->as.string+len_lhs, rhs->as.string);
             value->as.string[len_lhs+len_rhs] = '\0';
-        } else {
+        }*/ else {
             runtime_error("Invalid operation (+) on types");
         }
         return value;
@@ -185,7 +187,6 @@ static struct Value *expr_eval(struct Interpreter* const interp, struct Expr* co
         return value;
     case ExprTypeMul:
         value = malloc(sizeof(struct Value));
-        // TODO: add number * string
         lhs = expr_eval(interp, expr->as.binary.lhs);
         rhs = expr_eval(interp, expr->as.binary.rhs);
         if (lhs->type == rhs->type == ValueTypeNumber) {
@@ -218,8 +219,6 @@ static struct Value *expr_eval(struct Interpreter* const interp, struct Expr* co
         if (lhs->type == rhs->type == ValueTypeNumber) {
             value->type = ValueTypeNumber;
             value->as.number = number_eq(lhs->as.number, rhs->as.number);
-        } else if (lhs->type != rhs->type) {
-            runtime_error("Mismatch types");
         } else {
             runtime_error("Invalid operation (=) on types");
         }
@@ -231,8 +230,6 @@ static struct Value *expr_eval(struct Interpreter* const interp, struct Expr* co
         if (lhs->type == rhs->type == ValueTypeNumber) {
             value->type = ValueTypeNumber;
             value->as.number = number_smaller(lhs->as.number, rhs->as.number);
-        } else if (lhs->type != rhs->type) {
-            runtime_error("Mismatch types");
         } else {
             runtime_error("Invalid operation (<) on types");
         }
@@ -244,8 +241,6 @@ static struct Value *expr_eval(struct Interpreter* const interp, struct Expr* co
         if (lhs->type == rhs->type == ValueTypeNumber) {
             value->type = ValueTypeNumber;
             value->as.number = number_bigger(lhs->as.number, rhs->as.number);
-        } else if (lhs->type != rhs->type) {
-            runtime_error("Mismatch types");
         } else {
             runtime_error("Invalid operation (>) on types");
         }
