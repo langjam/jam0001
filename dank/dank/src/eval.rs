@@ -159,7 +159,7 @@ impl<'a, 'b> Evaluator<'a, 'b> {
                 let is_success = match self.eval_stmt(stmt) {
                     Signal::Error(e) => {
                         // TODO: optionally disable this
-                        eprintln!("Failed to evaluate a comment: {:?}", e);
+                        eprintln!("[Evaluator] Failed to evaluate a comment: {:?}", e);
                         None
                     }
                     _ => Some(()),

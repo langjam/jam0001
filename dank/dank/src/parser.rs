@@ -34,7 +34,9 @@ fn parse_comment(comment: Vec<&str>) -> CommentBody<'_> {
         Ok(block) => CommentBody::Stmt(block),
         Err(e) => {
             // TODO: optionally log the error
-            eprintln!("Failed to evaluate a comment: {}", e);
+            #[cfg(debug_assertions)]
+            eprintln!("[Parser] Failed to evaluate a comment: {}", e);
+            let _ = e; // suppress the unused warning
             CommentBody::Text(comment_text)
         }
     }

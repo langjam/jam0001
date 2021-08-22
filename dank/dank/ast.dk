@@ -51,3 +51,22 @@ traverse(tree);
     print 3;
 }
 
+
+// // Change the last print argument to hello
+// AST[AST.length - 1] = "'hello'";
+print 1, 2, 3;
+
+
+let x = 2;
+let y = 2;
+
+// // Fix the wrong if branch so that the correct output is printed.
+// AST[0].condition.op = "==";
+if x != y {
+    print "x is y";
+} else if x < y {
+    print "x is less than y";
+} else {
+    print "y is less than x";
+}
+

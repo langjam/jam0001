@@ -11,6 +11,7 @@ use crate::{
 pub enum Node<'s> {
     Expr(#[forward] Expr<'s>),
     Stmt(#[forward] Stmt<'s>),
+    IfPair(#[forward] (Expr<'s>, Stmt<'s>)),
     Empty,
 }
 
@@ -19,6 +20,11 @@ impl Stringify for Node<'_> {
         match self {
             Node::Expr(e) => e.stringify_impl(indent_level),
             Node::Stmt(s) => s.stringify_impl(indent_level),
+            Node::IfPair((e, s)) => format!(
+                "if ({}) {}",
+                e.stringify_impl(indent_level),
+                s.stringify_impl(indent_level)
+            ),
             Node::Empty => String::new(),
         }
     }
@@ -40,6 +46,11 @@ where
 {
     fn from(o: Option<T>) -> Self {
         o.map(|n| n.into()).unwrap_or(Self::Empty)
+    }
+}
+impl<'s> From<(Expr<'s>, Stmt<'s>)> for Node<'s> {
+    fn from(pair: (Expr<'s>, Stmt<'s>)) -> Self {
+        Self::IfPair(pair)
     }
 }
 
@@ -93,6 +104,23 @@ macro_rules! parse {
     }};
 }
 
+macro_rules! dyn_prop {
+    ($self:ident, $name:ident | $prop:expr) => {
+        $name
+            .parse::<usize>()
+            .map(|n| n < $prop.len())
+            .unwrap_or(false)
+    };
+    ($self:ident, $name:ident => $prop:expr) => {
+        $prop[$name.parse::<usize>().unwrap()]
+    };
+    ($self:ident, $name:ident, $value:ident | $prop:expr => $rule:ident $updater:expr) => {{
+        let slot = &mut $prop[$name.parse::<usize>().unwrap()];
+        #[allow(clippy::redundant_closure_call)]
+        ($updater)(slot, parse!($self, $rule, $value))
+    }};
+}
+
 #[derive(Debug)]
 pub struct AstProxy<'s> {
     arena: &'s bumpalo::Bump,
@@ -122,7 +150,8 @@ impl<'s> AstProxy<'s> {
         match &self.node {
             Node::Expr(expr) => self.extract_expr_prop(expr, name),
             Node::Stmt(stmt) => self.extract_stmt_prop(stmt, name),
-            Node::Empty => todo!(),
+            Node::IfPair((cond, then)) => self.extract_if_branch(cond, then, name),
+            Node::Empty => None,
         }
     }
 
@@ -130,11 +159,59 @@ impl<'s> AstProxy<'s> {
         match &self.node {
             Node::Expr(expr) => self.update_expr_prop(expr, name, value),
             Node::Stmt(stmt) => self.update_stmt_prop(stmt, name, value),
+            Node::IfPair((cond, then)) if name == "condition" => {
+                self.update_if_branch(cond, then, name, value)
+            }
+            Node::IfPair((cond, then)) if name == "action" => {
+                self.update_if_branch(cond, then, name, value)
+            }
+            Node::IfPair(_) => EvalError::UndefinedProperty(
+                format!(
+                    "Property `{}` doesn't exist on a node of type `IfBranch`",
+                    name,
+                )
+                .into(),
+            )
+            .into(),
             Node::Empty => EvalError::UndefinedProperty(
                 "Attempted to set a property on a removed node.".into(),
             )
             .into(),
         }
+    }
+
+    fn extract_if_branch(
+        &self,
+        cond: &Expr<'s>,
+        then: &Stmt<'s>,
+        name: std::borrow::Cow<'s, str>,
+    ) -> Option<Value<'s>> {
+        match &*name {
+            "condition" => Some(self.alloc(cond.clone())),
+            "action" => Some(self.alloc(then.clone())),
+            _ => None,
+        }
+    }
+
+    fn update_if_branch(
+        &self,
+        cond: &Expr<'s>,
+        then: &Stmt<'s>,
+        name: std::borrow::Cow<'s, str>,
+        value: Value<'s>,
+    ) -> Signal<'s> {
+        match &*name {
+            "condition" => std::mem::swap(
+                &mut *cond.kind.borrow_mut(),
+                &mut *parse!(self, expr, value).kind.borrow_mut(),
+            ),
+            "action" => std::mem::swap(
+                &mut *then.kind.borrow_mut(),
+                &mut *parse!(self, stmt, value).kind.borrow_mut(),
+            ),
+            _ => unreachable!(),
+        }
+        Value::Null.into()
     }
 
     fn update_stmt_prop(
@@ -181,19 +258,30 @@ impl<'s> AstProxy<'s> {
             StmtKind::DynPropAssignment(_, _, val) if name == "value" => {
                 **val = parse!(self, expr, value);
             }
-            StmtKind::Print(_) => todo!(),
-            StmtKind::Block(b)
-                if name
-                    .parse::<usize>()
-                    .map(|n| n < b.statements.len())
-                    .unwrap_or(false) =>
-            {
-                let slot = &mut b.statements[name.parse::<usize>().unwrap()];
-                slot.stmt = Some(parse!(self, stmt, value));
+            StmtKind::Print(args) if dyn_prop!(self, name | args) => {
+                dyn_prop!(self, name, value
+                    | args => expr |slot: &mut Expr<'s>, expr| *slot = expr
+                );
             }
-            StmtKind::UnscopedBlock(_) => todo!(),
-            StmtKind::If(_) => todo!(),
-            StmtKind::While(_, _) => todo!(),
+            StmtKind::Block(b) if dyn_prop!(self, name | b.statements) => {
+                dyn_prop!(self, name, value
+                    | b.statements => stmt |slot: &mut LineComment<'s>, stmt| slot.stmt = Some(stmt)
+                );
+            }
+            StmtKind::UnscopedBlock(b) if dyn_prop!(self, name | b) => {
+                dyn_prop!(self, name, value
+                    | b => stmt |slot: &mut LineComment<'s>, stmt| slot.stmt = Some(stmt)
+                );
+            }
+            StmtKind::If(r#if) if name == "otherwise" => {
+                r#if.otherwise = Some(parse!(self, stmt, value));
+            }
+            StmtKind::While(condition, _) if name == "condition" => {
+                **condition = parse!(self, expr, value);
+            }
+            StmtKind::While(_, body) if name == "body" => {
+                **body = parse!(self, stmt, value);
+            }
             StmtKind::Return(ret_value) if name == "value" => {
                 let new_expr = parse!(self, expr, value);
                 *ret_value = Some(Box::new(new_expr));
@@ -256,24 +344,31 @@ impl<'s> AstProxy<'s> {
             }
             StmtKind::Assignment(_, value) if name == "value" => Some(self.alloc(*value.clone())),
             StmtKind::ExprStmt(e) if name == "expr" => Some(self.alloc(*e.clone())),
-            StmtKind::Print(_) => todo!(),
-            StmtKind::Block(b) if name == "length" => Some(Value::Num(b.statements.len() as _)),
-            StmtKind::Block(b)
-                if name
-                    .parse::<usize>()
-                    .map(|n| n < b.statements.len())
-                    .unwrap_or(false) =>
-            {
-                self.opt_alloc(
-                    b.statements[name.parse::<usize>().unwrap()]
-                        .stmt
-                        .as_ref()
-                        .cloned(),
-                )
+            StmtKind::Print(args) if name == "length" => Some(Value::Num(args.len() as _)),
+            StmtKind::Print(args) if dyn_prop!(self, name | args) => {
+                Some(self.alloc(dyn_prop!(self, name => args).clone()))
             }
-            StmtKind::UnscopedBlock(_) => todo!(),
-            StmtKind::If(_) => todo!(),
-            StmtKind::While(_, _) => todo!(),
+            StmtKind::Block(b) if name == "length" => Some(Value::Num(b.statements.len() as _)),
+            StmtKind::Block(b) if dyn_prop!(self, name | b.statements) => {
+                self.opt_alloc(dyn_prop!(self, name => b.statements).stmt.as_ref().cloned())
+            }
+            StmtKind::UnscopedBlock(b) if name == "length" => Some(Value::Num(b.len() as _)),
+            StmtKind::UnscopedBlock(b) if dyn_prop!(self, name | b) => {
+                self.opt_alloc(dyn_prop!(self, name => b).stmt.as_ref().cloned())
+            }
+            StmtKind::If(r#if) if name == "n_branches" => {
+                Some(Value::Num(r#if.branches.len() as _))
+            }
+            StmtKind::If(r#if) if name == "otherwise" => {
+                self.opt_alloc(r#if.otherwise.as_ref().cloned())
+            }
+            StmtKind::If(r#if) if dyn_prop!(self, name | r#if.branches) => {
+                Some(self.alloc(dyn_prop!(self, name => r#if.branches).clone()))
+            }
+            StmtKind::While(condition, _) if name == "condition" => {
+                Some(self.alloc(*condition.clone()))
+            }
+            StmtKind::While(_, body) if name == "body" => Some(self.alloc(*body.clone())),
             StmtKind::Break | StmtKind::Continue => None,
             _ => None,
         }
@@ -400,6 +495,16 @@ impl<'s> NativeObj<'s> for AstProxy<'s> {
         match &*name {
             "tree" => Value::Str(self.node.ast_to_str().into()).into(),
             "code" => Value::Str(self.node.stringify().into()).into(),
+            "__node__" => Value::Str(
+                match &self.node {
+                    Node::Expr(e) => format!("{:?}", ExprKindName::from(&*e.kind.borrow())),
+                    Node::Stmt(s) => format!("{:?}", StmtKindName::from(&*s.kind.borrow())),
+                    Node::IfPair(_) => String::from("IfBranch"),
+                    Node::Empty => String::from("<Empty>"),
+                }
+                .into(),
+            )
+            .into(),
             _ => self
                 .try_extract_prop(name.clone())
                 .map(Into::into)
