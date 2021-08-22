@@ -8,11 +8,13 @@ import transformer from "../transformer";
 const parser = get_parser({transformer})
 
 class Runtime {
+    private readonly evalScope: Record<string, Base>
     private readonly tagDefs: Record<string, Tag>
     private readonly docRoot: Root
     private readonly wrappedElements: Base[]
 
     constructor(src: string) {
+        this.evalScope = {}
         this.tagDefs = {}
 
         this.docRoot = mdToMdast(src)
@@ -63,6 +65,18 @@ class Runtime {
     getWrappedElements(): Base[] {
         return this.wrappedElements
     }
+
+    generateEvalScope(): Record<string, Base> {
+        const scope: Record<string, Base> = {}
+        for (const tagName in this.tagDefs) {
+            const taggedElement = this.tagDefs[tagName].getTaggedElement()
+            if (taggedElement !== undefined) {
+                scope[tagName] = taggedElement
+            }
+        }
+        return scope
+    }
+
 }
 
 export default Runtime

@@ -9,8 +9,9 @@ function mdToMdast(src) {
         mdastExtensions: [gfmFromMarkdown]
     });
 }
-function mdastToMd(content) {
-    return toMarkdown(content, { extensions: [gfmToMarkdown()] });
+function mdastToMd(content, stripTrailingNewline = false) {
+    const md = toMarkdown(content, { extensions: [gfmToMarkdown()] });
+    return md.substr(0, md.length - (stripTrailingNewline ? 1 : 0));
 }
 function wrappedElementToMd(content) {
     if (content instanceof Function) {

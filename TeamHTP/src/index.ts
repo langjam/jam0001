@@ -27,5 +27,15 @@ console.log('testing save')
 saveToDisk(runtime)
 
 startRepl((input) => {
-    console.log(parser.parse(input))
+    const js = parser.parse(input)
+    console.log(js)
+    const evalScope = runtime.generateEvalScope()
+    return function (js: string) {
+        // eslint-disable-next-line no-with,@typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        // eslint-disable-next-line no-with
+        with (this) {
+            return eval(js)
+        }
+    }.call(evalScope, js)
 }).catch(console.log)

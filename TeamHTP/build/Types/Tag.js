@@ -1,16 +1,19 @@
 import Base from './Base';
 class Tag extends Base {
+    members;
+    taggedElement;
+    rawMd;
     constructor(mdastContent, rawMd, tag) {
         super(mdastContent, tag);
-        this.child = undefined;
+        this.taggedElement = undefined;
         this.rawMd = rawMd;
         this.members = {};
     }
-    setChild(child) {
-        this.child = child;
+    setTaggedElement(child) {
+        this.taggedElement = child;
     }
-    getChild() {
-        return this.child;
+    getTaggedElement() {
+        return this.taggedElement;
     }
     getMdastContent() {
         return this.mdastContent;

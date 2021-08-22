@@ -1,8 +1,10 @@
 class Base {
+    mdastContent;
+    tag;
     constructor(mdastContent, tag) {
         this.mdastContent = mdastContent;
         this.tag = tag;
-        console.log(`[${tag === null || tag === void 0 ? void 0 : tag.getMdastContent().label}]: ${mdastContent.type}`);
+        console.log(`[${tag?.getMdastContent().label}]: ${mdastContent.type}`);
     }
     getMdastContent() {
         return this.mdastContent;

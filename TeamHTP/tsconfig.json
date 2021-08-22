@@ -9,6 +9,6 @@
     "allowSyntheticDefaultImports": true,
     "isolatedModules": false,
     "allowJs": true,
-    "strict": true
+    "strict": false
   }
 }
