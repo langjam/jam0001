@@ -32,7 +32,10 @@ const sortKeypairs = (pairs: [[string, string]]) => {
 function makeTransformer(context) {
     return {
         repl: (exprs: string[]) => exprs.join(';\n'),
-        method: ([name, ...rest]: string[]) => `function ${name} {\n${rest.join(';\n')}\n}`,
+        method: ([name, ...rest]: string[]) => ({
+            name: name.split('(')[0],
+            func: `function ${name} {\n${rest.join(';\n')}\n}`
+        }),
         binary_message: ([op, param]: [string, string]) => `${op}(${param})`,
         keyword_message: sortKeypairs,
         message_pair: ([key, value]: [string, string]) => [key.slice(0, -1), value],

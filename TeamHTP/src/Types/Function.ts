@@ -44,8 +44,8 @@ class Function extends Base {
 
     evalRawJs() {
         if (this.rawJs !== undefined) {
-            return function (rawJs: string) {
-                return eval(rawJs)
+            return function (rawJs) {
+                eval(`this['${rawJs.name}'] = ${rawJs.func}`)
             }.call(this.getParent().getTaggedElement(), this.rawJs)
         }
     }
