@@ -1,7 +1,6 @@
 
-print(m("$1 * $1")) // square
-print(m("$1 + $1")) // 2-times
+print("hello") // hello
+and(print("world")) // hello
+and(print("world2")) // hello
 
-set($-1 "square")
-
-"$-1 and 2-times"(5 10)
+"hello"()

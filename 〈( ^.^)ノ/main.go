@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	dat, err := ioutil.ReadFile("examples/fib.sml")
+	dat, err := ioutil.ReadFile("examples/test_while.sml")
 	if err != nil {
 		panic(err)
 	}

@@ -128,8 +128,8 @@ func GenerateAst(toks []shared.Token) ([]shared.Node, map[string]shared.Node) {
 		os.Exit(1)
 	}
 
-		shared.Node{IsExpression: true, Children: ast}.Print("")
 	parser.Parse(shared.Node{IsExpression: true, Children: ast})
+		shared.Node{IsExpression: true, Children: ast}.Print("")
 
 	return ast, parser.Comments
 }
@@ -187,7 +187,10 @@ func (p *Parser) parseComment(content string, add bool, value []shared.Node) {
 	if add {
 		p.Comments[content] = shared.Node{
 			IsExpression: true,
-			Children:     append(p.Comments[content].Children, value[0].Children...)}
+			Children:     []shared.Node{p.Comments[content], value[0]}}
+
+		p.Comments[content].Print("")
+		fmt.Println("")
 	} else {
 		p.Comments[content] = value[0]
 	}

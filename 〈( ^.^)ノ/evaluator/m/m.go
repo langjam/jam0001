@@ -432,5 +432,10 @@ func Do(input string) (string, error) {
 	lexer.Lex(input)
 	e := Evaluator{}
 	e.Evaluate(lexer.out)
+	
+	if len(e.values) != 1 {
+		return "", errors.New("Incorrect operands")
+	}
+
 	return fmt.Sprint(e.values[0]), nil
 }
