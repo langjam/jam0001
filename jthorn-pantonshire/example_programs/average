@@ -1,0 +1,5 @@
+// A function which averages 4, 6, storing the result in avg, then prints avg
+function main()
+
+// A function which returns (a + b) / 2
+function average(a, b)

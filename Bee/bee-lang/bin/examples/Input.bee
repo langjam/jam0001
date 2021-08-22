@@ -1,0 +1,5 @@
+
+@call println with "Enter Your name :"
+#let name be @call scanString
+
+@call print with "Welcome " + name

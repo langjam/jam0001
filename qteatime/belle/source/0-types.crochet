@@ -1,0 +1,38 @@
+% crochet
+
+singleton belle;
+
+// -- Intrinsics
+abstract value;
+type b-integer(value is integer) is value;
+type b-string(value is text) is value;
+type b-stream(value is stream) is value;
+type b-atom(name is text) is value;
+type b-form(form is form) is value;
+type b-block(forms is list<form>) is value;
+abstract b-procedure is value;
+type b-lambda(arity is integer, captured is list<value>, body is list<form>) is b-procedure;
+type b-native-lambda(arity is integer, matched is text, captured is list<value>, run is ((vm, text) -> vm)) is b-procedure;
+type b-box(box) is value;
+
+// -- The rewriting
+type native-value-form(value is value) is form;
+type native-word-pattern(word is text) is pattern;
+
+abstract rewrite-rule;
+type native-rewrite-rule(pattern is pattern, arity is integer, run is ((vm, text) -> vm)) is rewrite-rule;
+type user-rewrite-rule(arity is integer, form is form--rule) is rewrite-rule;
+
+// -- The VM
+type vm(bindings is cell<map<text, value>>,
+        stack is cell<list<value>>,
+        program is cell<list<form>>,
+        rules is cell<list<rewrite-rule>>);
+
+// -- Execution effects
+effect belle with
+  display(value);
+  push-element(tag);
+  pop-element();
+  current-element();
+end

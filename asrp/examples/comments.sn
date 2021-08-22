@@ -1,0 +1,28 @@
+foo = /* comment object */ /* more comment on this object */
+print(foo)
+print("\n")
+print(foo.comment)
+print("\n")
+foo.comment = "override with new comment"
+print(foo)
+print("\n")
+/* unassigned comment */
+
+bar = [ |
+  /* This is my super cool function.
+   * It has, like, all kinds of params and stuff.
+   * Try it! */ /* Really, try it! */
+  ]
+
+print(bar())
+print("\n")
+
+MyObj = Obj.copy("MyObj")
+myRedObj = MyObj.copy("MyObj") /* This object is red */
+myRedObj.col = "red"
+
+commentPrinter = [ obj |
+  print(obj.comment)
+  ]
+
+commentPrinter(myRedObj /* is passed to the printer */)

@@ -1,0 +1,11 @@
+#function printPlus take x, y
+/*
+    @call println with x + y
+*/
+
+#function callback take fun
+/*
+    @call fun with 1, 2
+*/
+
+@call callback with printPlus

@@ -1,0 +1,17 @@
+Bool = Obj.copy("Bool")
+True = Bool.copy("True")
+False = Bool.copy("False")
+
+False.ifTrue = [ block self | ]
+True.ifTrue = [ block self | block.eval() ]
+False.ifFalse = [ block self | block.eval() ]
+True.ifFalse = [ block self | ]
+False.ifElse = [ trueBlock falseBlock self | falseBlock.eval() ]
+True.ifElse = [ trueBlock falseBlock self | trueBlock.eval() ]
+
+Block.whileTrue = [ block self |
+  self.eval().ifTrue([ |
+    block.eval()
+    self.whileTrue(block)
+    ])
+  ]
