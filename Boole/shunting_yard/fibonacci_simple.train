@@ -1,0 +1,25 @@
+[LOCOMOTIVE]
+start at AmsterdamCS track 1
+[FIRST CLASS]
+Jan: this is a nice long lime green train!
+Pieter: It has some blue accents as well!
+[SECOND CLASS]
+Julius: 1
+
+[LOCOMOTIVE]
+start at UtrechtCentraal track 2
+[FIRST CLASS]
+Gerrit: This train has a very pretty yellow colour!
+Marijke: I like the blue detail.
+Sara: The train is very short though...
+[SECOND CLASS]
+Jonathan: 1
+
+{UtrechtCentraal}
+operation: add
+track 1: go to UtrechtCentraal track 2
+track 2: go to AmsterdamCS track 1
+
+{AmsterdamCS}
+operation: print number
+track 1: go to UtrechtCentraal track 1

@@ -1,0 +1,15 @@
+[LOCOMOTIVE]
+start at delft track 1
+[FIRST CLASS]
+jan: This is a nice dark red train
+tom: with dark green accents
+[SECOND CLASS]
+
+
+{amsterdam}
+operation: print number
+track 1: go to delft track 1
+
+{delft}
+operation: input
+track 1: go to amsterdam track 1

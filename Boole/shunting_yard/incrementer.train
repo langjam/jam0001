@@ -1,0 +1,29 @@
+[LOCOMOTIVE]
+start at Utrecht track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 0
+
+[LOCOMOTIVE]
+start at Utrecht track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 1
+
+{Utrecht}
+operation: add
+track 1: go to Amsterdam track 1
+track 2: go to Utrecht track 2
+
+{Amsterdam}
+operation: duplicate
+track 1: go to Utrecht track 1
+track 2: go to Delft track 1
+
+
+{Delft}
+operation: print number
+track 1: go to Rotterdam track 1
+
+{Rotterdam}
+operation: delete

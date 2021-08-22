@@ -1,0 +1,243 @@
+[LOCOMOTIVE]
+start at Utrecht track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 0
+
+[LOCOMOTIVE]
+start at Utrecht track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 1
+
+{Utrecht}
+operation: add
+track 1: go to Amsterdam track 1
+track 2: go to Utrecht track 2
+
+{Amsterdam}
+operation: duplicate
+track 1: go to Utrecht track 1
+track 2: go to Sneek track 1
+
+
+
+
+[LOCOMOTIVE]
+start at Leeuwarden track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 15
+
+{Sneek}
+operation: duplicate
+track 1: go to Woerden track 1
+track 2: go to Woerden track 2
+
+{Woerden}
+operation: transfer
+track 1: go to Harlingen track 1
+track 2: go to Leeuwarden track 1
+
+{Leeuwarden}
+operation: mod
+track 1: go to Groningen track 1
+track 2: go to Leeuwarden track 2
+
+{Groningen}
+operation: switch eq
+track 1: go to Eindhoven track 2
+track 2: go to Assen track 1
+
+{Assen}
+operation: delete top
+track 1: go to Berlijn track 1
+
+[LOCOMOTIVE]
+start at Eindhoven track 1
+[FIRST CLASS]
+[SECOND CLASS]
+f: 102
+i: 105
+z: 122
+z: 122
+b: 98
+u: 117
+z: 122
+z: 122
+
+{Eindhoven}
+operation: add
+track 1: go to Delft track 1
+track 2: go to Harlingen track 1
+
+{Delft}
+operation: duplicate
+track 1: go to Eindhoven track 1
+track 2: go to Dortmund track 1
+
+
+
+
+[LOCOMOTIVE]
+start at Leiden track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 5
+
+{Berlijn}
+operation: duplicate
+track 1: go to Vlissingen track 1
+track 2: go to Vlissingen track 2
+
+{Vlissingen}
+operation: transfer
+track 1: go to Harlingen track 1
+track 2: go to Leiden track 1
+
+{Leiden}
+operation: mod
+track 1: go to DenHelder track 1
+track 2: go to Leiden track 2
+
+{DenHelder}
+operation: switch eq
+track 1: go to Gouda track 2
+track 2: go to Zoetermeer track 1
+
+{Zoetermeer}
+operation: delete top
+track 1: go to Haarlem track 1
+
+[LOCOMOTIVE]
+start at Gouda track 1
+[FIRST CLASS]
+[SECOND CLASS]
+b: 98
+u: 117
+z: 122
+z: 122
+
+{Gouda}
+operation: add
+track 1: go to Hilversum track 1
+track 2: go to Harlingen track 1
+
+{Hilversum}
+operation: duplicate
+track 1: go to Gouda track 1
+track 2: go to Bielefeld track 1
+
+
+
+
+[LOCOMOTIVE]
+start at Breda track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 3
+
+{Haarlem}
+operation: duplicate
+track 1: go to Dordrecht track 1
+track 2: go to Dordrecht track 2
+
+{Dordrecht}
+operation: transfer
+track 1: go to Harlingen track 1
+track 2: go to Breda track 1
+
+{Breda}
+operation: mod
+track 1: go to Almere track 1
+track 2: go to Breda track 2
+
+{Almere}
+operation: switch eq
+track 1: go to Alkmaar track 2
+track 2: go to Lelystad track 1
+
+{Lelystad}
+operation: delete top
+track 1: go to Antwerpen track 1
+
+[LOCOMOTIVE]
+start at Alkmaar track 1
+[FIRST CLASS]
+[SECOND CLASS]
+f: 102
+i: 105
+z: 122
+z: 122
+
+{Alkmaar}
+operation: add
+track 1: go to Hoorn track 1
+track 2: go to Harlingen track 1
+
+{Hoorn}
+operation: duplicate
+track 1: go to Alkmaar track 1
+track 2: go to Emmen track 1
+
+
+
+
+
+
+
+
+{Antwerpen}
+operation: nothing
+track 1: go to Tilburg track 1
+
+{Tilburg}
+operation: print number
+track 1: go to Harlingen track 1
+
+{Dortmund}
+operation: nothing
+track 1: go to Essen track 1
+
+{Essen}
+operation: nothing
+track 1: go to Dusseldorf track 1
+
+{Dusseldorf}
+operation: nothing
+track 1: go to Keulen track 1
+
+{Keulen}
+operation: nothing
+track 1: go to Hamburg track 1
+
+{Hamburg}
+operation: nothing
+track 1: go to Bielefeld track 1
+
+{Bielefeld}
+operation: nothing
+track 1: go to Zwolle track 1
+
+{Zwolle}
+operation: nothing
+track 1: go to Bremen track 1
+
+{Bremen}
+operation: nothing
+track 1: go to Hengelo track 1
+
+{Hengelo}
+operation: nothing
+track 1: go to Enschede track 1
+
+{Enschede}
+operation: nothing
+track 1: go to Emmen track 1
+
+{Emmen}
+operation: print string
+track 1: go to Harlingen track 1
+
+{Harlingen}
+operation: delete
