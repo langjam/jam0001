@@ -1,0 +1,8 @@
+//language supports a few natives
+
+print "enter your age";
+age = readnum();
+print "failed to read your age"; //when $age=="err"$
+//assert  $age>0$
+age = age+20; //otherwise
+print "you will be " + age + " years old in 20 years"; //and

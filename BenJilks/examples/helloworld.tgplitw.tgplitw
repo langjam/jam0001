@@ -1,0 +1,14 @@
+Name: BenJilks
+Date: Sunday the 22nd of August 2021
+Mood: good
+-------------------------------
+Hello world program
+-------------------------------
+
+Parse the hello world string into print, then 
+move the result into /dev/null.
+
+// "hello, world!" -> print -> /dev/null
+
+-------------------------------
+

@@ -1,0 +1,725 @@
+use crate::parser::Op;
+use std::str::FromStr;
+use syn::{parse_str, LitStr};
+
+grammar;
+
+match {
+    r"[ \t\r]+" => {},
+    // Ignore all non-comment content
+    // kind of a hack but it's fine
+    // 
+    // right?
+    r"\n([^/]|/[^/])*(//|\n)" => {},
+} else {
+    _
+}
+
+Header = "TODO" ":";
+
+Pattern<T>: T = Header <T> "here"?;
+
+Name: String = r"[A-Z][a-zA-Z]*" => String::from(<>);
+
+Names = (<Name> ",")+;
+
+Num: u64 = r"[0-9]+" => u64::from_str(<>).unwrap();
+
+Nth: usize = {
+    <r"[0-9]*1st"> => usize::from_str(&<>[..<>.len()-2]).unwrap(),
+    <r"[0-9]*2nd"> => usize::from_str(&<>[..<>.len()-2]).unwrap(),
+    <r"[0-9]*3rd"> => usize::from_str(&<>[..<>.len()-2]).unwrap(),
+    <r"[0-9]+th"> => usize::from_str(&<>[..<>.len()-2]).unwrap(),
+}
+
+Quote: String = {
+    r#""([^"]|\\")*""# => parse_str::<LitStr>(<>).unwrap().value(),
+}
+
+Fix: () = {
+    "fix" => (),
+    "handle" => (),
+    "debug" => (),
+}
+
+OffByOne: () = {
+    "off-by-one" => (),
+    "off" "by" "one" => (),
+}
+
+Increment: Op = {
+    Fix OffByOne => Op::Increment,
+    Fix OffByOne Error => Op::Increment,
+}
+
+IncrementOne: Op = {
+    Fix OffByOne "with" <Name> => Op::IncrementOne(<>),
+    Fix OffByOne Error "with" <Name> => Op::IncrementOne(<>),
+}
+
+Overflow: () = {
+    Fix "integer" "overflow" => (),
+    Fix "overflow" => (),
+    Fix "overflowing" => (),
+};
+
+Underflow: () = {
+    Fix "integer" "underflow" => (),
+    Fix "underflow" => (),
+    Fix "underflowing" => (),
+};
+
+#[inline]
+Adding: () = {
+    "when" "adding" => (),
+    "adding" => (),
+}
+
+SimpleAdd: Op = {
+    Overflow Adding => Op::Add,
+    Overflow "with" "addition" => Op::Add,
+}
+
+AddOne: Op = {
+    Overflow Adding <Name> => Op::AddOne(<>),
+    Overflow Adding "with" <Name> => Op::AddOne(<>),
+    Overflow Adding "to" <Name> => Op::AddOne(<>),
+    Overflow Adding "by" <Name> => Op::AddOne(<>),
+}
+
+AddTwo: Op = {
+    Overflow Adding <Name> "and" <Name> => Op::AddTwo(<>),
+    Overflow Adding <Name> "to" <Name> => Op::AddTwo(<>),
+    Overflow Adding <Name> "with" <Name> => Op::AddTwo(<>),
+    Overflow "adding" "with" <Name> "and" <Name> => Op::AddTwo(<>),
+    Overflow "with" "addition" <Name> "and" <Name> => Op::AddTwo(<>),
+}
+
+Multiplying: () = {
+    "when" "multiplying" => (),
+    "multiplying" => (),
+}
+
+SimpleMul: Op = {
+    Overflow Multiplying => Op::Mul,
+    Overflow "with" "multiplication" => Op::Mul,
+}
+
+MulOne: Op = {
+    Overflow Multiplying <Name> => Op::MulOne(<>),
+    Overflow Multiplying "with" <Name> => Op::MulOne(<>),
+}
+
+MulTwo: Op = {
+    Overflow Multiplying <Name> "and" <Name> => Op::MulTwo(<>),
+    Overflow Multiplying <Name> "with" <Name> => Op::MulTwo(<>),
+    Overflow Multiplying "with" <Name> "and" <Name> => Op::MulTwo(<>),
+    Overflow "with" "multiplying" <Name> "and" <Name> => Op::MulTwo(<>),
+}
+
+TakingPower: () = {
+    "with" "taking" "power" => (),
+    "taking" "power" => (),
+    "taking" "the" "power" => (),
+    "with" "taking" "the" "power" => (),
+}
+
+SimplePow: Op = {
+    Overflow "with" "exponent" => Op::Pow,
+    Overflow TakingPower => Op::Pow,
+    Overflow "with" "pow" => Op::Pow,
+}
+
+PowOne: Op = {
+    Overflow TakingPower "to" <Name> => Op::PowOne(<>),
+    Overflow "with" "taking" <Name> "power"  => Op::PowOne(<>),
+    Overflow "with" "taking" "the" <Name> "power"  => Op::PowOne(<>),
+    Overflow "with" "exponentiation" "with" <Name> => Op::PowOne(<>),
+    Overflow "with" "exponentiation" "to" <Name> => Op::PowOne(<>),
+}
+
+PowTwo: Op = {
+    Overflow "taking" <Name> "power" "of" <Name> => Op::PowTwo(<>),
+    Overflow "taking" "the" <Name> "power" "of" <Name> => Op::PowTwo(<>),
+    Overflow "with" <Name> "to" <Name> "power" => Op::PowTwo(<>),
+    Overflow "with" <Name> "to" <Name> "exponent" => Op::PowTwo(<>),
+    Overflow "with" "exponentiation" "of" <Name> "and" <Name> => Op::PowTwo(<>),
+    Overflow "with" "exponentiation" "of" <Name> "with" <Name> => Op::PowTwo(<>),
+    Overflow "with" "exponentiation" "of" <Name> "to" <Name> => Op::PowTwo(<>),
+    Overflow "with" "taking"  <Name> "to" <Name> "power" => Op::PowTwo(<>),
+    Overflow "with" "taking"  <Name> "to" <Name> => Op::PowTwo(<>),
+}
+
+Subtracting: () = {
+    "when" "subtracting" => (),
+    "subtracting" => (),
+}
+
+SimpleSub: Op = {
+    Underflow Subtracting => Op::Sub,
+    Underflow "with" "subtraction" => Op::Sub,
+    Underflow "with" "minus" => Op::Sub,
+}
+
+SubOne: Op = {
+    Underflow Subtracting <Name> => Op::SubOne(<>),
+    Underflow Subtracting "with" <Name> => Op::SubOne(<>),
+    Underflow Subtracting "by" <Name> => Op::SubOne(<>),
+}
+
+SubTwo: Op = {
+    Underflow Subtracting <Name> "and" <Name> => Op::SubTwo(<>),
+    Underflow Subtracting <Name> "by" <Name> => Op::SubTwo(<>),
+    Underflow Subtracting <Name> "with" <Name> => Op::SubTwo(<>),
+    Underflow "with" "subtraction" <Name> "and" <Name> => Op::SubTwo(<>),
+    Underflow "with" "subtraction" "of" <Name> "and" <Name> => Op::SubTwo(<>),
+}
+
+Error: () = {
+    "error" => (),
+    "crash" => (),
+    "failure" => (),
+    "bug" => (),
+    "fail" => (),
+    "panic" => (),
+}
+
+DivZero: () = {
+    Fix "division" "by" "zero" => (),
+    Fix "division-by-zero" => (),
+    Fix "dividing" "by" "zero" => (),
+    Fix "divide" "by" "zero" => (),
+    Fix "divide-by-zero" => (),
+}
+
+SimpleDiv: Op = {
+    DivZero => Op::Div,
+    DivZero Error => Op::Div,
+}
+
+DivOne: Op = {
+    DivZero "with" <Name> => Op::DivOne(<>),
+    DivZero Error "with" <Name> => Op::DivOne(<>),
+}
+
+Division: () = {
+    Fix "division" "of" => (),
+    Fix "divide" "of" => (),
+    Fix "dividing" => (),
+}
+
+DivTwo: Op = {
+    DivZero "with" <Name> "and" <Name> => Op::DivTwo(<>),
+    DivZero Error "with" <Name> "and" <Name> => Op::DivTwo(<>),
+    Division <Name> "by" "zero" "with" <Name> => Op::DivTwo(<>),
+}
+
+ModZero: () = {
+    Fix "modulo" "by" "zero" => (),
+    Fix "modulus" "by" "zero" => (),
+    Fix "modulus-by-zero" => (),
+    Fix "modulo-by-zero" => (),
+    Fix "modulo-zero" => (),
+}
+
+SimpleMod: Op = {
+    ModZero => Op::Mod,
+    ModZero Error => Op::Mod,
+}
+
+ModOne: Op = {
+    ModZero "with" <Name> => Op::ModOne(<>),
+    ModZero Error "with" <Name> => Op::ModOne(<>),
+}
+
+ModTwo: Op = {
+    ModZero "of" <Name> "and" <Name> => Op::ModTwo(<>),
+    ModZero Error "of" <Name> "and" <Name> => Op::ModTwo(<>),
+    ModZero "with" <Name> "and" <Name> => Op::ModTwo(<>),
+    ModZero Error "with" <Name> "and" <Name> => Op::ModTwo(<>),
+}
+
+StackOverflow: () = {
+    Fix "stack" "overflow" => (),
+    Fix "stackoverflow" => (),
+    Fix "stack-overflow" => (),
+    Fix "infinite" "recursion" => (),
+    Fix "recursion" => (),
+    Fix "recursion" "overflow" => (),
+    Fix "recursion" "stack" "overflow" => (),
+}
+
+Properly: () = {
+    "properly" => (),
+    "without" "hacks" => (),
+    "without" "spaghetti" => (),
+    "well" => (),
+    "correctly" => (),
+}
+
+Unless: () = {
+    "unless" => (),
+    "except" "when" => (),
+}
+
+Valid: () = {
+    "valid" => (),
+    "correct" => (),
+    "appropriate" => (),
+    "proper" => (),
+    "well" "formed" => (),
+    "well-formed" => (),
+    "good" => (),
+}
+
+When: () = {
+    "when" => (),
+    "if" => (),
+}
+
+Invalid: () = {
+    "invalid" => (),
+    "inappropriate" => (),
+    "improper" => (),
+    "malformed" => (),
+    "badly" "formed" => (),
+    "badly-formed" => (),
+    "incorrect" => (),
+    "not" Valid => (),
+    "bad" => (),
+}
+
+UnlessValid: () = {
+    Unless Valid => (),
+    When Invalid => (),
+}
+
+Contexts: () = {
+    "contexts" => (),
+    "circumstances" => (),
+    "situations" => (),
+}
+
+PlainFunction: Op = {
+    StackOverflow "with" <Name> => Op::PlainFunction(<>),
+    StackOverflow "in" <Name> => Op::PlainFunction(<>),
+    "clean" "up" "stack" "after" "calling" <Name> => Op::PlainFunction(<>),
+    "clean" "up" "after" "calling" <Name> => Op::PlainFunction(<>),
+    "document" <Name> => Op::PlainFunction(<>),
+    "document" <Name> "invariants" => Op::PlainFunction(<>),
+    "implement" <Name> => Op::PlainFunction(<>),
+    "implement" <Name> Properly => Op::PlainFunction(<>),
+    "prevent" <Name> "being" "called" UnlessValid => Op::PlainFunction(<>),
+    "prevent" <Name> "being" "called" "invalidly" => Op::PlainFunction(<>),
+    "prevent" <Name> "being" "called" "in" Invalid Contexts => Op::PlainFunction(<>),
+}
+
+ArgumentOf: () = {
+    "argument" "of" => (),
+    "argument" "to" => (),
+}
+
+Implement: () = {
+    "implement" => (),
+    "add" => (),
+}
+
+FunctionWithArgs: Op = {
+    "document" "the" <x:Nth> ArgumentOf <y:Name> => Op::FunctionWithArgs(y, x),
+    Fix "the" <x:Nth> ArgumentOf <y:Name> => Op::FunctionWithArgs(y, x),
+    Implement "the" <x:Nth> ArgumentOf <y:Name> => Op::FunctionWithArgs(y, x),
+    Implement "another" "argument" "to" <Name> => Op::FunctionWithArgs(<>, 1),
+    Implement "an" "argument" "to" <Name> => Op::FunctionWithArgs(<>, 1),
+    "document" "the" "argument" "to" <Name> => Op::FunctionWithArgs(<>, 1),
+    Fix "the" "argument" "to" <Name> => Op::FunctionWithArgs(<>, 1),
+    "type-check" "the" "argument" "to" <Name> => Op::FunctionWithArgs(<>, 1),
+}
+
+Formatting: () = {
+    "formatting" => (),
+    "the" "formatting" => (),
+    "indentation" => (),
+    "the" "indentation" => (),
+}
+
+EndFunctionBlock: Op = {
+    Fix Formatting => Op::Placeholder,
+}
+
+Call: () = {
+    "call" => (),    
+    "explicitly" "call" => (),
+    "try" "calling" => (),
+    "handle" "calling" => (),
+}
+
+Ensure: () = {
+    "ensure" => (),
+    "make" "sure" => (),
+}
+
+PlainFunctionCall: Op = {
+    Call <Name> "without" "checks" => Op::Call(<>),
+    Call <Name> Properly => Op::Call(<>),
+    Ensure "calling" <Name> Works => Op::Call(<>),
+    Ensure <Name> "is" "called" => Op::Call(<>),
+    Ensure <Name> "is" "always" "called" Properly => Op::Call(<>),
+    Ensure <Name> "is" "called" Properly => Op::Call(<>),
+    Fix Error "when" "calling" <Name>  => Op::Call(<>),
+    Fix Error "when" <Name> "is" "called" "safely" => Op::Call(<>),
+    Fix Error "when" <Name> "is" "called" Properly => Op::Call(<>),
+    "prevent" "calling" <Name> UnlessValid => Op::Call(<>),
+    Ensure <Name> "is" "never" "called" UnlessValid => Op::Call(<>),
+}
+
+Works: () = {
+    "works" => (),
+    "works" Properly => (),
+    "doesn't" Error => (),
+    "doesn't" "cause" "a" Error => (),
+    "doesn't" "cause" "an" Error => (),
+}
+
+FunctionCallWithArgs: Op = {
+    Call <Name> "with" <Names> Properly => Op::CallWithArgs(<>),
+    Ensure "calling" <Name> "with" <Names> Works => Op::CallWithArgs(<>),
+    "pass" <x:Names> "to" <y:Name> "safely" => Op::CallWithArgs(y, x),
+    "pass" <x:Names> "to" <y:Name> Properly => Op::CallWithArgs(y, x),
+    Fix Error "when" "passing" <x:Names> "to" <y:Name> => Op::CallWithArgs(y, x),
+}
+
+ErrorHandling: () = {
+    "error" "handling" => (),
+    "error-handling" => (),
+    "proper" "error" "handling" => (),
+}
+
+SkipOne: Op = {
+    "do" "some" ErrorHandling => Op::SkipIfTrue,
+    "do" ErrorHandling => Op::SkipIfTrue,
+    ErrorHandling => Op::SkipIfTrue,
+}
+
+StateManagement: () = {
+    "state" "management" => (),
+    "state" "handling" => (),
+    "checking" "for" Invalid "state" => (),
+    "handling" Invalid "state" => (),
+    "handling" Invalid "states" => (),
+}
+
+Equality: Op = {
+    "do" StateManagement => Op::Equal,
+    StateManagement => Op::Equal,
+    "handle" Invalid "state" => Op::Equal,
+    "handle" Invalid "states" => Op::Equal,
+    "validate" "state" => Op::Equal,
+    "validate" "states" => Op::Equal,
+    "validate" "state" Properly => Op::Equal,
+    "validate" "states" Properly => Op::Equal,
+    Ensure Valid "state" => Op::Equal,
+}
+
+NullCheck: () = {
+    "null" "check" => (),
+    "null" "checking" => (),
+    "null-check" => (),
+    "checking" "for" "null" => (),
+    "checking" "for" "nullness" => (),
+    "checking" "for" "existence" => (),
+    "checking" "for" "validity" => (),
+    "check" "for" "null" => (),
+    "check" "for" "nullness" => (),
+    "check" "for" "existence" => (),
+    "check" "for" "validity" => (),
+}
+
+Nonzeroness: Op = {
+    NullCheck => Op::Nonzero,
+    NullCheck Properly => Op::Nonzero,
+    Ensure "values" "exist" => Op::Nonzero,
+}
+
+Bloat: () = {
+    "bloat" => (),
+    "bloaty" "code" => (),
+    "redundancy" => (),
+    "redundant" "code" => (),
+    "redudnant" "states" => (),
+    "useless" "code" => (),
+}
+
+Remove: () = {
+    "delete" => (),
+    "remove" => (),
+    "avoid" => (),
+    "clear" => (),
+    "clear" "out" => (),
+}
+
+Dup: Op = {
+    Remove Bloat => Op::Dup,
+    Remove "this" Bloat => Op::Dup,
+    Remove "a" "lot" "of" "this" Bloat => Op::Dup,
+    Remove "a" "lot" "of" Bloat => Op::Dup,
+    Remove "all" "the" Bloat => Op::Dup,
+    Remove "all" "this" Bloat => Op::Dup,
+    "somehow" Remove "all" "this" Bloat => Op::Dup,
+    "try" "to" Remove "the" Bloat => Op::Dup,
+    "cry" "while" "trying" "to" Remove "the" Bloat => Op::Dup,
+    "lose" "your" "will" "to" "live" "trying" "to" Remove "the" Bloat => Op::Dup,
+    "do" "something" "about" "the" Bloat => Op::Dup,
+}
+
+DeadCode: () = {
+    "dead" "code" => (),
+    "unreachable" "code" => (),
+    "unreachable" "lines" => (),
+    "unreachable" "condition" => (),
+    "unreachable" "state" => (),
+    "unreachable" "states" => (),
+}
+
+Around: () = {
+    "around" => (),
+    "with" => (),
+    "related" "to" => (),
+}
+
+Pop: Op = {
+    Fix DeadCode Around <Name> => Op::Pop(<>),
+    Fix "unnecessary" DeadCode Around <Name> => Op::Pop(<>),
+    Fix Stupid DeadCode Around <Name> => Op::Pop(<>),
+}
+
+Errors: () = {
+    "raising" "an" Error => (),
+    "failures" => (),
+    "crashes" => (),
+    "panics" => (),
+    "bugs" => (),
+    "fails" => (),
+}
+
+Stupid: () = {
+    "stupid" => (),
+    "dumb" => (),
+    "idiotic" => (),
+    "insane" => (),
+    "dang" => (),
+}
+
+These: () = {
+    "these" => (),
+    "all" "these" => (),
+    "the" => (),
+    "all" "the" => (),
+}
+
+Push: Op = {
+    Fix Errors Around <Name> => Op::Push(<>),
+    Fix These Errors Around <Name> => Op::Push(<>),
+    Fix These Stupid Errors Around <Name> => Op::Push(<>),
+}
+
+Specifically: () = {
+    "specifically" => (),
+    "in" "specific" => (),
+}
+
+Eventually: () = {
+    "eventually" => (),
+    "at" "some" "point" => (),
+    "at" "some" "point" "in" "time" => (),
+    "at" "some" "point" "in" "time" "in" "the" "future" => (),
+    "in" "the" "future" => (),
+    "sometime" => (),
+    "later" => (),
+    "sometime" "later" => (),
+}
+
+Number: Op = {
+    Fix These <Num> Errors => Op::PushNumber(<>),
+    Fix These <Num> Errors Eventually => Op::PushNumber(<>),
+    Fix These <Num> Stupid Errors => Op::PushNumber(<>),
+    Fix <Num> Errors => Op::PushNumber(<>),
+    Fix <Num> "more" Errors  => Op::PushNumber(<>),
+    Fix <Num> Stupid Errors => Op::PushNumber(<>),
+    Fix These <Num> Stupid Errors Specifically => Op::PushNumber(<>),
+}
+
+Someone: () = {
+    "someone" => (),
+    "my" "mentor" => (),
+    "my" "coworker" => (),
+    "my" "coworkers" => (),
+    "the" "internet" => (),
+    "someone" "on" "the" "internet" => (),
+    "somebody" "on" "the" "internet" => (),
+    "an" "article" => (),
+    "stackoverflow" => (),
+    "a" "stackoverflow" "answer" => (),
+    "a" "friend" => (),
+}
+
+PushStr: Op = {
+    <Quote> "," "they" "said" => Op::PushString(<>),
+    Someone "told" "me" <Quote> "is" "good" => Op::PushString(<>),
+    Someone "told" "me" <Quote> "is" "a" "good" "idea" => Op::PushString(<>),
+    Someone "told" "me" <Quote> "is" "preferable" => Op::PushString(<>),
+    "according" "to" Someone "," <Quote> => Op::PushString(<>),
+    "according" "to" Someone "," "i" "should" <Quote> => Op::PushString(<>),
+    "according" "to" Someone "," "this" "should" <Quote> => Op::PushString(<>),
+    "idea" ":" <Quote> => Op::PushString(<>),
+    "a" "possibility" ":" <Quote> => Op::PushString(<>),
+    <Quote> "maybe" "?" => Op::PushString(<>),
+}
+
+TypeError: () = {
+    "type" "error" => (),
+    "type-error" => (),
+    "typeerror" => (),
+    "typeerrors" => (),
+    "type" "errors" => (),
+    "type" "mismatch" => (),
+    "types" "raising" Error => (),
+    "types" "raising" "an" Error => (),
+    "types" "raising" "a" Error => (),
+}
+
+SerializeNum: Op = {
+    Fix TypeError => Op::Serialize,
+    Fix "this" TypeError => Op::Serialize,
+    Fix "these" TypeError => Op::Serialize,
+    Remove "this" TypeError "from" "existence" => Op::Serialize,
+    Remove "these" TypeError "from" "existence" => Op::Serialize,
+}
+
+Cursed: () = {
+    "cursed" => (),
+    "horrible" => (),
+    "terrible" => (),
+    "really" "cursed" => (),
+    "mildly" "cursed" => (),
+    "somewhat" "cursed" => (),
+    "weirdly" "cursed" => (),
+    "highly" "cursed" => (),
+    "incredibly" "cursed" => (),
+    "beyond" "cursed" => (),
+    "accursed" => (),
+}
+
+StrOutput: Op = {
+    Fix "this" Cursed "code" => Op::StringOut,
+    "somehow" Fix "this" Cursed "code" => Op::StringOut,
+    "try" "to" Fix "this" Cursed "code" => Op::StringOut,
+    "try" "to" Fix "this" Cursed "code" "somehow" => Op::StringOut,
+    "attempt" "to" Fix "this" Cursed "code" => Op::StringOut,
+    "attempt" "to" Fix "this" Cursed "code" "and" "fail" => Op::StringOut,
+    "attempt" "to" Fix "this" Cursed "code" "but" "fail" "probably" => Op::StringOut,
+    "can" "i" "even" "do" "anything" "about" "this" Cursed "code" => Op::StringOut,
+    "this" "code" "is" Cursed => Op::StringOut,
+    "this" "code" "is" Cursed "and" "i" "don't" "know" "what" "to" "do" => Op::StringOut,
+    "this" "code" "is" Cursed "and" "i" "don't" "know" "what" "to" "do" "about" "it" => Op::StringOut,
+    Remove "this" Cursed "code" => Op::StringOut,
+}
+
+Help: () = {
+    "help" => (),
+    "advice" => (),
+    "guidance" => (),
+}
+
+AskFor: () = {
+    "ask" "for" => (),
+    "ask" Someone "for" => (),
+}
+
+Documentation: () = {
+    "the" "docs" => (),
+    "the" "documentation" => (),
+    "documentation" => (),
+    "documentation" "pages" => (),
+    "man" "pages" => (),
+    "the" "manual" => (),
+    "a" "tutorial" => (),
+    "a" "guide" => (),
+    "that" "annoying" "medium" "article" "that's" "somehow" "still" "helpful" => (),
+}
+
+StrInput: Op = {
+    AskFor "some" Help => Op::StringIn,
+    AskFor "please" "," "some" Help => Op::StringIn,
+    AskFor "please" "some" Help => Op::StringIn,
+    "ask" Someone "to" Help => Op::StringIn,
+    "read" Documentation => Op::StringIn,
+    "maybe" "read" Documentation => Op::StringIn,
+    "perhaps" "i" "should" "read" Documentation => Op::StringIn,
+    "maybe" "i" "should" "read" Documentation => Op::StringIn,
+    "maybe" "i" "should" "read" Documentation "before" "attempting" => Op::StringIn,
+    "read" Documentation "and" "figure" "out" "what's" "going" "on" => Op::StringIn,
+    "read" Documentation "to" "maybe" "figure" "out" "what's" "going" "on" => Op::StringIn,
+}
+
+Halt: Op = {
+    "give" "up" => Op::Exit,
+    "just" "give" "up" => Op::Exit,
+    "just" "give" "up" "already" => Op::Exit,
+    "consider" "giving" "up" => Op::Exit,
+    "consider" "giving" "in" => Op::Exit,
+    "cry" => Op::Exit,
+    "try" "not" "to" "cry" => Op::Exit,
+    "try" "not" "to" "cry" "too" "much" => Op::Exit,
+    "cry" "a" "lot" => Op::Exit,
+    "give" "up" "and" "cry" => Op::Exit,
+    "cry" "..." "and" "that's" "okay" => Op::Exit,
+    "stop" "writing" "this" "mess" => Op::Exit,
+    "stop" "programming" => Op::Exit,
+    "retire" "from" "programming" => Op::Exit,
+}
+
+Op: Op = {
+    // Arithmetic!
+    Increment,
+    SimpleAdd,
+    SimpleMul,
+    SimplePow,
+    SimpleSub,
+    SimpleDiv,
+    SimpleMod,
+    IncrementOne,
+    AddOne,
+    MulOne,
+    PowOne,
+    SubOne,
+    DivOne,
+    ModOne,
+    AddTwo,
+    MulTwo,
+    PowTwo,
+    SubTwo,
+    DivTwo,
+    ModTwo,
+    // Functions
+    PlainFunction,
+    FunctionWithArgs,
+    EndFunctionBlock,
+    PlainFunctionCall,
+    FunctionCallWithArgs,
+    // Conditions & stack stuff
+    Equality,
+    Nonzeroness,
+    SkipOne,
+    Dup,
+    Push,
+    Pop,
+    Number,
+    // String stuff, IO
+    PushStr,
+    SerializeNum,
+    StrOutput,
+    StrInput,
+    Halt
+}
+
+pub Comments = Pattern<Op>*;

@@ -1,0 +1,51 @@
+SomeLang {
+    Main = Declaration*
+    Declaration = ThreadDecl
+        | FuncDecl // todo (?): constdecl, globaldecl, channeldecl, structdecl, more?
+
+    ThreadDecl = "@thread" "fn" ident "()" BlockStatement
+    FuncDecl = "fn" ident "(" ListOf<ident, ","> ")" BlockStatement
+
+    BlockStatement = "{" Statement* "}"
+
+    Statement = BlockStatement
+        | InfiniteLoopStatement
+        | LetStatement
+        | IfStatement
+        | AssignStatement
+        | BreakStatement
+        | ExpressionStatement
+
+    InfiniteLoopStatement = "for" BlockStatement
+    LetStatement = "let" ident "=" Expression ";"
+    ExpressionStatement = Expression ";"
+    IfStatement = "if" ParenExpression BlockStatement ("else" BlockStatement)?
+    AssignStatement = ident "=" Expression ";" -- normal
+        | ident "+=" Expression ";" -- add
+    BreakStatement = "break" ";"
+
+    Expression = AtLogExpression -- atlog
+        | AtPublishWorkExpression -- atpublishwork
+        | RFCExpression -- rfc
+        | Expression "==" Expression -- equality
+        | SeeWorkExpression -- seework
+        | strlit -- string
+        | number -- number
+        | CommentExpression -- comment
+        | ident -- variable
+        | ":" ident -- atom
+
+    AtLogExpression = "@log" "(" NonemptyListOf<Expression, ","> ")"
+    AtPublishWorkExpression = "@publish_work" "(" Expression ")"
+    RFCExpression = "@rfc" "(" Expression ")"
+    SeeWorkExpression = "@seework" "(" strlit ")"
+    CommentExpression = "@comment" "(" Expression "," Expression ")"
+    ParenExpression = "(" Expression ")"
+
+    strchr = ~"\"" ~"\\" ~"\n" any -- normal
+        | "\\" ("n" | "\"" | "\\") -- escape
+    strlit = "\"" strchr* "\""
+
+    ident = (letter | "_") (letter | digit | "_")*
+    number = digit+
+}

@@ -1,0 +1,5 @@
+# todo "Improve Performance"
+# fix "Don't forget to fix this issue"
+
+# warn "Remember that println return the size of the string :D"
+@call println with "Hello, World!"

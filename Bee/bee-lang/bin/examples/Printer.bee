@@ -1,0 +1,2 @@
+#let c be 'c' + 'm'
+@call println with @call osName

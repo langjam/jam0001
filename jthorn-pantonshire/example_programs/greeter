@@ -1,0 +1,5 @@
+// This function greets "James", "Tom"
+function main()
+
+// A function which prints "hello ", personA, " and ", personB
+function greet(personA, personB)
