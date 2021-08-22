@@ -1,0 +1,15 @@
+
+//loop start
+
+a = 1; //once
+print "defined a";//and
+
+a = a+1;//otherwise
+
+//conditionally
+print "foobar"; //when $(a%5==0) * (a%3==0)$
+print "foo"; //otherwise when $a%3==0$
+print "bar"; //otherwise when $a%5==0$
+print a; //otherwise
+
+goto loop start; //when $a<15$
