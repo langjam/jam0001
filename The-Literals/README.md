@@ -38,14 +38,31 @@ $ python3 -m commentinator [filename]
 # Examples
 There are a number of samples in the `samples/` directory. At the time of writing, the following samples are known to work.
 
+- `echo.comment` - demonstrates jump statements by echoing a string n times.
 - `fib.comment` - calculates the nth fibonacci number and prints it using a **Built-in**.
-- `string_literal.comment` - prints a string literal using a **Built-in**.
 - `multiply.comment` - multiplies two numbers and prints the result using a **Built-in**.
+- `string_literal.comment` - prints a string literal using a **Built-in**.
+- `user_input.comment` - asks the user for a number, doubles it, and prints the result.
 
+### echo.comment
+```
+$ python3 -m commentinator samples/echo.comment
+Hello
+Hello
+Hello
+Hello
+Hello
+```
 ### fib.comment
 ```
 $ python3 -m commentinator samples/fib.comment
 55
+```
+
+### multiply.comment
+```
+$ python3 -m commentinator samples/multiply.comment
+27
 ```
 ### string_literal.comment
 ```
@@ -53,10 +70,11 @@ $ python3 -m commentinator samples/string_literal.comment
 Hello
 ```
 
-### multiply.comment
+### user_input.comment
 ```
-$ python3 -m commentinator samples/multiply.comment
-27
+$ python3 -m commentinator samples/user_input.comment
+Please enter a number:55
+110
 ```
 # Syntax Guide
 
@@ -128,6 +146,12 @@ A function call statement consists of a function name, in imperative form, follo
 // Calculate the nth fibonacci number with n as 10 and call it fibonacci number.
 ```
 
+## Jump Statements.
+A jump statement consists of the keyword `jump`, followed by a direction (one of `forward` or `backward`), a number of lines to jump, then the keyword `lines`.
+```
+Jump forward 3 lines.
+```
+
 ### Function Names
 As described above, function names are given in third person singular form, e.g., `Opens the pod bay doors`. However, functions must be invoked in imperative form, e.g., `Open the pod bay doors`.
 
@@ -155,7 +179,8 @@ and call it the result.
 There are a number of built-in functions.
 
 - `Prints a number`, which is invoked as `Print a number`.
-- `Print`, which prints a string literal.
+- `Prints`, which prints a string literal and is invoked as `Print`.
+- `Asks the user for a number`, which is invoked as `Ask the user for a number`.
 
 ## Expressions
 Expressions in Commentator are exceedingly basic. They can be a variable or a number, or a binary operator where the operands are variables or numbers. There is no operator precedence, because an expression can only contain one binary operator.
