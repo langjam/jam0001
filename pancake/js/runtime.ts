@@ -1,4 +1,4 @@
-import { Interpreter, StateInfo } from './interpreter';
+import { Interpreter, Result, StateInfo } from './interpreter';
 
 type Mode = 
     | { type: 'Stopped' }
@@ -13,10 +13,15 @@ export class Runtime {
     delaySeconds: number = 0.5;
     interpreter: Interpreter = new Interpreter();
     stateListener: (s: StateInfo | null) => void;
+    resultListener: (r: Result) => void;
     newCode: string | null = null;
 
-    constructor(stateListener: (s: StateInfo) => void) {
+    constructor(
+        stateListener: (s: StateInfo) => void,
+        resultListener: (r: Result) => void
+    ) {
         this.stateListener = stateListener;
+        this.resultListener = resultListener;
     }
 
     setDelaySeconds(delaySeconds: number) {
@@ -54,7 +59,8 @@ export class Runtime {
         this.running = true;
 
         if (this.newCode !== null) {
-            this.interpreter.setCode(this.newCode);
+            const result = await this.interpreter.setCode(this.newCode);
+            this.resultListener(result);
             this.newCode = null;
         }
 

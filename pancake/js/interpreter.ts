@@ -2,7 +2,14 @@
 export interface StateInfo {
     currentLine: number;
     activeLines: number[];
+    currentStack: Value[]
 }
+
+export type Value = 
+    | string
+    | number
+    | Value[]
+    | { type: 'Function' };
 
 export type Result = SuccessfulResult | FailureResult;
 

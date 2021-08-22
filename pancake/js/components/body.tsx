@@ -1,4 +1,4 @@
-import { StateInfo } from "../interpreter";
+import { Result, StateInfo } from "../interpreter";
 import { Runtime } from "../runtime";
 import { Editor } from "./editor";
 import { IOPanel } from "./iopanel";
@@ -6,16 +6,18 @@ import { Stack } from "./stack";
 
 interface BodyProps {
     runtime: Runtime,
+    result: Result,
     state: StateInfo
 }
 
-export function Body({ runtime, state }: BodyProps) {
+export function Body({ runtime, result, state }: BodyProps) {
 
     return (
         <div className='content flex-row'>
             <div style={{width: '50%'}}>
                 <Editor
                     runtime={runtime}
+                    result={result}
                     state={state}
                 />
             </div>

@@ -4,15 +4,15 @@ import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/theme-gruvbox";
 import "ace-builds/src-noconflict/ext-language_tools";
 
-import { StateInfo } from "../interpreter";
+import { Result, StateInfo } from "../interpreter";
 import { Runtime } from "../runtime";
 import { Ace } from "ace-builds";
 
 interface EditorProps {
     runtime: Runtime,
+    result: Result,
     state: StateInfo
 }
-
 
 export function Editor({ runtime, state }: EditorProps) {
     // on initialization start out empty or whatever
@@ -23,6 +23,7 @@ export function Editor({ runtime, state }: EditorProps) {
         <div style={{ textAlign: 'center'}}>
             <h1>Editor</h1>
             <AceEditor
+                defaultValue={defaultValue}
                 setOptions={{
                     hScrollBarAlwaysVisible: true,
                     showPrintMargin: false,
@@ -60,3 +61,21 @@ function onLoad(editor: Ace.Editor) {
         })
     }
 }
+
+const defaultValue = `\
+"welcome to the demo, please enter your name:"
+write str
+read str
+"enter your age:"
+write str
+read num
+18
+<
+flip if
+# "glad to see you here, be safe"
+# write str
+"yoohoo bro, wassup. let's get down to it"
+write str
+# flip
+exit
+`;
