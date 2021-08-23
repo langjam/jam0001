@@ -1,0 +1,130 @@
+{-1};
+1//2,"""
+
+const fs = require('fs');
+const cp = require('child_process')
+const path = require('path')
+const errorExit = a => process.stderr.write(a)+process.exit(1);
+
+if (process.argv.length == 2) errorExit("Error: file needed\n");
+
+const file = process.argv[2]
+if (!fs.existsSync(file)) errorExit("Error: file does not exist\n");
+
+const langs = {
+	'Python': 'python3',
+	'Javascript': 'nodejs',
+	'Haskell': 'bash ' + __dirname + '/haskell',
+	'Perl': 'perl',
+	'C': 'tcc -xc -w -run'
+};
+
+var stdin = process.stdin;
+const chunks = [];
+
+stdin.on('readable', () => {
+	let chunk;
+	while (null !== (chunk = stdin.read())) {
+		chunks.push(chunk);
+	}
+});
+
+stdin.on('end', () => {
+	const inp = chunks.join('');
+	results = {}
+	for (l in langs) {
+		p = cp.spawnSync(langs[l], process.argv.slice(2), {input: inp, shell: true});
+		if (p.error) {
+			process.stderr.write("Lang "+l+" may not be installed\n");
+		} else {
+			if (results[p.status] == undefined) {
+				results[p.status] = {};
+				results[p.status][p.stdout] = 1;
+			} else if (results[p.status][p.stdout] == undefined) {
+				results[p.status][p.stdout] = 1;
+			} else {
+				results[p.status][p.stdout] += 1;
+				if (results[p.status][p.stdout] == 3) {
+					process.stdout.write(p.stdout);
+					process.exit(p.status);
+				}
+			}
+		}
+	}
+});
+
+/* """
+
+import sys, os, subprocess
+
+if len(sys.argv) == 1: sys.exit("Error: file needed\n")
+file = sys.argv[1]
+if not os.path.exists(file): sys.exit("Error: file does not exist\n")
+
+langs = {
+	'Python': 'python3',
+	'Javascript': 'nodejs',
+	'Haskell': 'bash '+(os.path.dirname(__file__) + '/' if os.path.dirname(__file__) != '' else '')+'haskell',
+	'Perl': 'perl',
+	'C': 'tcc -xc -w -run'
+}
+
+inp = sys.stdin.read()
+results = {}
+for l in langs:
+	try:
+		p = subprocess.run(langs[l].split() + sys.argv[1:], capture_output = True, input = inp, text = True)
+		r = (p.stdout, p.returncode)
+		if r in results: results[r] += 1
+		else: results[r] = 1
+		if results[r] == 3:
+			sys.stdout.write(p.stdout)
+			exit(p.returncode)
+	except FileNotFoundError:
+		sys.stderr.write("Lang %s may not be installed\n" % l)
+
+""" -}
+import System.Environment
+import System.Directory
+import System.Exit
+import System.IO
+import System.Process
+import Control.Exception
+import Data.List
+
+main = do
+        args <- getArgs
+        input <- getContents
+        if null args 
+            then exitErr "Error: file needed"
+            else return ()
+        exists <- doesFileExist $ head args
+        if not exists
+            then exitErr "Error: file does not exist"
+            else return ()
+        currentPath <- getExecutablePath >>= makeAbsolute
+        let currentDir = reverse $ dropWhile ('/'/=) $ reverse currentPath
+            langs = [
+                ("Python", ["python3"]),
+                ("Javascript", ["nodejs"]),
+                ("Haskell", ["bash", currentDir++"/haskell"]),
+                ("Perl",["perl"]),
+                ("C",["tcc","-xc","-w","-run"])
+                ]
+            evaluate (lang, com) = do
+                result <- try (readProcessWithExitCode (head com) (tail com++args) input) :: IO (Either SomeException (ExitCode, String, String))
+                case result of
+                    Left ex -> do
+                        hPutStr stderr ("Lang "++lang++" may not be installed\n")
+                        return ("", ExitFailure 1)
+                    Right (code, output, _) -> return (output, code)
+        results <- mapM evaluate langs
+        let r = map head $ filter ((2<).length) $ group $ sort results
+        mapM (putStr.fst <> exitWith.snd) r
+
+exitErr :: String -> IO a
+exitErr message = do
+        hPutStrLn stderr message
+        exitFailure
+
+-- """ # */

@@ -1,0 +1,2 @@
+1//2; print("${print 'Hello, World!'.chr(10)}" and "Hello, World!");exit(0);
+console.log("Hello, World!")

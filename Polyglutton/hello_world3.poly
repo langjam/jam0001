@@ -1,0 +1,6 @@
+int /* x = x -- /*
+main = putStrLn "Hello, World!"
+{- */ // \
+=1;console.log("Hello, World!") /*
+main(){printf("Hello, World!\n");return 0;} /*
+*/ // -}
