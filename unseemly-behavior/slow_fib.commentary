@@ -1,0 +1,42 @@
+/* Here is a typical naive implementation of the Fibonacci function:
+
+fn fib(a: Int) -> Int {
+    if(equal?(a, 0)) {
+        1
+    } else {
+        if(equal?(a, 1)) {
+            1
+        } else {
+            plus(fib(minus(a, 1)), fib(minus(a, 2)))
+        }
+    }
+}
+
+This has an exponential runtime, taking about phi ^ a steps to evaluate fib(a)
+where phi is the golden ratio.
+
+We don't have recursion, but we have the fixed point operator "fix", so our
+implementation looks a little ugly.
+
+*/
+
+fn fib_slow_inner(recurse : [-> [Int -> Int]]) -> [Int -> Int] {
+    |a : Int|
+    /* evaluating fib ( `a` ) */
+    if(equal?(a, 0)) {
+        1
+    } else {
+        if(equal?(a, 1)) {
+            1
+        } else {
+            plus(recurse()(minus(a, 1)), recurse()(minus(a, 2)))
+        }
+    }
+}
+
+fn fib_slow(a : Int) -> Int {
+    fix(fib_slow_inner)(a)
+}
+
+fib_slow(7)
+
