@@ -1,6 +1,0 @@
-module [moop| mooping now for you] where
-
-
-[i| An integer constant] = 1
-
-[main|Here we go] = 2
