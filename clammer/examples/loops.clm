@@ -1,0 +1,10 @@
+x = 0;
+do write(x = x + 1)
+while x < 10 print(" One more...")
+else print(" All Done!");
+
+
+# "The semicolons are especially awkward here 😅"
+x = 0;
+y = do x = x + 1 while x < 10;
+print(y)

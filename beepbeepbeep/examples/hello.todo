@@ -1,0 +1,15 @@
+use std::io::{stdout, Write};
+// TODO: someone on the internet told me "Hello, world!\n" is a good idea
+fn hello() {
+    let chars = &[
+        'H', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!'
+    ];
+    let mut out = stdout();
+    // TODO: somehow fix this cursed code
+    for c in chars {
+        let mut buf = [0; 4];
+        c.encode_utf8(&mut buf);
+        out.write(&buf).unwrap();
+    }
+    out.flush().expect("unwrap");
+}

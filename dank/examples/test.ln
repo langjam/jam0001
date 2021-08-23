@@ -1,0 +1,99 @@
+// fn comment_time_only_function(x) {
+//     print "print 'This function can be accessed only at comment time execution';";
+//     print "print '" + x + "';";
+// }
+//
+// fn show ast() {
+//      print "print '" + AST.tree + "';";
+// }
+//
+
+// please show ast
+let x = 7;
+
+// this is a test comment
+// abc
+// dddddddddddd
+
+// // Nested comment
+// print "fn i_was_generated(x) { print x; }";
+// print "print 5;";
+
+// comment_time_only_function("this string was passed in from a comment");
+
+print { name: "value", nested: { object: "here" } };
+
+let x = 5;
+print x;
+
+
+let obj = { name: "test" };
+print obj.name;
+print clock();
+
+i_was_generated(7);
+
+
+print 'single quoted string';
+
+print 1 + 1;
+
+print -4838;
+
+print !0;
+
+
+let callable = { __call__: fn(){} };
+print callable();
+
+let callable2 = { __call__: fn() { return 5; } };
+callable.field = "added after creation";
+print callable, callable2();
+
+
+fn outer() {
+    fn inner() { return 7; }
+
+    let x = 5;
+
+    print "before inner return";
+
+    {
+        x = inner();
+    }
+
+    print "after inner return";
+
+    return x;
+}
+
+print outer();
+
+let x = 0;
+while true {
+    x = x + 1;
+    break;
+}
+print "x is", x;
+
+
+while x < 3 {
+    x = x + 1;
+    print "x is now", x;
+}
+
+while true {
+    let value = input("Enter a string: ");
+    if value == "secret" {
+        print "You've entered the secret string, gaining access to my password: hunter2!";
+        break;
+    } else if value == "borgar" {
+        print "Mmm borgar...";
+        break;
+    } else if value.length != 0 {
+        print "Try again.";
+    } else {
+        break;
+    }
+}
+

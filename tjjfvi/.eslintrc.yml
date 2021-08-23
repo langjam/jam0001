@@ -1,0 +1,234 @@
+ignorePatterns:
+  - '**/node_modules/*'
+  - '**/dist/*'
+env:
+  commonjs: true
+  es6: true
+  node: true
+plugins:
+  - '@typescript-eslint'
+settings:
+  react:
+    version: detect
+extends:
+  - 'eslint:recommended'
+  - 'plugin:@typescript-eslint/eslint-recommended'
+  - 'plugin:@typescript-eslint/recommended'
+parser: '@typescript-eslint/parser'
+parserOptions:
+  ecmaVersion: 2018
+  sourceType: module
+rules:
+  '@typescript-eslint/member-delimiter-style':
+    - warn
+    - multiline:
+        delimiter: "comma"
+        requireLast: true
+      singleline:
+        delimiter: "comma"
+        requireLast: false
+  '@typescript-eslint/no-explicit-any':
+    - off
+  '@typescript-eslint/no-empty-interface':
+    - off
+  '@typescript-eslint/ban-ts-comment':
+    - off
+  '@typescript-eslint/ban-ts-ignore':
+    - off
+  '@typescript-eslint/no-use-before-define':
+    - off
+  '@typescript-eslint/no-empty-function':
+    - off
+  '@typescript-eslint/no-this-alias':
+    - off
+  '@typescript-eslint/no-namespace':
+    - off
+  '@typescript-eslint/explicit-module-boundary-types':
+    - off
+  '@typescript-eslint/class-name-casing':
+    - off
+  '@typescript-eslint/ban-types':
+    - off
+  '@typescript-eslint/explicit-function-return-type':
+    - off
+  '@typescript-eslint/no-inferrable-types':
+    - off
+  '@typescript-eslint/no-non-null-assertion':
+    - off
+  prefer-const:
+    - off
+  indent:
+    - warn
+    - 2
+    - ignoreComments: false
+      SwitchCase: 1
+  linebreak-style:
+    - error
+    - unix
+  quotes:
+    - warn
+    - double
+    - avoidEscape: true
+  # no-magic-numbers:
+  #   - warn
+  #   - ignoreArrayIndexes: true
+  #     detectObjects: true
+  #     ignore: [0, 1]
+  no-warning-comments:
+    - warn
+  eqeqeq:
+    - warn
+    - smart
+#   default-case:
+#     - warn
+  no-useless-concat:
+    - warn
+  array-bracket-newline:
+    - warn
+    - consistent
+  array-bracket-spacing:
+    - warn
+    - never
+  array-element-newline:
+    - warn
+    - consistent
+  arrow-spacing:
+    - warn
+    - before: true
+      after: true
+  brace-style:
+    - warn
+    - stroustrup
+  block-spacing:
+    - warn
+    - always
+  comma-dangle:
+    - warn
+    - always-multiline
+  comma-spacing:
+    - warn
+  eol-last:
+    - warn
+    - always
+  func-call-spacing:
+    - warn
+  key-spacing:
+    - warn
+    - singleLine:
+        beforeColon: false
+        afterColon: true
+        mode: strict
+      multiLine:
+        beforeColon: false
+        afterColon: true
+        mode: minimum
+  lines-between-class-members:
+    - warn
+    - always
+    - exceptAfterSingleLine: true
+#   max-depth:
+#     - warn
+  new-parens:
+    - warn
+  newline-per-chained-call:
+    - warn
+    - ignoreChainWithDepth: 4
+  no-lonely-if:
+    - warn
+  no-multiple-empty-lines:
+    - warn
+    - max: 1
+  no-trailing-spaces:
+    - warn
+  no-unneeded-ternary:
+    - warn
+  no-whitespace-before-property:
+    - warn
+  curly:
+    - warn
+    - multi
+  object-curly-newline:
+    - warn
+    - multiline: true
+      consistent: true
+  object-curly-spacing:
+    - warn
+    - always
+  object-property-newline:
+    - warn
+    - allowAllPropertiesOnSameLine: true
+  one-var:
+    - warn
+    - separateRequires: true
+  one-var-declaration-per-line:
+    - warn
+    - initializations
+  operator-assignment:
+    - warn
+  operator-linebreak:
+    - warn
+    - before
+    - overrides:
+        "=": after
+  padded-blocks:
+    - warn
+    - classes: always
+      switches: never
+  semi-spacing:
+    - warn
+  semi-style:
+    - warn
+    - first
+  semi:
+    - off
+  '@typescript-eslint/semi':
+    - warn
+    - never
+    - beforeStatementContinuationChars: always
+  space-before-blocks:
+    - warn
+    - functions: never
+      keywords: always
+      classes: always
+  keyword-spacing:
+    - warn
+    - overrides:
+        if: { after: false }
+        for: { after: false }
+        while: { after: false }
+        switch: { after: false }
+  space-before-function-paren:
+    - warn
+    - anonymous: never
+      named: never
+      asyncArrow: always
+  space-in-parens:
+    - warn
+  space-infix-ops:
+    - warn
+  space-unary-ops:
+    - warn
+  spaced-comment:
+    - warn
+  arrow-body-style:
+    - warn
+    - as-needed
+  arrow-parens:
+    - warn
+    - as-needed
+  max-len:
+    - warn
+    - code: 120
+      tabWidth: 1
+      ignoreUrls: true
+      ignoreRegExpLiterals: true
+  no-var:
+    - warn
+  no-console:
+    - off
+  implicit-arrow-linebreak:
+    - off
+  no-empty-pattern:
+    - off
+  no-constant-condition:
+    - off

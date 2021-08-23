@@ -1,0 +1,8 @@
+# 1
+var y;
+# 2
+y = y + 1;
+# 3
+y = y + 2;
+
+print(commentof y);

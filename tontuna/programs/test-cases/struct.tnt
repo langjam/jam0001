@@ -1,0 +1,10 @@
+struct A {}
+
+let a = A();
+
+a.foo = 1;
+a.bar = "hello";
+
+println(a);
+println(a.foo);
+println(a.bar);

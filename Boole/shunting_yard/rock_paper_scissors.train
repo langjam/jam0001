@@ -1,0 +1,239 @@
+[LOCOMOTIVE]
+start at Rotterdam track 1
+[FIRST CLASS]
+[SECOND CLASS]
+
+{Rotterdam}
+operation: nothing
+track 1: go to Delft track 1
+
+{Delft}
+operation: input
+track 1: go to DenHaag track 1
+
+[LOCOMOTIVE]
+start at DenHaag track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 0
+
+{DenHaag}
+operation: add
+track 1: go to Lelystad track 1
+track 2: go to Emmen track 2
+
+{Emmen}
+operation: add
+track 1: go to Groningen track 1
+track 2: go to Steenwijk track 1
+
+{Steenwijk}
+operation: nothing
+track 1: go to Leiden track 1
+
+{Leiden}
+operation: input
+track 1: go to Lelystad track 2
+
+[LOCOMOTIVE]
+start at Emmen track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 80
+x: 108
+x: 97
+x: 121
+x: 101
+x: 114
+x: 32
+x: 50
+x: 44
+x: 32
+x: 112
+x: 108
+x: 97
+x: 121
+x: 33
+
+[LOCOMOTIVE]
+start at Groningen track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 49
+x: 58
+x: 32
+x: 82
+x: 111
+x: 99
+x: 107
+x: 44
+x: 32
+x: 50
+x: 58
+x: 32
+x: 80
+x: 97
+x: 112
+x: 101
+x: 114
+x: 44
+x: 32
+x: 51
+x: 58
+x: 32
+x: 83
+x: 99
+x: 105
+x: 115
+x: 115
+x: 111
+x: 114
+x: 115
+
+[LOCOMOTIVE]
+start at Leeuwarden track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 80
+x: 108
+x: 97
+x: 121
+x: 101
+x: 114
+x: 32
+x: 49
+x: 44
+x: 32
+x: 112
+x: 108
+x: 97
+x: 121
+x: 33
+
+{Leeuwarden}
+operation: print string
+track 1: go to Almere track 1
+
+{Groningen}
+operation: print string
+track 1: go to Almere track 1
+
+{Almere}
+operation: delete
+
+
+
+{Lelystad}
+operation: sub
+track 1: go to Zwolle track 1
+track 2: go to Almere track 1
+
+{Zwolle}
+operation: switch gte
+track 1: go to Arnhem track 1
+track 2: go to Apeldoorn track 1
+
+[LOCOMOTIVE]
+start at Apeldoorn track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 3
+
+{Apeldoorn}
+operation: add
+track 1: go to Arnhem track 1
+track 2: go to Apeldoorn track 2
+
+
+{Arnhem}
+operation: switch eq
+track 1: go to Eindhoven track 2
+track 2: go to Nijmegen track 1
+
+[LOCOMOTIVE]
+start at Nijmegen track 2
+[FIRST CLASS]
+[SECOND CLASS]
+x: 1
+
+{Nijmegen}
+operation: sub
+track 1: go to Tilburg track 1
+track 2: go to Nijmegen track 2
+
+{Tilburg}
+operation: switch eq
+track 1: go to Roermond track 2
+track 2: go to Maastricht track 2
+
+{Eindhoven}
+operation: add
+track 1: go to Leeuwarden track 1
+track 2: go to Almere track 1
+
+[LOCOMOTIVE]
+start at Eindhoven track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 68
+x: 114
+x: 97
+x: 119
+x: 33
+
+{Roermond}
+operation: add
+track 1: go to Leeuwarden track 1
+track 2: go to Almere track 1
+
+[LOCOMOTIVE]
+start at Roermond track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 70
+x: 105
+x: 114
+x: 115
+x: 116
+x: 32
+x: 112
+x: 108
+x: 97
+x: 121
+x: 101
+x: 114
+x: 32
+x: 119
+x: 105
+x: 110
+x: 115
+x: 33
+
+{Maastricht}
+operation: add
+track 1: go to Leeuwarden track 1
+track 2: go to Almere track 1
+
+[LOCOMOTIVE]
+start at Maastricht track 1
+[FIRST CLASS]
+[SECOND CLASS]
+x: 82
+x: 101
+x: 99
+x: 111
+x: 110
+x: 100
+x: 32
+x: 112
+x: 108
+x: 97
+x: 121
+x: 101
+x: 114
+x: 32
+x: 119
+x: 105
+x: 110
+x: 115
+x: 33

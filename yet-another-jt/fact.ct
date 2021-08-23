@@ -1,0 +1,10 @@
+
+{- A helper to make the comment for factorial -}
+makeFactComment n = {- The factorial function on -} # {!- n -!};
+
+{!- makeFactComment n -!}
+fact n = ifElse (eq n 0) 1 $ mul n $ fact $ sub n 1;
+
+{!- makeFactComment n -!}
+fact_crash n = ifElse (eq n 0) false $ mul n $ fact_crash $ sub n 1;
+

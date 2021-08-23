@@ -1,0 +1,63 @@
+WHITESPACE = _{ " " | "\r" | "\t" | "\n" }
+
+int = @{ ASCII_DIGIT+ }
+string = ${ "\"" ~ inner ~ "\"" }
+inner = @{ char* }
+char = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+boolean = { "true" | "false" }
+
+open_paren = _{ "(" }
+close_paren = _{ ")" }
+open_curly = _{ "{" }
+close_curly = _{ "}" }
+ident = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
+
+scope = { global_var | static_var | var }
+    global_var = { "let" ~ "global" }
+    static_var = { "let" ~ "static" }
+    var = { "let" }
+
+binary_operator = { add | subtract | multiply | divide | modulo | and | or | equals | not_equals | greater_than_equals | less_than_equals | greater_than | less_than }
+    add = { "+" }
+    subtract = { "-" }
+    multiply = { "*" }
+    divide = { "/" }
+    modulo = { "%" }
+    and = { "&&" }
+    or = { "||" }
+    equals = { "==" }
+    not_equals = { "!=" }
+    greater_than_equals = { ">=" }
+    less_than_equals = { "<=" }
+    greater_than = { ">" }
+    less_than = { "<" }
+
+unary_operator = { not | negate }
+    not = { "!" }
+    negate = { "-" }
+
+expression = { binary_expression | unary_expression | function_call | term }
+    binary_expression = { (function_call | unary_expression | term ) ~ binary_operator ~ expression }
+    unary_expression = { unary_operator ~ expression }
+    function_call = { ident ~ open_paren ~ arguments ~ close_paren }
+        arguments = { (expression ~ ("," ~ expression)*)? }
+    term = { int | string | boolean | ident | open_paren ~ expression ~ close_paren }
+
+statement = { declare ~ semicolon | assignment ~ semicolon | if_statement | function_definition | goto_statement ~ semicolon | return_statement ~ semicolon | expression ~ semicolon }
+    declare = { scope ~ ident ~ "=" ~ expression }
+    assignment = { ident ~ "=" ~ expression }
+    if_statement = { "if" ~ open_paren ~ expression ~ close_paren ~ open_curly ~ list_statement ~ close_curly ~ else_statement? }
+        else_statement = { "else" ~ open_curly ~ list_statement ~ close_curly }
+    function_definition = { "fun" ~ ident ~ open_paren ~ parameters ~ close_paren ~ open_curly ~ list_statement ~ close_curly }
+        parameters = { (ident ~ ("," ~ ident)*)? }
+    goto_statement = { "goto" ~ expression }
+    return_statement = { "return" ~ expression}
+    semicolon = _{ ";" }
+
+list_statement = { statement+ }
+
+language = { list_statement }

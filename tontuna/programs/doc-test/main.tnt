@@ -1,0 +1,101 @@
+fn main() {
+    run_doc_tests();
+}
+
+# Checks top level comments for code snippets,
+# runs them in a sandbox, and reports failures.
+fn run_doc_tests() {
+    # checks only top level comments
+    let source = program_source();
+    for item in source {
+        if let comment: Comment = item {
+            test_comment(comment);
+        }
+    }
+}
+
+# Because we don't have `break` and want to break on error.
+fn test_comment(comment) {
+    let had_code = false;
+    for comment_item in comment.children {
+        if let code: Code = comment_item {
+            had_code = true;
+            let interpreter = prepare_interpreter();
+            let err = interpreter.run(code);
+            if err != nil {
+                println("doc test failed: ", err);
+                return nil;
+            }
+        }
+    }
+    if had_code {
+        println("doc test passed");
+    } else {
+        println("comment did not contain any code examples");
+    }
+}
+
+# Create an interpreter and run all top-level statements through it
+# so that further invocations would have access to top-level definitions.
+fn prepare_interpreter() {
+    let inp = Interpreter();
+    for item in program_source() {
+        if let code: Code = item {
+            let text = code.text;
+            # we have a plain `main()` invocation at the end,
+            # we don't want to run it
+            if starts_with(text, "fn") {
+                inp.run(code);
+            }
+        }
+    }
+    return inp;
+}
+
+# Checks if a string has another string as its prefix.
+# Examples:
+# > assert(starts_with("foobar", "foo"), "starts with test 1");
+# > assert(not(starts_with("baz", "bo"), "starts with test 2"));
+fn starts_with(text, prefix) {
+    if text.len < prefix.len {
+        return false;
+    }
+    let actual_prefix = text.substring(0, prefix.len);
+    return prefix == actual_prefix;
+}
+
+# A helper to check invariants.
+# Example:
+# > assert(1 < 2, "arithmetic is not broken");
+fn assert(condition, message) {
+    if not(condition) {
+        panic(message);
+    }
+}
+
+# Because I forgot to add the operator.
+# > if not(true) {
+# >     panic("it's broken");    
+# > }
+fn not(b) {
+    if b {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+# Here's a broken function to catch in doc tests!
+# > assert(range_contains(5, 10, 8), "8 should be in [5, 10]");
+fn range_contains(low, high, value) {
+    return value <= low && value <= high;
+}
+
+# Uh oh, this sample is outright bogus.
+# > let total = quux();
+# > assert(total > 0, "total is positive");
+fn baz(the_foo) {
+    return the_foo + "!";
+}
+
+main();

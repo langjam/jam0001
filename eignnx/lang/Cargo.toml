@@ -1,0 +1,11 @@
+[package]
+name = "lang"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nom = "6.2.1"
+nom-supreme = "0.5.0"
+displaydoc = "0.2.3"

@@ -1,0 +1,25 @@
+% crochet
+
+effect find with
+  found(value);
+end
+
+// Convenience for finding the first match and not iterating more than that.
+command list find-first: (Predicate is (A -> boolean)) do
+  handle
+    for X in self if Predicate(X) do
+      perform find.found(X);
+    end
+    #result error: nothing;
+  with
+    on find.found(Value) => #result ok: Value;
+  end
+end
+
+command list intersperse: Separator do
+  condition
+    when self is-empty => self;
+    when self count === 1 => self;
+    always => self rest fold-from: [self first] with: { A, B in A ++ [Separator, B] };
+  end
+end

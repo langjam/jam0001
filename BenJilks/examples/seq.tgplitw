@@ -1,0 +1,21 @@
+Name: BenJilks
+Date: Sunday the 22nd of August 2021
+Mood: good
+-------------------------------
+Generate a sequential list of number
+-------------------------------
+
+// please define none -> seq -> none
+// {
+        // [,in ,"count"] -> tee -> match
+        // {
+                // =0: { count - 1 -> seq -> eval in + [,count] -> out }
+                // =None: { [,count] -> out }
+        // } -> out
+// } thanks
+
+// a -> seq -> print -> /dev/null
+// a -> seq -> len -> print -> /dev/null
+
+-------------------------------
+

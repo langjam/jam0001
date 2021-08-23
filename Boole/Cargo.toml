@@ -1,0 +1,5 @@
+
+
+[workspace]
+members=["train", "train-cli"]
+default-members=["train", "train-cli"]

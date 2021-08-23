@@ -1,0 +1,5 @@
+# prints "Hello 42"
+
+#Hello %
+print-format 42
+

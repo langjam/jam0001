@@ -1,0 +1,62 @@
+
+// I guess for now we're ignoring the fillers.
+// Also, can we change the token IDENTIFIER to IDENTIFIERWORD? 
+// Because the identifier consists of a sequence of "identifier words"
+
+program ::= BOF func_defs stmts EOF {Prog($2, $3)}
+
+func_defs = list(func_def) {$1}
+stmts = list(stmt) {$1}
+
+func_stmts = list(func_stmt) {$1}
+
+func_def ::= 
+    FUNCTION FUNCTION_NAME DOT params return HEADER_END func_stmts END_DEF {FunctionWithReturn($2, $4, $5, $7)}
+  | FUNCTION FUNCTION_NAME DOT params HEADER_END func_stmts END_DEF {FunctionWithoutReturn($2, $4, $6)}
+
+full_identifier = list(IDENTIFIER) {Identifier(' '.join($1)}
+
+param ::= FILLER PARAM full_identifier {Param($3)}
+
+return ::= FILLER RETURN full_identifier {Return($3)}
+
+params = list(param) {$1}
+
+stmt ::=
+    stmt_contents LEAVE_FUNC DOT {$1} ...?
+  | stmt_contents DOT {$1}
+
+func_stmt ::= 
+    func_stmt_contents LEAVE_FUNC DOT {FuncStmtDone($1, $2)}
+  | func_stmt_contents DOT {$1}
+
+func_stmt_contents ::=
+    SETVAR full_identifier TO expr {SetStmt($2, $4)}
+  | IF_KEYWORD expr THEN func_stmts  {IfStmt($2, $4)}
+  | func_call
+
+
+stmt_contents ::=
+    SETVAR full_identifier TO expr {SetStmt($2, $4)}
+  | IF_KEYWORD expr THEN stmts  {IfStmt($2, $4)}
+  | func_call
+
+func_call ::=
+    call_body {$1}
+  | call_body AND_CALL_IT full_identifier {$1}
+
+call_body ::=
+    func_name {CallBody($1)}
+    func_name WITH full_identifier AS expr {CallBody($1, [($3, $5)])}
+    func_name WITH full_identifier AS expr list(extra_param) {CallBody($1, [Param($3,$5)] + $6)}
+
+extra_param ::= AND full_identifier AS expr {Param($2, $4))}
+
+expr ::= 
+    NUM                {$1}
+  | NUM BINOP NUM      {Binop($2, $1, $3)}
+  | NUM COMPARISON NUM {Comparison($2, $1, $3)}
+
+
+
+

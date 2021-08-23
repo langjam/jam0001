@@ -1,0 +1,2493 @@
+*******'IF (VAR n) is (NUMBER 0) THEN SET fib TO NUMBER 1'
+IF (VAR n) is (NUMBER 0) THEN SET fib TO NUMBER 1
+*******'IF (VAR n) is (NUMBER 1) THEN SET fib TO NUMBER 1'
+IF (VAR n) is (NUMBER 1) THEN SET fib TO NUMBER 1
+CALL Calculates the nth fibonacci number WITH {'n': (VAR n) - (NUMBER 1)} AND CALL IT x
+CALL Calculates the nth fibonacci number WITH {'n': (VAR n) - (NUMBER 2)} AND CALL IT y
+SET fib TO (VAR x) + (VAR y)
+CALL Calculates the nth fibonacci number WITH {'n': NUMBER 0}
+Calling Calculates the nth fibonacci number with args {'n': NUMBER 0}
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = 0, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -1, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -2, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -3, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -4, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -5, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -6, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -7, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -8, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -9, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -10, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -11, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -12, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -13, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -14, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -15, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -16, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -17, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -18, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -19, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -20, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -21, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -22, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -23, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -24, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -25, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -26, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -27, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -28, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -29, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -30, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -31, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -32, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -33, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -34, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -35, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -36, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -37, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -38, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -39, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -40, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -41, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -42, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -43, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -44, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -45, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -46, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -47, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -48, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -49, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -50, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -51, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -52, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -53, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -54, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -55, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -56, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -57, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -58, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -59, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -60, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -61, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -62, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -63, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -64, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -65, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -66, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -67, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -68, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -69, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -70, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -71, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -72, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -73, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -74, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -75, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -76, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -77, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -78, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -79, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -80, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -81, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -82, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -83, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -84, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -85, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -86, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -87, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -88, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -89, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -90, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -91, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -92, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -93, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -94, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -95, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -96, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -97, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -98, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -99, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -100, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -101, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -102, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -103, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -104, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -105, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -106, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -107, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -108, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -109, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -110, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -111, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -112, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -113, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -114, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -115, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -116, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -117, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -118, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -119, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -120, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -121, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -122, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -123, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -124, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -125, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -126, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -127, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -128, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -129, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -130, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -131, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -132, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -133, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -134, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -135, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -136, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -137, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -138, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -139, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -140, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -141, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -142, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -143, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -144, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -145, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -146, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -147, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -148, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -149, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -150, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -151, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -152, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -153, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -154, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -155, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -156, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -157, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -158, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -159, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -160, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -161, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -162, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -163, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -164, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -165, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -166, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -167, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -168, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -169, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -170, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -171, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -172, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -173, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -174, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -175, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -176, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -177, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -178, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -179, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -180, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -181, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -182, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -183, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -184, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -185, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -186, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -187, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -188, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -189, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -190, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -191, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -192, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -193, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -194, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -195, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -196, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -197, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -198, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -199, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -200, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -201, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -202, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -203, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -204, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -205, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -206, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -207, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -208, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -209, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -210, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -211, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -212, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -213, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -214, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -215, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -216, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -217, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -218, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -219, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -220, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -221, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -222, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -223, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -224, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -225, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -226, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -227, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -228, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -229, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -230, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -231, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -232, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -233, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -234, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -235, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -236, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -237, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -238, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -239, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -240, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -241, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -242, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -243, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -244, R = 1
+Calling Calculates the nth fibonacci number with args {'n': (VAR n) - (NUMBER 1)}
+L = -245, R = 1
+Traceback (most recent call last):
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\parse.py", line 544, in <module>
+    program.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 277, in execute
+    self.stmts.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 210, in execute
+    result = function.run(evaluated_args)
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 264, in run
+    self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 235, in execute
+    is_done = next_stmt.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 157, in execute
+    premature_done = self.body.execute()
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 207, in execute
+    print(f"Calling {self.func_name} with args {self.args}")
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 124, in __repr__
+    return f"({self.left_operand}) {self.operator} ({self.right_operand})"
+  File "D:\Users\Rod\Projects\jam0001\The-Literals\abstract_syntax_trees.py", line 92, in __repr__
+    return f"NUMBER {self.value}"
+RecursionError: maximum recursion depth exceeded while getting the str of an object

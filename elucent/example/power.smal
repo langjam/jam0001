@@ -1,0 +1,8 @@
+these functions compute fixed powers of numbers.
+
+    fn squared [dup *]
+    fn cubed [dup dup * *]
+
+the below line should output 64 (2^2^3).
+
+    2 squared cubed

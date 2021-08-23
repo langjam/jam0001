@@ -1,0 +1,5 @@
+EQUAL = "is"
+LESS_THAN = "is less than"
+GREATER_THAN = "is greater than"
+LT_OR_EQ = "is less than or equal to"
+GT_OR_EQ = "is greater than or equal to"

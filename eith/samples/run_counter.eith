@@ -1,0 +1,19 @@
+\ Counts number of times program has been run via comment unwrapping.
+
+\ I am a counter.
+
+\ Counts number of comment unwrappings
+0
+3 IS-COMMENT
+BEGIN 3 UNCOMMENT 1+ 3 IS-COMMENT UNTIL
+
+DUP
+
+\ Prints number of times run
+." # OF TIMES PROGRAM WAS RUN: "
+.
+
+\ Restores and increments comment counter
+0
+DO 3 COMMENT LOOP
+3 COMMENT

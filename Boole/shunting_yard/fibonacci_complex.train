@@ -1,0 +1,44 @@
+[LOCOMOTIVE]
+start at sneek track 1
+[FIRST CLASS]
+Jonathan: This is a beautiful lime green train!
+Noah: This train has ugly dark green accents...
+Julius: The train is quite long
+[SECOND CLASS]
+pieter: 1
+
+[LOCOMOTIVE]
+start at woerden track 2
+[FIRST CLASS]
+Jonathan: This is a weirdly light red colored train...
+Noah: The train has dark red details!
+Julius: This train is a bit short
+[SECOND CLASS]
+pieter: 2
+
+{sneek}
+operation: duplicate
+track 1: go to woerden track 1
+track 2: go to eindhoven track 1
+
+{woerden}
+operation: add
+track 1: go to maastricht track 2
+track 2: go to rotterdam track 1
+
+{rotterdam}
+operation: duplicate
+track 1: go to maastricht track 1
+track 2: go to eindhoven track 1
+
+{maastricht}
+operation: add
+track 1: go to woerden track 2
+track 2: go to sneek track 1
+
+{eindhoven}
+operation: print number
+track 1: go to utrecht track 1
+
+{utrecht}
+operation: delete

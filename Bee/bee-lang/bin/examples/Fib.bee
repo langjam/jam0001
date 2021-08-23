@@ -1,0 +1,11 @@
+#function fibonacci take n
+/*
+    #if n < 2
+    /*
+        #return with n
+    */
+    #return with ((@call fibonacci with n - 1) + (@call fibonacci with n - 2))
+*/
+
+#let result be (@call fibonacci with 6)
+@call print with "Fibonacci of 6 is " + result

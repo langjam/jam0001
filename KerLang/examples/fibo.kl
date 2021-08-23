@@ -1,0 +1,20 @@
+/*
+    This function takes 1 argument.
+    Let minus 1 be the difference of argument 1 and 1,
+    Let minus 2 be the difference of argument 1 and 2,
+    Let res 1 be the application of self on minus 1,
+    Let res 2 be the application of self on minus 2,
+    Let res be the sum of res 1 and res 2,
+    Let branch 1 be res if minus 1 and 1 otherwise,
+    Let branch 0 be branch 1 if argument 1 and 0 otherwise,
+    It returns branch 0.
+ */
+function fibo;
+
+/*
+    Let a be the application of fibo on 12.
+    It shows a.
+    It returns a.
+    The expected result is 144.
+ */
+function fibo12;

@@ -1,0 +1,139 @@
+
+# welcome to uncom's tutorial
+
+# open up the repl by running `ruby uncom.rb`, you should be greeted by
+# a line like this
+
+# -> (data [] / func [])
+
+# uncom is a stack based language, the two main stacks are 'data' and 'func'
+# one for data and the other for functions
+
+# type `1 + 2 + 3` into the repl
+# and you'll see the result has been added to the data stack
+# -> (data [6.0] / func [])
+
+# now type, `4 5` and you'll see they've been added to the stack as well
+# -> (data [6.0, 4.0, 5.0] / func [])
+
+# type `.` to clear BOTH of your stacks
+# -> (data [] / func [])
+
+
+
+
+# ok im running out of time, tutorial speeds up. now!
+
+# typing a function puts it on the func stack
+# `+ +`
+# -> (data [] / func [+, +])
+
+# when there the top of the data stack is enough for the top of the function stack
+# the function gets called. and the function is popped off the stack
+# `1 2 3`
+# -> (data [6.0] / func [])
+
+# you can use parenthesis `(` and `)` to get a new stack or go back to an old one
+# `5 * (4 - 2)`
+# -> (data [10.0] / func [])
+
+# put some data on the stack and try `(` and `)` on their own in the repl and see what happens
+
+
+
+
+
+# Variables
+# variables are created by assigning to them, make sure to do `x=` and NOT 'x ='
+# `x= 6 . x * 2`
+# -> (data [12.0] / func [])
+# global variables begin with a $ and are accessible every where after their creation
+
+# '[' and ']' push and pop the local variale stack, this is useful in functions
+# `x= 2 [x= 6 x] x`
+# -> (data [6.0, 2.0] / func [])
+# this does NOT affect the normal function and data stacks
+
+
+# Quotations
+# type `{3 + 4}` to push a quotation onto the stack
+# -> (data [{3 + 4}] / func [])
+# type `do` to execute the quote
+# -> (data [7.0] / func [])
+
+# Defining functions
+# functions are defined with `def`, it expects three quotations on the stack,
+# the firs the function name, the second the types it accepts and third it's code
+# type `def {++} {num num} { + + }`
+# type `1 2 3 ++``
+# -> (data [6.0] / func [])
+
+
+# Comments
+# comments are created with `#`, comments can be unamed (like these) or named
+#named-comment: there *must* be a colon after the name
+# `uncomment name-comment` # turns the comment "on", as if you'd done it in ur text editor
+# `comment name-comment` # turns it back "off"
+# `commented? name-comment` # checks if it's on or off
+
+
+# sorry this was so short, here's a function summary
+
+
+
+# flow #
+({ def if ifelse do }.)
+
+# constants #
+({ false true nil }.)
+
+# arithmetic #
+({ + - * / % inv neg floor }.)
+
+# comparison #
+({ > >= < <= == }.)
+
+# boolean #
+({ and or not }.)
+
+# type checking #
+({ any? num? bool? str? quote? comment? array? nil? }.)
+
+# io #
+({ print puts read readline }.)
+
+# comments #
+({ comment uncomment commented? }.)
+
+# arrays #
+({ get set length }.)
+
+# debugging #
+({ print-source print-stack p inspect }.)
+
+# strings #
+({ to_s bytes pack }.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

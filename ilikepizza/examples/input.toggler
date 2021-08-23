@@ -1,0 +1,8 @@
+# input a number and use it!
+
+#This is the prompt
+input
+add 2
+#Your number plus 2 is %
+print-format
+

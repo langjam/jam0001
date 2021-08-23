@@ -1,0 +1,11 @@
+# infinite loop but fancier
+
+#reverse
+uncomment-range -1 -1
+#
+#Infinite!
+print-format 0
+#Loop!
+#
+reverse
+

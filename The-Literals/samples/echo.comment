@@ -1,0 +1,18 @@
+This is a sample .comment program. This line, ironically, is ignored because it is not a comment.
+
+/**
+ * Echoes.
+ *
+ * @param the phrase
+ * @param total number of repetitions
+ */
+// Set repetitions so far to 0.
+// If total number of repetitions is 0 then jump forward 4 lines.
+// Print with the string as the phrase.
+// Set repetitions so far to repetitions so far + 1.
+// If repetitions so far is less than total number of repetitions then jump back 2 lines.
+// And we're done.
+
+The main program is below!
+
+// Echo with the phrase as "Hello" and total number of repetitions as 5.

@@ -1,0 +1,55 @@
+
+
+
+#c1#
+okay, this is the first comment!
+##
+
+
+#c2#
+this is the second comment
+##
+
+
+#c3#
+we can compose them in the main function
+##
+
+
+#c4#
+we can also include computations in the main function
+##
+
+
+#c5#
+to do that, write between parenthesis an expression
+##
+
+#c6#
+... and convert it to a comment with the function "comment"
+##
+
+
+isEmpty:
+    with l do
+        when l is
+            [] do ['e','m','p','t','y'] please
+            for x:xs do ['f','u','l', 'l'] please
+    please!
+
+map:
+    with f do
+        with l do
+            when l is
+                [] do [] please
+                for x:xs do (f x : map f xs) please
+        please
+    please !
+
+
+main:
+    c1 c2 c3
+    c4 c5 c6
+    (comment (isEmpty []))
+    (comment (isEmpty [1,3,5]))
+    (comment (map (with x do x - 4 please) [1, 2, 3, 4, 5, 6]))

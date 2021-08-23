@@ -1,0 +1,29 @@
+= sieve fn (n)
+  = A []
+  = i 0
+  while <= i n
+    push A 1
+    = i + i 1
+  end
+  = i 2
+  while <= * i i n
+    if == @ A i 1
+      = j * i i
+      while <= j n
+        = @ A j 0
+        = j + j i
+      end
+    end
+    = i + i 1
+  end
+  = out []
+  = i 2
+  while <= i n
+    if == @ A i 1 push out i end
+    = i + i 1
+  end
+  /* Prime numbers from 2 to $n. */
+  return out
+end
+
+sieve (100)

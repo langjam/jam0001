@@ -1,0 +1,21 @@
+// This returns (fib 9) in a funny way
+
+def zero? n = n == 0;
+def one? n = n == 1;
+def addOne = (+ 1) /* a partially applied operator */;
+
+op <+> 20 left;
+def (<+>) a b = 2 * a + b;
+
+def y = 3 /* haha comment */; //another comment
+def x = y <+> 1 * 2;
+
+def fib n = if zero? n
+            then 0
+            else if one? n
+                then 1
+                else fib (n - 1) + fib (n - 2);
+
+RT.println $ "addOne is " + RT.E addOne;
+RT.println $ "the comment on " + y + " is " + RT.E y;
+fib $ addOne $ addOne x;

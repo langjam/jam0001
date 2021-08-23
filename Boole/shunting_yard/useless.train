@@ -1,0 +1,89 @@
+[LOCOMOTIVE]
+start at Maastricht track 1
+[FIRST CLASS]
+Bill: Awesome this dark red colour!
+Pieter: It has some blue accents as well!
+Tim: NS, late as always...
+[SECOND CLASS]
+Douglas: 42
+
+[LOCOMOTIVE]
+start at Weert track 1
+[FIRST CLASS]
+Rose: The Light red colour is my favourite!
+Martha: And I love those dark green accents.
+Sam: Where are we going?
+Sara: The train is very short though...
+[SECOND CLASS]
+Dylan: 19
+
+[LOCOMOTIVE]
+start at Sneek track 1
+[FIRST CLASS]
+Ruben: The dark green colour looks great on this train!
+Tim: It does take quite long this trip...
+Laura: Why is it so hot today...
+Annabelle: Why is this train so long??
+[SECOND CLASS]
+Sammy: 3
+
+[LOCOMOTIVE]
+start at Eindhoven track 1
+[FIRST CLASS]
+Jonathan: This train is has a lovely yellow colour
+Noah: I like the red accents!
+[SECOND CLASS]
+Jaqueline: 3
+
+[LOCOMOTIVE]
+start at Rotterdam track 1
+[FIRST CLASS]
+Tim: what a lovely weather
+[SECOND CLASS]
+Harry: 3
+
+[LOCOMOTIVE]
+start at Weert track 2
+[FIRST CLASS]
+Mark: this train has a brown colour
+[SECOND CLASS]
+Thomas: 3
+
+[LOCOMOTIVE]
+start at Eindhoven track 2
+[FIRST CLASS]
+Sem: this train has a light green colour
+[SECOND CLASS]
+Julius: 3
+
+[LOCOMOTIVE]
+start at Maastricht track 2
+[FIRST CLASS]
+Donald: this train has a orange green colour
+[SECOND CLASS]
+Test: 3
+
+
+{Rotterdam}
+operation: print number
+track 1: go to Maastricht track 2
+
+{Eindhoven}
+operation: sub
+track 1: go to Sneek track 2
+track 2: go to Weert track 2
+
+{Sneek}
+operation: sub
+track 1: go to Rotterdam track 1
+track 2: go to Eindhoven track 2
+
+{Maastricht}
+operation: add
+track 1: go to Eindhoven track 1
+track 2: go to Weert track 1
+
+{Weert}
+operation: add
+track 1: go to Maastricht track 1
+track 2: go to Sneek track 1

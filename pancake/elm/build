@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+LOCAL_DIST_DIR=dist
+
+elm make src/Main.elm --output $LOCAL_DIST_DIR/js/pancake.js

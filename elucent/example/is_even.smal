@@ -1,0 +1,10 @@
+we can define a function is-even that computes whether a number is even.
+
+    fn is-even [
+        and 1 if [false] [true]
+    ]
+
+let's try invoking it on a few numbers.
+
+    putv (1 is-even)
+    putv (2 is-even)

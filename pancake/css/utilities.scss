@@ -1,0 +1,32 @@
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-align-center {
+    align-items: center;
+}
+
+.horizontal-rhythm-4 > *:not(:first-child) {
+    margin-left: 4px;
+}
+
+.horizontal-rhythm-8 > *:not(:first-child) {
+    margin-left: 8px;
+}
+
+.horizontal-rhythm-16 > *:not(:first-child) {
+    margin-left: 16px;
+}
+
+.vertical-rhythm-4 > *:not(:first-child) {
+    margin-top: 4px;
+}
+
+.vertical-rhythm-8 > *:not(:first-child) {
+    margin-top: 8px;
+}
+
+.vertical-rhythm-16 > *:not(:first-child) {
+    margin-top: 16px;
+}

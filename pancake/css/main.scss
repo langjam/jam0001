@@ -1,0 +1,76 @@
+
+.app {
+    background-color: #504945;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    color: white;
+    width: 100vw;
+    height: 100vh;
+}
+
+.app-comment {
+    background-color: #a89984;
+}
+
+.header {
+    overflow: hidden;
+    background-color: #282828;
+    box-shadow: 0px 5px 5px #3c3836;
+    position: fixed; /* Set the navbar to fixed position */
+    top: 0; /* Position the navbar at the top of the page */
+    width: 100%; /* Full width */
+    height: 128px;
+}
+
+.content {
+    padding-top: 148px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+}
+
+.content > div {
+    margin: 16px;
+}
+
+.logo {
+    padding: 8px;
+    padding-left: 32px;
+    font-size: 32px;
+}
+
+.stack {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    align-items: center;
+    height: 512px;
+}
+
+.stack > div {
+    width: 100%;
+    margin: 8px;
+    background-color: #fabd2f; // #fabd2f; //#d5c4a1;
+    color: #1d2021;
+    border-radius: 8px;
+}
+
+.stack-comment > div {
+    background-color: #3c383c;//#928374;
+    color: white;
+}
+
+button {
+    background-color: #d79921;
+    color: white;
+    font-size: 24px;
+    border: none;
+    border-radius: 4px;
+    height: 64px;
+    padding-left: 64px;
+    padding-right: 64px;
+}
+
+button:hover {
+    background-color: #fabd2f;
+    color: #1d2021;
+}

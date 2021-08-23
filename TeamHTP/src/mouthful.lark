@@ -1,0 +1,62 @@
+?start: method
+
+method: message temps? exprs
+
+message: word -> unary_message | op word -> binary_message | message_pair+ -> keyword_message
+message_pair: kw word
+
+?exprs: expr ("." expr)* "."?
+
+?expr: answer | assign
+
+answer: "^" expr
+
+?assign: word ":=" assign | send
+
+?send: keyword
+?keyword: binary [keypairs cascades?]
+keypairs: keypair+
+keypair: kw binary
+cascades: (";" keypairs)+
+?binary: [binary op] unary
+?unary: unary word | primary
+
+?primary: array | block | map | scalar | number | string | symbol | word
+
+array: "@{" primary* "}"
+
+block: "[" params? temps? exprs "]"
+params:  param+ "|"
+temps: "|" word+ "|"
+
+map: "%{" mappair* "}"
+mappair: kw primary
+
+scalar: "${" expr "}"
+
+kw: KEYWORD
+KEYWORD: WORD ":"
+
+number: NUMBER
+NUMBER: DIGIT+ ["." DIGIT+]
+
+op: OP
+OP: ("~"|"@"|"%"|"&"|"*"|"-"|"="|"+"|"\\"|"|"|","|"<"|">"|"/"|"?")+
+
+param: PARAM
+PARAM: ":" WORD
+
+string: STRING
+STRING: "'" _STRING_ESC_INNER "'"
+
+symbol: SYMBOL
+SYMBOL: "#" WORD
+
+word: WORD
+
+%import common._STRING_ESC_INNER 
+%import common.DIGIT
+%import common.WORD
+%import common.WS
+
+%ignore WS

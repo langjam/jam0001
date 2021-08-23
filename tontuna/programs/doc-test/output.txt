@@ -1,0 +1,8 @@
+comment did not contain any code examples
+comment did not contain any code examples
+comment did not contain any code examples
+doc test failed: runtime error on line 58: not expects 1 args, got 2
+doc test passed
+doc test passed
+doc test failed: runtime error on line 72: panic: 8 should be in [5, 10]
+doc test failed: runtime error on line 95: undefined variable: quux

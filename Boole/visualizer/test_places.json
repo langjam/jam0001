@@ -1,0 +1,50 @@
+[
+  {
+    "type": "Delete",
+    "name": "a",
+    "inputs": 1,
+    "to": []
+  },
+  {
+    "type": "Print",
+    "name": "b",
+    "inputs": 1,
+    "to": [[0,1]]
+  },
+  {
+    "type": "Nothing",
+    "name": "c",
+    "inputs": 0,
+    "to": [[3,1]]
+  },
+  {
+    "type": "Duplicate",
+    "name": "d",
+    "inputs": 1,
+    "to": [[1,1],[6,1]]
+  },
+  {
+    "type": "Duplicate",
+    "name": "e",
+    "inputs": 1,
+    "to": [[1,1],[7,2]]
+  },
+  {
+    "type": "Nothing",
+    "name": "f",
+    "inputs": 0,
+    "to": [[6,2]]
+  },
+  {
+    "type": "Add",
+    "name": "g",
+    "inputs": 2,
+    "to": [[4,1],[7,1]]
+  },
+  {
+    "type": "Add",
+    "name": "h",
+    "inputs": 2,
+    "to": [[3,1],[6,2]]
+  }
+]

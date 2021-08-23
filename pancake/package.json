@@ -1,0 +1,39 @@
+{
+  "name": "pancake",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx parcel serve index.html",
+    "build": "npm run prettier && parcel build index.html -d public",
+    "prettier": "prettier --write 'src/*'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pancake-lang/jam0001.git"
+  },
+  "author": "Team pancake",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pancake-lang/jam0001/issues"
+  },
+  "homepage": "https://github.com/pancake-lang/jam0001#readme",
+  "devDependencies": {
+    "@types/react-dom": "^17.0.9",
+    "parcel": "^2.0.0-rc.0",
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@parcel/transformer-elm": "^2.0.0-rc.0",
+    "@parcel/transformer-image": "^2.0.0-rc.0",
+    "@parcel/transformer-react-refresh-wrap": "^2.0.0-alpha.3",
+    "@parcel/transformer-sass": "^2.0.0-rc.0",
+    "@types/react": "^17.0.2",
+    "ace-builds": "^1.4.12",
+    "postcss": "^8.2.15",
+    "react": "^17.0.2",
+    "react-ace": "^9.4.3",
+    "react-dom": "^17.0.2"
+  }
+}

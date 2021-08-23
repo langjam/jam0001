@@ -1,0 +1,12 @@
+let x = List();
+x.push(1);
+x.push(3);
+for item in x {
+    println("first: ", item);
+}
+
+let y = List(2);
+y.push(4);
+for item in y {
+    println("second: ", item);
+}

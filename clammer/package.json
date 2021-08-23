@@ -1,0 +1,16 @@
+{
+  "name": "clammer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Drini Cami <cdrini@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "ohm-js": "^15.5.0",
+    "prompt-sync": "^4.2.0"
+  }
+}

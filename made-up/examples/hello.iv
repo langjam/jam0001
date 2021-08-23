@@ -1,0 +1,5 @@
+def greet x = "Hello " + x; 
+def helloWorld = greet "world"; // !
+
+/* this will print "Hello world // !" */
+RT.println $ helloWorld + " " + RT.E helloWorld;

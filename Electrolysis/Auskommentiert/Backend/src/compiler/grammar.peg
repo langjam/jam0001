@@ -1,0 +1,59 @@
+start := comment=Comment _ $
+
+Comment := WhileComment | ManipulationComment | SetComment | IfComment | Expression
+_ := ' '*
+
+WhileComment := 'while' _ whileExpression=Expression ':'
+
+ManipulationComment := ManipulationCommentBase
+ManipulationCommentBase := ManipulationCommentSwap | ManipulationCommentMove | ManipulationCommentRotate
+ManipulationCommentSwap := 'swap' _ target=CommentSelector
+ManipulationCommentMove := 'move' _ target=CommentSelector _ nav=Navigations
+ManipulationCommentRotate := 'rotate' _ target=CommentSelector _ rotateDir={'downwards' | 'upwards'}
+
+SetComment := 'set ' _ target=CommentSelector  _ 'to' _ value=Expression
+
+Navigations := _ navigations={ distance='[0-9]+' _ dir={'up' | 'down' | 'left' | 'right'} _ }* 
+CommentSelector := '{' _ 'get' _ countSelector={sth='comment' | count='[0-9]+' _ 'comments' _ aboveBelow={'above' | 'below'}} _ navigations=Navigations _ '}'
+
+IfComment := 'if' _ condition=Expression _ ':'
+
+VarName := '[a-zA-Z]+[0-9a-zA-Z]*'
+Expression := LogicalExpression
+
+LogicalExpression := EqualsExpression | NotEqualsExpression | ComparisionExpression
+EqualsExpression := lhs=LogicalExpression _ '==' _ rhs=ComparisionExpression
+NotEqualsExpression := lhs=LogicalExpression _ '!=' _ rhs=ComparisionExpression
+
+ComparisionExpression := LessThanExpression | MoreThanExpression | LessEqualExpression | MoreEqualExpression | LineExpression
+LessThanExpression := lhs=ComparisionExpression _ '<' _ rhs=LineExpression
+MoreThanExpression := lhs=ComparisionExpression _ '>' _ rhs=LineExpression
+LessEqualExpression := lhs=ComparisionExpression _ '<=' _ rhs=LineExpression
+MoreEqualExpression := lhs=ComparisionExpression _ '>=' _ rhs=LineExpression
+
+LineExpression := AddExpression | SubExpression | DotExpression
+AddExpression :=  lhs=LineExpression _ '\+' _ rhs=DotExpression
+SubExpression :=  lhs=LineExpression _ '\-' _ rhs=DotExpression
+
+DotExpression := MulExpression | DivExpression | PrefixExpression
+MulExpression := lhs=DotExpression _ '\*' _ rhs=PrefixExpression
+DivExpression := lhs=DotExpression _ '\/' _ rhs=PrefixExpression
+
+PrefixExpression := EvalExpression | PostfixExpression
+EvalExpression := '\$' _ toEval=PostfixExpression
+
+PostfixExpression := FunctionCall | GetLengthExpression | IndexExpression | AtomicExpression
+
+FunctionParameters := value=Expression _ next={',' _ nextParam=FunctionParameters}?
+FunctionCall := funcName=AtomicExpression _ '\(' _ params=FunctionParameters? _ '\)'
+GetLengthExpression := list=AtomicExpression _ '.length'
+IndexExpression := list=AtomicExpression _ '\[' _ index=Expression _ '\]'
+
+AtomicExpression := value='true' 
+    | value='false' 
+    | varName=VarName 
+    | num='[0-9]+' 
+    | '\(' sub=Expression '\)' 
+    | '\[' listParams=FunctionParameters? '\]' 
+    | CommentSelector 
+    | '\'' str={!'\'' char='.'}* '\''

@@ -1,0 +1,21 @@
+let i = /* [1] initialize counter to 1 */;
+
+while (i < 100) {
+    if (/* [2] i is divisible by both 3 and 5 */) {
+        print "FizzBuzz";
+    } else if (/* [3] i is divisible by 3 */) {
+        print "Fizz";
+    } else if (/* [4] i is divisible by 5 */) {
+        print "Buzz";
+    } else {
+        print i;
+    }
+
+    i = /* [5] increment i */;
+}
+
+/* [[1]] {{1}} */
+/* [[2]] {{ i % 15 == 0 }} */
+/* [[3]] {{ i % 3 == 0 }} */
+/* [[4]] {{ i % 5 == 0 }} */
+/* [[5]] {{ i + 1 }} */

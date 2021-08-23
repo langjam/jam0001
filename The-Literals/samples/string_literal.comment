@@ -1,0 +1,4 @@
+This is a sample .comment program. This line, ironically, is ignored because it is not a comment.
+
+// Set the result to "Hello".
+// Print with the string as the result.

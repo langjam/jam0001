@@ -1,0 +1,55 @@
+{* Redirect the output of this program to a PPM file. *}
+
+bind 'maxx 630
+bind 'maxy 360
+bind 'maxiter 500
+
+defun lerp (a t b) [ + * - 1 t a * t b ]
+defun abs (x) [ if < x 0 [ * -1 x ] else [ x ] ]
+
+defun escape (x0 y0) [
+    bind 'x 0
+    bind 'y 0
+	for iter iota maxiter [
+		if > + * x x * y y 4 [
+			return /. iter maxiter
+		]
+
+        bind 'xt + - * x x * y y x0
+        store 'y + * * 2 x y y0
+        store 'x xt
+	]
+	1.
+]
+
+defun quant (s) [
+    bind 't s
+    if < s 0 [ store 't 0. ]
+    if > s 1 [ store 't 1. ]
+    float->int * 255 t
+]
+
+println << "P3 " + 1 maxx " " + 1 maxy " 255" >>
+for py iota + 1 maxy [
+    for px iota + 1 maxx [
+        bind 'x0 lerp -2.5 /. px maxx 1.
+        bind 'y0 lerp -1 /. py maxy 1.
+        bind 'iter escape x0 y0
+
+        bind 'hue * 3 iter  bind 'bri 1.  bind 'sat 0.8
+        bind 'h * 6. - hue floor hue
+        bind 'f - h floor h
+        bind 'p * - 1 sat bri
+        bind 'q * bri - 1 * f sat
+        bind 't * bri - 1 * sat - 1 f
+        bind 'r 1.  bind 'g p  bind 'b q
+        if = 0 float->int h [ store 'r bri  store 'g t    store 'b p   ]
+        if = 1 float->int h [ store 'r q    store 'g bri  store 'b p   ]
+        if = 2 float->int h [ store 'r p    store 'g bri  store 'b t   ]
+        if = 3 float->int h [ store 'r p    store 'g q    store 'b bri ]
+        if = 4 float->int h [ store 'r t    store 'g p    store 'b bri ]
+        store 'r quant r  store 'g quant g  store 'b quant b
+
+        println << r " " g " " b >>
+    ]
+]
