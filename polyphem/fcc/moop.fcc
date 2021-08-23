@@ -1,0 +1,8 @@
+module [Moop| mooping now for you] where
+
+
+[i| An integer constant] = 1+3
+
+[j x| J Function adding 1 with a lambda to arg] = [\a -> 1+a|the inc lambda] x
+
+[main|Here we go] = j i
