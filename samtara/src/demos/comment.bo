@@ -1,0 +1,20 @@
+function my_function(str) {
+  // call the reverse method on "str" and print that out
+  // do all of that 10 times
+}
+-------------
+
+// call the <X> method on "<Y>"
+  <Y>.<X>()
+
+<>  <X> and print that out
+  <>  console.log(<X>)
+
+{<A>// do all of that <X> times<Z>}
+  {
+    for (let i = 0; i < <X>; i++) {
+       <A>
+    }
+    <Z>
+  }
+

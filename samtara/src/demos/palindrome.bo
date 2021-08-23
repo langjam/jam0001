@@ -1,0 +1,19 @@
+is racecar a palindrome?
+is programmer a palindrome?
+-----
+
+is <a><X><a> a palindrome?
+  is <X> a palindrome?
+
+is <a><a> a palindrome?
+  yes
+
+is <a> a palindrome?
+  yes
+
+is <a><X><b> a palindrome?
+  no
+
+is <a><b> a palindrome?
+  no
+
