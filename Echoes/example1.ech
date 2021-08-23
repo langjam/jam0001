@@ -1,0 +1,6 @@
+log "part 1:"
+if (1 + 2 * 5) = 10 {
+    log "Yo this language is so cool!"
+} else {
+    log "This language is trash"
+}
