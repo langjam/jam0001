@@ -1,4 +1,4 @@
-Note: this was imported from (https://github.com/jDomantas/tontuna/tree/4390ab8af3428dbe0cf5fa236c232b7deeb6b0fc). Go to the original repo if you want to find updates.
+Note: this was imported from https://github.com/jDomantas/tontuna/tree/langjam-submission. Go to the original repo if you want to find updates.
 
 # Tontuna programming language
 
@@ -63,19 +63,19 @@ To spice it up and be on topic it has a few special features:
 1. Comments are part of program's syntax tree. They can only appear in statement
 positions though.
 2. Programs can introspect their own source code (and thus read the comments).
-This allows some interesting features implementable as libraries. And also
+This allows some interesting features to be implemented as libraries. And also
 conveniently makes demo programs small and self-contained.
 3. Comments can contain embedded code snippets (think of Rust's doc tests, but
 anywhere). The snippets are not run by default, but they must be syntactically
 correct and are available through code introspection.
 4. Programs can evaluate code dynamically though an eval-like api. The exciting
-thing that is opens up is that they can run the code snippets that are embedded
-in its own comments.
+thing that this opens up is that programs can run the code snippets embedded
+in their own comments.
 
 
 ## Demo programs
 
-There's three demo programs in this repo:
+There are three demo programs in this repo:
 
 1. Documentation generator.
 
