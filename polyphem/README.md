@@ -4,20 +4,20 @@
 
 To compile you need ghc and cabal installed , it is a haskell project.
 
----
+```
 cd fcc
 cabal update
 cabal build
----
+```
 
 ## Run
 
 To run the interpreter you need to pass a source (.fcc) file on the cmdline.
 Since it is a cabal project , use cabal to execute.
 
----
+```
 cabal exec fcc -- moop.fcc
----
+```
 
 ## FCC Language
 
@@ -26,7 +26,7 @@ ability to "attach" comments to any first class value. There is no repl yet, so 
 a "main" entrypoint in your sourcefile.
 
 ### Source Code Example
----
+```
 module [Add|Time to add numbers] where
 
 
@@ -38,7 +38,7 @@ module [Add|Time to add numbers] where
 
 [main|Lets go] = add 1 2
 
----
+```
 
 
 
