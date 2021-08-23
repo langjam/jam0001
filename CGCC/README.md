@@ -1,2 +1,0 @@
-# CGCC Team thing
-frick
