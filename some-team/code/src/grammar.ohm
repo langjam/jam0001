@@ -20,8 +20,8 @@ SomeLang {
     LetStatement = "let" ident "=" Expression ";"
     ExpressionStatement = Expression ";"
     IfStatement = "if" ParenExpression BlockStatement ("else" BlockStatement)?
-    AssignStatement = ident "=" Expression ";" -- normal
-        | ident "+=" Expression ";" -- add
+    AssignStatement = lval "=" Expression ";" -- normal
+        | lval "+=" Expression ";" -- add
     BreakStatement = "break" ";"
 
     Expression = AtLogExpression -- atlog
@@ -32,8 +32,12 @@ SomeLang {
         | strlit -- string
         | number -- number
         | CommentExpression -- comment
-        | ident -- variable
+        | lval -- variable
         | ":" ident -- atom
+        | "{" ListOf<ObjectField, ","> "}" -- obj
+    
+    lval = ident ("." ident)*
+    ObjectField = ident ":" Expression
 
     AtLogExpression = "@log" "(" NonemptyListOf<Expression, ","> ")"
     AtPublishWorkExpression = "@publish_work" "(" Expression ")"

@@ -1,23 +1,24 @@
 #pragma once
 
-#include <stdint.h>
+#include <any>
+#include <assert.h>
 #include <csetjmp>
 #include <cstdint>
+#include <cstdlib>
 #include <deque>
-#include <iostream>
 #include <functional>
+#include <iostream>
+#include <memory>
 #include <mutex>
 #include <ostream>
 #include <pthread.h>
-#include <cstdlib>
 #include <sched.h>
-#include <assert.h>
-#include <string>
 #include <sstream>
+#include <stdint.h>
+#include <string>
 #include <tuple>
 #include <unordered_map>
 #include <variant>
-#include <memory>
 #include <vector>
 
 #ifndef HAS_ATOMS
@@ -36,7 +37,15 @@ struct Work {
     atom::atom origin;
     void* inner;
 };
-using ref = std::variant<std::int64_t, /* nil */ nullptr_t, std::string, bool, atom::atom, WorkID, Work>;
+using map = std::unordered_map<atom::atom, std::any>;
+using ref = std::variant<std::int64_t,
+                         /* nil */ nullptr_t,
+                         std::string,
+                         bool,
+                         atom::atom,
+                         WorkID,
+                         Work,
+                         std::shared_ptr<map>>;
 
 inline ref nil = ref(nullptr);
 
@@ -45,8 +54,7 @@ struct Thread {
     std::unordered_map</* wdeque name */ atom::atom, /* progress */ std::uint64_t> progressmap;
 };
 
-static std::unordered_map<atom::atom, std::vector<std::tuple<ref, std::deque<ref>>>>
-    messages;
+static std::unordered_map<atom::atom, std::vector<std::tuple<ref, std::deque<ref>>>> messages;
 static std::int64_t threads_online = 1;
 static std::mutex thmutex;
 static thread_local Thread current;
@@ -103,9 +111,31 @@ static ref from_symbol(atom::atom value) {
     return ref(value);
 }
 static std::mutex workm;
+static ref newobj() {
+    return ref(std::make_shared<map>());
+}
+static void setprop(ref r, atom::atom name, ref val) {
+    auto valv = std::get<std::shared_ptr<map>>(r);
+    (*valv)[name] = std::any(val);
+}
+static ref getprop(ref r, atom::atom name) {
+    auto valv = std::get<std::shared_ptr<map>>(r);
+    return std::any_cast<ref>((*valv)[name]);
+}
+static ref clone(ref r) {
+    if (std::holds_alternative<std::shared_ptr<map>>(r)) {
+        ref o = newobj();
+        auto valv = std::get<std::shared_ptr<map>>(r);
+        for (auto& vp : *valv) {
+            setprop(o, vp.first, clone(std::any_cast<ref>(vp.second)));
+        }
+        return o;
+    }
+    return r;
+}
 static ref pubwork(ref val) {
     workm.lock();
-    messages[current.name].push_back(std::tuple<ref, std::deque<ref>>{val, std::deque<ref>{}});
+    messages[current.name].push_back(std::tuple<ref, std::deque<ref>>{clone(val), std::deque<ref>{}});
     ref r = ref(WorkID{messages[current.name].size() - 1});
     workm.unlock();
     return r;
@@ -133,11 +163,11 @@ static ref eq(ref l, ref r) {
     if (std::holds_alternative<std::string>(l)) return std::get<std::string>(l) == std::get<std::string>(r);
     if (std::holds_alternative<bool>(l)) return std::get<bool>(l) == std::get<bool>(r);
     if (std::holds_alternative<atom::atom>(l)) return std::get<atom::atom>(l) == std::get<atom::atom>(r);
-    if (std::holds_alternative<WorkID>(l))
-        return std::get<WorkID>(l).id == std::get<WorkID>(r).id;
+    if (std::holds_alternative<WorkID>(l)) return std::get<WorkID>(l).id == std::get<WorkID>(r).id;
     assert(!"unknown case (UB?)");
     abort();
 }
+static std::string format(ref r);
 static std::string format(ref r) {
     if (std::holds_alternative<std::int64_t>(r)) {
         std::string s;
@@ -150,7 +180,19 @@ static std::string format(ref r) {
     if (std::holds_alternative<bool>(r)) return std::get<bool>(r) ? "true" : "false";
     if (std::holds_alternative<atom::atom>(r)) return "<atom>";
     if (std::holds_alternative<WorkID>(r)) return "<work>";
-    if (std::holds_alternative<Work>(r)) return std::string{"work{"} + format(*(ref*)std::get<Work>(r).inner) + std::string{"}"};
+    if (std::holds_alternative<Work>(r))
+        return std::string{"work{"} + format(*(ref*)std::get<Work>(r).inner) + std::string{"}"};
+    if (std::holds_alternative<std::shared_ptr<map>>(r)) {
+        auto valv = std::get<std::shared_ptr<map>>(r);
+        std::stringstream ss;
+        ss << "{";
+        for (auto& vp : *valv) {
+            ref r = std::any_cast<ref>(vp.second);
+            ss << " " << atom2str(vp.first).substr(1) << ": " << format(r) << ";";
+        }
+        ss << " }";
+        return ss.str();
+    }
     return "<unknown>";
 }
 static void log(ref r) {
@@ -176,13 +218,10 @@ static ref seework(atom::atom a) {
             continue;
         }
         auto v = std::get<0>(messages[a].at(current.progressmap[a]));
+
+        ref vr = ref(Work{.id = current.progressmap[a]++, .origin = a, .inner = (void*)(new ref(clone(v)))});
         workm.unlock();
-        
-        return ref(Work{
-            .id = current.progressmap[a]++,
-            .origin = a,
-            .inner = (void*)(new ref(v))
-        });
+        return vr;
     }
 }
 static ref comment(ref v, ref pld) {

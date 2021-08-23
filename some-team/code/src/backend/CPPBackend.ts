@@ -48,6 +48,19 @@ function atom(s: string): string {
 }
 
 export class CPPBackend implements IBackend {
+    getprop(r: Ref, prop: string): Ref {
+        const sym = gensym()
+        emit.code(`    slref ${refdb.get(sym)} = slapi::getprop(${refdb.get(r)}, ${atom(prop)});`)
+        return sym
+    }
+    obj(): Ref {
+        const sym = gensym()
+        emit.code(`    slref ${refdb.get(sym)} = slapi::newobj();`)
+        return sym
+    }
+    setprop(r: Ref, prop: string, val: Ref): void {
+        emit.code(`    slapi::setprop(${refdb.get(r)}, ${atom(prop)}, ${refdb.get(val)});`)
+    }
     break(): void {
         emit.code('break;');
     }
