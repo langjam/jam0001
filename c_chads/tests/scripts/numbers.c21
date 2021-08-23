@@ -1,0 +1,14 @@
+main := proc() int {
+    hex := 0x10;
+    bin := 0b111;
+    oct := 015;
+    flt := 15.3;
+
+    print(hex; bin; oct; flt);
+
+    flt = flt + 2.5;
+    print(flt);
+
+    flt = 23.2 - float(bin);
+    print(flt);
+};

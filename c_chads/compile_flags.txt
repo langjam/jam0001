@@ -1,0 +1,8 @@
+-xc
+-Wsign-conversion
+-Wextra
+-Wall
+-Werror
+-Wno-pointer-sign
+-pedantic
+-Wno-gnu-zero-variadic-macro-arguments
