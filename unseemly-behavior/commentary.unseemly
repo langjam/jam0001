@@ -4,7 +4,7 @@ extend_syntax
     #### Get rid of comments! We need them to be a part of expressions for what we're doing.
     DefaultSeparator ::= /((?s:\s)*)/ ;
 
-    DefaultAtom ::= common ( ,{DefaultWord}, reserving 'fn' 'Int' 'String' 'capture_language');
+    DefaultAtom ::= common ( ,{DefaultWord}, reserving 'fn' 'Int' 'String' 'capture_language' 'fix');
 
     # A variable name starts with a letter, and has letters, numbers, '_', and '?'.
     # Whitespace may come before it.
@@ -12,10 +12,17 @@ extend_syntax
     #    [,{DefaultSeparator},
     #     word := (/(\p{Letter}(?:\p{Letter}|\p{Number}|[_?])*)/) ]) ;
 
-    DefaultToken ::= /\s*([|:;,(){}=]|->|capture_language)/ ;
+    DefaultToken ::= /\s*([\]\[|:;,(){}=]|->|capture_language)/ ;
 
     Expr ::= alt[
         #### lambda ####
+        # forall O . '{[
+            # lit ,{DefaultToken}, = '|'
+            # lit ,{DefaultToken}, = '|'
+            # fn_body := ( ,{Expr<O>}, )
+        # ]}' lambda0 -> .{
+            # '[Expr| .[ . ,[fn_body], ]. ]'
+        # }.
         forall I0 O . '{[
             lit ,{DefaultToken}, = '|'
             arg_name0 := ( ,{Pat<I0>}, )  lit ,{DefaultToken}, = ':'  arg_type0 := ( ,{Type<I0>}, )
@@ -38,6 +45,27 @@ extend_syntax
         }.
 
         #### function definition ####
+        forall O T . '{[
+            lit ,{DefaultWord}, = 'fn'
+            fn_name := ( ,{Pat< [ -> O] >}, )
+            lit ,{DefaultToken}, = '('
+            lit ,{DefaultToken}, = ')'
+            lit ,{DefaultToken}, = '->'
+            ret_type := ( ,{Type<O>}, )
+            lit ,{DefaultToken}, = '{'
+            fn_body := ( ,{Expr<O>}, <-- fn_name = [ -> ret_type ] )
+            lit ,{DefaultToken}, = '}'
+
+            body := ( ,{ Expr<T> }, <-- fn_name = [ -> ret_type ]  )
+        ]}'  let_fn0 -> .{
+            # In case the function is recursive, wrap it in `fix`:
+            '[Expr | let ,[fn_name], = (fix
+                .[ again: [ -> [ -> ,[ret_type], ] ] .
+                    .[ . ,[fn_body], ].
+                ].) ; in
+                ,[body],
+            ]'
+        }.
         forall I0 O T . '{[
             lit ,{DefaultWord}, = 'fn'
             fn_name := ( ,{Pat< [I0 -> O] >}, )
@@ -91,7 +119,7 @@ extend_syntax
 
         #### let ####
         forall T S . '{ [
-            lit ,{ DefaultToken }, = 'let'
+            lit ,{ DefaultWord }, = 'let'
             [
                 pat := ( ,{ Pat<S> }, )
                 lit ,{ DefaultToken }, = ':'
@@ -123,12 +151,48 @@ extend_syntax
             ,{DefaultSeparator},
             /(\/\*)/
             pre_text := (/([^`*]*)/)
+            post_text := ( /([^`*]*)/ )
+            /(\*\/)/
+            ,{DefaultSeparator},
+            body := ( ,{Expr<T>}, )
+        ] }' comment_unannotate -> .{
+            match unfold (env_var "COMMENTARY_SEARCH") {
+                +[Some needle]+ =>
+                    if (or (contains? (ident_to_string pre_text) needle)
+                        (contains? (ident_to_string post_text) needle)) then
+                        '[Expr|
+                            -{
+                                (write_file "/dev/stdout"
+                                    (join s[
+                                        "/*"
+                                        ,[(prefab (ident_to_string pre_text))],
+                                        (join s[ ...[,comment_expr, >>
+                                            (anything_to_string ,[comment_expr],)]... ]s "")
+                                        ,[(prefab (ident_to_string post_text))],
+                                        "*/
+"
+                                    ]s "")) ;
+                                ,[body],
+                            }-
+                        ]'
+                        else
+                        '[Expr| ,[body],]'
+                +[None]+ => '[Expr| ,[body],]'
+            }
+
+        }.
+
+        #### comment ####
+        forall T C . '{ [
+            ,{DefaultSeparator},
+            /(\/\*)/
+            pre_text := (/([^`*]*)/)
             [
                 /(`)/
                 comment_expr := ( ,{Expr<C>}, )
                 ,{DefaultSeparator},
                 /(`)/
-            ] *
+            ] +
             post_text := ( /([^`*]*)/ )
             /(\*\/)/
             ,{DefaultSeparator},
@@ -205,6 +269,13 @@ extend_syntax
             }.
 
             #### function application ####
+            forall O . '{[
+                rator := ( ,{Expr< [-> O] >}, )
+                lit ,{DefaultToken}, = '('
+                lit ,{DefaultToken}, = ')'
+            ]}' apply_0ary -> .{
+                '[Expr| (,[rator],)]'
+            }.
             forall I0 O . '{[
                 rator := ( ,{Expr< [I0 -> O] >}, )
                 lit ,{DefaultToken}, = '('
@@ -224,6 +295,16 @@ extend_syntax
                 '[Expr| (,[rator], ,[rand0], ,[rand1],)]'
             }.
 
+            #### fixed point operator ####
+            forall I0 O . '{[
+                lit ,{DefaultWord}, = 'fix'
+                lit ,{DefaultToken}, = '('
+                arg := ( ,{Expr< [ [ -> [I0 -> O] ] -> [I0 -> O] ] >}, )
+                lit ,{DefaultToken}, = ')'
+            ]}' fixed -> .{
+                '[Expr| (fix ,[arg],)]'
+            }.
+
             #### language export ####
             capture_language_form
         ]alt }or
@@ -232,4 +313,5 @@ extend_syntax
 in
 
 capture_language
+
 
