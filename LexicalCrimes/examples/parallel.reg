@@ -1,0 +1,35 @@
+main:
+
+    # RAN OUT OF TIME TO IMPLEMENT MULTITHREADING :(
+
+    let message = "Sending 5 concurrent requests to http://127.0.0.1:6942/ with curl"
+    /*
+        -----------------
+        | print message |
+        -----------------
+    */
+    threads()
+:end
+
+threads:
+    let thread_1 = exec("curl http://127.0.0.1:6942/")?
+    let thread_2 = exec("curl http://127.0.0.1:6942/")?
+    let thread_3 = exec("curl http://127.0.0.1:6942/")?
+    let thread_4 = exec("curl http://127.0.0.1:6942/")?
+    let thread_5 = exec("curl http://127.0.0.1:6942/")?
+
+    /*
+                                             +-------+
+                                             | spawn |
+                                             +-------+
+                                                 |
+                                                 |
+             +------------------+----------------+-----------------+-----------------+
+             |                  |                |                 |                 |
+             |                  |                |                 |                 |
+             v                  v                v                 v                 v
+        +----------+      +----------+      +----------+      +----------+      +----------+
+        | thread_1 |      | thread_2 |      | thread_3 |      | thread_4 |      | thread_5 |
+        +----------+      +----------+      +----------+      +----------+      +----------+
+    */
+:end

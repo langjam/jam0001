@@ -1,0 +1,9 @@
+main:
+    let string = "\nI am in a newline\n\n\tI am social distancing with a tab space!"
+
+    /*
+        +--------------+
+        | print string |
+        +--------------+
+    */
+:end
