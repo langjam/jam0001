@@ -1,0 +1,47 @@
+cabal-version:      3.0
+name:               fcc
+version:            0.1.0.0
+synopsis:
+    Fcc is a language in witch comments are first class, i.e. bound to terminal and nonterminal language constructs and obligatory. This lets you evaluate your program, and also get a "commented" discription of what was happening as it got evaluated.
+
+-- A longer description of the package.
+-- description:
+homepage:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+license:            BSD-2-Clause
+license-file:       LICENSE
+author:             polyphem
+maintainer:         dc1mdp@gmail.com
+
+-- A copyright notice.
+-- copyright:
+category:           Language
+extra-source-files: CHANGELOG.md
+
+executable fcc
+    main-is:          Main.hs
+
+    -- Modules included in this executable, other than Main.
+    other-modules:    AST
+                      Parser
+                      TypeSystem
+                      Pretty
+                      Eval
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+    build-depends:    base, 
+                      text,
+                      pretty,
+                      pretty-simple,
+                      parser-combinators,
+                      containers,
+                      mtl,
+                      transformers,
+                      megaparsec
+
+    hs-source-dirs:   app
+    default-language: Haskell2010
+    ghc-options: -Wall 

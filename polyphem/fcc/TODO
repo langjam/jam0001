@@ -1,0 +1,15 @@
+*** parser
+  - if
+  - fix
+  - let rec
+  - eq
+  - Cmt for all 
+
+*** typcheck
+
+*** eval
+  - evalT
+  - evalC
+  - evalM(ingle)
+
+*** repl
