@@ -1,0 +1,8 @@
+src/nettleparse.out
+src/nettleparse.h
+src/nettleparse.c
+.ninja_log
+.ninja_deps
+out
+.vscode
+out.lst

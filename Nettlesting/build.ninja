@@ -1,0 +1,20 @@
+rule compile
+    command = gcc -fstack-protector  -c -o $out $in
+    description = COMPILE $out
+rule link
+    command = gcc -fstack-protector -o $out $in
+    description = LINK $out
+rule lemon
+    command = lemon $in
+    description = LEMON $in
+
+build out/main.o:         compile src/main.c
+build out/nettle.o:       compile src/nettle.c
+build out/utils.o:        compile src/utils.c
+build out/ext/hashmap.o:  compile src/ext/sheredom/hashmap.c
+build out/ext/vec.o:      compile src/ext/rxi/vec.c
+
+build src/nettleparse.c:  lemon src/nettleparse.y
+build out/nettleparse.o:  compile src/nettleparse.c
+
+build nsting: link out/nettleparse.o out/ext/vec.o out/ext/hashmap.o out/utils.o out/nettle.o out/main.o

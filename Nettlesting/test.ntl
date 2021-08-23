@@ -1,0 +1,34 @@
+{ }
+{ hello }
+{ #definition: "value"; }
+{ hello #definition: "value"; }
+{
+    hello world
+    and again
+    #definition: "vaaaaa";
+}
+{ 
+    types:
+        number
+        string
+        comment
+        numbers - array of number
+        strings - array of string
+}
+{
+    #name: "main";
+    #bindings: {
+        #argc: number;
+        #argv: strings;
+    };
+    #locals: {
+        #c: number;
+    };
+} <= [
+    let c := 4 + 6;
+    { bruh moment }
+    { #name: "test"; } <= while 1 [
+        let c := 2;
+        break test;
+    ];
+]
