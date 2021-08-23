@@ -1,0 +1,39 @@
+fn find_rec(arr: array('a), target: 'a, from: integer) [
+  @in_bounds: `0 <= $from <= len($arr)`
+] -> option(integer) [
+  @result: `if $target \in $arr[from..], $return = some(idx) and get($arr, idx) = $target; else, $return = none`
+] {
+  match from = len(arr) {
+    true => {
+      proof @result = `arr[len(arr)..] is empty, so target \notin arr[len(arr)..]`;
+      none
+    },
+    false => {
+      proof @get_in_bounds: `0 <= from < len(arr)` =
+        `0 <= from <= len(arr) from @in_bounds, and from != len(arr), so 0 <= from < len(arr)`;
+      match target = get(arr, from) [@get_in_bounds] {
+        true => {
+          proof @result = `get(arr, from) = target`;
+          some(from)
+        },
+        false => {
+          proof @result = `recursive`;
+          find_rec(arr, target, from + 1)
+        }
+      }
+    }
+  }
+}
+fn find(arr: array('a), target: 'a) -> option(integer) [
+  @result: `if $target \in $arr, $return = some(idx) and get($arr, idx) = $target; else, $return = none`
+] {
+  proof @result = `recursive; $arr[0..] = $arr`;
+  find_rec(arr, target, 0) [proof `0 <= 0 <= len($arr)` = `obvious since len(arr) >= 0 \forall arr`]
+}
+
+fn main() -> () {
+  print("variant 1(3) = ");
+  println(find(array(1, 2, 3, 4, 5, 6), 4));
+  print("variant 0 = ");
+  println(find(array("hello", "hi", "ah"), "mm"))
+}
