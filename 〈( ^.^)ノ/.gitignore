@@ -1,0 +1,5 @@
+jam0001
+**/*.swp
+.vscode
+main.exe
+__debug_bin
