@@ -1,0 +1,52 @@
+AppAttributeelider{
+  Diagrams = Diagram+
+  Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
+  Attribute = NameAttribute | DiagramIDAttribute | OtherAttribute
+  NameAttribute = "name" "=" string
+  DiagramIDAttribute = "id" "=" string
+  OtherAttribute = alnum+ "=" attributeValue
+  string= "\"" notDQ* "\""
+  notDQ = ~"\"" any
+  encodedChar = ~"<" any
+  attributeValue = number | string		  
+  number = digit+
+
+  GraphModel = "<mxGraphModel" Attribute+ ">" Root "</mxGraphModel>" 
+  Root = "<root>" Cell+ "</root>"
+  Cell = CellWithContent | CellWithoutContent
+  CellWithoutContent = "<mxCell" CellAttribute+ "/>"
+  CellWithContent = "<mxCell" CellAttribute+ ">" Geometry? "</mxCell>"	     
+  Geometry = GeometryWithoutContent | GeometryWithContent
+  GeometryWithoutContent = "<mxGeometry" GAttribute+ "/>"
+  GeometryWithContent = "<mxGeometry" GAttribute+ ">" ignore+ "</mxGeometry>"
+  CellAttribute =   KindAttribute 
+                  | ValueAttribute 
+		  | EdgeAttribute
+		  | VertexAttribute
+		  | SourceAttribute
+		  | TargetAttribute
+		  | IDAttribute
+		  | GreenAttribute
+		  | YellowAttribute
+		  | RedAttribute
+		  | OtherCellAttribute
+  KindAttribute = "kind" "=" string
+  ValueAttribute = "value" "=" string
+  SourceAttribute = "source" "=" string
+  TargetAttribute = "target" "=" string
+  IDAttribute = "id" "=" string
+  EdgeAttribute = "edge" "=" quote "1" quote
+  VertexAttribute = "vertex" "=" quote "1" quote
+  GreenAttribute = "fillColor" "=" quote "#d5e8d4" quote
+  YellowAttribute = "fillColor" "=" quote "#fff2cc" quote
+  RedAttribute = "fillColor" "=" quote "#f8cecc" quote
+  OtherCellAttribute = alnum+ "=" attributeValue
+
+  GAttribute = 
+                OtherGAttribute 
+  OtherGAttribute = alnum+ "=" attributeValue
+
+  quote = "\""
+
+  ignore = ~"</mxGeometry>" any
+}

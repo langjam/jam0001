@@ -1,0 +1,39 @@
+Components {
+  Main = TopLevelComponent+ Component+
+  TopLevelComponent = "{" Pair<"diagram"> Pair<"toplevelcomponent"> "}"
+  Component = "{"
+    ChildrenArrayPair
+    ObjectArrayPair<"connections">
+    Pair<"diagram">
+    Pair<"id">
+    ArrayPair<"inputs">
+    Pair<"name">
+    ArrayPair<"outputs">
+    Pair<"synccode">
+    "}"
+
+    ChildrenArrayPair = NamesArrayPair<"children">
+
+      Pair<Name> = quote Name quote colon string
+      ArrayPair<Name> = quote Name quote colon "[" string* "]"
+      NamesArrayPair<Name> = quote Name quote colon "[" name* "]"
+      ObjectArrayPair<Name> = quote Name quote colon "[" JSONconnection* "]"
+      colon = ":"
+      quote = "\""
+      string = quote notQuote* quote
+      name = quote notQuote* quote
+      notQuote = ~quote any
+      space += ","
+
+      JSONconnection = "{" 
+                          Pair<"name"> 
+                          ComponentPortPair<"source">
+                          ComponentPortPair<"target">
+                       "}"
+
+    ComponentPortPair<Name> = quote Name quote colon "{"
+                                                        Pair<"component"> 
+                                                        Pair<"port">
+                                                     "}"
+
+}

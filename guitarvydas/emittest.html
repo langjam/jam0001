@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+textarea {
+}
+</style>
+</head>
+<body>
+
+<h1>Sequence Transpiler (DaS Workbench)</h1>
+
+<p>grok (parser details.json):</p>
+<textarea id="grammar" rows="1" cols="90" placeholder=" grammar" style="background-color:oldlace;">
+Components {
+    Main = Rule<"paul">
+    Rule<Name> = Name "x"
+    Name = alnum+
+}
+
+
+</textarea>
+
+<p>emit:</p>
+<textarea id="semantics" rows="1" cols="90" placeholder="decode semantics" style="background-color:oldlace;">
+  Main [r] = [[${r}]]
+  Rule [name k] = [[${name} ${k}]]
+  Name [@cs] = [[${cs}]]
+</textarea>
+
+<p>source (diagrams.net raw):</p>
+<textarea id="encodedsource" rows="5" cols="90" placeholder="diagrams.net raw source" style="background-color:oldlace;">
+paul x
+</textarea>
+
+<p>decoded:</p>
+<textarea id="transpiled" name="transpiled" rows="17" cols="90" placeholder="decoded"  readonly style="background-color:whitesmoke;">
+</textarea>
+<br>
+<br>
+<p id="status" > READY </p>
+
+
+<br>
+<button onclick="generate ()">Generate</button>
+<script src="../../scnwb/ohm.js"></script>
+<script src="../../scnwb/glue.js"></script>
+<script src="../../scnwb/scope.js"></script>
+<script src="../../scnwb/pako/dist/pako_inflate.js"></script>
+<script src="support.js"></script>
+<script>
+"use strict"
+
+  function run (grammar, semantics, source, output, status) {
+      let scnGrammar = document.getElementById(grammar).value;
+      let scnSemantics = document.getElementById(semantics).value;
+      let notationSource = document.getElementById(source).value;
+      // glueGrammar and glueSemantics defined in ../scnwb/
+      let generatedSCNSemantics = transpiler (scnSemantics, glueGrammar, "_glue", glueSemantics);
+
+      _ruleInit();
+      try {
+          document.getElementById(status).innerHTML = "FAILED";
+          let semObject = eval('(' + generatedSCNSemantics + ')');
+          document.getElementById (output).value = semObject;
+          let tr = transpiler(notationSource, scnGrammar, "_glue", semObject);
+          document.getElementById(output).value = tr;
+          document.getElementById(status).innerHTML = "OK";
+      }
+       catch (err) {
+          document.getElementById(status).innerHTML = err;
+       }
+  }
+
+
+  
+  function grokandemit () {
+      run ('grammar', 'semantics', 'encodedsource', 'transpiled', 'status');
+  }
+  function generate () {
+      grokandemit ();
+  }
+
+  </script>
+</body>
+</html>
+

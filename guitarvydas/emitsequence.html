@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+textarea {
+}
+</style>
+</head>
+<body>
+
+<h1>Sequence Transpiler (DaS Workbench)</h1>
+
+<p>source</p>
+<textarea id="source" rows="5" cols="90" placeholder="JSON source (sequence.json)" style="background-color:oldlace;">
+</textarea>
+
+<p>grok</p>
+<textarea id="grammar" rows="1" cols="90" placeholder=" grammar" style="background-color:oldlace;">
+Components {
+  Main = TopLevelComponent+ Component+
+  TopLevelComponent = "{" Pair<"diagram"> Pair<"toplevelcomponent"> "}"
+  Component = "{"
+    ArrayPair<"children">
+    ObjectArrayPair<"connections">
+    Pair<"diagram">
+    Pair<"id">
+    ArrayPair<"inputs">
+    Pair<"name">
+    ArrayPair<"outputs">
+    Pair<"synccode">
+    "}"
+
+      Pair<Name> = quote Name quote colon string
+      ArrayPair<Name> = quote Name quote colon "[" string* "]"
+      ObjectArrayPair<Name> = quote Name quote colon "[" JSONconnection* "]"
+      colon = ":"
+      quote = "\""
+      string = quote notQuote* quote
+      notQuote = ~quote any
+      space += ","
+
+      JSONconnection = "{" 
+                          Pair<"name"> 
+                          ComponentPortPair<"source">
+                          ComponentPortPair<"target">
+                       "}"
+
+    ComponentPortPair<Name> = quote Name quote colon "{"
+                                                        Pair<"component"> 
+                                                        Pair<"port">
+                                                     "}"
+
+}
+
+
+</textarea>
+
+<p>emit:</p>
+<textarea id="semantics" rows="1" cols="90" placeholder="decode semantics" style="background-color:oldlace;">
+  Main [@toplevels @components] = [[${components}]]
+  TopLevelComponent [lb diag component rb] = [[${lb}${diag}${component}${rb}\n]]
+  Component [lb children connections diagram id inputs name outputs synccode rb] =
+    [[${connections}\n]]
+
+      Pair [q1 name q2 colon str] = [[${str} ]]
+      ArrayPair [q1 name q2 colon lb @strs rb] = [[${q1}${name}${q2} ${colon} ${lb} ${strs} ${rb}]]
+      ObjectArrayPair [q1 name q2 colon lb @jscs rb] = [[${jscs}]]
+      colon [c] = [[${c}]]
+      quote [c] = [[${c}]]
+      string [q1 @nqs q2] = [[${q1}${nqs}${q2} ]]
+      notQuote [c] = [[${c}]]
+
+      JSONconnection [lb name source target rb] = [[${source} ${target}]]
+
+    ComponentPortPair [ q1 name q2 colon lb component port rb ] = 
+      [[${namify (component)} ]]
+
+
+
+
+</textarea>
+
+
+<p>transpiled</p>
+<textarea id="transpiled" name="transpiled" rows="17" cols="90" placeholder="decoded"  readonly style="background-color:whitesmoke;">
+</textarea>
+<br>
+<br>
+<p id="status" > READY </p>
+
+
+<br>
+<button onclick="generate ()">Generate</button>
+<script src="../../scnwb/ohm.js"></script>
+<script src="../../scnwb/glue.js"></script>
+<script src="../../scnwb/scope.js"></script>
+<script src="../../scnwb/pako/dist/pako_inflate.js"></script>
+<script src="support.js"></script>
+<script>
+"use strict"
+
+  function run (grammar, semantics, source, output, status) {
+      let scnGrammar = document.getElementById(grammar).value;
+      let scnSemantics = document.getElementById(semantics).value;
+      let notationSource = document.getElementById(source).value;
+      // glueGrammar and glueSemantics defined in ../scnwb/
+      let generatedSCNSemantics = transpiler (scnSemantics, glueGrammar, "_glue", glueSemantics);
+
+      _ruleInit();
+      try {
+          document.getElementById(status).innerHTML = "FAILED";
+          let semObject = eval('(' + generatedSCNSemantics + ')');
+          document.getElementById (output).value = semObject;
+          let tr = transpiler(notationSource, scnGrammar, "_glue", semObject);
+          document.getElementById(output).value = tr;
+          document.getElementById(status).innerHTML = "OK";
+      }
+       catch (err) {
+          document.getElementById(status).innerHTML = err;
+       }
+  }
+
+
+  
+  function grokandemit () {
+      run ('grammar', 'semantics', 'source', 'transpiled', 'status');
+  }
+  function generate () {
+      grokandemit ();
+  }
+
+  </script>
+</body>
+</html>
+

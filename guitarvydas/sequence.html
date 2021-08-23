@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+textarea {
+}
+</style>
+</head>
+<body>
+
+<h1>Sequence Transpiler (DaS Workbench)</h1>
+
+<p>source (diagrams.net raw):</p>
+<textarea id="encodedsource" rows="17" cols="90" placeholder="raw source (sequence.drawio)" style="background-color:oldlace;">
+</textarea>
+
+<p>grok (decoder):</p>
+<textarea id="decodergrammar" rows="1" cols="90" placeholder="decoder grammar" style="background-color:oldlace;">
+AppDiagramsEncodedNet{
+TabbedDiagrams = Header Diagram+ Trailer
+Header = "<" "mxfile" encodedChar+
+Trailer = "</mxfile>"
+Diagram = "<diagram" Attribute* ">" encodedChar+ "</diagram>"
+Attribute = alnum+ "=" attributeValue
+string= "\"" notDQ* "\""
+notDQ = ~"\"" any
+encodedChar = ~"<" any		   
+attributeValue = number | string
+number = digit+
+}
+</textarea>
+
+<p>emit (decoder):</p>
+<textarea id="decodersemantics" rows="1" cols="90" placeholder="decode semantics" style="background-color:oldlace;">
+TabbedDiagrams [h @d t] = [[${d}]]
+Header [k k2 @ec] = [[${k}${k2}${ec}]]
+Trailer [k] = [[${k}]]
+Diagram [k @a k2 @ec k3] = [[${k}${a}${k2}\n${decodeMxDiagram(ec)}\n${k3}\n]]
+Attribute [@an k s] = [[\ ${an}${k}${s}]]
+string [q1 @cs q2] = [[${q1}${cs}${q2}]]
+notDQ [c] = [[${c}]]
+encodedChar [c] = [[${c}]]
+attributeValue[x] = [[${x}]]
+number [n] = [[${n}]]
+</textarea>
+
+<p>decoded:</p>
+<textarea id="decodertranspiled" rows="1" cols="90" placeholder="decoded"  readonly style="background-color:whitesmoke;">
+</textarea>
+<br>
+<br>
+<p id="decoderstatus" > READY </p>
+
+
+<!----------------------------------------------------------->
+
+
+<!-- diagrams.net style expander -->
+
+<p>grok (styleexpander):</p>
+<textarea id="styleexpandergrammar" rows="1" cols="90" placeholder="styleexpander grammar" style="background-color:oldlace;">
+AppStyleexpander{
+  Diagrams = Diagram+
+  Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
+  Attribute = alnum+ "=" attributeValue
+  string= "\"" notDQ* "\""
+  notDQ = ~"\"" any
+  encodedChar = ~"<" any		   
+
+  GraphModel = "<mxGraphModel" Attribute+ ">" Root "</mxGraphModel>" 
+  Root = "<root>" Cell+ "</root>"
+  Cell = CellWithContent | CellWithoutContent
+  CellWithoutContent = "<mxCell" CellAttribute+ "/>"
+  CellWithContent = "<mxCell" CellAttribute+ ">" Geometry? "</mxCell>"	     
+  Geometry = GeometryWithoutContent | GeometryWithContent
+  GeometryWithoutContent = "<mxGeometry" Attribute+ "/>"
+  GeometryWithContent = "<mxGeometry" Attribute+ ">" ignore+ "</mxGeometry>"
+  CellAttribute = StyleAttribute | OtherCellAttribute
+  StyleAttribute = "style" "=" string
+  OtherCellAttribute = alnum+ "=" attributeValue
+
+  attributeValue = number | string
+  number = digit+
+
+  ignore = ~"</mxGeometry>" any
+
+}
+
+</textarea>
+
+<p>emit (styleexpander):</p>
+<textarea id="styleexpandersemantics" rows="1" cols="90" placeholder="decode semantics" style="background-color:oldlace;">
+Diagrams [@ds] = [[${ds}]]
+Diagram [k @a k2 graphmodel k3] = [[${k}${a}${k2}\n${graphmodel}\n${k3}\n]]
+Attribute [@an k s] = [[\ ${an}${k}${s}]]
+string [q1 @cs q2] = [[${q1}${cs}${q2}]]
+notDQ [c] = [[${c}]]
+encodedChar [c] = [[${c}]]
+
+GraphModel [k1 @as k2 root k3] = [[${k1}${as}${k2}${root}${k3}]]
+Root [k1 @cells k2] = [[${k1}${cells}${k2}]]
+Cell [c] = [[${c}]]
+CellWithoutContent [k1 @as k2] = [[${k1}${as}${k2}]]
+CellWithContent [k1 @as k2 @geometry k3] = [[${k1}${as}${k2}${geometry}${k3}]]
+Geometry [g] = [[${g}]]
+GeometryWithoutContent [k1 @as k2] = [[${k1}${as}${k2}]]
+GeometryWithContent [k1 @as k2 @ignore k3] = [[${k1}${as}${k2}${ignore}${k3}]]
+
+CellAttribute [a] = [[\ ${a}]]
+StyleAttribute [id k s] = [[\ ${expandStyle(s)}]]
+OtherCellAttribute [@an k s] = [[\ ${an}${k}${s}]]
+
+attributeValue [x] = [[${x}]]
+number [n] = [[${n}]]
+
+</textarea>
+
+
+<p>diagrams net style expanded:</p>
+<textarea id="styleexpandertranspiled" rows="1" cols="90" placeholder="style expander"  readonly style="background-color:whitesmoke;">
+</textarea>
+<br>
+<br>
+<p id="styleexpanderstatus" > READY </p>
+
+<!-- end diagrams.net style expander -->
+
+
+<!----------------------------------------------------------->
+
+
+
+<!-- diagrams.net attribute elider -->
+
+<p>grok (attributeelider):</p>
+<textarea id="attributeelidergrammar" rows="1" cols="90" placeholder="attributeelider grammar" style="background-color:oldlace;">
+AppAttributeelider{
+  Diagrams = Diagram+
+  Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
+  Attribute = NameAttribute | DiagramIDAttribute | OtherAttribute
+  NameAttribute = "name" "=" string
+  DiagramIDAttribute = "id" "=" string
+  OtherAttribute = alnum+ "=" attributeValue
+  string= "\"" notDQ* "\""
+  notDQ = ~"\"" any
+  encodedChar = ~"<" any
+  attributeValue = number | string		  
+  number = digit+
+
+  GraphModel = "<mxGraphModel" Attribute+ ">" Root "</mxGraphModel>" 
+  Root = "<root>" Cell+ "</root>"
+  Cell = CellWithContent | CellWithoutContent
+  CellWithoutContent = "<mxCell" CellAttribute+ "/>"
+  CellWithContent = "<mxCell" CellAttribute+ ">" Geometry? "</mxCell>"	     
+  Geometry = GeometryWithoutContent | GeometryWithContent
+  GeometryWithoutContent = "<mxGeometry" GAttribute+ "/>"
+  GeometryWithContent = "<mxGeometry" GAttribute+ ">" ignore+ "</mxGeometry>"
+  CellAttribute =   KindAttribute 
+                  | ValueAttribute 
+		  | EdgeAttribute
+		  | VertexAttribute
+		  | SourceAttribute
+		  | TargetAttribute
+		  | IDAttribute
+		  | GreenAttribute
+		  | YellowAttribute
+		  | RedAttribute
+		  | OtherCellAttribute
+  KindAttribute = "kind" "=" string
+  ValueAttribute = "value" "=" string
+  SourceAttribute = "source" "=" string
+  TargetAttribute = "target" "=" string
+  IDAttribute = "id" "=" string
+  EdgeAttribute = "edge" "=" quote "1" quote
+  VertexAttribute = "vertex" "=" quote "1" quote
+  GreenAttribute = "fillColor" "=" quote "#d5e8d4" quote
+  YellowAttribute = "fillColor" "=" quote "#fff2cc" quote
+  RedAttribute = "fillColor" "=" quote "#f8cecc" quote
+  OtherCellAttribute = alnum+ "=" attributeValue
+
+  GAttribute = 
+                OtherGAttribute 
+  OtherGAttribute = alnum+ "=" attributeValue
+
+  quote = "\""
+
+  ignore = ~"</mxGeometry>" any
+}
+
+</textarea>
+
+<p>emit (attributeelider):</p>
+<textarea id="attributeelidersemantics" rows="1" cols="90" placeholder="decode semantics" style="background-color:oldlace;">
+Diagrams [@ds] = [[${ds}]]
+Diagram [k @a k2 graphmodel k3] = [[${k}${a}${k2}\n${graphmodel}\n${k3}\n]]
+Attribute [a] = [[${a}]]
+NameAttribute [an k s] = [[\ ${an}${k}${s}]]
+DiagramIDAttribute [an k s] = [[\ ${an}${k}${s}]]
+OtherAttribute [@an k s] = [[\ ${an}${k}${s}]]
+string [q1 @cs q2] = [[${q1}${cs}${q2}]]
+notDQ [c] = [[${c}]]
+encodedChar [c] = [[${c}]]
+attributeValue [x] = [[${x}]]
+number [n] = [[${n}]]
+
+GraphModel [k1 @as k2 root k3] = [[${k1}${as}${k2}${root}${k3}]]
+Root [k1 @cells k2] = [[${k1}${cells}${k2}]]
+Cell [c] = [[${c}]]
+CellWithoutContent [k1 @as k2] = [[${k1}${as}${k2}]]
+CellWithContent [k1 @as k2 @geometry k3] = [[${k1}${as}${k2}${geometry}${k3}]]
+Geometry [g] = [[${g}]]
+GeometryWithoutContent [k1 @as k2] = [[${k1}${as}${k2}]]
+GeometryWithContent [k1 @as k2 @ignore k3] = [[${k1}${as}${k2}${ignore}${k3}]]
+
+CellAttribute [a] = [[${a}]]
+KindAttribute [kind eq s] = [[\ ${kind}${eq}${s}]]
+ValueAttribute [v eq s] = [[\ ${v}${eq}${s}]]
+SourceAttribute [v eq s] = [[\ ${v}${eq}${s}]]
+TargetAttribute [v eq s] = [[\ ${v}${eq}${s}]]
+IDAttribute [v eq s] = [[\ ${v}${eq}${s}]]
+EdgeAttribute [v eq q1 s q2] = [[\ ${v}${eq}${q1}${s}${q2}]]
+VertexAttribute [v eq q1 s q2] = [[\ ${v}${eq}${q1}${s}${q2}]]
+GreenAttribute [id k q1 s q2] = [[\ fillColor="green"]]
+YellowAttribute [id k q1 s q2] = [[\ fillColor="yellow"]]
+RedAttribute [id k q1 s q2] = [[\ fillColor="red"]]
+OtherCellAttribute [@an k s] = [[]]
+
+GAttribute [a] = [[${a}]]
+OtherGAttribute [@an k s] = [[\ ${an}${k}${s}]]
+
+quote [c] = [[${c}]]
+
+</textarea>
+
+
+<p>diagrams net attribute elider:</p>
+<textarea id="attributeelidertranspiled" rows="1" cols="90" placeholder="attribute elider"  readonly style="background-color:whitesmoke;">
+</textarea>
+<br>
+<br>
+<p id="attributeeliderstatus" > READY </p>
+
+<!-- end diagrams.net attribute elider -->
+
+<!----------------------------------------------------------->
+
+
+
+<!-- diagrams.net tofb passes 1 & 2 -->
+
+<!-- diagrams.net tofb1 -->
+<!-- collect cell and diagam names into a table -->
+
+<p>grok (tofb1):</p>
+<textarea id="tofb1grammar" rows="1" cols="90" placeholder="tofb1 grammar" style="background-color:oldlace;">
+Tofb1{
+  Diagrams = Diagram+
+  Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
+  Attribute = NameAttribute | DiagramIDAttribute | OtherAttribute
+  NameAttribute = "name" "=" string
+  DiagramIDAttribute = "id" "=" string
+  OtherAttribute = alnum+ "=" attributeValue
+  string= "\"" notDQ* "\""
+  notDQ = ~"\"" any
+  attributeValue = number | string
+  number = digit+
+
+  GraphModel = "<mxGraphModel" Attribute+ ">" Root "</mxGraphModel>" 
+  Root = "<root>" Cell+ "</root>"
+  Cell = CellWithContent | CellWithoutContent
+  CellWithoutContent = "<mxCell" CellAttribute+ "/>"
+  CellWithContent = "<mxCell" CellAttribute+ ">" Geometry? "</mxCell>"	     
+  Geometry = GeometryWithoutContent | GeometryWithContent
+  GeometryWithoutContent = "<mxGeometry" GAttribute+ "/>"
+  GeometryWithContent = "<mxGeometry" GAttribute+ ">" ignore+ "</mxGeometry>"
+CellAttribute =     EllipseAttribute
+                  | TextAttribute 
+                  | KindAttribute 
+                  | ValueAttribute 
+		  | EdgeAttribute
+		  | VertexAttribute
+		  | SourceAttribute
+		  | TargetAttribute
+		  | IDAttribute
+		  | GreenAttribute
+		  | YellowAttribute
+		  | RedAttribute
+		  | OtherCellAttribute
+  EllipseAttribute = "kind" "=" quote "ellipse" quote
+  TextAttribute = "kind" "=" quote "text" quote
+  KindAttribute = "kind" "=" string
+  ValueAttribute = "value" "=" string
+  SourceAttribute = "source" "=" string
+  TargetAttribute = "target" "=" string
+  IDAttribute = "id" "=" string
+  EdgeAttribute = "edge" "=" quote "1" quote
+  VertexAttribute = "vertex" "=" quote "1" quote
+  RedAttribute = "fillColor" "=" quote "red" quote
+  GreenAttribute = "fillColor" "=" quote "green" quote
+  YellowAttribute = "fillColor" "=" quote "yellow" quote
+  OtherCellAttribute = alnum+ "=" attributeValue
+
+  GAttribute =   ASGAttribute
+               | RelativeGAttribute 
+               | OtherGAttribute 
+  ASGAttribute = "as" "=" string
+  RelativeGAttribute = "relative" "=" string
+  OtherGAttribute = alnum+ "=" attributeValue
+
+  quote = "\""
+
+  ignore = ~"</mxGeometry>" any
+}
+
+</textarea>
+
+<p>emit (tofb1):</p>
+<textarea id="tofb1semantics" rows="1" cols="90" placeholder="tofb1 semantics" style="background-color:oldlace;">
+Diagrams [@ds] = {{ resetNames (); }}[[${strMangle (ds)}]]
+Diagram [k @a k2 graphmodel k3] = {{ scopeAdd ('diagramid', '') }}[[${a}${graphmodel}]]
+Attribute [a] = [[${a}]]
+NameAttribute [an k s] = [[]]
+DiagramIDAttribute [an k s] = [[${newDiagramID (s)}\n${getDiagramID()}\t\t${s}\n]]
+OtherAttribute [@an k s] = [[\ ${an}${k}${s}]]
+string [q1 @cs q2] = [[${q1}${cs}${q2}]]
+notDQ [c] = [[${c}]]
+attributeValue [x] = [[${x}]]
+number [n] = [[${n}]]
+
+GraphModel [k1 @as k2 root k3] = [[${root}]]
+Root [k1 @cells k2] = [[${cells}]]
+Cell [c] = {{scopeAdd ('cellid', '');}}[[${c}]]
+CellWithoutContent [k1 @as k2] = [[${as}]]
+CellWithContent [k1 @as k2 @geometry k3] = [[${as}${geometry}]]
+Geometry [g] = [[${g}]]
+GeometryWithoutContent [k1 @as k2] = [[${as}]]
+GeometryWithContent [k1 @as k2 @ignore k3] = [[${as}]]
+
+CellAttribute [a] = [[${a}]]
+EllipseAttribute [kind eq q1 s q2] = [[]]
+TextAttribute [kind eq q1 s q2] = [[]]
+KindAttribute [kind eq s] = [[]]
+ValueAttribute [v eq s] = [[]]
+SourceAttribute [v eq s] = [[]]
+TargetAttribute [v eq s] = [[]]
+IDAttribute [id eq s] = [[${newCellID(s)}${getCellID()}\t\t${s}\n]]
+EdgeAttribute [v eq q1 s q2] = [[]]
+VertexAttribute [v eq q1 s q2] = [[]]
+RedAttribute [id k q1 s q2] = [[]]
+GreenAttribute [id k q1 s q2] = [[]]
+YellowAttribute [id k q1 s q2] = [[]]
+OtherCellAttribute [@an k s] = [[]]
+
+GAttribute [a] = [[${a}]]
+ASGAttribute [kas k s] = [[]]
+RelativeGAttribute [r k s] = [[]]
+OtherGAttribute [@an k s] = [[]]
+
+quote [c] = [[${c}]]
+</textarea>
+
+
+<p>diagrams net tofb1:</p>
+<textarea id="tofb1transpiled" rows="1" cols="90" placeholder="tofb1 output"  readonly style="background-color:whitesmoke;">
+</textarea>
+<br>
+<br>
+<p id="tofb1status" > READY </p>
+
+<!-- end diagrams.net tofb1 -->
+
+<!----------------------------------------------------------->
+
+
+
+<!-- diagrams.net tofb -->
+
+<p>grok (tofb):</p>
+<textarea id="tofbgrammar" rows="1" cols="90" placeholder="tofb grammar" style="background-color:oldlace;">
+Tofb{
+  Diagrams = Diagram+
+  Diagram = "<diagram" Attribute* ">" GraphModel "</diagram>"
+  Attribute = NameAttribute | DiagramIDAttribute | OtherAttribute
+  NameAttribute = "name" "=" string
+  DiagramIDAttribute = "id" "=" string
+  OtherAttribute = alnum+ "=" attributeValue
+  string= "\"" notDQ* "\""
+  unqstring= "\"" notDQ* "\""
+  notDQ = ~"\"" any
+  attributeValue = number | string
+  number = digit+
+
+  GraphModel = "<mxGraphModel" Attribute+ ">" Root "</mxGraphModel>" 
+  Root = "<root>" Cell+ "</root>"
+  Cell = CellWithContent | CellWithoutContent
+  CellWithoutContent = "<mxCell" CellAttribute+ "/>"
+  CellWithContent = "<mxCell" CellAttribute+ ">" Geometry? "</mxCell>"	     
+  Geometry = GeometryWithoutContent | GeometryWithContent
+  GeometryWithoutContent = "<mxGeometry" GAttribute+ "/>"
+  GeometryWithContent = "<mxGeometry" GAttribute+ ">" ignore+ "</mxGeometry>"
+  CellAttribute =   EllipseAttribute
+                  | TextAttribute 
+                  | KindAttribute 
+                  | ValueAttribute 
+		  | EdgeAttribute
+		  | VertexAttribute
+		  | SourceAttribute
+		  | TargetAttribute
+		  | IDAttribute
+		  | RedAttribute
+		  | GreenAttribute
+		  | YellowAttribute
+		  | OtherCellAttribute
+  EllipseAttribute = "kind" "=" quote "ellipse" quote
+  TextAttribute = "kind" "=" quote "text" quote
+  KindAttribute = "kind" "=" string
+  ValueAttribute = "value" "=" string
+  SourceAttribute = "source" "=" string
+  TargetAttribute = "target" "=" string
+  IDAttribute = "id" "=" string
+  EdgeAttribute = "edge" "=" quote "1" quote
+  VertexAttribute = "vertex" "=" quote "1" quote
+  RedAttribute = "fillColor" "=" quote "red" quote
+  GreenAttribute = "fillColor" "=" quote "green" quote
+  YellowAttribute = "fillColor" "=" quote "yellow" quote
+  OtherCellAttribute = alnum+ "=" attributeValue
+
+  GAttribute =   ASGAttribute
+               | RelativeGAttribute 
+               | xGAttribute 
+               | yGAttribute 
+               | widthGAttribute 
+               | heightGAttribute 
+               | OtherGAttribute 
+  ASGAttribute = "as" "=" string
+  RelativeGAttribute = "relative" "=" string
+  xGAttribute = "x" "=" unqstring
+  yGAttribute = "y" "=" unqstring
+  widthGAttribute = "width" "=" unqstring
+  heightGAttribute = "height" "=" unqstring
+  OtherGAttribute = alnum+ "=" attributeValue
+
+  quote = "\""
+
+  ignore = ~"</mxGeometry>" any
+}
+
+</textarea>
+
+<p>emit (tofb):</p>
+<textarea id="tofbsemantics" rows="1" cols="90" placeholder="tofb semantics" style="background-color:oldlace;">
+Diagrams [@ds] = [[${strMangle (ds)}]]
+Diagram [k @a k2 graphmodel k3] = {{scopeAdd ('diagramid', 'yyy'); }}[[${a}${graphmodel}]]
+Attribute [a] = [[${a}]]
+NameAttribute [an k s] = [[name(${getDiagramID()}, ${s}).\n]]
+DiagramIDAttribute [an k s] = [[${pushDiagramID (s)}diagram(${getDiagramID()}, "").\n]]
+OtherAttribute [@an k s] = [[\ ${an}${k}${s}]]
+string [q1 @cs q2] = [[${q1}${cs}${q2}]]
+unqstring [q1 @cs q2] = [[${cs}]]
+notDQ [c] = [[${c}]]
+attributeValue [x] = [[${x}]]
+number [n] = [[${n}]]
+
+GraphModel [k1 @as k2 root k3] = [[${root}]]
+Root [k1 @cells k2] = [[${cells}]]
+Cell [c] = {{scopeAdd ('cellid', 'zzz');}}[[cell(${getCellID()},"").\ndiagramContains(${getDiagramID()}, ${getCellID()}).\n${c}]]
+CellWithoutContent [k1 @as k2] = [[${as}]]
+CellWithContent [k1 @as k2 @geometry k3] = [[${as}${geometry}]]
+Geometry [g] = [[${g}]]
+GeometryWithoutContent [k1 @as k2] = [[${as}]]
+GeometryWithContent [k1 @as k2 @ignore k3] = [[${as}]]
+
+CellAttribute [a] = [[${a}]]
+EllipseAttribute [kind eq q1 s q2] = [[ellipse(${getCellID()}, "").\n]]
+TextAttribute [kind eq q1 s q2] = [[text(${getCellID()}, "").\n]]
+KindAttribute [kind eq s] = [[kind(${getCellID()}, ${s}).\n]]
+ValueAttribute [v eq s] = [[value(${getCellID ()}, ${s}).\n]]
+SourceAttribute [v eq s] = [[source(${getCellID ()}, ${refCellID(stripQuotes (s))}).\n]]
+TargetAttribute [v eq s] = [[target(${getCellID ()}, ${refCellID(stripQuotes (s))}).\n]]
+IDAttribute [id eq s] = [[${pushCellID (s)}]]
+EdgeAttribute [v eq q1 s q2] = [[edge(${getCellID()}, "").\n]]
+VertexAttribute [v eq q1 s q2] = [[vertex(${getCellID()}, "").\n]]
+GreenAttribute [id k q1 s q2] = [[fillColor(${getCellID()}, "green").\n]]
+YellowAttribute [id k q1 s q2] = [[fillColor(${getCellID()}, "yellow").\n]]
+RedAttribute [id k q1 s q2] = [[fillColor(${getCellID()}, "red").\n]]
+OtherCellAttribute [@an k s] = [[]]
+
+GAttribute [a] = [[${a}]]
+ASGAttribute [kas k s] = [[]]
+RelativeGAttribute [r k s] = [[]]
+xGAttribute [an k s] = [[${an}(${getCellID()}, ${s}).\n]]
+yGAttribute [an k s] = [[${an}(${getCellID()}, ${s}).\n]]
+widthGAttribute [an k s] = [[${an}(${getCellID()}, ${s}).\n]]
+heightGAttribute [an k s] = [[${an}(${getCellID()}, ${s}).\n]]
+OtherGAttribute [@an k s] = [[${an}(${getCellID()}, ${s}).\n]]
+
+quote [c] = [[${c}]]
+</textarea>
+
+
+<p>diagrams net tofb:</p>
+<textarea id="tofbtranspiled" rows="1" cols="90" placeholder="tofb output"  readonly style="background-color:whitesmoke;">
+</textarea>
+<br>
+<br>
+<p id="tofbstatus" > READY </p>
+
+<!-- end diagrams.net tofb -->
+
+<!-- sort -->
+<p>sorted</p>
+<textarea id="plsorted" rows="17" cols="90" placeholder="pl sorted"  readonly style="background-color:whitesmoke;">
+</textarea>
+<br>
+<!-- end sort -->
+
+
+
+
+
+
+<br>
+<button onclick="generate ()">Generate</button>
+<script src="../../scnwb/ohm.js"></script>
+<script src="../../scnwb/glue.js"></script>
+<script src="../../scnwb/scope.js"></script>
+<script src="../../scnwb/pako/dist/pako_inflate.js"></script>
+<script src="support.js"></script>
+<script>
+"use strict"
+
+  function run (grammar, semantics, source, output, status) {
+      let scnGrammar = document.getElementById(grammar).value;
+      let scnSemantics = document.getElementById(semantics).value;
+      let notationSource = document.getElementById(source).value;
+      // glueGrammar and glueSemantics defined in ../scnwb/
+      let generatedSCNSemantics = transpiler (scnSemantics, glueGrammar, "_glue", glueSemantics);
+
+      _ruleInit();
+      try {
+          document.getElementById(status).innerHTML = "FAILED";
+          let semObject = eval('(' + generatedSCNSemantics + ')');
+          document.getElementById (output).value = semObject;
+          let tr = transpiler(notationSource, scnGrammar, "_glue", semObject);
+          document.getElementById(output).value = tr;
+          document.getElementById(status).innerHTML = "OK";
+      }
+       catch (err) {
+          document.getElementById(status).innerHTML = err;
+       }
+  }
+
+
+  
+  function decode () {
+      run ('decodergrammar', 'decodersemantics', 'encodedsource', 'decodertranspiled', 'decoderstatus');
+  }
+  
+  function styleexpandertranspile () {
+    run ('styleexpandergrammar', 'styleexpandersemantics', 'decodertranspiled', 'styleexpandertranspiled', 'styleexpanderstatus');
+  }
+  
+  function attributeEliderTranspile () {
+    run ('attributeelidergrammar', 'attributeelidersemantics', 'styleexpandertranspiled', 'attributeelidertranspiled', 'attributeeliderstatus');
+  }
+  
+  function tofb1Transpile () {
+    run ('tofb1grammar', 'tofb1semantics', 'attributeelidertranspiled', 'tofb1transpiled', 'tofb1status');
+  }
+  
+  function tofbTranspile () {
+    run ('tofbgrammar', 'tofbsemantics', 'attributeelidertranspiled', 'tofbtranspiled', 'tofbstatus');
+  }
+  
+  function plsort () {
+    var fb = document.getElementById('tofbtranspiled').value;
+    var lines = fb.split ('\n');
+    lines.sort ();
+    document.getElementById ('plsorted').value = lines.join('\n');
+  }
+
+  function generate () {
+      decode ();
+      styleexpandertranspile ();
+      attributeEliderTranspile ();
+      tofb1Transpile ();
+      tofbTranspile ();
+      plsort ();
+  }
+
+  </script>
+</body>
+</html>
+

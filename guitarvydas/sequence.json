@@ -1,0 +1,39 @@
+{"diagram":"id1", "toplevelcomponent":"id4"}
+
+{
+  "children": ["process A", "process B" ],
+  "connections": [
+    {
+      "name":"x2",
+      "source": {"component":"process A", "port":"fb"},
+      "target": {"component":"process B", "port":"in"}
+    }
+  ],
+  "diagram":"id1",
+  "id":"id4",
+  "inputs": [],
+  "name":"topLevel",
+  "outputs": [],
+  "synccode":""
+}
+{
+  "children": [],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id5",
+  "inputs": [],
+  "name":"process A",
+  "outputs": ["fb" ],
+  "synccode":""
+}
+{
+  "children": [],
+  "connections": [],
+  "diagram":"id1",
+  "id":"id6",
+  "inputs": ["in" ],
+  "name":"process B",
+  "outputs": [],
+  "synccode":""
+}
+
