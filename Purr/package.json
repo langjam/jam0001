@@ -1,0 +1,24 @@
+{
+  "name": "purr",
+  "version": "1.0.0",
+  "description": "langjam0001 entry for a joyful cat language :)",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx tsc; node ./dist/parse-that/parser0001.test.js",
+    "tests-with-no-compile": "node ./dist/parse-that/parser0001.test.js"
+  },
+  "keywords": [
+    "concatenative",
+    "first-class-comments",
+    "cat",
+    "kitten",
+    "joy",
+    "forth"
+  ],
+  "author": "nmorse",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^16.7.1",
+    "typescript": "^4.3.5"
+  }
+}
