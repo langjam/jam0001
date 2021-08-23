@@ -27,18 +27,31 @@ a "main" entrypoint in your sourcefile.
 
 ### Source Code Example
 ```
-module [Add|Time to add numbers] where
+module [Moop| mooping now for you] where
 
 
-[add a b| adding two numbers in a way that shows some language features] = 
-    [\c d -> let [u| first number] =  c
-                 [v x|function to return a number as is] = x
-             in u + (v d)
-    |lamda adding two numbers] a b
+[i| An integer constant] = 1+3
 
-[main|Lets go] = add 1 2
+[j x| J Function adding 1 with a lambda to arg] = [\a -> 1+a|the inc lambda] x
+
+[main|Here we go] = j i
+
 
 ```
+If run this will yield :
+
+```
+➜  fcc git:(master) ✗ cabal run  fcc -- moop.fcc
+Up to date
+"Moop: mooping now for you"
+Cmt "Here we go"
+Cmt "J Function adding 1 with a lambda to arg"
+Cmt "An integer constant"
+Cmt "the inc lambda"
+VNum 5
+➜  fcc git:(master) ✗ 
+```
+
 
 
 

@@ -1,0 +1,12 @@
+module [Add|Time to add numbers] where
+
+[moo|haha] = [\x y -> x+ y|lamda]
+
+[add a b| adding two numbers in a way that shows some language features] = 
+                [\v w -> let [x| the result] = v + b
+                              [y| some other val] = 7
+                          in x + y | lamda] a b 
+
+[main|Lets go] = add 3 4 
+
+

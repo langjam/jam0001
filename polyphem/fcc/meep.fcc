@@ -1,0 +1,40 @@
+module [Meep|under the aspect of Meep] where
+
+[foo x| calculating the foo] = True
+
+[foo x| calculating the foo] = x
+
+[foo x| calculating the foo] = 2.33
+
+[foo x| calculating the foo] = -2.44
+
+[foo x| calculating the foo] = 2
+
+[foo x| calculating the foo] = -2
+
+
+[foo x| calculating the foo] = [\a b -> a b|lambda]
+
+[foo x| calculating the foo] = 
+                    [\a b -> a b|lambda]  
+
+
+[foo x| calculating the foo] = ([\a b -> a b|lambda] u)
+
+[foo x| calculating the foo] = [\a b -> a b|lambda] x
+
+
+[ss|aa] =  a 
+
+[foo x| calculating the foo] = 2
+
+[foo x| calculating the foo] = [\a b -> a b|lambda] 2
+
+
+[meep a | meepness of] = let 
+                             [x|x coord] = a
+                             [y|y coord] = a
+                         in x y
+
+
+[moo e | mooing] = 3 + (3*5) - (-4)
