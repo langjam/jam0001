@@ -1,0 +1,15 @@
+[package]
+name = "gold-backend"
+version = "0.1.0"
+edition = "2018"
+authors = ["aboss123", "Noah-Kennedy"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gold-frontend = { path = "../gold-frontend" }
+gold-standard = { path = "../gold-standard" }
+cranelift = "0.76.0"
+cranelift-module = "0.76.0"
+cranelift-jit = "0.76.0"
+cranelift-native = "0.76.0"

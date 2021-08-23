@@ -1,0 +1,8 @@
+// foo is a function.
+// Params:
+// 'a' is of type Int.
+// 'b' is of type String.
+// Returns: Int
+fn {
+  "Hello, World!"
+}

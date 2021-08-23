@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "gold",
+    "gold-backend",
+    "gold-frontend",
+    "gold-standard"
+]
