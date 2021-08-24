@@ -1,0 +1,5 @@
+# our main function
+def main {
+    # print out hello
+    print("hello")
+}
