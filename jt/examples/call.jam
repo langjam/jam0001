@@ -1,0 +1,10 @@
+def foo {
+    # return hello
+    "hello"
+}
+
+def main {
+    # print hello world
+    foo()
+    print()
+}
