@@ -47,6 +47,7 @@ Object *object_bool(Heap*, int);
 Object *object_function(Heap*, Function*);
 Object *object_native_function(Heap*, NativeFunction);
 Object *object_list(Heap*, int len);
+void object_copy(Object *dst, Object *src);
 void object_free(Object *object);
 
 const char* object_to_string(Object*);

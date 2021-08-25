@@ -65,6 +65,21 @@ Object *object_list(Heap *heap, int len)
     return obj;
 }
 
+void object_copy(Object *dst, Object *src)
+{
+    memcpy(dst, src, sizeof(Object));
+    switch (src->type)
+    {
+        case OBJECT_TYPE_STRING:
+	    dst->str = malloc(strlen(src->str) + 1);
+	    strcpy(dst->str, src->str);
+            break;
+
+        defualt:
+            break;
+    }
+}
+
 void object_free(Object *object)
 {
     switch (object->type)
@@ -130,9 +145,9 @@ Object *object_add(Heap *heap, Object *lhs, Object *rhs)
                 case OBJECT_TYPE_LIST:
                 {
                     Object *list = object_list(heap, 1 + rhs->list_len);
-                    memcpy(&list->items[0], lhs, sizeof(Object));
+                    object_copy(&list->items[0], lhs);
                     for (int i = 0; i < rhs->list_len; i++)
-                        list->items[i + 1] = rhs->items[i];
+                        object_copy(&list->items[i + 1], &rhs->items[i]);
                     return list;
                 }
 
@@ -155,8 +170,8 @@ Object *object_add(Heap *heap, Object *lhs, Object *rhs)
                 {
                     Object *list = object_list(heap, 1 + lhs->list_len);
                     for (int i = 0; i < lhs->list_len; i++)
-                        list->items[i] = lhs->items[i];
-                    memcpy(&list->items[lhs->list_len], rhs, sizeof(Object));
+                        object_copy(&list->items[i], &lhs->items[i]);
+                    object_copy(&list->items[lhs->list_len], rhs);
                     return list;
                 }
 
@@ -164,9 +179,9 @@ Object *object_add(Heap *heap, Object *lhs, Object *rhs)
                 {
                     Object *list = object_list(heap, lhs->list_len + rhs->list_len);
                     for (int i = 0; i < lhs->list_len; i++)
-                        list->items[i] = lhs->items[i];
+                        object_copy(&list->items[i], &lhs->items[i]);
                     for (int i = 0; i < rhs->list_len; i++)
-                        list->items[i + lhs->list_len] = rhs->items[i];
+                        object_copy(&list->items[i + lhs->list_len], &rhs->items[i]);
                     return list;
                 }
 
