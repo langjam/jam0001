@@ -8,4 +8,4 @@ Voting should be for other teams. Please do not vote for your own team.
 
 ## Deadline
 
-Voting is open until Sunday 29th of August at 7pm.
+Voting is open until Sunday 29th of August at 7pm UK time.
