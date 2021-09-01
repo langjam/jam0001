@@ -8,7 +8,11 @@ print(y);
 
 // @trace
 fn has_comments(x, b) {
-    let y = x + 1; // @todo: add more code
+    let v = 0;
+    if b {
+        v = 1;
+    }
+    let y = x + v; // @todo: add more code
     return y;
 }
 

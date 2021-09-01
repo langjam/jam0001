@@ -14,7 +14,6 @@ name = "suslang"
 path = "src/main.rs"
 
 [dependencies]
-quickscope = "0.1"
-logos      = "0.12"
-structopt  = "0.3"
-anyhow     = "1"
+logos     = "0.12"
+structopt = "0.3"
+anyhow    = "1"

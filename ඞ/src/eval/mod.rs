@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use quickscope::ScopeMap;
-
 pub use self::value::{Class, Function, Object, Value};
 
 mod ast;
+mod scope;
+use scope::ScopeMap;
 mod value;
 pub use ast::remove_refs;
 
@@ -12,8 +12,8 @@ pub type EvalResult = Result<Value, String>;
 
 pub struct Evaluator {
     classes: HashMap<String, Class>,
-    vars: ScopeMap<String, Value>,
-    fns: ScopeMap<String, Function>,
+    vars: ScopeMap<Value>,
+    fns: ScopeMap<Function>,
     pub(crate) returning: Option<Value>,
 }
 
@@ -30,13 +30,13 @@ impl Evaluator {
     }
 
     pub(crate) fn enter_scope(&mut self) {
-        self.vars.push_layer();
-        self.fns.push_layer();
+        self.vars.enter_scope();
+        self.fns.enter_scope();
     }
 
     pub(crate) fn exit_scope(&mut self) {
-        self.vars.pop_layer();
-        self.fns.pop_layer();
+        self.vars.exit_scope();
+        self.fns.exit_scope();
     }
 
     pub fn get_class(&self, name: &str) -> Result<&Class, String> {
@@ -52,12 +52,11 @@ impl Evaluator {
     pub fn get_var(&mut self, name: &str) -> Result<*mut Value, String> {
         self.vars
             .get_mut(name)
-            .map(|val| val as *mut _)
             .ok_or(format!("Unknown var: {}", name))
     }
 
-    pub(crate) fn create_var(&mut self, name: impl Into<String>, value: Value) {
-        self.vars.define(name.into(), value);
+    pub(crate) fn create_var(&mut self, name: impl AsRef<str> + Into<String>, value: Value) {
+        self.vars.declare_or_reassign(name.into(), value);
     }
 
     pub fn get_fn(&self, name: &str) -> Result<Function, String> {
@@ -68,6 +67,6 @@ impl Evaluator {
     }
 
     pub(crate) fn create_fn(&mut self, name: impl Into<String>, function: Function) {
-        self.fns.define(name.into(), function);
+        self.fns.declare_or_reassign(name.into(), function);
     }
 }
