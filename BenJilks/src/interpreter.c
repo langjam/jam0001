@@ -78,7 +78,7 @@ static Object *eval_list(Interpreter *interpreter, Scope *scope,
     int index = 0;
     Object *list_object = object_list(interpreter->heap, len);
     for (List *it = list; it; it = it->next)
-        memcpy(&list_object->items[index++], eval_expression(interpreter, scope, it->value), sizeof(Object));
+        object_copy(&list_object->items[index++], eval_expression(interpreter, scope, it->value));
 
     return list_object;
 }
